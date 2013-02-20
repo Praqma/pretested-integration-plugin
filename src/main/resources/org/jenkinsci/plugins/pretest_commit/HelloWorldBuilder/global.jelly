@@ -11,9 +11,9 @@
     tags they use. Views are always organized according to its owner class,
     so it should be straightforward to find them.
   -->
-  <f:section title="Hello World Builder">
-    <f:entry title="French" field="useFrench"
-      description="Check if we should say hello in French">
+  <f:section title="Pre-tested Commits">
+    <f:entry title="Pre-test commits" field="pretestCommits"
+      description=":O">
       <f:checkbox />
     </f:entry>
   </f:section>
