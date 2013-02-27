@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.pretest_commit;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
@@ -89,21 +90,24 @@ public class HelloWorldBuilder extends Builder {
 		 * If you don't want fields to be persisted, use <tt>transient</tt>.
 		 */
 		private boolean pretestCommits;
+		private String textField;
+		private String selectBoxOption;
 		
 		/**
 		 * Performs on-the-fly validation of the form field 'name'.
 		 *
-		 * @param value
-		 *	  This parameter receives the value that the user has typed.
-		 * @return
-		 *	  Indicates the outcome of the validation. This is sent to the browser.
+		 * @param value This parameter receives the value that the user has typed.
+		 * @return Indicates the outcome of the validation. This is sent to the
+     * browser.
 		 */
-		public FormValidation doCheckName(@QueryParameter String value)
+		public FormValidation doCheckName(@QueryParameter String value) 
 				throws IOException, ServletException {
-			if (value.length() == 0)
+			if (value.length() == 0) {
 				return FormValidation.error("Please set a name");
-			if (value.length() < 4)
+			}
+			if (value.length() < 4) {
 				return FormValidation.warning("Isn't the name too short?");
+			}
 			return FormValidation.ok();
 		}
 		
@@ -120,25 +124,59 @@ public class HelloWorldBuilder extends Builder {
 		}
 		
 		@Override
-		public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+		public boolean configure(StaplerRequest req, JSONObject formData) 
+				throws FormException {
 			// To persist global configuration information,
 			// set that to properties and call save().
 			pretestCommits = formData.getBoolean("pretestCommits");
+			textField = formData.getString("textField");
+			selectBoxOption = formData.getString("selectBox");
+			
 			// ^Can also use req.bindJSON(this, formData);
-			//  (easier when there are many fields; need set* methods for this, like setUseFrench)
+			//	(easier when there are many fields; need set* methods for this, like setUseFrench)
 			save();
 			return super.configure(req,formData);
 		}
-		
+
 		/**
 		 * This method returns true if the global configuration says we should speak French.
 		 *
 		 * The method name is bit awkward because global.jelly calls this method to determine
 		 * the initial state of the checkbox by the naming convention.
 		 */
+		
 		public boolean getPretestCommits() {
 			return pretestCommits;
 		}
+		
+		public String getTextField() {
+			return textField;
+		}
+		
+		public String getSelectBox(){
+			return selectBoxOption;
+		}
+		
+		public ListBoxModel doFillSelectBoxItems() {
+			ListBoxModel items = new ListBoxModel();
+		
+			items.add("An option provided by the descriptor","1");
+			items.add("Another option","2");
+		
+		return items;
+		}
+
+		public FormValidation doTestTextField(@QueryParameter("textField")
+				final String textField) {
+			try {
+				if(textField.length() == 4) {
+					return FormValidation.ok("Success!");
+				} else {
+					return FormValidation.error("Please input exactly 4 characters");
+				}
+			} catch (Exception e) {
+				return FormValidation.error("Some unkown error occured");
+			}
+		}
 	}
 }
-
