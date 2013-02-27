@@ -86,7 +86,7 @@ public class HelloWorldBuilder extends Builder {
          * If you don't want fields to be persisted, use <tt>transient</tt>.
          */
         private boolean pretestCommits;
-
+        private String textField;
         /**
          * Performs on-the-fly validation of the form field 'name'.
          *
@@ -121,6 +121,7 @@ public class HelloWorldBuilder extends Builder {
             // To persist global configuration information,
             // set that to properties and call save().
             pretestCommits = formData.getBoolean("pretestCommits");
+            textField = formData.getString("textField");
             // ^Can also use req.bindJSON(this, formData);
             //  (easier when there are many fields; need set* methods for this, like setUseFrench)
             save();
@@ -136,6 +137,10 @@ public class HelloWorldBuilder extends Builder {
         public boolean getPretestCommits() {
             return pretestCommits;
         }
+
+       public String getTextField() {
+         return textField;
+       }
     }
 }
 
