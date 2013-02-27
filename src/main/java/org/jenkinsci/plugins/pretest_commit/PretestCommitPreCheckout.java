@@ -39,6 +39,8 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		listener.getLogger().println("Setup!!!");
+		listener.getLogger().println("Workspace is here: "
+				+ build.getWorkspace());
 		return new NoopEnv();
 	}
 	
