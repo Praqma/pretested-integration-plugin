@@ -16,5 +16,8 @@
       description=":O">
       <f:checkbox />
     </f:entry>
+    <f:entry title="${%A textfield}" field="textField">
+      <f:textbox default="${%A default value}" />
+    </f:entry>
   </f:section>
 </j:jelly>
