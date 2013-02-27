@@ -19,6 +19,9 @@
     <f:entry title="${%A textfield}" field="textField">
       <f:textbox default="${%A default value}" />
     </f:entry>
+    <f:validateButton title="${%Click to validate textfield}"
+    progress="${%Validation in progress...}" method="testTextField"
+    with="textField" />
     <f:entry title="${%A select field}" field="selectBox">
       <f:select />
     </f:entry>
