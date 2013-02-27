@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.pretest_commit;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
@@ -87,6 +88,8 @@ public class HelloWorldBuilder extends Builder {
          */
         private boolean pretestCommits;
         private String textField;
+        private String selectBoxOption;
+
         /**
          * Performs on-the-fly validation of the form field 'name'.
          *
@@ -122,6 +125,8 @@ public class HelloWorldBuilder extends Builder {
             // set that to properties and call save().
             pretestCommits = formData.getBoolean("pretestCommits");
             textField = formData.getString("textField");
+            selectBoxOption = formData.getString("selectBox");
+
             // ^Can also use req.bindJSON(this, formData);
             //  (easier when there are many fields; need set* methods for this, like setUseFrench)
             save();
@@ -141,6 +146,19 @@ public class HelloWorldBuilder extends Builder {
        public String getTextField() {
          return textField;
        }
+
+       public String getSelectBox(){
+         return selectBoxOption;
+       }
+
+      public ListBoxModel doFillSelectBoxItems() {
+        ListBoxModel items = new ListBoxModel();
+
+        items.add("An option provided by the descriptor","1");
+        items.add("Another option","2");
+
+        return items;
+      }
     }
 }
 

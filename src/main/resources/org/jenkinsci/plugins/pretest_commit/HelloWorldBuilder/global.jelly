@@ -19,5 +19,8 @@
     <f:entry title="${%A textfield}" field="textField">
       <f:textbox default="${%A default value}" />
     </f:entry>
+    <f:entry title="${%A select field}" field="selectBox">
+      <f:select />
+    </f:entry>
   </f:section>
 </j:jelly>
