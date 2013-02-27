@@ -139,9 +139,9 @@ public class HelloWorldBuilder extends Builder {
          * The method name is bit awkward because global.jelly calls this method to determine
          * the initial state of the checkbox by the naming convention.
          */
-        public boolean getPretestCommits() {
-            return pretestCommits;
-        }
+       public boolean getPretestCommits() {
+         return pretestCommits;
+       }
 
        public String getTextField() {
          return textField;
@@ -159,6 +159,18 @@ public class HelloWorldBuilder extends Builder {
 
         return items;
       }
+
+      public FormValidation doTestTextField(@QueryParameter("textField")
+      final String textField) {
+        try {
+          if(textField.length() == 4) {
+						return FormValidation.ok("Success!");
+          } else {
+						return FormValidation.error("Please input exactly 4 characters");
+          }
+        } catch (Exception e) {
+          return FormValidation.error("Some unkown error occured");
+        }
+      }
     }
 }
-
