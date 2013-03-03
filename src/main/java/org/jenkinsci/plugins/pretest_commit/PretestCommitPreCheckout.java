@@ -29,9 +29,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	}
 
 	/**
-	 * Overridden setup returns a noop class as we don't want to add annything
-	 * here.
-	 *
 	 * @param build
 	 * @param launcher
 	 * @param listener
@@ -52,12 +49,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	}
 	
 	/**
-	 * Overridden precheckout step, this is where wedo all the work.
-	 *
-	 * Checks to make sure we have some buildsteps set,
-	 * and then calls the prebuild and perform on all of them.
-	 * @todo handle build steps failure in some sort of reasonable way
-	 *
 	 * @param build
 	 * @param launcher
 	 * @param listener
