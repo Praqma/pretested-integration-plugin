@@ -43,8 +43,8 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		listener.getLogger().println("Setup!!!");
 		listener.getLogger().println("Workspace is here: "
 				+ build.getWorkspace());
+		listener.getLogger().println("Writing file here: " + fp);
 		FilePath fp = build.getWorkspace().child("pretest_stuff_was_here");
-		listener.getLogger().println("Write here: " + fp);
 		OutputStream os = fp.write();
 		os.write(0);
 		os.close();
