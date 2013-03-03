@@ -11,9 +11,11 @@ import hudson.model.Cause.LegacyCodeCause;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildTrigger;
 import hudson.tasks.BuildStep;
+import hudson.FilePath;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +41,13 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		listener.getLogger().println("Setup!!!");
+		listener.getLogger().println("Workspace is here: "
+				+ build.getWorkspace());
+		listener.getLogger().println("Writing file here: " + fp);
+		FilePath fp = build.getWorkspace().child("pretest_stuff_was_here");
+		OutputStream os = fp.write();
+		os.write(0);
+		os.close();
 		return new NoopEnv();
 	}
 	
