@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretest_commit;
+package org.jenkinsci.plugins.pretestcommit;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.util.FormValidation;
