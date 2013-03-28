@@ -48,19 +48,19 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	 * @throws InterruptedException
 	 */
 	ArgumentListBuilder findHgExe(MercurialSCM scm, Node node, TaskListener listener, boolean allowDebug) throws IOException, InterruptedException {
-        for (MercurialInstallation inst : MercurialInstallation.allInstallations()) {
-            if (inst.getName().equals(scm.getInstallation())) {
-                // XXX what about forEnvironment?
-            	String home = inst.getExecutable().replace("INSTALLATION", inst.forNode(node, listener).getHome());
-                ArgumentListBuilder b = new ArgumentListBuilder(home);
-                if (allowDebug && inst.getDebug()) {
-                    b.add("--debug");
-                }
-                return b;
-            }
-        }
-        return new ArgumentListBuilder(scm.getDescriptor().getHgExe());
-    }
+		for (MercurialInstallation inst : MercurialInstallation.allInstallations()) {
+			if (inst.getName().equals(scm.getInstallation())) {
+				// XXX what about forEnvironment?
+				String home = inst.getExecutable().replace("INSTALLATION", inst.forNode(node, listener).getHome());
+				ArgumentListBuilder b = new ArgumentListBuilder(home);
+				if (allowDebug && inst.getDebug()) {
+					b.add("--debug");
+				}
+				return b;
+			}
+		}
+		return new ArgumentListBuilder(scm.getDescriptor().getHgExe());
+	}
 	/**
 	 * @param build
 	 * @param launcher
@@ -92,37 +92,39 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		//This is also a possibility
 		//new HgExe(scm,launcher,build.getBuiltOn(),listener,env);
 		
-        String source = build.getBuildVariables().get("branch").toString();
-		//Use args.add(String a) to add an argument/flag just as you would an ordinary flag
-        //e.g. to do "hg pull" you'd use args.add("pull")
-        cmd.add("pull");
-        cmd.add("--update");
-        
-
-        cmd.add(build.getBuildVariables().get("branch"));
-        
-        //Finally use hg.run(args).join() to run the command on the system
-        int cloneExitCode;
-		try{
+		String source = build.getBuildVariables().get("branch").toString();
+		//Use args.add(String a) to add an argument/flag just as you would an
+		// ordinary flag
+		//e.g. to do "hg pull" you'd use args.add("pull")
+		cmd.add("pull");
+		cmd.add("--update");
+		cmd.add(build.getBuildVariables().get("branch"));
+		
+		//Finally use hg.run(args).join() to run the command on the system
+		int cloneExitCode;
+		try {
 			//cloneExitCode = hg.run(args).join();\
-			cloneExitCode = launcher.launch().cmds(cmd).pwd(build.getWorkspace()).join();
+			cloneExitCode = launcher.launch().cmds(cmd)
+					.pwd(build.getWorkspace()).join();
 		} catch(IOException e) {
 			String message = e.getMessage();
-			 if (message != null && 
-					 message.startsWith("Cannot run program") && 
-					 message.endsWith("No such file or directory")) {
-	                listener.error("Failed to clone " + source + " because hg could not be found;" +
-	                        " check that you've properly configured your Mercurial installation");
-	            } else {
-	                e.printStackTrace(listener.error("Failed to clone repository"));
-	            }
-	            throw new AbortException("Failed to clone repository");
+			if (message != null
+					&& message.startsWith("Cannot run program")
+					&& message.endsWith("No such file or directory")) {
+				listener.error("Failed to clone " + source
+						+ " because hg could not be found;"
+						+ " check that you've properly configured your"
+						+ " Mercurial installation");
+			} else {
+				e.printStackTrace(listener.error(
+						"Failed to clone repository"));
+			}
+			throw new AbortException("Failed to clone repository");
 		}
 		if(cloneExitCode!=0) {
-			
-            listener.error("Failed to clone repository");
-            throw new AbortException("Failed to clone repository");
-        }
+			listener.error("Failed to clone repository");
+			throw new AbortException("Failed to clone repository");
+		}
 		
 		//Use build.getBuildVariables().get("foo") to get a build variable configured in the jenkins job
 		
