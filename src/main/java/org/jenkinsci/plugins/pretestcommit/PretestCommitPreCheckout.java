@@ -28,6 +28,7 @@ import java.io.PrintStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -61,36 +62,38 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		}
 		return new ArgumentListBuilder(scm.getDescriptor().getHgExe());
 	}
-	/**
-	 * @param build
-	 * @param launcher
-	 * @param listener
-	 * @return noop Environment class
-	 */
-	@Override
-	public Environment setUp(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
-		listener.getLogger().println("Setup!!!");
-		listener.getLogger().println("Workspace is here: "
-				+ build.getWorkspace());
-		
-		FilePath fp = build.getWorkspace().child("pretest_stuff_was_here");
-		listener.getLogger().println("Writing file here: " + fp);
-		OutputStream os = fp.write();
-		
+	
+	private ArgumentListBuilder createArgumentListBuilder(
+			AbstractBuild build, Launcher launcher, BuildListener listener)
+			throws IOException, InterruptedException {
 		//Setup variables to find our executable
 		AbstractProject<?,?> project = build.getProject();
 		//We need to check this cast..
-		MercurialSCM scm = (MercurialSCM) project.getScm();
+		MercurialSCM scm = null;
+		try {
+			scm = (MercurialSCM) project.getScm();
+		} catch(ClassCastException e) {
+			listener.error("The chosen SCM is not Mercurial!");
+			throw new AbortException("The chosen SCM is not Mercurial!");
+		}
 		Node node = Computer.currentComputer().getNode();
-		
+
 		EnvVars env = build.getEnvironment(listener);
-		
+
 		//Why not do it like the mercurial plugin? ;)
 		ArgumentListBuilder cmd = findHgExe(scm, node, listener, false);
 		
 		//This is also a possibility
 		//new HgExe(scm,launcher,build.getBuiltOn(),listener,env);
+		
+		return cmd;
+	}
+	
+	private void pullFromCT(AbstractBuild build, Launcher launcher,
+			BuildListener listener) throws IOException, InterruptedException {
+		
+		ArgumentListBuilder cmd = createArgumentListBuilder(
+				build, launcher, listener);
 		
 		String source = build.getBuildVariables().get("branch").toString();
 		//Use args.add(String a) to add an argument/flag just as you would an
@@ -99,7 +102,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		cmd.add("pull");
 		cmd.add("--update");
 		cmd.add(build.getBuildVariables().get("branch"));
-		
+
 		//Finally use hg.run(args).join() to run the command on the system
 		int cloneExitCode;
 		try {
@@ -124,13 +127,100 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		if(cloneExitCode!=0) {
 			listener.error("Failed to clone repository");
 			throw new AbortException("Failed to clone repository");
+		} else {
+			listener.getLogger().println("Successfully pulled " + source);
 		}
+	}
+	
+	void doTestStuff(AbstractBuild build, Launcher launcher,
+			BuildListener listener) throws IOException, InterruptedException {
+		listener.getLogger().println("Setup!!!");
+		listener.getLogger().println("Workspace is here: "
+				+ build.getWorkspace());
 		
-		//Use build.getBuildVariables().get("foo") to get a build variable configured in the jenkins job
-		
+		FilePath fp = build.getWorkspace().child("pretest_stuff_was_here");
+		listener.getLogger().println("Writing file here: " + fp);
+		OutputStream os = fp.write();
 		os.write(0);
 		os.close();
+	}
+	
+	void mergeWithNewBranch(AbstractBuild build, Launcher launcher,
+			BuildListener listener, String repositoryURL, String branch,
+			String changeset, String user)
+			throws IOException, InterruptedException {
+		// listener.getLogger().println("URL: " + repositoryURL);
+		// listener.getLogger().println("branch: " + branch);
+		// listener.getLogger().println("changeset: " + changeset);
+		// listener.getLogger().println("user: " + user);
+		
+		listener.getLogger().println("Merging branch \"" + branch + "\" by "
+				+ user + "...");
+		
+		ArgumentListBuilder cmd = createArgumentListBuilder(
+				build, launcher, listener);
+		cmd.add("pull");
+		cmd.add("--update");
+		cmd.add("-r");
+		cmd.add(changeset);
+		cmd.add(repositoryURL);
+		
+		listener.getLogger().println("Merge command: " + cmd);
+		
+		int mergeExitCode;
+		try {
+			mergeExitCode = launcher.launch().cmds(cmd)
+					.pwd(build.getWorkspace()).join();
+		} catch(IOException e) {
+			String message = e.getMessage();
+			if (message != null
+					&& message.startsWith("Cannot run program")
+					&& message.endsWith("No such file or directory")) {
+				listener.error("Failed to merge " + repositoryURL
+						+ " because hg could not be found;"
+						+ " check that you've properly configured your"
+						+ " Mercurial installation");
+			} else {
+				e.printStackTrace(listener.error(
+						"Failed to merge repository"));
+			}
+			throw new AbortException("Failed to merge repository");
+		}
+		if(mergeExitCode!=0) {
+			listener.error("Failed to merge repository");
+			throw new AbortException("Failed to merge repository");
+		} else {
+			listener.getLogger().println("Successfully merged "
+					+ repositoryURL);
+		}
+	}
+	
+	/**
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 * @return noop Environment class
+	 */
+	@Override
+	public Environment setUp(AbstractBuild build, Launcher launcher,
+			BuildListener listener) throws IOException, InterruptedException {
+		
+		doTestStuff(build, launcher, listener);
+		
+		pullFromCT(build, launcher, listener);
+		
+		Map<String,String> vars = build.getBuildVariables();
+		String repositoryURL = vars.get("user_repository_url").toString();
+		String branch = vars.get("user_branch").toString();
+		String changeset = vars.get("user_changeset").toString();
+		String user = vars.get("user_name").toString();
+//		test build URL: sben.dk:8081/job/Demo job/buildWithParameters?user_name=mig&user_changeset=1234&user_branch=b&user_repository_url=file:///home/nogen/hej
+		mergeWithNewBranch(build, launcher, listener, repositoryURL, branch,
+				changeset, user);
+		
 		return new NoopEnv();
+		
+		PRTECO
 	}
 	
 	/**
@@ -141,8 +231,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public void preCheckout(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		//PrintStream log = listener.getLogger();
-		
 		listener.getLogger().println("Pre-checkout!!!");
 	}
 	
