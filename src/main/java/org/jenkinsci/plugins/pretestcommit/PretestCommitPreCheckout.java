@@ -220,7 +220,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		
 		return new NoopEnv();
 		
-		PRTECO
+//		PRTECO
 	}
 	
 	/**
