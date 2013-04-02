@@ -1,0 +1,5 @@
+[paths]
+default=/home/andreas/documents/diku/development_studio/tmp/hg_pull_repo/
+
+[hooks]
+changegroup = python:.hg/hg_change_group_hook.py:run
