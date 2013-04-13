@@ -15,6 +15,7 @@ import hudson.tasks.BuildTrigger;
 import hudson.tasks.BuildStep;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import hudson.tasks.BuildStepMonitor;
 import hudson.model.*;
 import hudson.plugins.mercurial.HgExe;
@@ -36,7 +37,7 @@ import java.io.BufferedReader;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class PretestCommitPostCheckout extends Publisher {
+public class PretestCommitPostCheckout extends Recorder {
 
 	@DataBoundConstructor
 	public PretestCommitPostCheckout() {
@@ -89,7 +90,7 @@ public class PretestCommitPostCheckout extends Publisher {
 		EnvVars env = build.getEnvironment(listener);
 
 		//Why not do it like the mercurial plugin? ;)
-		ArgumentListBuilder cmd = findHgExe(scm, node, listener, false);
+		ArgumentListBuilder cmd = findHgExe(scm, node, listener, true);
 		
 		//This is also a possibility
 		//new HgExe(scm,launcher,build.getBuiltOn(),listener,env);
