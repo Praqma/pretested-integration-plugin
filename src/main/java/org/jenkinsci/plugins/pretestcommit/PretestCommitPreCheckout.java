@@ -238,13 +238,24 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 //		PRTECO
 	}
 	
+	/**
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 */
+	@Override
+	public void preCheckout(AbstractBuild build, Launcher launcher,
+			BuildListener listener) throws IOException, InterruptedException {
+		listener.getLogger().println("Pre-checkout!!!");
+	}
+	/*
 	@Extension
 	public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
 		public String getDisplayName() {
 			return "Run pretest-commit stuff before SCM runs";
 		}
 	}
-	
+	*/
 	class NoopEnv extends Environment {
 	}
 }

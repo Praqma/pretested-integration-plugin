@@ -37,7 +37,7 @@ import java.io.BufferedReader;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class PretestCommitPostCheckout extends Recorder {
+public class PretestCommitPostCheckout extends Publisher {
 
 	@DataBoundConstructor
 	public PretestCommitPostCheckout() {
