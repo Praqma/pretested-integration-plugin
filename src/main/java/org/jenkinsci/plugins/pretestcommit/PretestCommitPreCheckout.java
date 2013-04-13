@@ -89,62 +89,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		return cmd;
 	}
 	
-	private void pullFromCT(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
-		
-		ArgumentListBuilder cmd = createArgumentListBuilder(
-				build, launcher, listener);
-		
-		String source = build.getBuildVariables().get("branch").toString();
-		//Use args.add(String a) to add an argument/flag just as you would an
-		// ordinary flag
-		//e.g. to do "hg pull" you'd use args.add("pull")
-		cmd.add("pull");
-		cmd.add("--update");
-		cmd.add(build.getBuildVariables().get("branch"));
-
-		//Finally use hg.run(args).join() to run the command on the system
-		int cloneExitCode;
-		try {
-			//cloneExitCode = hg.run(args).join();\
-			cloneExitCode = launcher.launch().cmds(cmd)
-					.pwd(build.getWorkspace()).join();
-		} catch(IOException e) {
-			String message = e.getMessage();
-			if (message != null
-					&& message.startsWith("Cannot run program")
-					&& message.endsWith("No such file or directory")) {
-				listener.error("Failed to clone " + source
-						+ " because hg could not be found;"
-						+ " check that you've properly configured your"
-						+ " Mercurial installation");
-			} else {
-				e.printStackTrace(listener.error(
-						"Failed to clone repository"));
-			}
-			throw new AbortException("Failed to clone repository");
-		}
-		if(cloneExitCode!=0) {
-			listener.error("Failed to clone repository");
-			throw new AbortException("Failed to clone repository");
-		} else {
-			listener.getLogger().println("Successfully pulled " + source);
-		}
-	}
-	
-	void doTestStuff(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
-		listener.getLogger().println("Setup!!!");
-		listener.getLogger().println("Workspace is here: "
-				+ build.getWorkspace());
-		
-		FilePath fp = build.getWorkspace().child("pretest_stuff_was_here");
-		listener.getLogger().println("Writing file here: " + fp);
-		OutputStream os = fp.write();
-		os.write(0);
-		os.close();
-	}
-	
 	void mergeWithNewBranch(AbstractBuild build, Launcher launcher,
 			BuildListener listener, String repositoryURL, String branch,
 			String changeset, String user)
@@ -204,10 +148,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		
-		doTestStuff(build, launcher, listener);
-		
-		pullFromCT(build, launcher, listener);
 		
 		Map<String,String> vars = build.getBuildVariables();
 		String repositoryURL = vars.get("user_repository_url").toString();
