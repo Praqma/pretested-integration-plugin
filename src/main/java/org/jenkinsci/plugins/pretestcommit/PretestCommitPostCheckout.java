@@ -33,6 +33,7 @@ import java.io.PrintStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Dictionary;
 import java.io.BufferedReader;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -47,7 +48,7 @@ public class PretestCommitPostCheckout extends Publisher {
 	public boolean needsToRunAfterFinalized() {
 		return true;
 	}
-
+	
 	/**
 	 * Finds the hg executable on the system. This method is  taken from MercurialSCM where it is private
 	 * @param node
@@ -110,45 +111,38 @@ public class PretestCommitPostCheckout extends Publisher {
 		ArgumentListBuilder cmd = createArgumentListBuilder(
 				build, launcher, listener);
 		
-		String source = build.getBuildVariables().get("branch").toString();
-		//Use args.add(String a) to add an argument/flag just as you would an
-		// ordinary flag
-		//e.g. to do "hg pull" you'd use args.add("pull")
-		cmd.add("push");
-		//cmd.add("--update");
-		//cmd.add(build.getBuildVariables().get("branch"));
-
-		//Finally use hg.run(args).join() to run the command on the system
-		int pushExitCode;
+		Dictionary<String, String> newCommitInfo = HgLog.getNewestCommitInfo(
+				build, launcher, listener);
+		String sourceBranch = newCommitInfo.get("branch");
+		listener.getLogger().println("[prteco] commit is on this branch: "
+				+ sourceBranch);
+		
+		HgLog.runScmCommand(build, launcher, listener,
+				new String[]{"push", "--branch", sourceBranch});
+	}
+	
+	private boolean getBuildSuccessStatus(AbstractBuild build,
+			Launcher launcher, BuildListener listener) {
+		boolean success = true;
 		try {
-			//cloneExitCode = hg.run(args).join();\
-			pushExitCode = launcher.launch().cmds(cmd)
-					.pwd(build.getWorkspace()).join();
-		} catch(IOException e) {
-			String message = e.getMessage();
-			listener.getLogger().println("Failed to push workspace to company truth -- IOException");
-			/*
-			if (message != null
-					&& message.startsWith("Cannot run program")
-					&& message.endsWith("No such file or directory")) {
-				listener.error("Failed to clone " + source
-						+ " because hg could not be found;"
-						+ " check that you've properly configured your"
-						+ " Mercurial installation");
-			} else {
-				e.printStackTrace(listener.error(
-						"Failed to clone repository"));
+			BufferedReader br = new BufferedReader(build.getLogReader());
+			while(success) {
+				String line = br.readLine();
+				if(line == null) {
+					break;
+				}
+				if(line.startsWith("Build step '")
+						&& line.endsWith("' marked build as failure")) {
+							success = false;
+					break;
+				}
 			}
-			*/
-			throw new AbortException("Failed to push workspace to company truth");//"Failed to clone repository");
+		} catch(IOException e) {
+			listener.getLogger().println(
+					"[prteco] Could not read log. Assuming build failure.");
+			success = false;
 		}
-		if(pushExitCode!=0) {
-			listener.error("Failed to push workspace to company truth, "+pushExitCode);
-			listener.getLogger().println("Failed to push workspace to company truth");
-			throw new AbortException("Failed to push workspace to company truth");
-		} else {
-			listener.getLogger().println("Successfully pushed workspace to company truth");
-		}
+		return success;
 	}
 	
 	/**
@@ -163,26 +157,17 @@ public class PretestCommitPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		BufferedReader br = new BufferedReader(build.getLogReader());
-		boolean success = true;
-		while (success) {
-			String line = br.readLine();
-			if (line == null) {
-				break;
-			}
-			if (line.startsWith("Build step '")
-					&& line.endsWith("' marked build as failure")) {
-				success = false;
-				break;
-			}
-		}
-		listener.getLogger().println("Post build status HESTEHEST: "+success);
-		if (success) {
-			listener.getLogger().println("Pushing resulting workspace to CT...");
+		boolean status = getBuildSuccessStatus(build, launcher, listener);
+		listener.getLogger().println("[prteco] Post build status: " + status);
+		
+		if(status) {
+			listener.getLogger().println(
+					"[prteco] Pushing resulting workspace to CT...");
 			pushToCT(build, launcher, listener);
-			listener.getLogger().println("...done!");
+			listener.getLogger().println("[prteco] ...done!");
 		} else {
-			listener.getLogger().println("LULWHATPONY");
+			listener.getLogger().println(
+					"[prteco] Build error. Not pushing to CT");
 		}
 		return true;
 	}

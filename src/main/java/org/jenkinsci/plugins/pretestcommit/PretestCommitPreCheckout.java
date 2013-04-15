@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class PretestCommitPreCheckout extends BuildWrapper {
@@ -94,6 +93,21 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		return cmd;
 	}
 	
+	private String getScmRepositoryURL(AbstractBuild build, Launcher launcher,
+			BuildListener listener) throws AbortException {
+		//Setup variables to find our executable
+		AbstractProject<?,?> project = build.getProject();
+		//We need to check this cast..
+		MercurialSCM scm = null;
+		try {
+			scm = (MercurialSCM) project.getScm();
+		} catch(ClassCastException e) {
+			listener.error("The chosen SCM is not Mercurial!");
+			throw new AbortException("The chosen SCM is not Mercurial!");
+		}
+		return scm.getSource();
+	}
+	
 	void mergeWithNewBranch(AbstractBuild build, Launcher launcher,
 			BuildListener listener, String repositoryURL, String branch,
 			String changeset, String user)
@@ -102,9 +116,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		// listener.getLogger().println("branch: " + branch);
 		// listener.getLogger().println("changeset: " + changeset);
 		// listener.getLogger().println("user: " + user);
-		
-		listener.getLogger().println("Merging branch \"" + branch + "\" by "
-				+ user + "...");
 		
 		ArgumentListBuilder cmd = createArgumentListBuilder(
 				build, launcher, listener);
@@ -154,7 +165,25 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		
-		ArgumentListBuilder cmd = createArgumentListBuilder(
+		/*ArgumentListBuilder cmd = createArgumentListBuilder(
+				build, launcher, listener);
+		cmd.add("pull");
+		int updateExitCode;
+		try {
+			updateExitCode = launcher.launch().cmds(cmd)
+					.pwd(build.getWorkspace()).join();
+		} catch(IOException e) {
+			throw new AbortException("Failed to update");
+		}
+		if(updateExitCode!=0) {
+			listener.error("Failed to update repository");
+			throw new AbortException("Failed to update repository");
+		} else {
+			listener.getLogger().println("Successfully updated");
+		}
+		
+		
+		/*ArgumentListBuilder* cmd = createArgumentListBuilder(
 				build, launcher, listener);
 		cmd.add("log");
 		cmd.add("-l");
@@ -191,7 +220,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 			listener.getLogger().println("Successfully got log");
 		}
 		
-		String branch = null;
+		String new_branch = null;
 		String changeset = null;
 		String user = null;
 		String message = null;
@@ -206,7 +235,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 			if(firstWord.equals("changeset:")) {
 				changeset = restOfLine;
 			} else if(firstWord.equals("branch:")) {
-				branch = restOfLine;
+				new_branch = restOfLine;
 			} else if(firstWord.equals("user:")) {
 				user = restOfLine;
 			} else if(firstWord.equals("date:")) {
@@ -217,7 +246,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		}
 		
 		listener.getLogger().println("changeset: " + changeset);
-		listener.getLogger().println("branch: " + branch);
+		listener.getLogger().println("branch: " + new_branch);
 		listener.getLogger().println("user: " + user);
 		listener.getLogger().println("date: " + date);
 		listener.getLogger().println("message: " + message);
@@ -230,12 +259,13 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		
 		
 //		test build URL: sben.dk:8081/job/Demo job/buildWithParameters?user_name=mig&user_changeset=1234&user_branch=b&user_repository_url=file:///home/nogen/hej
-//		mergeWithNewBranch(build, launcher, listener, repositoryURL, branch,
-//				changeset, user);//TODO find repositoryURL
-		
+		//mergeWithNewBranch(build, launcher, listener, repositoryURL, branch,
+		//		changeset, user);//TODO
+		*/
 		return new NoopEnv();
 		
 //		PRTECO
+		
 	}
 	
 	/**
@@ -248,14 +278,14 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 			BuildListener listener) throws IOException, InterruptedException {
 		listener.getLogger().println("Pre-checkout!!!");
 	}
-	/*
+	
 	@Extension
 	public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
 		public String getDisplayName() {
 			return "Run pretest-commit stuff before SCM runs";
 		}
 	}
-	*/
+	
 	class NoopEnv extends Environment {
 	}
 }
