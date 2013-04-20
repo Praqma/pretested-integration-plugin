@@ -16,7 +16,7 @@ public class CommitQueue {
 	Semaphore semaphore;
 	
 	private CommitQueue() {
-	semaphore = new Semaphore(1, true);
+		semaphore = new Semaphore(1, true);
 	}
 	
 	public static CommitQueue getInstance() {
@@ -36,5 +36,9 @@ public class CommitQueue {
 	
 	public void release() {
 		semaphore.release();
+	}
+
+	public boolean available() {
+		return semaphore.availablePermits() > 0;
 	}
 }
