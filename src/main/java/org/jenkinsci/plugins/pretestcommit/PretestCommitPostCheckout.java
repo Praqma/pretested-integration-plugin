@@ -36,10 +36,14 @@ import java.util.List;
 import java.util.Dictionary;
 import java.io.BufferedReader;
 
+import org.jenkinsci.plugins.pretestcommit.CommitQueue;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class PretestCommitPostCheckout extends Publisher {
 
+	private boolean hasQueue;
+	
 	@DataBoundConstructor
 	public PretestCommitPostCheckout() {
 	}
@@ -157,6 +161,33 @@ public class PretestCommitPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		try {
+			return work(build, launcher, listener);
+		} catch(IOException e) {
+			if (hasQueue) {
+				CommitQueue.getInstance().release();
+			}
+			throw(e);
+			//return false;
+		} catch(InterruptedException e) {
+			if (hasQueue) {
+				CommitQueue.getInstance().release();
+			}
+			throw(e);
+			//return false;
+		} catch(Exception e) {
+			if (hasQueue) {
+				CommitQueue.getInstance().release();
+			}
+			e.printStackTrace();
+			return false;
+		}
+	}
+		
+	public boolean work(AbstractBuild build, Launcher launcher,
+			BuildListener listener) throws IOException, InterruptedException {
+		hasQueue = true;
+		BufferedReader br = new BufferedReader(build.getLogReader());
 		boolean status = getBuildSuccessStatus(build, launcher, listener);
 		listener.getLogger().println("[prteco] Post build status: " + status);
 		
@@ -169,6 +200,16 @@ public class PretestCommitPostCheckout extends Publisher {
 			listener.getLogger().println(
 					"[prteco] Build error. Not pushing to CT");
 		}
+		
+		listener.getLogger().println(
+				"Queue available pre release: " +
+				CommitQueue.getInstance().available());
+		CommitQueue.getInstance().release();
+		hasQueue = false;
+		listener.getLogger().println(
+				"Queue available post release: " +
+				CommitQueue.getInstance().available());
+
 		return true;
 	}
 	
