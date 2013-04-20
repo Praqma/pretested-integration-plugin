@@ -35,11 +35,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.jenkinsci.plugins.pretestcommit.CommitQueue;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class PretestCommitPreCheckout extends BuildWrapper {
 
+	private boolean hasQueue;
+	
 	@DataBoundConstructor
 	public PretestCommitPreCheckout() {
 	}
@@ -153,7 +156,36 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		try {
+			return performSetup(build, launcher, listener);
+		} catch(IOException e) {
+			if (hasQueue) {
+				CommitQueue.getInstance().release();
+			}	
+			throw(e);
+			//return new NoopEnv();
+		} catch(InterruptedException e) {
+			if (hasQueue) {
+				CommitQueue.getInstance().release();
+			}	
+			throw(e);
+			//return new NoopEnv();
+		} catch(Exception e) {
+			if (hasQueue) {
+				CommitQueue.getInstance().release();
+			}	
+			e.printStackTrace();
+			return new NoopEnv();
+		}
+	}
+	
+	public Environment performSetup(AbstractBuild build, Launcher launcher,
+			BuildListener listener) throws IOException, InterruptedException {
+
+		//Get unique access or go to queue
 		
+		CommitQueue.getInstance().enqueueAndWait();
+		hasQueue = true;
 		ArgumentListBuilder cmd = createArgumentListBuilder(
 				build, launcher, listener);
 		cmd.add("log");
@@ -248,14 +280,13 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 			BuildListener listener) throws IOException, InterruptedException {
 		listener.getLogger().println("Pre-checkout!!!");
 	}
-	/*
 	@Extension
 	public static final class DescriptorImpl extends Descriptor<BuildWrapper> {
 		public String getDisplayName() {
 			return "Run pretest-commit stuff before SCM runs";
 		}
 	}
-	*/
+
 	class NoopEnv extends Environment {
 	}
 }
