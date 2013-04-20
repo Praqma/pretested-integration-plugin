@@ -1,5 +1,2 @@
-[paths]
-default=C:\SDC\merc2
-
 [hooks]
-changegroup.bug_id_required = python:.hg/pytest.py:run
+changegroup = python:.hg/hg_change_group_hook.py:run
