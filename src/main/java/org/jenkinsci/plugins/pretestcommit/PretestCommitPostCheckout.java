@@ -120,7 +120,6 @@ public class PretestCommitPostCheckout extends Publisher {
 		String sourceBranch = newCommitInfo.get("branch");
 		listener.getLogger().println("[prteco] commit is on this branch: "
 				+ sourceBranch);
-		
 		HgLog.runScmCommand(build, launcher, listener,
 				new String[]{"push", "--branch", sourceBranch});
 	}
