@@ -69,9 +69,9 @@ public class HgUtils {
 		try {
 			scm = (MercurialSCM) project.getScm();
 		} catch(ClassCastException e) {
-			listener.error("[prteco] The chosen SCM is not Mercurial!");
+			PretestUtils.logError(listener, "The chosen SCM is not Mercurial!");
 			throw new AbortException(
-					"[prteco] The chosen SCM is not Mercurial!");
+					"The chosen SCM is not Mercurial!");
 		}
 		Node node = Computer.currentComputer().getNode();
 
@@ -115,20 +115,20 @@ public class HgUtils {
 			if(message != null
 					&& message.startsWith("Cannot run program")
 					&& message.endsWith("No such file or directory")) {
-				listener.error("[prteco] Failed to get hg command "
+				PretestUtils.logError(listener, "Failed to get hg command "
 						+ " because hg could not be found;"
 						+ " check that you've properly configured your"
 						+ " Mercurial installation");
 			} else {
 				e.printStackTrace(listener.error(
-						"[prteco] Failed to execute hg command"));
+						"Failed to execute hg command"));
 			}
-			throw new AbortException("[prteco] Failed to execute hg command");
+			throw new AbortException("Failed to execute hg command");
 		} catch(InterruptedException e) {
 			e.printStackTrace(listener.error(
-					"[prteco] Failed to execute hg command: Interrupted"));
+					"Failed to execute hg command: Interrupted"));
 			throw new AbortException(
-					"[prteco] Failed to execute hg command: Interrupted");
+					"Failed to execute hg command: Interrupted");
 		}
 		if(exitCode != 0) {
 			List<String> hgList = new ArrayList<String>();
@@ -142,15 +142,16 @@ public class HgUtils {
 				}
 			}catch(IOException e) 
 			{
-				listener.error("[prteco] An unexpected error occured when reading hg log");
+				PretestUtils.logError(listener, "An unexpected error occured when reading hg log");
 			}
 
 			if(lastLine.equals("no changes found")) 
 			{
-				listener.error("[prteco] no changes found when doing hg command: "+"\'"+cmdList.get(1)+"\'" );
+				PretestUtils.logError(listener, "No changes found when doing hg command: "+"\'"+cmdList.get(1)+"\'");
+				
 			}else
 			{
-				listener.error("[prteco] an unexpected hg log message occured, dumping log");
+				PretestUtils.logError(listener, "An unexpected hg log message occured, dumping log");
 				Iterator itr = hgList.iterator();
 				while(itr.hasNext()) 
 				{
@@ -159,10 +160,9 @@ public class HgUtils {
 				}
 			}	
 
-			throw new AbortException("[prteco] Failed to execute hg command");
+			throw new AbortException("Failed to execute hg command");
 		} else {
-			listener.getLogger().println(
-					"[prteco] Successfully executed hg command");
+			PretestUtils.logMessage(listener, "Successfully executed hg command");
 		}
 		
 		return stdout;
@@ -188,7 +188,7 @@ public class HgUtils {
 		while((line = logStdout.readLine()) != null) {
 			String firstWord = line.split("\\s+")[0];
 			String restOfLine = line.substring(firstWord.length()).trim();
-			//listener.getLogger().println("log line: start = " + firstWord
+			//PretestUtils.logMessage(listener,"log line: start = " + firstWord
 			//		+ ", rest = " + restOfLine);
 			if(firstWord.equals("changeset:")) {
 				info.put("changeset", restOfLine);
@@ -202,19 +202,19 @@ public class HgUtils {
 				info.put("message", restOfLine);
 			}
 		}
-		
-		listener.getLogger().println(
-				"[prteco] SCM log data:");
-		listener.getLogger().println(
-				"[prteco] \tchangeset: " + info.get("changeset"));
-		listener.getLogger().println(
-				"[prteco] \tbranch: " + info.get("branch"));
-		listener.getLogger().println(
-				"[prteco] \tuser: " + info.get("user"));
-		listener.getLogger().println(
-				"[prteco] \tdate: " + info.get("date"));
-		listener.getLogger().println(
-				"[prteco] \tmessage: " + info.get("message"));
+		 
+		PretestUtils.logMessage(listener,
+				"SCM log data:");
+		PretestUtils.logMessage(listener,
+				"\tchangeset: " + info.get("changeset"));
+		PretestUtils.logMessage(listener,
+				"\tbranch: " + info.get("branch"));
+		PretestUtils.logMessage(listener,
+				"\tuser: " + info.get("user"));
+		PretestUtils.logMessage(listener,
+				"\tdate: " + info.get("date"));
+		PretestUtils.logMessage(listener,
+				"\tmessage: " + info.get("message"));
 		
 		return info;
 	}

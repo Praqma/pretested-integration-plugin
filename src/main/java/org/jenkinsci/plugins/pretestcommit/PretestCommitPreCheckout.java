@@ -111,7 +111,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public void preCheckout(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		listener.getLogger().println("Pre-checkout!!!");
+		PretestUtils.logMessage(listener,"Pre-checkout!!!");
 	}
 	
 	@Override
