@@ -41,7 +41,9 @@ import org.jenkinsci.plugins.pretestcommit.CommitQueue;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class PretestCommitPostCheckout extends Publisher {
-
+	
+	private static final String DISPLAY_NAME = "Run pretest post-build step";
+	
 	private boolean hasQueue;
 	
 	@DataBoundConstructor
@@ -220,7 +222,7 @@ public class PretestCommitPostCheckout extends Publisher {
 	@Extension
 	public static final class DescriptorImpl extends Descriptor<Publisher> {
 		public String getDisplayName() {
-			return "Run pretest-commit stuff after everything and whatnut";
+			return DISPLAY_NAME;
 		}
 	}
 }

@@ -41,7 +41,6 @@ import javax.servlet.ServletException;
 
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Ini;
-import org.jenkinsci.plugins.pretestcommit.HelloWorldBuilder.DescriptorImpl;
 
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestcommit.CommitQueue;
@@ -51,6 +50,8 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 public class PretestCommitPreCheckout extends BuildWrapper {
+	
+	private static final String DISPLAY_NAME = "Use pretested commits";
 	
 	private final String stageRepositoryUrl;
 
@@ -341,7 +342,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	public static final class DescriptorImpl extends BuildWrapperDescriptor {
 		
 		public String getDisplayName() {
-			return "Use pretested commits";
+			return DISPLAY_NAME;
 		}
 		
 		/**
