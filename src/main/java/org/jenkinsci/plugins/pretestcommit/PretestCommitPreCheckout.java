@@ -49,6 +49,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+/**
+ *
+ */
 public class PretestCommitPreCheckout extends BuildWrapper {
 	
 	private static final String DISPLAY_NAME = "Use pretested commits";

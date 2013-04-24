@@ -40,6 +40,9 @@ import org.jenkinsci.plugins.pretestcommit.CommitQueue;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ *
+ */
 public class PretestCommitPostCheckout extends Publisher {
 	
 	private static final String DISPLAY_NAME = "Run pretest post-build step";
@@ -61,6 +64,8 @@ public class PretestCommitPostCheckout extends Publisher {
 	 * @param build
 	 * @param launcher
 	 * @param listener
+	 *
+	 * @return void	 
 	 */
 	private void pushToCT(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
@@ -76,6 +81,15 @@ public class PretestCommitPostCheckout extends Publisher {
 				new String[]{"push", "--branch", sourceBranch});
 	}
 	
+	/**
+	 * 
+	 * 
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 *
+	 * @return boolean	 
+	 */
 	private boolean getBuildSuccessStatus(AbstractBuild build,
 			Launcher launcher, BuildListener listener) {
 		boolean success = true;
@@ -107,7 +121,8 @@ public class PretestCommitPostCheckout extends Publisher {
 	 * @param build
 	 * @param launcher
 	 * @param listener
-	 * @return noop Environment class
+	 *
+	 * @return boolean
 	 */
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
@@ -135,6 +150,15 @@ public class PretestCommitPostCheckout extends Publisher {
 		}
 	}
 		
+	/**
+	 * 
+	 * 
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 *
+	 * @return boolean	 
+	 */
 	public boolean work(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		hasQueue = true;
