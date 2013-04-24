@@ -70,7 +70,7 @@ public class PretestCommitPostCheckout extends Publisher {
 		Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
 				build, launcher, listener);
 		String sourceBranch = newCommitInfo.get("branch");
-		listener.getLogger().println("[prteco] commit is on this branch: "
+		PretestUtils.logMessage(listener, "commit is on this branch: "
 				+ sourceBranch);
 		HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"push", "--branch", sourceBranch});
@@ -93,8 +93,8 @@ public class PretestCommitPostCheckout extends Publisher {
 				}
 			}
 		} catch(IOException e) {
-			listener.getLogger().println(
-					"[prteco] Could not read log. Assuming build failure.");
+			PretestUtils.logMessage(listener,
+					"Could not read log. Assuming build failure.");
 			success = false;
 		}
 		return success;
@@ -140,25 +140,22 @@ public class PretestCommitPostCheckout extends Publisher {
 		hasQueue = true;
 		BufferedReader br = new BufferedReader(build.getLogReader());
 		boolean status = getBuildSuccessStatus(build, launcher, listener);
-		listener.getLogger().println("[prteco] Post build status: " + status);
+		PretestUtils.logMessage(listener, "Post build status: " + status);
 		
 		if(status) {
-			listener.getLogger().println(
-					"[prteco] Pushing resulting workspace to CT...");
+			PretestUtils.logMessage(listener,
+					"Pushing resulting workspace to CT...");
 			pushToCT(build, launcher, listener);
-			listener.getLogger().println("[prteco] ...done!");
+			PretestUtils.logMessage(listener, "...done!");
 		} else {
-			listener.getLogger().println(
-					"[prteco] Build error. Not pushing to CT");
+			PretestUtils.logMessage(listener, "Build error. Not pushing to CT");
 		}
 		
-		listener.getLogger().println(
-				"Queue available pre release: " +
+		PretestUtils.logMessage(listener, "Queue available pre release: " +
 				CommitQueue.getInstance().available());
 		CommitQueue.getInstance().release();
 		hasQueue = false;
-		listener.getLogger().println(
-				"Queue available post release: " +
+		PretestUtils.logMessage(listener, "Queue available post release: " +
 				CommitQueue.getInstance().available());
 
 		return true;
