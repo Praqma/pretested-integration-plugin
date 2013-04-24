@@ -56,56 +56,6 @@ public class PretestCommitPostCheckout extends Publisher {
 	}
 	
 	/**
-	 * Finds the hg executable on the system. This method is  taken from MercurialSCM where it is private
-	 * @param node
-	 * @param listener
-	 * @param allowDebug
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	ArgumentListBuilder findHgExe(MercurialSCM scm, Node node, TaskListener listener, boolean allowDebug) throws IOException, InterruptedException {
-		for (MercurialInstallation inst : MercurialInstallation.allInstallations()) {
-			if (inst.getName().equals(scm.getInstallation())) {
-				// XXX what about forEnvironment?
-				String home = inst.getExecutable().replace("INSTALLATION", inst.forNode(node, listener).getHome());
-				ArgumentListBuilder b = new ArgumentListBuilder(home);
-				if (allowDebug && inst.getDebug()) {
-					b.add("--debug");
-				}
-				return b;
-			}
-		}
-		return new ArgumentListBuilder(scm.getDescriptor().getHgExe());
-	}
-
-	private ArgumentListBuilder createArgumentListBuilder(
-			AbstractBuild build, Launcher launcher, BuildListener listener)
-			throws IOException, InterruptedException {
-		//Setup variables to find our executable
-		AbstractProject<?,?> project = build.getProject();
-		//We need to check this cast..
-		MercurialSCM scm = null;
-		try {
-			scm = (MercurialSCM) project.getScm();
-		} catch(ClassCastException e) {
-			listener.error("The chosen SCM is not Mercurial!");
-			throw new AbortException("The chosen SCM is not Mercurial!");
-		}
-		Node node = Computer.currentComputer().getNode();
-
-		EnvVars env = build.getEnvironment(listener);
-
-		//Why not do it like the mercurial plugin? ;)
-		ArgumentListBuilder cmd = findHgExe(scm, node, listener, true);
-		
-		//This is also a possibility
-		//new HgExe(scm,launcher,build.getBuiltOn(),listener,env);
-		
-		return cmd;
-	}
-
-	/**
 	 * Pushing to Company Truth
 	 * 
 	 * @param build
@@ -114,15 +64,15 @@ public class PretestCommitPostCheckout extends Publisher {
 	 */
 	private void pushToCT(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		ArgumentListBuilder cmd = createArgumentListBuilder(
+		ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
 				build, launcher, listener);
 		
-		Dictionary<String, String> newCommitInfo = HgLog.getNewestCommitInfo(
+		Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
 				build, launcher, listener);
 		String sourceBranch = newCommitInfo.get("branch");
 		listener.getLogger().println("[prteco] commit is on this branch: "
 				+ sourceBranch);
-		HgLog.runScmCommand(build, launcher, listener,
+		HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"push", "--branch", sourceBranch});
 	}
 	
