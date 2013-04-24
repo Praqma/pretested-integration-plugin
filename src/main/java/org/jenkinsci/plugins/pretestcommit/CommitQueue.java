@@ -7,18 +7,25 @@ import java.io.OutputStream;
 import java.util.Queue;
 
 import java.util.concurrent.Semaphore;
-
-//Singleton Queue
+/**
+ * Singleton Queue
+ */
 public class CommitQueue {
 	
 	private static CommitQueue instance;
 	
 	Semaphore semaphore;
 	
+	/**
+	 *
+	 */	
 	private CommitQueue() {
 		semaphore = new Semaphore(1, true);
 	}
 	
+	/**
+	 *
+	 */	
 	public static CommitQueue getInstance() {
 		if(instance == null) {
 			instance = new CommitQueue();
@@ -34,10 +41,16 @@ public class CommitQueue {
 		semaphore.acquireUninterruptibly();
 	}
 	
+	/**
+	 *
+	 */	
 	public void release() {
 		semaphore.release();
 	}
 
+	/**
+	 *
+	 */	
 	public boolean available() {
 		return semaphore.availablePermits() > 0;
 	}
