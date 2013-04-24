@@ -40,7 +40,7 @@ import java.util.Iterator;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class HgLog {
+public class HgUtils {
 	
 	private static ArgumentListBuilder findHgExe(MercurialSCM scm, Node node,
 			TaskListener listener, boolean allowDebug) throws IOException,
@@ -59,7 +59,7 @@ public class HgLog {
 		return new ArgumentListBuilder(scm.getDescriptor().getHgExe());
 	}
 	
-	private static ArgumentListBuilder createArgumentListBuilder(
+	public static ArgumentListBuilder createArgumentListBuilder(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException {
 		//Setup variables to find our executable
@@ -99,7 +99,7 @@ public class HgLog {
 	
 	public static BufferedReader runScmCommand(AbstractBuild build,
 			Launcher launcher, BuildListener listener, ArgumentListBuilder cmd)
-			throws AbortException {
+			throws AbortException, IOException, InterruptedException {
 		BufferedReader stdout;
 		int exitCode;
 		List<String> cmdList = cmd.toList();
@@ -109,8 +109,7 @@ public class HgLog {
 			Proc proc = starter.start();
 			stdout = new BufferedReader(
 					new InputStreamReader(proc.getStdout()));
-			exitCode = starter.join();
-
+			exitCode = proc.join();
 		} catch(IOException e) {
 			String message = e.getMessage();
 			if(message != null
@@ -181,8 +180,8 @@ public class HgLog {
 		
 		runScmCommand(build, launcher, listener, new String[]{"pull"});
 		
-		BufferedReader logStdout = runScmCommand(build, launcher, listener,
-				new String[]{"log", "-l", "1"});
+		BufferedReader logStdout = runScmCommand(
+				build, launcher, listener, new String[]{"log", "-l", "1"});
 		
 		Dictionary<String, String> info = new Hashtable<String, String>();
 		String line;
