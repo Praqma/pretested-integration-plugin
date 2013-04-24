@@ -110,12 +110,6 @@ public class HgLog {
 			stdout = new BufferedReader(
 					new InputStreamReader(proc.getStdout()));
 			exitCode = starter.join();
-			if(cmdList.get(1).equals("push11"))
-			{
-				listener.error("attempt to get error: "+stdout.readLine());
-			}
-				//listener.error("1: "+cmdList.get(0)+"\n");
-				//listener.error("2: "+cmdList.get(1)+"\n");
 
 		} catch(IOException e) {
 			String message = e.getMessage();
@@ -146,7 +140,6 @@ public class HgLog {
 				{
 					hgList.add(line);
 					lastLine = line;
-					//listener.error("attempt to get error: "+line);
 				}
 			}catch(IOException e) 
 			{
@@ -157,13 +150,15 @@ public class HgLog {
 			{
 				listener.error("[prteco] no changes found when doing hg command: "+"\'"+cmdList.get(1)+"\'" );
 			}else
+			{
 				listener.error("[prteco] an unexpected hg log message occured, dumping log");
 				Iterator itr = hgList.iterator();
-				while(itr.hasNext()) {
+				while(itr.hasNext()) 
+				{
 					Object element = itr.next();
-					System.out.print(element);
+					listener.error("[prteco]"+element.toString());
 				}
-				
+			}	
 
 			throw new AbortException("[prteco] Failed to execute hg command");
 		} else {
