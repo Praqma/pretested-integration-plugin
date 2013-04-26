@@ -41,7 +41,7 @@ import org.jenkinsci.plugins.pretestcommit.CommitQueue;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- *
+ * A collection of funtions used post build.
  */
 public class PretestCommitPostCheckout extends Publisher {
 	
@@ -71,7 +71,7 @@ public class PretestCommitPostCheckout extends Publisher {
 			BuildListener listener) throws IOException, InterruptedException {
 		ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
 				build, launcher, listener);
-		
+		//get info regarding which branch that is going to be pushed to company truth	
 		Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
 				build, launcher, listener);
 		String sourceBranch = newCommitInfo.get("branch");
@@ -82,7 +82,7 @@ public class PretestCommitPostCheckout extends Publisher {
 	}
 	
 	/**
-	 * 
+	 * Determains the outcome of the build
 	 * 
 	 * @param build
 	 * @param launcher
@@ -151,7 +151,7 @@ public class PretestCommitPostCheckout extends Publisher {
 	}
 		
 	/**
-	 * 
+	 * Gets work from the queue
 	 * 
 	 * @param build
 	 * @param launcher
