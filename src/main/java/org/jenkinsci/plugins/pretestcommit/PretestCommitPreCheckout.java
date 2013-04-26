@@ -52,6 +52,7 @@ import org.kohsuke.stapler.StaplerRequest;
 public class PretestCommitPreCheckout extends BuildWrapper {
 	
 	private static final String DISPLAY_NAME = "Use pretested commits";
+	private static final String PLUGIN_NAME = "pretest-commit";
 	
 	private final String stageRepositoryUrl;
 
@@ -111,7 +112,13 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public void preCheckout(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		PretestUtils.logMessage(listener,"Pre-checkout!!!");
+		if(Hudson.getInstance().getPlugin(PLUGIN_NAME) != null) {
+			PretestUtils.logMessage(listener,"Pre-Checkout plugin version: "
+					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)
+					.getWrapper().getVersion());
+		}
+		PretestUtils.logMessage(listener, "No plugin found with name "
+				+ PLUGIN_NAME);
 	}
 	
 	@Override
