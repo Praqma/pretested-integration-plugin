@@ -40,8 +40,20 @@ import java.util.Iterator;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ *
+ */	
 public class HgUtils {
-	
+
+	/**
+	 * 
+	 * @param MercurialSCM
+	 * @param Node
+	 * @param listener
+	 * @param boolean
+	 *
+	 * @return ArgumentListBuilder	 
+	 */	
 	private static ArgumentListBuilder findHgExe(MercurialSCM scm, Node node,
 			TaskListener listener, boolean allowDebug) throws IOException,
 			InterruptedException {
@@ -59,6 +71,14 @@ public class HgUtils {
 		return new ArgumentListBuilder(scm.getDescriptor().getHgExe());
 	}
 	
+	/**
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return ArgumentListBuilder	 
+	 */	
 	public static ArgumentListBuilder createArgumentListBuilder(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException {
@@ -86,6 +106,15 @@ public class HgUtils {
 		return cmd;
 	}
 	
+	/**
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 * @param String[]
+	 *
+	 * @return BufferedReader	 
+	 */	
 	public static BufferedReader runScmCommand(AbstractBuild build,
 			Launcher launcher, BuildListener listener, String command[])
 			throws AbortException, IOException, InterruptedException {
@@ -97,6 +126,15 @@ public class HgUtils {
 		return runScmCommand(build, launcher, listener, cmd);
 	}
 	
+	/**
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 * @param ArgumentListBuilder
+	 *
+	 * @return BufferedReader	 
+	 */	
 	public static BufferedReader runScmCommand(AbstractBuild build,
 			Launcher launcher, BuildListener listener, ArgumentListBuilder cmd)
 			throws AbortException, IOException, InterruptedException {
@@ -173,7 +211,13 @@ public class HgUtils {
 	 * "date", "message". Each field will be null if the corresponding field is
 	 * not defined in the log. Specifically, "branch" will be null if the commit
 	 * is made on the default branch.
-	 */
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return Dictionary<String, String>	 
+	 */	
 	public static Dictionary<String, String> getNewestCommitInfo(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
