@@ -71,7 +71,8 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	}
 	
 	/**
-	 * Jenkins hook that fires after the workspace is initialised
+	 * Jenkins hook that fires after the workspace is initialized.
+	 *
 	 * @param build
 	 * @param launcher
 	 * @param listener
@@ -80,13 +81,20 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		// Get info about the newest commit and store it in the environment.
+		// This is used to determine the triggering build, even if newer commits
+		// are applied while this job is in the queue.
+		Environment environment = new PretestEnvironment();
+		environment.buildEnvVars(HgUtils.getNewestCommitInfo(
+				build, launcher, listener));
 		
-		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
+		// Wait in line until no other jobs are running.
 		CommitQueue.getInstance().enqueueAndWait();
 		hasQueue = true;
-		HgUtils.getNewestCommitInfo(build, launcher, listener);
 		
-		return new NoopEnv();
+		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
+		
+		return new environment;
 	}
 	
 	/**
@@ -295,5 +303,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	}
 	
 	class NoopEnv extends Environment {
+	}
+	class PretestEnvironment extends Environment {
 	}
 }
