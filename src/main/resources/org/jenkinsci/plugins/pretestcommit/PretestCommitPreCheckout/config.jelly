@@ -7,9 +7,6 @@ xmlns:f="/lib/form"> -->
 		<f:textbox />
 	</f:entry>
   <f:validateButton
-    title="${%Test repository}" progress="${%Testing...}"
-    method="testRepository" with="stageRepositoryUrl" />
-  <f:validateButton
-    title="${%Setup repository}" progress="${%Configuration...}"
+    title="${%Make/update repository}" progress="${%Configuration...}"
     method="updateRepository" with="stageRepositoryUrl,name" />
 </j:jelly>
