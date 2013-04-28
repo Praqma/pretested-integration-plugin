@@ -236,7 +236,7 @@ public class HgUtils {
 	 *
 	 * @return
 	 */	
-	public static Dictionary<String, String> getNewestCommitInfo(
+	public static Hashtable<String, String> getNewestCommitInfo(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
 		// Make sire we have the latest changes
@@ -246,7 +246,7 @@ public class HgUtils {
 				build, launcher, listener, new String[]{"log", "-l", "1"});
 		
 		// Read one line at a time and put the values into a dictionary
-		Dictionary<String, String> info = new Hashtable<String, String>();
+		Hashtable<String, String> info = new Hashtable<String, String>();
 		String line;
 		while((line = logStdout.readLine()) != null) {
 			String firstWord = line.split("\\s+")[0];
