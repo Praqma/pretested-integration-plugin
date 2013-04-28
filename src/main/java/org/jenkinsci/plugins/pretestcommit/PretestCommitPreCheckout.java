@@ -104,6 +104,12 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		
+		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
+		CommitQueue.getInstance().enqueueAndWait();
+		hasQueue = true;
+		HgUtils.getNewestCommitInfo(build, launcher, listener);
+		
 		return new NoopEnv();
 	}
 	
