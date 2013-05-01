@@ -240,19 +240,26 @@ public class HgUtils {
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
 		// Make sire we have the latest changes
-		runScmCommand(build, launcher, listener, new String[]{"pull"});
+		//runScmCommand(build, launcher, listener, new String[]{"pull",repositoryUrl});
 		// Get the first item in the log
 		BufferedReader logStdout = runScmCommand(
-				build, launcher, listener, new String[]{"log", "-l", "1"});
+				build, launcher, listener, new String[]{"log", "-r", "tip"});
 		
 		// Read one line at a time and put the values into a dictionary
 		Dictionary<String, String> info = new Hashtable<String, String>();
+		info.put("branch","default");
 		String line;
 		while((line = logStdout.readLine()) != null) {
 			String firstWord = line.split("\\s+")[0];
 			String restOfLine = line.substring(firstWord.length()).trim();
 			if(firstWord.equals("changeset:")) {
-				info.put("changeset", restOfLine);
+				String changeset;
+				if(restOfLine.contains(":")){
+					changeset = restOfLine.substring(restOfLine.indexOf(":")+1);
+				} else {
+					changeset = restOfLine;
+				}
+				info.put("changeset", changeset);
 			} else if(firstWord.equals("branch:")) {
 				info.put("branch", restOfLine);
 			} else if(firstWord.equals("user:")) {
