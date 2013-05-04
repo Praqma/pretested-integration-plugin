@@ -15,6 +15,7 @@ import hudson.util.FormValidation;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Dictionary;
 
 import net.sf.json.JSONObject;
 
@@ -61,13 +62,22 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	}
 	
 	void mergeWithNewBranch(AbstractBuild build, Launcher launcher,
-			BuildListener listener, String repositoryURL, String branch,
-			String changeset, String user)
+			BuildListener listener, String repositoryURL)
 			throws IOException, InterruptedException {
 		
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"pull", "--update", "-r", changeset,
-				repositoryURL});
+		PretestUtils.logMessage(listener, "Pulling changes from stage");
+		//First get the curent tip info
+		Dictionary<String, String> oldVars = HgUtils.getNewestCommitInfo(build, launcher, listener);
+		String oldTip = oldVars.get("changeset");
+		
+		try {
+			HgUtils.runScmCommand(build, launcher, listener, 
+					new String[]{"update","default"});
+			HgUtils.runScmCommand(build, launcher, listener,
+				new String[]{"pull", "--update", repositoryURL});
+		} catch(AbortException e){
+			System.out.print("Could not update workspace, uh oh!");
+		}
 	}
 	
 	/**
@@ -81,9 +91,10 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		
-		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
 		CommitQueue.getInstance().enqueueAndWait();
 		hasQueue = true;
+
+		mergeWithNewBranch(build,launcher, listener, stageRepositoryUrl);
 		HgUtils.getNewestCommitInfo(build, launcher, listener);
 		
 		return new NoopEnv();
@@ -221,7 +232,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		 */
 		public FormValidation doUpdateRepository(@QueryParameter("stageRepositoryUrl") final String repositoryUrl, 
 				@QueryParameter("name") final String name) {
-			System.out.println("Name of the task is: "+name);
 			boolean updateConfiguration = updateConfiguration(repositoryUrl);
 			if(updateConfiguration){
 				boolean updateHook = updateHook(repositoryUrl, name);

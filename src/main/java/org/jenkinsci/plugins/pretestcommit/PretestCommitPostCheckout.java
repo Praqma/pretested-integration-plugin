@@ -18,9 +18,6 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.BuildStepMonitor;
 import hudson.model.*;
-import hudson.plugins.mercurial.HgExe;
-import hudson.plugins.mercurial.MercurialInstallation;
-import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildTrigger;
@@ -181,6 +178,8 @@ public class PretestCommitPostCheckout extends Publisher {
 			pushToCT(build, launcher, listener);
 			PretestUtils.logMessage(listener, "...done!");
 		} else {
+			HgUtils.runScmCommand(build, launcher, listener, 
+					new String[]{"update","-C",oldTip});
 			PretestUtils.logMessage(listener, "Build error. Not pushing to CT");
 		}
 		
