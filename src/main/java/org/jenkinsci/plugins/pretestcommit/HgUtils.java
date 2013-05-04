@@ -236,7 +236,7 @@ public class HgUtils {
 	 *
 	 * @return
 	 */	
-	public static Dictionary<String, String> getNewestCommitInfo(
+	public static Hashtable<String, String> getNewestCommitInfo(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
 		// Make sire we have the latest changes
