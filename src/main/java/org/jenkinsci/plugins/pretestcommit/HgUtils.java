@@ -240,13 +240,14 @@ public class HgUtils {
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
 		// Make sire we have the latest changes
-		runScmCommand(build, launcher, listener, new String[]{"pull"});
+		//runScmCommand(build, launcher, listener, new String[]{"pull"});
 		// Get the first item in the log
 		BufferedReader logStdout = runScmCommand(
 				build, launcher, listener, new String[]{"log", "-l", "1"});
 		
 		// Read one line at a time and put the values into a dictionary
 		Dictionary<String, String> info = new Hashtable<String, String>();
+		info.put("branch", "default");
 		String line;
 		while((line = logStdout.readLine()) != null) {
 			String firstWord = line.split("\\s+")[0];

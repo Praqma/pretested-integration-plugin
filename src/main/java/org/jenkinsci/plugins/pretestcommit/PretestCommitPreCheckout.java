@@ -1,25 +1,50 @@
 package org.jenkinsci.plugins.pretestcommit;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Launcher.ProcStarter;
+import hudson.Proc;
 import hudson.model.BuildListener;
+import hudson.model.Environment;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Hudson;
-import hudson.plugins.mercurial.MercurialSCM;
+import hudson.model.Descriptor;
+import hudson.model.Cause.LegacyCodeCause;
+import hudson.model.Descriptor.FormException;
+import hudson.model.Computer;
+
+import hudson.model.*;
+import hudson.plugins.mercurial.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.tasks.BuildTrigger;
+import hudson.tasks.BuildStep;
+import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
+import hudson.FilePath;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+
+import org.ini4j.InvalidFileFormatException;
+import org.ini4j.Ini;
 
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pretestcommit.CommitQueue;
 
-import org.ini4j.Ini;
-import org.ini4j.InvalidFileFormatException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -66,12 +91,10 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 			throws IOException, InterruptedException {
 		
 		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"pull", "--update", "-r", changeset,
-				repositoryURL});
+				new String[]{"pull", "--update", repositoryURL});
 	}
 	
 	/**
-	 * Jenkins hook that fires after the workspace is initialised
 	 * @param build
 	 * @param launcher
 	 * @param listener
@@ -80,18 +103,10 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		
-		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
-		CommitQueue.getInstance().enqueueAndWait();
-		hasQueue = true;
-		HgUtils.getNewestCommitInfo(build, launcher, listener);
-		
 		return new NoopEnv();
 	}
 	
 	/**
-	 * Jenkins hook that fires before the SCM repository is checked out.
-	 * We don't use this yet
 	 * @param build
 	 * @param launcher
 	 * @param listener
@@ -99,7 +114,13 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	@Override
 	public void preCheckout(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		//This method is left intentionally blank
+		if(Hudson.getInstance().getPlugin(PLUGIN_NAME) != null) {
+			PretestUtils.logMessage(listener,"Pre-Checkout plugin version: "
+					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)
+					.getWrapper().getVersion());
+		}
+		PretestUtils.logMessage(listener, "No plugin found with name "
+				+ PLUGIN_NAME);
 	}
 	
 	@Override
@@ -215,6 +236,21 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		}
 		
 		/**
+		 * Performs a validation test whether the repository url is correctly 
+		 * initialised
+		 */
+		public FormValidation doTestRepository(
+				@QueryParameter("stageRepositoryUrl") final String repositoryUrl) 
+						throws IOException, ServletException {
+			boolean isValid = validateConfiguration(repositoryUrl);
+			if(isValid) {
+				return FormValidation.ok("The path contains a valid mercurial repository");
+			} else {
+				return FormValidation.error("The repository is not a mercurial repository");
+			}
+		}
+		
+		/**
 		 * Updates or creates the repository url to be functional
 		 * @param repositoryUrl
 		 * @return
@@ -233,56 +269,13 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		}
 		
 		/**
-		 * Performs a validation test whether the repository url is correctly 
-		 * initialised
-		 */
-		public FormValidation doCheckStageRepositoryUrl(
-				@QueryParameter("stageRepositoryUrl") final String repositoryUrl) {
-
-			String response = new String();
-			
-			//First we check whether a supported plugin is installed
-			String supportedPlugins[] = new String[]{"mercurial"};
-			
-			boolean noDependencies = true;
-			for (String plugin : supportedPlugins) {
-				if (Hudson.getInstance().getPlugin(plugin) != null) {
-					// use classes in the "javanet-uploader" plugin
-					noDependencies = false;
-				}
-			}
-
-			if(noDependencies){
-				response.concat("There are no supported SCM plugins installed.");
-				return FormValidation.error(response);
-			}
-			
-			//Then we check whether the SCM configured is supported, else we return an error
-			//Not done yet
-			
-			//Finally we check if the repository at the url is configured correctly
-			boolean isValid = validateConfiguration(repositoryUrl);
-			if(isValid) {
-				return FormValidation.ok("The path contains a valid mercurial repository");
-			} else if (repositoryUrl.startsWith("ssh://")){
-				//Check whether it starts with "ssh://" if it does simply say we do not know
-					response = response.concat("You have configured a remote repository.\n");
-					response = response.concat("We cannot tell whether the repository is configured correctly.\n");
-					response = response.concat("TODO: Test whether the repository is reachable? hg statuPrint out dynamic text giving the contents of the files to create");
-					return FormValidation.ok(response);
-			}
-			response = response.concat("The repository is not a mercurial repository.\n");
-			response = response.concat("Click the \"Make/Update repository\" button to create a repository at the specified path...");
-			return FormValidation.error(response);
-		}
-		
-		/**
-		 * Invoked when "save" is hit on the main configuration page. 
+		 * Invoked when "save" is hit. 
 		 */
 		
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject formData) 
 				throws FormException {
+			
 			save();
 			return super.configure(req,formData);
 		}
