@@ -182,22 +182,25 @@ public class HgUtils {
 			throw new AbortException(
 					"Failed to execute hg command: Interrupted");
 		}
+
+		List<String> hgList = new ArrayList<String>();
+		String lastLine = "";
+		if (!cmdList.get(0).equals("log") && !cmdList.get(1).equals("log")) //TODO cahnge this dirty hack!!
+		{
+		try {
+			String line;
+			while((line = stdout.readLine()) != null) 
+			{
+				hgList.add(line);
+				lastLine = line;
+			}
+		} catch(IOException e) {
+			PretestUtils.logError(listener, "An unexpected error occured"
+					+ " when reading hg log");
+		}
+		}	
 		if(exitCode != 0) {
 			// Program ran but failed. Read output to find out what happened.
-			List<String> hgList = new ArrayList<String>();
-			String lastLine = "";
-			try {
-				String line;
-				while((line = stdout.readLine()) != null) 
-				{
-					hgList.add(line);
-					lastLine = line;
-				}
-			} catch(IOException e) {
-				PretestUtils.logError(listener, "An unexpected error occured"
-						+ " when reading hg log");
-			}
-			
 			if(lastLine.equals("no changes found")) {
 				// This means that no error actually happened, but the command
 				// did nothing
@@ -219,6 +222,17 @@ public class HgUtils {
 		} else {
 			PretestUtils.logMessage(listener,
 					"Successfully executed hg command");
+			if (true)
+			{
+				PretestUtils.logMessage(listener,
+					"Debugging, dumping log");
+
+				Iterator itr = hgList.iterator();
+				while(itr.hasNext()) {
+					Object element = itr.next();
+					PretestUtils.logMessage(listener, element.toString());
+				}
+			}
 		}
 		
 		return stdout;
@@ -236,7 +250,7 @@ public class HgUtils {
 	 *
 	 * @return
 	 */	
-	public static Dictionary<String, String> getNewestCommitInfo(
+	public static Hashtable<String, String> getNewestCommitInfo(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
 		// Make sire we have the latest changes
@@ -246,7 +260,7 @@ public class HgUtils {
 				build, launcher, listener, new String[]{"log", "-r", "tip"});
 		
 		// Read one line at a time and put the values into a dictionary
-		Dictionary<String, String> info = new Hashtable<String, String>();
+		Hashtable<String, String> info = new Hashtable<String, String>();
 		info.put("branch","default");
 		String line;
 		while((line = logStdout.readLine()) != null) {
