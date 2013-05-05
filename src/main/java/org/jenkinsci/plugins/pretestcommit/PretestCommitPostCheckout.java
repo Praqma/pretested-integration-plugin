@@ -75,14 +75,14 @@ public class PretestCommitPostCheckout extends Publisher {
 		PretestUtils.logMessage(listener, "commit is on this branch: "
 				+ sourceBranch);
 
+		//HgUtils.runScmCommand(build, launcher, listener,
+		//		new String[]{"up", "default"});
+		//HgUtils.runScmCommand(build, launcher, listener,
+		//		new String[]{"merge", sourceBranch});
+		//HgUtils.runScmCommand(build, launcher, listener,
+		//		new String[]{"commit", "-m", "dummy commit"});
 		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"up", "default"});
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"merge", sourceBranch});
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"commit", "-m", "dummy commit"});
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"push", "--branch", "default"});
+				new String[]{"push", });//"--branch", "default"});
 		//HgUtils.runScmCommand(build, launcher, listener,
 		//		new String[]{"push", "--branch", sourceBranch});
 	}
@@ -178,8 +178,8 @@ public class PretestCommitPostCheckout extends Publisher {
 			pushToCT(build, launcher, listener);
 			PretestUtils.logMessage(listener, "...done!");
 		} else {
-			HgUtils.runScmCommand(build, launcher, listener, 
-					new String[]{"update","-C",oldTip});
+			//HgUtils.runScmCommand(build, launcher, listener, 
+					//new String[]{"update","-C",oldTip});
 			PretestUtils.logMessage(listener, "Build error. Not pushing to CT");
 		}
 		
