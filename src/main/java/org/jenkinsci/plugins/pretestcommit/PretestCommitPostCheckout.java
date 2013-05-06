@@ -85,6 +85,10 @@ public class PretestCommitPostCheckout extends Publisher {
 				new String[]{"push", });//"--branch", "default"});
 		//HgUtils.runScmCommand(build, launcher, listener,
 		//		new String[]{"push", "--branch", sourceBranch});
+
+		PretestUtils.logMessage(listener, "Getting oldest tag: ");
+		//HgUtils.getOldestCommitInfo(build, launcher, listener);
+		
 	}
 	
 	/**

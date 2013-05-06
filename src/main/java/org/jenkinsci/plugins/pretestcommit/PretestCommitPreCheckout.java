@@ -109,7 +109,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		// are applied while this job is in the queue.
 		Environment environment = new PretestEnvironment();
 		environment.buildEnvVars(HgUtils.getNewestCommitInfo(
-				build, launcher, listener));
+				build, launcher, listener)); //TODO this should be removed
 		
 		// Wait in line until no other jobs are running.
 		CommitQueue.getInstance().enqueueAndWait();
@@ -120,6 +120,8 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		
 		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
 		
+		//Environment environment2 = build.getEnvironment(null);
+		//environment2.put("stageRepositoryUrl",getStageRepositoryUrl());
 
 		return environment;
 	}
