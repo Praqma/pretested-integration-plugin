@@ -38,56 +38,101 @@ public abstract class PretestCommitTestCase extends HudsonTestCase {
 			.getRootUrl()
 			.replaceAll("^http://|/$", "");*/
 	
-	protected TaskListener listener;
-	protected Launcher launcher;
+	public TaskListener listener;
+	public Launcher launcher;
 	
-	@Before
-	public File setup() throws Exception, IOException {
-		//Create the project
-
-		listener = new StreamTaskListener(System.out, Charset.defaultCharset());
-        launcher = Hudson.getInstance().createLauncher(listener);
-        
-		FreeStyleProject project = createFreeStyleProject();
-		File tmp = createTempDirectory();
-		String local = tmp.getPath() + "/local";
-		String stage = tmp.getPath() + "/stage";
-		String remote = tmp.getPath() + "/remote";
-		
-		
-		//Initialise repositories
+	public void setupRemoteRepository(String remote) throws Exception, IOException {
 		hg("init",remote);
+	}
+	
+	public void setupStageRepository(String stage, String remote, boolean doConfigure) throws Exception, IOException {
 		hg("clone",remote,stage);
-		hg("clone",remote,local);
-		
-		//Local repo pushes to stage
-		File localHgrc = new File(local,".hg/hgrc");
-		FileWriter localFw = new FileWriter(localHgrc);
-		localFw.write("[paths]\r\ndefault="+remote+"\r\ndefault-push="+stage);
-		localFw.close();
-		
+		if(doConfigure)
+			configureStageRepository(stage);
+	}
+	
+	public void configureStageRepository(String stage) throws Exception, IOException {
 		//Correctly setup the stage repository so that it notifies jenkins
 		File stageHg = new File(stage,".hg");
 		File stageHgrc = new File(stageHg,"hgrc");
 		FileWriter stageFw = new FileWriter(stageHgrc);
 		stageFw.write("[default]\r\n\tchangegroup=\"hg_changegroup_hook.py\"");
 		stageFw.close();
-		writeChangegroupHook(stageHg);
+		writeChangegroupHook(stageHg);		
+	}
+	
+	public void setupLocalRepository(String local, 
+			String stage, 
+			String remote, 
+			boolean doConfigure) 
+					throws Exception, IOException {
+		hg("clone",remote,local);
+		if(doConfigure)
+			configureLocalRepository(local, stage, remote);
+	}
+	
+	public void configureLocalRepository(String local, 
+			String stage, 
+			String remote) 
+					throws IOException {
+		//Local repo pushes to stage
+		File localHgrc = new File(local,".hg/hgrc");
+		FileWriter localFw = new FileWriter(localHgrc);
+		localFw.write("[paths]\r\ndefault="+remote+"\r\ndefault-push="+stage);
+		localFw.close();
+				
+	}
+	
+	public File setup() throws Exception, IOException {
+		return setup(false);
+	}
+	
+	public File setup(boolean setupRepositories) throws Exception, IOException {
 		
+		return setup(setupRepositories, false);
+		
+	}
+	
+	@Before
+	public File setup(boolean setupRepositories, boolean doConfigure) throws Exception, IOException {
+		//Create the project
+		listener = new StreamTaskListener(System.out, Charset.defaultCharset());
+        launcher = Hudson.getInstance().createLauncher(listener);
+		File tmp = createTempDirectory();
+		
+        if(setupRepositories)
+        	return setupRepositories(tmp, doConfigure);
+        return tmp;
+	}
+	
+	public File setupRepositories(File path) throws Exception {
+		return setupRepositories(path, true);
+	}
+	
+	public File setupRepositories(File path, boolean doConfigure) throws Exception{
+		project = createFreeStyleProject();
+		String local = path.getPath() + "/local";
+		String stage = path.getPath() + "/stage";
+		String remote = path.getPath() + "/remote";
+		
+		//Initialise repositories
+		setupRemoteRepository(remote);
+		setupStageRepository(stage, remote, doConfigure);
+		setupLocalRepository(local, stage, remote, doConfigure);
 		
 		//Setup the correct scm
 		SCM scm = new MercurialSCM("default",remote,"default","","", null, false, true);
 		project.setScm(scm);
 		
 		//Make sure the buildwrapper is added to the project and configured correctly
-		BuildWrapper buildWrapper = new PretestCommitPreCheckout(stage);
+		buildWrapper = new PretestCommitPreCheckout(stage);
 		//Ensure that it is added per default
 		project.getBuildWrappersList().add(buildWrapper);
 
 		//Make sure the publisher is added to the project
 		Publisher notifier = new PretestCommitPostCheckout();
 		project.getPublishersList().add(notifier);
-		return tmp;
+		return path;
 		
 		//Configure the project
 	}
@@ -95,6 +140,7 @@ public abstract class PretestCommitTestCase extends HudsonTestCase {
 	//Thank you MercurialSCM
 	static ProcStarter launch(Launcher launcher) {
 		return launcher.launch().envs(Collections.singletonMap("HGPLAIN", "true"));
+		
 	}
 
     protected final void hg(String... args) throws Exception {
@@ -184,8 +230,8 @@ public abstract class PretestCommitTestCase extends HudsonTestCase {
 		    throws IOException
 		{
 		    final File temp;
-
-		    temp = File.createTempFile("prteco-", Long.toString(System.nanoTime()));
+		   
+		    temp = File.createTempFile("prteco-"+ Long.toString(System.nanoTime()),"");
 		    
 		    if(!(temp.delete()))
 		    {
