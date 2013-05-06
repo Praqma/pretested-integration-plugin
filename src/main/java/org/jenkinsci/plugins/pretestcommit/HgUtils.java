@@ -40,6 +40,8 @@ import java.util.Iterator;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import org.jenkinsci.plugins.pretestcommit.PretestUtils;
+
 /**
  * Collection of static methods for interacting with Mercurial.
  * TODO: All functionality in this class must be moved once we finish our design
@@ -241,7 +243,7 @@ public class HgUtils {
 	/**
 	 * Returns a dictionary with the fields "changeset", "branch", "user",
 	 * "date", "message". Each field will be null if the corresponding field is
-	 * not defined in the log. Specifically, "branch" will be null if the commit
+	 * not defined in the log. Except, "branch" will be default if the commit
 	 * is made on the default branch.
 	 * 
 	 * @param AbstractBuild
@@ -301,5 +303,146 @@ public class HgUtils {
 		
 		return info;
 	}
-	
+
+	/**
+	 * Returns the oldest build tag made by Jenkins hook. 
+	 * If no tags is found, null is returned
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return
+	 */	
+	public static String getChangesetByOldestTag(
+			AbstractBuild build, Launcher launcher, BuildListener listener)
+			throws IOException, InterruptedException, AbortException {
+		
+		//BuildWrapper bArray[] = build.getBuildWrapperLists();
+
+		String repoURL = build.getEnvironment().get("stageRepositoryUrl");
+		PretestUtils.logMessage(listener, "REPOURL: "+repoURL+"\n");
+
+		BufferedReader tagsStdout = runScmCommand(
+			build, launcher, listener, new String[]{"tags","-v"});
+
+		int lowestRev = Integer.MAX_VALUE;
+		String lowestRevHash = null; 
+		String line;
+		while((line = tagsStdout.readLine()) != null) 
+		{
+			if (line.startsWith("[prteco]")&& line.endsWith("local"))
+			{
+				String lineTokens[] = line.split("\\s+");
+				if (lineTokens.length < 2) {
+					continue;
+				}
+				String revAndHash = lineTokens[lineTokens.length-2];
+				int rev;
+				String revHash;
+				try {
+					rev = Integer.parseInt(revAndHash.split(":")[0]);
+					revHash = revAndHash.split(":")[1];
+				} catch (NumberFormatException e) {
+					continue;
+				}catch (IndexOutOfBoundsException e){
+					continue;
+				}
+				if (rev<lowestRev)
+				{
+					lowestRevHash = revHash; 
+					lowestRev = rev; 
+				}
+			}
+		}
+		return lowestRevHash;
+	}
+
+	/**
+	 * Returns a dictionary with the fields "changeset", "branch", "user",
+	 * "date", "message" for a given revision. Each field will be null if the corresponding field is
+	 * not defined in the log. Except, "branch" will be default if the commit
+	 * is made on the default branch.
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return
+	 */	
+	public static Hashtable<String, String> getCommitInfoByRev(
+			AbstractBuild build, Launcher launcher, BuildListener listener, String rev)
+			throws IOException, InterruptedException, AbortException {
+		
+		BufferedReader logStdout = runScmCommand(
+				build, launcher, listener, new String[]{"log", "--rev", rev});
+		
+		// Read one line at a time and put the values into a dictionary
+		Hashtable<String, String> info = new Hashtable<String, String>();
+		info.put("branch","default");
+		String line;
+		while((line = logStdout.readLine()) != null) {
+			String firstWord = line.split("\\s+")[0];
+			String restOfLine = line.substring(firstWord.length()).trim();
+			if(firstWord.equals("changeset:")) {
+				String changeset;
+				if(restOfLine.contains(":")){
+					changeset = restOfLine.substring(restOfLine.indexOf(":")+1);
+				} else {
+					changeset = restOfLine;
+				}
+				info.put("changeset", changeset);
+			} else if(firstWord.equals("branch:")) {
+				info.put("branch", restOfLine);
+			} else if(firstWord.equals("user:")) {
+				info.put("user", restOfLine);
+			} else if(firstWord.equals("date:")) {
+				info.put("date", restOfLine);
+			} else if(firstWord.equals("summary:")) {
+				info.put("message", restOfLine);
+			}
+		}
+		
+		// Dump it all to the log
+		PretestUtils.logMessage(listener,
+				"SCM log data:");
+		PretestUtils.logMessage(listener,
+				"\tchangeset: " + info.get("changeset"));
+		PretestUtils.logMessage(listener,
+				"\tbranch: " + info.get("branch"));
+		PretestUtils.logMessage(listener,
+				"\tuser: " + info.get("user"));
+		PretestUtils.logMessage(listener,
+				"\tdate: " + info.get("date"));
+		PretestUtils.logMessage(listener,
+				"\tmessage: " + info.get("message"));
+		
+		return info;
+	}
+	/**
+	 * Returns a dictionary with the fields "changeset", "branch", "user",
+	 * "date", "message" for a given revision. Each field will be null if the corresponding field is
+	 * not defined in the log. Except, "branch" will be default if the commit
+	 * is made on the default branch.
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return
+	 */	
+	public static Hashtable<String, String> getOldestCommitInfo(
+			AbstractBuild build, Launcher launcher, BuildListener listener)
+			throws IOException, InterruptedException, AbortException {
+		
+
+		String oldestChangeset = getChangesetByOldestTag(build, launcher, listener);
+
+		if (oldestChangeset == null){
+			PretestUtils.logError( listener, "No tag was found in repository" );
+			throw new AbortException();
+		}
+		return getCommitInfoByRev(build, launcher, listener,oldestChangeset);
+	}
+		
 }
