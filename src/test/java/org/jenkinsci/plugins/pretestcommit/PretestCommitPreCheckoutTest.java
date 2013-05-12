@@ -28,6 +28,23 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		
 	}
 	
+	public void testShouldGiveDotHgDirectory() throws Exception {
+		
+		//Given a local filepath
+		String relativePath = "some/local/directory";
+		String relativePathEndingWithSlash = relativePath + "/";
+		//When I try to get the configuration directory for the repository
+		//Then the path is 
+		//PretestCommitPreCheckout buildWrapper = new PretestCommitPreCheckout("");
+	
+		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		
+		//buildWrapper.getDescriptor();
+		
+		assertEquals(new File(relativePath + "/.hg"), descriptor.configurationDirectory(relativePath));
+		assertEquals(new File(relativePathEndingWithSlash + ".hg"), descriptor.configurationDirectory(relativePathEndingWithSlash));
+	}
+	/*
 	public void testShouldSetupDirectory() throws Exception {
 		
 		//Some initial setup
@@ -55,11 +72,11 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		assertTrue(setupResult);
 		//And the directory should still exist
 		assertTrue(tmp.exists());
-	}
+	}*/
 	
 	/**
 	 * Test if the a new repository is correctly initialised
-	 */
+	 *//*
 	public void testShouldNotValidateConfiguration() throws Exception{
 		
 		//Given an empty directory, e.g. no .hg/
@@ -82,7 +99,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		//And the changegroup hook does not exist
 		//Then the validation method should return false
 	}
-	
+	/*
 	public void testShouldConfigureStageRepository() throws Exception {
 		File tmp = setup();
 		//Given a valid hg directory
@@ -90,14 +107,18 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 			hg("init", path);
 			//When the doUpdateRepository method is invoked
 			PretestCommitPreCheckout buildWrapper = new PretestCommitPreCheckout(tmp.getAbsolutePath());
-			PretestCommitPreCheckout.DescriptorImpl descriptor = 
-					(PretestCommitPreCheckout.DescriptorImpl) buildWrapper.getDescriptor();
-			FormValidation response = descriptor.doUpdateRepository(tmp.getAbsolutePath(), "");
-			//Then a valid staging repository should be configured
+			PretestCommitPreCheckout.DescriptorImpl mockedDescriptor = mock(PretestCommitPreCheckout.DescriptorImpl.class);
 			
-			assertSame(response.kind,FormValidation.Kind.OK);
-			assertTrue(descriptor.validateConfiguration(path));
+			//		(PretestCommitPreCheckout.DescriptorImpl) buildWrapper.getDescriptor();
+			when(mockedDescriptor.getJenkinsRootUrl()).thenReturn("localhost:8080");
+			FormValidation response = mockedDescriptor.doUpdateRepository(tmp.getAbsolutePath(), "");
+			//Then a valid staging repository should be configured
+			assertEquals(mockedDescriptor.getJenkinsRootUrl(), "localhost:8080");
+			
+			assertNotNull();
+			//assertSame(response.kind,FormValidation.Kind.OK);
+			assertTrue(mockedDescriptor.validateConfiguration(path));
 			//Todo - check the actual state
 		
-	}
+	}*/
 }
