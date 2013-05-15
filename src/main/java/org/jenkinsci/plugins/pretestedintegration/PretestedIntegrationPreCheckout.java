@@ -206,7 +206,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		 * Updates the configuration file in the specified repository
 		 * @param repositoryUrl
 		 */
-		public boolean updateConfiguration(final String repositoryUrl) {
+		public boolean writeConfiguration(final String repositoryUrl) {
 			File repoDir = configurationDirectory(repositoryUrl);
 			if(setupRepositoryDirectory(repoDir)){
 				//the hgDir now is a valid path
@@ -242,42 +242,36 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		 * @param repositoryUrl
 		 * @return 
 		 */
-		public boolean updateHook(final String repositoryUrl, final String jenkinsRoot, final String job){
-			File repoDir = configurationDirectory(repositoryUrl);
-			if(setupRepositoryDirectory(repoDir)){
-				try {
-					File hook = new File(repoDir,"hg_changegroup_hook.py");
-					if(hook.canWrite() || hook.createNewFile()){
-						FileWriter fw = new FileWriter(hook);
-						fw.write("from mercurial import ui, hg\r\n");
-						fw.write("from mercurial.node import hex\r\n");
-						fw.write("from httplib import HTTPConnection\r\n");
-						fw.write("from urllib import urlencode\r\n");
-						fw.write("import os\r\n\r\n");
+		public boolean writeHook(final File repoDir, final String jenkinsRoot, final String job) throws IOException {
+			File hook = new File(repoDir,"hg_changegroup_hook.py");
+			if(hook.canWrite() || hook.createNewFile()){
+				FileWriter fw = new FileWriter(hook);
+				fw.write("from mercurial import ui, hg\r\n");
+				fw.write("from mercurial.node import hex\r\n");
+				fw.write("from httplib import HTTPConnection\r\n");
+				fw.write("from urllib import urlencode\r\n");
+				fw.write("import os\r\n\r\n");
 						
+				fw.write("def run(ui, repo, **kwargs):\r\n");
+				fw.write("\thttp = HTTPConnection(\"" 
+						+ jenkinsRoot + "\")\r\n");
+				fw.write("\thttp.request(\"GET\",\"http://" 
+						+ jenkinsRoot + "/job/" 
+						+ job + "/build\")\r\n");
+				fw.write("\tui.warn(\"http://" 
+						+ jenkinsRoot + "/job/" 
+						+ job + "/build\\n\")\r\n");
+				fw.write("\tui.warn(str(http.getresponse().read())"
+						+ "+\"\\n\")\r\n");
+				fw.write("\treturn False\r\n");
 						
-						fw.write("def run(ui, repo, **kwargs):\r\n");
-						fw.write("\thttp = HTTPConnection(\"" 
-								+ jenkinsRoot + "\")\r\n");
-						fw.write("\thttp.request(\"GET\",\"http://" 
-								+ jenkinsRoot + "/job/" 
-								+ job + "/build\")\r\n");
-						fw.write("\tui.warn(\"http://" 
-								+ jenkinsRoot + "/job/" 
-								+ job + "/build\\n\")\r\n");
-						fw.write("\tui.warn(str(http.getresponse().read())"
-								+ "+\"\\n\")\r\n");
-						fw.write("\treturn False\r\n");
-						
-						fw.close();
-						return true;
-					}
-				} catch (IOException e) {
-					System.out.println("Could not write to hook file");
-				}
+				fw.close();
+				return true;
 			}
+			
 			return false;
 		}
+		
 		
 		/**
 		 * Performs a validation test whether the repository url is correctly 
@@ -301,11 +295,18 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		 */
 		public FormValidation doUpdateRepository(@QueryParameter("stageRepositoryUrl") final String repositoryUrl, 
 				@QueryParameter("name") final String name) {
-			boolean updateConfiguration = updateConfiguration(repositoryUrl);
+			boolean updateConfiguration = writeConfiguration(repositoryUrl);
 			if(updateConfiguration){
-				boolean updateHook = updateHook(repositoryUrl, getJenkinsRootUrl(), name);
-				if(updateHook) {
-					return FormValidation.ok("Configuration updated");
+				File configDir = configurationDirectory(repositoryUrl);
+				if(setupRepositoryDirectory(configDir)){
+					try {
+						boolean updateHook = writeHook(configDir, getJenkinsRootUrl(), name);
+						if(updateHook) {
+							return FormValidation.ok("Configuration updated");
+						}
+					} catch (IOException e){
+						
+					}
 				}
 			}
 			return FormValidation.error("Configuration could not be updated");
