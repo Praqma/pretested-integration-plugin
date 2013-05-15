@@ -35,14 +35,14 @@
       <!--
       <id>maven.jenkins-ci.org</id>
       -->
-      <id>Jenkins</id>
+      <id>Test</id>
       <url>file:///home/andreas/tmp/mvn</url>
     </snapshotRepository>
   </distributionManagement>
 
   <pluginRepositories>
     <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
+      <id>Jenkins</id>
       <url>http://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
