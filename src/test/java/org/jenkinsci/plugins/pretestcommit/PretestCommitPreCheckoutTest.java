@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestcommit;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 
 import static org.mockito.Mockito.*;
@@ -31,7 +32,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	/**
 	 * Test if the a new repository is correctly initialised
 	 */
-	public void testShouldNotValidateConfiguration() throws Exception{
+	public void testShouldFailValidateConfiguration() throws Exception{
 		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
 		
 		File tmp = getTempFile();
@@ -59,7 +60,6 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldGiveDotHgDirectory() throws Exception {
-		
 		//Given a local filepath
 		String relativePath = "some/local/directory";
 		String relativePathEndingWithSlash = relativePath + "/";
@@ -75,8 +75,21 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		assertEquals(new File(relativePathEndingWithSlash + ".hg"), descriptor.configurationDirectory(relativePathEndingWithSlash));
 	}
 	
-	public void testShouldSetupRepositoryDirectory() throws Exception {
+	public void testShouldSetupRepositoryDirectoryExists() throws Exception {
+		//Some initial setup
+		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
 		
+		//Given a directory that does exist
+		File tmp = createTempDirectory();
+		//When I invoke the setup method
+		boolean setupResult = descriptor.setupRepositoryDirectory(tmp);
+		//Then the setup method should return true
+		assertTrue(setupResult);
+		//And the directory should still exist
+		assertTrue(tmp.exists());
+	}
+	
+	public void testShouldSetupRepositoryDirectoryNotExists() throws Exception {
 		//Some initial setup
 		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
 		
@@ -90,16 +103,6 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		assertTrue(tmp.exists());
 		
 		//cleanup the results
-		tmp = null;
-		
-		//Given a directory that does exist
-		tmp = createTempDirectory();
-		//When I invoke the setup method
-		setupResult = descriptor.setupRepositoryDirectory(tmp);
-		//Then the setup method should return true
-		assertTrue(setupResult);
-		//And the directory should still exist
-		assertTrue(tmp.exists());
 	}
 	
 	public void testShouldUpdateConfigurationHgrcNotExists() throws Exception {
@@ -114,7 +117,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		//And that the hgrc does not exist
 		assertFalse(hgrc.exists());
 		//When the the configuration is updated
-		boolean updateResult = descriptor.updateConfiguration(tmp.getAbsolutePath());
+		boolean updateResult = descriptor.writeConfiguration(tmp.getAbsolutePath());
 		//And the configuration succeeds
 		assertTrue(updateResult);
 		//Then the hgrc file should exist
@@ -135,7 +138,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		
 		File hgrc = new File(repoDir,"hgrc");
 		assertTrue(hgrc.createNewFile());
-		boolean updateResult = descriptor.updateConfiguration(tmp.getAbsolutePath());
+		boolean updateResult = descriptor.writeConfiguration(tmp.getAbsolutePath());
 		assertTrue(updateResult);
 		assertTrue(hgrc.exists());
 		Scanner scanner = new Scanner(hgrc);
@@ -153,7 +156,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		repoDir.setWritable(false);
 		
 		File hgrc = new File(repoDir,"hgrc");
-		boolean updateResult = descriptor.updateConfiguration(tmp.getAbsolutePath());
+		boolean updateResult = descriptor.writeConfiguration(tmp.getAbsolutePath());
 		assertFalse(updateResult);
 		assertFalse(hgrc.exists());
 		repoDir.setWritable(true);
@@ -170,7 +173,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		File hgrc = new File(repoDir,"hgrc");
 		hgrc.createNewFile();
 		hgrc.setWritable(false);
-		boolean updateResult = descriptor.updateConfiguration(tmp.getAbsolutePath());
+		boolean updateResult = descriptor.writeConfiguration(tmp.getAbsolutePath());
 		assertFalse(updateResult);
 		hgrc.setWritable(true);
 		
@@ -178,12 +181,69 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	
 	public void testShouldUpdateHook() throws Exception {
 		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
-		File tmp = getTempFile();
-		descriptor.updateHook(tmp.getAbsolutePath(), "localhost:8080", "foo");
-		File repoDir = new File(tmp,".hg");
-		File hook = new File(repoDir, "hg_changegroup_hook.py");
+		File tmp = createTempDirectory();
+		boolean updateResult = descriptor.writeHook(tmp, "localhost:8080", "foo");
+		assertTrue(updateResult);
+		//File repoDir = new File(tmp,".hg");
+		File hook = new File(tmp, "hg_changegroup_hook.py");
 		assertTrue(hook.exists());
 		//Check stuff about the contents of the hook file maybe?
+	}
+	
+	public void testShouldFailUpdateHookDirNotExists() throws Exception {
+		PretestCommitPreCheckout.DescriptorImpl descriptor = spy(new PretestCommitPreCheckout.DescriptorImpl());
+		
+		File tmp = getTempFile();
+		
+		try{
+			boolean updateResult = descriptor.writeHook(tmp, "localhost:8080", "foo");
+			fail("IOException expected. updateResult: " + updateResult);
+		} catch (IOException e){
+			
+		}
+		
+		File hook = new File(tmp, "hg_changegroup_hook.py"); 
+		assertFalse(hook.exists());
+		
+	}
+	
+	public void testShouldFailUpdateHookDirNotWritable() throws Exception {
+		PretestCommitPreCheckout.DescriptorImpl descriptor = spy(new PretestCommitPreCheckout.DescriptorImpl());
+		
+		File tmp = getTempFile();
+		tmp.mkdirs();
+		tmp.setWritable(false);
+		
+		try{
+			boolean updateResult = descriptor.writeHook(tmp, "localhost:8080", "foo");
+			fail("IOException expected. updateResult: " + updateResult);
+		} catch (IOException e){
+			
+		}
+		
+		File hook = new File(tmp, "hg_changegroup_hook.py"); 
+		assertFalse(hook.exists());
+		tmp.setWritable(true);
+	}
+	
+	public void testShouldFailUpdateHookFileNotWritable() throws Exception {
+		PretestCommitPreCheckout.DescriptorImpl descriptor = spy(new PretestCommitPreCheckout.DescriptorImpl());
+		
+		File tmp = getTempFile();
+		tmp.mkdirs();
+		File hook = new File(tmp, "hg_changegroup_hook.py"); 
+		
+		hook.setWritable(false);
+		
+		try{
+			boolean updateResult = descriptor.writeHook(hook, "localhost:8080", "foo");
+			fail("IOException expected. updateResult: " + updateResult);
+		} catch (IOException e){
+			
+		}
+		
+		assertFalse(hook.exists());
+		hook.setWritable(true);
 	}
 	
 	/*
