@@ -23,13 +23,13 @@
   <!-- setting CSM to git -->
   <scm>
     <connection>scm:git:git://github.com/pcds2013-team-delta/pretest-commit-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:pcds2013-team-delta/pretest-commit-plugin.git</developerConnection>
+    <developerConnection>scm:git:ssh://git@github.com/pcds2013-team-delta/pretest-commit-plugin.git</developerConnection>
     <url>https://github.com/pcds2013-team-delta/pretest-commit-plugin</url>
   </scm>
   <distributionManagement>
     <site>
       <id>github-pages</id>
-      <url>gitsite:git@github.com:pcds2013-team-delta/pretest-commit-plugin.git:core</url>
+      <url>gitsite:git@github.com/pcds2013-team-delta/pretest-commit-plugin.git:core</url>
     </site>
     <snapshotRepository>
       <id>maven.jenkins-ci.org</id>
