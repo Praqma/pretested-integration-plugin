@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -33,21 +33,21 @@ import java.util.List;
 import java.util.Dictionary;
 import java.io.BufferedReader;
 
-import org.jenkinsci.plugins.pretestcommit.CommitQueue;
+import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A collection of funtions used post build.
  */
-public class PretestCommitPostCheckout extends Publisher {
+public class PretestedIntegrationPostCheckout extends Publisher {
 	
-	private static final String DISPLAY_NAME = "Run pretest post-build step";
+	private static final String DISPLAY_NAME = "Run pretested integration post-build step";
 	
 	private boolean hasQueue;
 	
 	@DataBoundConstructor
-	public PretestCommitPostCheckout() {
+	public PretestedIntegrationPostCheckout() {
 	}
 
 	@Override
@@ -74,21 +74,8 @@ public class PretestCommitPostCheckout extends Publisher {
 		String sourceBranch = newCommitInfo.get("branch");
 		PretestUtils.logMessage(listener, "commit is on this branch: "
 				+ sourceBranch);
-
-		//HgUtils.runScmCommand(build, launcher, listener,
-		//		new String[]{"up", "default"});
-		//HgUtils.runScmCommand(build, launcher, listener,
-		//		new String[]{"merge", sourceBranch});
-		//HgUtils.runScmCommand(build, launcher, listener,
-		//		new String[]{"commit", "-m", "dummy commit"});
 		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"push", });//"--branch", "default"});
-		//HgUtils.runScmCommand(build, launcher, listener,
-		//		new String[]{"push", "--branch", sourceBranch});
-
-		PretestUtils.logMessage(listener, "Getting oldest tag: "); 
-		//HgUtils.getOldestCommitInfo(build, launcher, listener);
-		
+				new String[]{"push", "--branch", sourceBranch});
 	}
 	
 	/**

@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.model.TaskListener;
 
@@ -7,7 +7,7 @@ import hudson.model.TaskListener;
   */ 
 public class PretestUtils {
 	
-	private static final String LOG_PREFIX = "[prteco] ";
+	private static final String LOG_PREFIX = "[PREINT] ";
 	
 	/**
 	 * Writes the given log message to the Jenkins log and pre fixes it with a

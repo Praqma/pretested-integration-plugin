@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -40,7 +40,7 @@ import java.util.Iterator;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import org.jenkinsci.plugins.pretestcommit.PretestUtils;
+import org.jenkinsci.plugins.pretestedintegration.PretestUtils;
 
 /**
  * Collection of static methods for interacting with Mercurial.
@@ -305,60 +305,6 @@ public class HgUtils {
 	}
 
 	/**
-	 * Returns the oldest build tag made by Jenkins hook. 
-	 * If no tags is found, null is returned
-	 * 
-	 * @param AbstractBuild
-	 * @param Launcher
-	 * @param BuildListener
-	 *
-	 * @return
-	 */	
-	public static String getChangesetByOldestTag(
-			AbstractBuild build, Launcher launcher, BuildListener listener)
-			throws IOException, InterruptedException, AbortException {
-		
-		//BuildWrapper bArray[] = build.getBuildWrapperLists();
-
-		String repoURL = build.getEnvironment().get("stageRepositoryUrl");
-		PretestUtils.logMessage(listener, "REPOURL: "+repoURL+"\n");
-
-		BufferedReader tagsStdout = runScmCommand(
-			build, launcher, listener, new String[]{"tags","-v"});
-
-		int lowestRev = Integer.MAX_VALUE;
-		String lowestRevHash = null; 
-		String line;
-		while((line = tagsStdout.readLine()) != null) 
-		{
-			if (line.startsWith("[prteco]")&& line.endsWith("local"))
-			{
-				String lineTokens[] = line.split("\\s+");
-				if (lineTokens.length < 2) {
-					continue;
-				}
-				String revAndHash = lineTokens[lineTokens.length-2];
-				int rev;
-				String revHash;
-				try {
-					rev = Integer.parseInt(revAndHash.split(":")[0]);
-					revHash = revAndHash.split(":")[1];
-				} catch (NumberFormatException e) {
-					continue;
-				}catch (IndexOutOfBoundsException e){
-					continue;
-				}
-				if (rev<lowestRev)
-				{
-					lowestRevHash = revHash; 
-					lowestRev = rev; 
-				}
-			}
-		}
-		return lowestRevHash;
-	}
-
-	/**
 	 * Returns a dictionary with the fields "changeset", "branch", "user",
 	 * "date", "message" for a given revision. Each field will be null if the corresponding field is
 	 * not defined in the log. Except, "branch" will be default if the commit
@@ -419,30 +365,4 @@ public class HgUtils {
 		
 		return info;
 	}
-	/**
-	 * Returns a dictionary with the fields "changeset", "branch", "user",
-	 * "date", "message" for a given revision. Each field will be null if the corresponding field is
-	 * not defined in the log. Except, "branch" will be default if the commit
-	 * is made on the default branch.
-	 * 
-	 * @param AbstractBuild
-	 * @param Launcher
-	 * @param BuildListener
-	 *
-	 * @return
-	 */	
-	public static Hashtable<String, String> getOldestCommitInfo(
-			AbstractBuild build, Launcher launcher, BuildListener listener)
-			throws IOException, InterruptedException, AbortException {
-		
-
-		String oldestChangeset = getChangesetByOldestTag(build, launcher, listener);
-
-		if (oldestChangeset == null){
-			PretestUtils.logError( listener, "No tag was found in repository" );
-			throw new AbortException();
-		}
-		return getCommitInfoByRev(build, launcher, listener,oldestChangeset);
-	}
-		
 }
