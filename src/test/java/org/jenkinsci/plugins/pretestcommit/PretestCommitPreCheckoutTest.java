@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pretestcommit;
 import java.io.File;
 import java.util.Scanner;
 
+import static org.mockito.Mockito.*;
+
 public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 
 	/**
@@ -175,16 +177,9 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldUpdateHook() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl() {
-			@Override
-			public String getJenkinsRootUrl() {
-				return "localhost:8080";
-			}
-			
-		};
-		
+		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
 		File tmp = getTempFile();
-		descriptor.updateHook(tmp.getAbsolutePath(), "foo");
+		descriptor.updateHook(tmp.getAbsolutePath(), "localhost:8080", "foo");
 		File repoDir = new File(tmp,".hg");
 		File hook = new File(repoDir, "hg_changegroup_hook.py");
 		assertTrue(hook.exists());
