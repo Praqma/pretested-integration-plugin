@@ -28,14 +28,7 @@ import hudson.FilePath;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.Dictionary;
 
 import javax.servlet.ServletException;
 
@@ -86,12 +79,35 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 	}
 	
 	void mergeWithNewBranch(AbstractBuild build, Launcher launcher,
-			BuildListener listener, String repositoryURL, String branch,
-			String changeset, String user)
+			BuildListener listener, String repositoryURL)
 			throws IOException, InterruptedException {
 		
-		HgUtils.runScmCommand(build, launcher, listener,
+		PretestUtils.logMessage(listener, "Pulling changes from stage");
+		//First get the curent tip info
+		Dictionary<String, String> oldVars = HgUtils.getNewestCommitInfo(build, launcher, listener);
+		String oldTip = oldVars.get("changeset");
+		
+		try {
+			HgUtils.runScmCommand(build, launcher, listener, 
+					new String[]{"update","default"});
+			HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"pull", "--update", repositoryURL});
+			
+			HgUtils.runScmCommand(build, launcher, listener, 
+					new String[]{"update","default"});
+			
+			Dictionary<String, String> newVars =  HgUtils.getNewestCommitInfo(build, launcher, listener); //this line has been added for debugging
+			String newTip = newVars.get("changeset");
+			
+			HgUtils.runScmCommand(build, launcher, listener,
+				new String[]{"merge", newVars.get("branch")});
+			HgUtils.runScmCommand(build, launcher, listener,
+				new String[]{"commit", "-m", newVars.get("message")});
+			HgUtils.getNewestCommitInfo(build, launcher, listener); //this line has been added for debugging
+		} catch(AbortException e){
+			System.out.print("Could not update workspace, uh oh!");
+			throw e;
+		}
 	}
 	
 	/**
@@ -110,15 +126,21 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		// are applied while this job is in the queue.
 		Environment environment = new PretestEnvironment();
 		environment.buildEnvVars(HgUtils.getNewestCommitInfo(
-				build, launcher, listener));
+				build, launcher, listener)); //TODO this should be removed
 		
 		// Wait in line until no other jobs are running.
 		CommitQueue.getInstance().enqueueAndWait();
 		hasQueue = true;
+
+		mergeWithNewBranch(build,launcher, listener, stageRepositoryUrl);
+		HgUtils.getNewestCommitInfo(build, launcher, listener);
 		
 		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
 		
-		return new environment;
+		//Environment environment2 = build.getEnvironment(null);
+		//environment2.put("stageRepositoryUrl",getStageRepositoryUrl());
+
+		return environment;
 	}
 	
 	/**
@@ -272,7 +294,6 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 		 */
 		public FormValidation doUpdateRepository(@QueryParameter("stageRepositoryUrl") final String repositoryUrl, 
 				@QueryParameter("name") final String name) {
-			System.out.println("Name of the task is: "+name);
 			boolean updateConfiguration = updateConfiguration(repositoryUrl);
 			if(updateConfiguration){
 				boolean updateHook = updateHook(repositoryUrl, name);
