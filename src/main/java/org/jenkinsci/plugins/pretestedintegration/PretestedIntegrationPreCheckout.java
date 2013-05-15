@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.AbortException;
 import hudson.Extension;
@@ -28,17 +28,17 @@ import org.kohsuke.stapler.StaplerRequest;
 /**
  *
  */
-public class PretestCommitPreCheckout extends BuildWrapper {
+public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
-	private static final String DISPLAY_NAME = "Use pretested commits";
-	private static final String PLUGIN_NAME = "pretest-commit";
+	private static final String DISPLAY_NAME = "Use pretested integration";
+	private static final String PLUGIN_NAME = "pretested-integration";
 	
 	private final String stageRepositoryUrl;
 
 	private boolean hasQueue;
 	
 	@DataBoundConstructor
-	public PretestCommitPreCheckout(String stageRepositoryUrl) {
+	public PretestedIntegrationPreCheckout(String stageRepositoryUrl) {
 		this.stageRepositoryUrl = stageRepositoryUrl;
 	}
 
@@ -76,17 +76,13 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 			HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"pull", "--update", repositoryURL});
 			
-			HgUtils.runScmCommand(build, launcher, listener, 
-					new String[]{"update","default"});
 			
-			Dictionary<String, String> newVars =  HgUtils.getNewestCommitInfo(build, launcher, listener); //this line has been added for debugging
-			String newTip = newVars.get("changeset");
+			Dictionary<String, String> newVars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
 			
 			HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"merge", newVars.get("branch")});
 			HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"commit", "-m", newVars.get("message")});
-			HgUtils.getNewestCommitInfo(build, launcher, listener); //this line has been added for debugging
 		} catch(AbortException e){
 			System.out.print("Could not update workspace, uh oh!");
 			throw e;
@@ -190,7 +186,7 @@ public class PretestCommitPreCheckout extends BuildWrapper {
 					File hgrc = new File(repoDir,"hgrc");
 					if(hgrc.canWrite() || hgrc.createNewFile()){
 						Ini ini = new Ini(hgrc);
-						ini.put("hooks","changegroup", 
+						ini.put("hooks","pretxnchangegroup", 
 							"python:.hg/hg_changegroup_hook.py:run");
 						ini.store();
 						return true;
