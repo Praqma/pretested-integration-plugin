@@ -170,7 +170,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	}
 	
 	@Extension
-	public static final class DescriptorImpl extends BuildWrapperDescriptor {
+	public static class DescriptorImpl extends BuildWrapperDescriptor {
 		
 		public String getDisplayName() {
 			return DISPLAY_NAME;
@@ -231,6 +231,12 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			return false;
 		}
 		
+		public String getJenkinsRootUrl() {
+			return Hudson.getInstance()
+					.getRootUrl()
+					.replaceAll("^http://|/$", "");
+		}
+		
 		/**
 		 * Updates the hook file in the specified repository
 		 * @param repositoryUrl
@@ -249,9 +255,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 						fw.write("from urllib import urlencode\r\n");
 						fw.write("import os\r\n\r\n");
 						
-						String jenkinsRoot = Hudson.getInstance()
-								.getRootUrl()
-								.replaceAll("^http://|/$", "");
+						String jenkinsRoot = getJenkinsRootUrl();
 						
 						fw.write("def run(ui, repo, **kwargs):\r\n");
 						fw.write("\thttp = HTTPConnection(\"" 
