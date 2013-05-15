@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -39,6 +39,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import org.jenkinsci.plugins.pretestedintegration.PretestUtils;
 
 /**
  * Collection of static methods for interacting with Mercurial.
@@ -182,22 +184,25 @@ public class HgUtils {
 			throw new AbortException(
 					"Failed to execute hg command: Interrupted");
 		}
+
+		List<String> hgList = new ArrayList<String>();
+		String lastLine = "";
+		if (!cmdList.get(0).equals("log") && !cmdList.get(1).equals("log")) //TODO cahnge this dirty hack!!
+		{
+		try {
+			String line;
+			while((line = stdout.readLine()) != null) 
+			{
+				hgList.add(line);
+				lastLine = line;
+			}
+		} catch(IOException e) {
+			PretestUtils.logError(listener, "An unexpected error occured"
+					+ " when reading hg log");
+		}
+		}	
 		if(exitCode != 0) {
 			// Program ran but failed. Read output to find out what happened.
-			List<String> hgList = new ArrayList<String>();
-			String lastLine = "";
-			try {
-				String line;
-				while((line = stdout.readLine()) != null) 
-				{
-					hgList.add(line);
-					lastLine = line;
-				}
-			} catch(IOException e) {
-				PretestUtils.logError(listener, "An unexpected error occured"
-						+ " when reading hg log");
-			}
-			
 			if(lastLine.equals("no changes found")) {
 				// This means that no error actually happened, but the command
 				// did nothing
@@ -219,6 +224,17 @@ public class HgUtils {
 		} else {
 			PretestUtils.logMessage(listener,
 					"Successfully executed hg command");
+			if (true)
+			{
+				PretestUtils.logMessage(listener,
+					"Debugging, dumping log");
+
+				Iterator itr = hgList.iterator();
+				while(itr.hasNext()) {
+					Object element = itr.next();
+					PretestUtils.logMessage(listener, element.toString());
+				}
+			}
 		}
 		
 		return stdout;
@@ -227,7 +243,7 @@ public class HgUtils {
 	/**
 	 * Returns a dictionary with the fields "changeset", "branch", "user",
 	 * "date", "message". Each field will be null if the corresponding field is
-	 * not defined in the log. Specifically, "branch" will be null if the commit
+	 * not defined in the log. Except, "branch" will be default if the commit
 	 * is made on the default branch.
 	 * 
 	 * @param AbstractBuild
@@ -240,20 +256,26 @@ public class HgUtils {
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
 		// Make sire we have the latest changes
-		//runScmCommand(build, launcher, listener, new String[]{"pull"});
+		//runScmCommand(build, launcher, listener, new String[]{"pull",repositoryUrl});
 		// Get the first item in the log
 		BufferedReader logStdout = runScmCommand(
-				build, launcher, listener, new String[]{"log", "-l", "1"});
+				build, launcher, listener, new String[]{"log", "-r", "tip"});
 		
 		// Read one line at a time and put the values into a dictionary
-		Dictionary<String, String> info = new Hashtable<String, String>();
-		info.put("branch", "default");
+		Hashtable<String, String> info = new Hashtable<String, String>();
+		info.put("branch","default");
 		String line;
 		while((line = logStdout.readLine()) != null) {
 			String firstWord = line.split("\\s+")[0];
 			String restOfLine = line.substring(firstWord.length()).trim();
 			if(firstWord.equals("changeset:")) {
-				info.put("changeset", restOfLine);
+				String changeset;
+				if(restOfLine.contains(":")){
+					changeset = restOfLine.substring(restOfLine.indexOf(":")+1);
+				} else {
+					changeset = restOfLine;
+				}
+				info.put("changeset", changeset);
 			} else if(firstWord.equals("branch:")) {
 				info.put("branch", restOfLine);
 			} else if(firstWord.equals("user:")) {
@@ -281,5 +303,66 @@ public class HgUtils {
 		
 		return info;
 	}
-	
+
+	/**
+	 * Returns a dictionary with the fields "changeset", "branch", "user",
+	 * "date", "message" for a given revision. Each field will be null if the corresponding field is
+	 * not defined in the log. Except, "branch" will be default if the commit
+	 * is made on the default branch.
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return
+	 */	
+	public static Hashtable<String, String> getCommitInfoByRev(
+			AbstractBuild build, Launcher launcher, BuildListener listener, String rev)
+			throws IOException, InterruptedException, AbortException {
+		
+		BufferedReader logStdout = runScmCommand(
+				build, launcher, listener, new String[]{"log", "--rev", rev});
+		
+		// Read one line at a time and put the values into a dictionary
+		Hashtable<String, String> info = new Hashtable<String, String>();
+		info.put("branch","default");
+		String line;
+		while((line = logStdout.readLine()) != null) {
+			String firstWord = line.split("\\s+")[0];
+			String restOfLine = line.substring(firstWord.length()).trim();
+			if(firstWord.equals("changeset:")) {
+				String changeset;
+				if(restOfLine.contains(":")){
+					changeset = restOfLine.substring(restOfLine.indexOf(":")+1);
+				} else {
+					changeset = restOfLine;
+				}
+				info.put("changeset", changeset);
+			} else if(firstWord.equals("branch:")) {
+				info.put("branch", restOfLine);
+			} else if(firstWord.equals("user:")) {
+				info.put("user", restOfLine);
+			} else if(firstWord.equals("date:")) {
+				info.put("date", restOfLine);
+			} else if(firstWord.equals("summary:")) {
+				info.put("message", restOfLine);
+			}
+		}
+		
+		// Dump it all to the log
+		PretestUtils.logMessage(listener,
+				"SCM log data:");
+		PretestUtils.logMessage(listener,
+				"\tchangeset: " + info.get("changeset"));
+		PretestUtils.logMessage(listener,
+				"\tbranch: " + info.get("branch"));
+		PretestUtils.logMessage(listener,
+				"\tuser: " + info.get("user"));
+		PretestUtils.logMessage(listener,
+				"\tdate: " + info.get("date"));
+		PretestUtils.logMessage(listener,
+				"\tmessage: " + info.get("message"));
+		
+		return info;
+	}
 }

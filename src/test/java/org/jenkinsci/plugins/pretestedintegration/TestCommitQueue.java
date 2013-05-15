@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 // Required import for JUnit.
 import org.junit.Test;
@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 //import junit.framework.TestSuite;
 import static org.junit.Assert.*;
 
-import org.jenkinsci.plugins.pretestcommit.CommitQueue;
+import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 //import pretestcommit.CommitQueue;
 
 public class TestCommitQueue /*extends TestCase*/ {
