@@ -20,6 +20,7 @@ import java.util.Dictionary;
 import javax.servlet.ServletException;
 
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 
 import org.ini4j.Ini;
 import org.ini4j.InvalidFileFormatException;
@@ -102,6 +103,8 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		PretestUtils.logMessage(listener, "Beginning pre-build step");
+		
 		// Get info about the newest commit and store it in the environment.
 		// This is used to determine the triggering build, even if newer commits
 		// are applied while this job is in the queue.
@@ -120,7 +123,9 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		
 		//Environment environment2 = build.getEnvironment(null);
 		//environment2.put("stageRepositoryUrl",getStageRepositoryUrl());
-
+		
+		PretestUtils.logMessage(listener, "Finished pre-build step");
+		
 		return environment;
 	}
 	
