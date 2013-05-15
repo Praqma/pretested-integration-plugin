@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,7 +28,7 @@ import org.junit.*;
  * @author rel
  *
  */
-public abstract class PretestCommitTestCase extends HudsonTestCase {
+public abstract class PretestedIntegrationTestCase extends HudsonTestCase {
 	
 	public FreeStyleProject project;
 	public BuildWrapper buildWrapper;
@@ -125,12 +125,12 @@ public abstract class PretestCommitTestCase extends HudsonTestCase {
 		project.setScm(scm);
 		
 		//Make sure the buildwrapper is added to the project and configured correctly
-		buildWrapper = new PretestCommitPreCheckout(stage);
+		buildWrapper = new PretestedIntegrationPreCheckout(stage);
 		//Ensure that it is added per default
 		project.getBuildWrappersList().add(buildWrapper);
 
 		//Make sure the publisher is added to the project
-		Publisher notifier = new PretestCommitPostCheckout();
+		Publisher notifier = new PretestedIntegrationPostCheckout();
 		project.getPublishersList().add(notifier);
 		return path;
 		

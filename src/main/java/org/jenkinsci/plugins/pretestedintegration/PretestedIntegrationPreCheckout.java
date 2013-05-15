@@ -1,51 +1,28 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.AbortException;
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.Launcher.ProcStarter;
-import hudson.Proc;
 import hudson.model.BuildListener;
-import hudson.model.Environment;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Descriptor;
-import hudson.model.Cause.LegacyCodeCause;
-import hudson.model.Descriptor.FormException;
-import hudson.model.Computer;
-
-import hudson.model.*;
-import hudson.plugins.mercurial.*;
+import hudson.model.Hudson;
+import hudson.plugins.mercurial.MercurialSCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
-import hudson.tasks.BuildTrigger;
-import hudson.tasks.BuildStep;
-import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
-import hudson.FilePath;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Dictionary;
 
 import javax.servlet.ServletException;
 
-import org.ini4j.InvalidFileFormatException;
-import org.ini4j.Ini;
-
 import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pretestcommit.CommitQueue;
 
+import org.ini4j.Ini;
+import org.ini4j.InvalidFileFormatException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
