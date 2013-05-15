@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -18,9 +18,6 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.BuildStepMonitor;
 import hudson.model.*;
-import hudson.plugins.mercurial.HgExe;
-import hudson.plugins.mercurial.MercurialInstallation;
-import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildTrigger;
@@ -36,21 +33,21 @@ import java.util.List;
 import java.util.Dictionary;
 import java.io.BufferedReader;
 
-import org.jenkinsci.plugins.pretestcommit.CommitQueue;
+import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A collection of funtions used post build.
  */
-public class PretestCommitPostCheckout extends Publisher {
+public class PretestedIntegrationPostCheckout extends Publisher {
 	
-	private static final String DISPLAY_NAME = "Run pretest post-build step";
+	private static final String DISPLAY_NAME = "Run pretested integration post-build step";
 	
 	private boolean hasQueue;
 	
 	@DataBoundConstructor
-	public PretestCommitPostCheckout() {
+	public PretestedIntegrationPostCheckout() {
 	}
 
 	@Override
@@ -172,6 +169,8 @@ public class PretestCommitPostCheckout extends Publisher {
 			pushToCT(build, launcher, listener);
 			PretestUtils.logMessage(listener, "...done!");
 		} else {
+			//HgUtils.runScmCommand(build, launcher, listener, 
+					//new String[]{"update","-C",oldTip});
 			PretestUtils.logMessage(listener, "Build error. Not pushing to CT");
 		}
 		
