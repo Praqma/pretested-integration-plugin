@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestcommit;
+package org.jenkinsci.plugins.pretestedintegration;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 import static org.mockito.Mockito.*;
 
-public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
+public class PretestedIntegrationPreCheckoutTest extends PretestedIntegrationTestCase {
 
 	/**
 	 * Tests the validateConfiguration method in the 
@@ -17,7 +17,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		//Given a valid local repository
 		File stage = new File(tmp,"stage");
 		//When i test for validation
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		boolean isValid = descriptor.validateConfiguration(stage.getAbsolutePath());
 		//Then the validation method should return true
 		assertTrue(isValid);
@@ -33,7 +33,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	 * Test if the a new repository is correctly initialised
 	 */
 	public void testShouldFailValidateConfiguration() throws Exception{
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		File tmp = getTempFile();
 		assertFalse(descriptor.validateConfiguration(tmp.getAbsolutePath()));
@@ -65,9 +65,9 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 		String relativePathEndingWithSlash = relativePath + "/";
 		//When I try to get the configuration directory for the repository
 		//Then the path is 
-		//PretestCommitPreCheckout buildWrapper = new PretestCommitPreCheckout("");
+		//PretestedIntegrationPreCheckout buildWrapper = new PretestedIntegrationPreCheckout("");
 	
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		//buildWrapper.getDescriptor();
 		
@@ -77,7 +77,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	
 	public void testShouldSetupRepositoryDirectoryExists() throws Exception {
 		//Some initial setup
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		//Given a directory that does exist
 		File tmp = createTempDirectory();
@@ -91,7 +91,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	
 	public void testShouldSetupRepositoryDirectoryNotExists() throws Exception {
 		//Some initial setup
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		//Given a directory that does not exist
 		File tmp = getTempFile();
@@ -106,7 +106,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldUpdateConfigurationHgrcNotExists() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		//Given that the repository is correctly setup
 		File tmp = getTempFile();
@@ -129,7 +129,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldUpdateConfigurationHgrcExists() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		//Setup the directory
 		File tmp = getTempFile();
@@ -147,7 +147,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldFailUpdateConfigurationHgrcNotCreatable() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		//Setup the directory
 		File tmp = getTempFile();
@@ -163,7 +163,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldFailUpdateConfigurationHgrcNotWritable() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
 		//Setup the directory
 		File tmp = getTempFile();
@@ -180,7 +180,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldUpdateHook() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = new PretestCommitPreCheckout.DescriptorImpl();
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		File tmp = createTempDirectory();
 		boolean updateResult = descriptor.writeHook(tmp, "localhost:8080", "foo");
 		assertTrue(updateResult);
@@ -191,7 +191,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldFailUpdateHookDirNotExists() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = spy(new PretestCommitPreCheckout.DescriptorImpl());
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = spy(new PretestedIntegrationPreCheckout.DescriptorImpl());
 		
 		File tmp = getTempFile();
 		
@@ -208,7 +208,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldFailUpdateHookDirNotWritable() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = spy(new PretestCommitPreCheckout.DescriptorImpl());
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = spy(new PretestedIntegrationPreCheckout.DescriptorImpl());
 		
 		File tmp = getTempFile();
 		tmp.mkdirs();
@@ -227,7 +227,7 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 	}
 	
 	public void testShouldFailUpdateHookFileNotWritable() throws Exception {
-		PretestCommitPreCheckout.DescriptorImpl descriptor = spy(new PretestCommitPreCheckout.DescriptorImpl());
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = spy(new PretestedIntegrationPreCheckout.DescriptorImpl());
 		
 		File tmp = getTempFile();
 		tmp.mkdirs();
@@ -253,10 +253,10 @@ public class PretestCommitPreCheckoutTest extends PretestCommitTestCase {
 			String path = tmp.getAbsolutePath();
 			hg("init", path);
 			//When the doUpdateRepository method is invoked
-			PretestCommitPreCheckout buildWrapper = new PretestCommitPreCheckout(tmp.getAbsolutePath());
-			PretestCommitPreCheckout.DescriptorImpl mockedDescriptor = mock(PretestCommitPreCheckout.DescriptorImpl.class);
+			PretestedIntegrationPreCheckout buildWrapper = new PretestedIntegrationPreCheckout(tmp.getAbsolutePath());
+			PretestedIntegrationPreCheckout.DescriptorImpl mockedDescriptor = mock(PretestedIntegrationPreCheckout.DescriptorImpl.class);
 			
-			//		(PretestCommitPreCheckout.DescriptorImpl) buildWrapper.getDescriptor();
+			//		(PretestedIntegrationPreCheckout.DescriptorImpl) buildWrapper.getDescriptor();
 			when(mockedDescriptor.getJenkinsRootUrl()).thenReturn("localhost:8080");
 			FormValidation response = mockedDescriptor.doUpdateRepository(tmp.getAbsolutePath(), "");
 			//Then a valid staging repository should be configured
