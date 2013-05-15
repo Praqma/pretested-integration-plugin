@@ -1,51 +1,29 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.AbortException;
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.Launcher.ProcStarter;
-import hudson.Proc;
 import hudson.model.BuildListener;
-import hudson.model.Environment;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Descriptor;
-import hudson.model.Cause.LegacyCodeCause;
-import hudson.model.Descriptor.FormException;
-import hudson.model.Computer;
-
-import hudson.model.*;
-import hudson.plugins.mercurial.*;
+import hudson.model.Hudson;
+import hudson.plugins.mercurial.MercurialSCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
-import hudson.tasks.BuildTrigger;
-import hudson.tasks.BuildStep;
-import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
-import hudson.FilePath;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Dictionary;
 
 import javax.servlet.ServletException;
 
-import org.ini4j.InvalidFileFormatException;
-import org.ini4j.Ini;
-
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 
+import org.ini4j.Ini;
+import org.ini4j.InvalidFileFormatException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -174,7 +152,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	}
 	
 	@Extension
-	public static final class DescriptorImpl extends BuildWrapperDescriptor {
+	public static class DescriptorImpl extends BuildWrapperDescriptor {
 		
 		public String getDisplayName() {
 			return DISPLAY_NAME;
@@ -210,7 +188,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		 * Updates the configuration file in the specified repository
 		 * @param repositoryUrl
 		 */
-		public boolean updateConfiguration(final String repositoryUrl) {
+		public boolean writeConfiguration(final String repositoryUrl) {
 			File repoDir = configurationDirectory(repositoryUrl);
 			if(setupRepositoryDirectory(repoDir)){
 				//the hgDir now is a valid path
@@ -235,50 +213,47 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			return false;
 		}
 		
+		public String getJenkinsRootUrl() {
+			return Hudson.getInstance()
+					.getRootUrl()
+					.replaceAll("^http://|/$", "");
+		}
+		
 		/**
 		 * Updates the hook file in the specified repository
 		 * @param repositoryUrl
 		 * @return 
 		 */
-		public boolean updateHook(final String repositoryUrl, final String job){
-			File repoDir = configurationDirectory(repositoryUrl);
-			if(setupRepositoryDirectory(repoDir)){
-				try {
-					File hook = new File(repoDir,"hg_changegroup_hook.py");
-					if(hook.canWrite() || hook.createNewFile()){
-						FileWriter fw = new FileWriter(hook);
-						fw.write("from mercurial import ui, hg\r\n");
-						fw.write("from mercurial.node import hex\r\n");
-						fw.write("from httplib import HTTPConnection\r\n");
-						fw.write("from urllib import urlencode\r\n");
-						fw.write("import os\r\n\r\n");
+		public boolean writeHook(final File repoDir, final String jenkinsRoot, final String job) throws IOException {
+			File hook = new File(repoDir,"hg_changegroup_hook.py");
+			if(hook.canWrite() || hook.createNewFile()){
+				FileWriter fw = new FileWriter(hook);
+				fw.write("from mercurial import ui, hg\r\n");
+				fw.write("from mercurial.node import hex\r\n");
+				fw.write("from httplib import HTTPConnection\r\n");
+				fw.write("from urllib import urlencode\r\n");
+				fw.write("import os\r\n\r\n");
 						
-						String jenkinsRoot = Hudson.getInstance()
-								.getRootUrl()
-								.replaceAll("^http://|/$", "");
+				fw.write("def run(ui, repo, **kwargs):\r\n");
+				fw.write("\thttp = HTTPConnection(\"" 
+						+ jenkinsRoot + "\")\r\n");
+				fw.write("\thttp.request(\"GET\",\"http://" 
+						+ jenkinsRoot + "/job/" 
+						+ job + "/build\")\r\n");
+				fw.write("\tui.warn(\"http://" 
+						+ jenkinsRoot + "/job/" 
+						+ job + "/build\\n\")\r\n");
+				fw.write("\tui.warn(str(http.getresponse().read())"
+						+ "+\"\\n\")\r\n");
+				fw.write("\treturn False\r\n");
 						
-						fw.write("def run(ui, repo, **kwargs):\r\n");
-						fw.write("\thttp = HTTPConnection(\"" 
-								+ jenkinsRoot + "\")\r\n");
-						fw.write("\thttp.request(\"GET\",\"http://" 
-								+ jenkinsRoot + "/job/" 
-								+ job + "/build\")\r\n");
-						fw.write("\tui.warn(\"http://" 
-								+ jenkinsRoot + "/job/" 
-								+ job + "/build\\n\")\r\n");
-						fw.write("\tui.warn(str(http.getresponse().read())"
-								+ "+\"\\n\")\r\n");
-						fw.write("\treturn False\r\n");
-						
-						fw.close();
-						return true;
-					}
-				} catch (IOException e) {
-					System.out.println("Could not write to hook file");
-				}
+				fw.close();
+				return true;
 			}
+			
 			return false;
 		}
+		
 		
 		/**
 		 * Performs a validation test whether the repository url is correctly 
@@ -302,11 +277,18 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		 */
 		public FormValidation doUpdateRepository(@QueryParameter("stageRepositoryUrl") final String repositoryUrl, 
 				@QueryParameter("name") final String name) {
-			boolean updateConfiguration = updateConfiguration(repositoryUrl);
+			boolean updateConfiguration = writeConfiguration(repositoryUrl);
 			if(updateConfiguration){
-				boolean updateHook = updateHook(repositoryUrl, name);
-				if(updateHook) {
-					return FormValidation.ok("Configuration updated");
+				File configDir = configurationDirectory(repositoryUrl);
+				if(setupRepositoryDirectory(configDir)){
+					try {
+						boolean updateHook = writeHook(configDir, getJenkinsRootUrl(), name);
+						if(updateHook) {
+							return FormValidation.ok("Configuration updated");
+						}
+					} catch (IOException e){
+						
+					}
 				}
 			}
 			return FormValidation.error("Configuration could not be updated");
