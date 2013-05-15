@@ -32,7 +32,10 @@
       <url>gitsite:git@github.com/pcds2013-team-delta/pretest-commit-plugin.git:core</url>
     </site>
     <snapshotRepository>
+      <!--
       <id>maven.jenkins-ci.org</id>
+      -->
+      <id>Jenkins</id>
       <url>file:///home/andreas/tmp/mvn</url>
     </snapshotRepository>
   </distributionManagement>
