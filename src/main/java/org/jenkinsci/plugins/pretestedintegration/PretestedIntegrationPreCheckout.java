@@ -242,7 +242,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		 * @param repositoryUrl
 		 * @return 
 		 */
-		public boolean updateHook(final String repositoryUrl, final String job){
+		public boolean updateHook(final String repositoryUrl, final String jenkinsRoot, final String job){
 			File repoDir = configurationDirectory(repositoryUrl);
 			if(setupRepositoryDirectory(repoDir)){
 				try {
@@ -255,7 +255,6 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 						fw.write("from urllib import urlencode\r\n");
 						fw.write("import os\r\n\r\n");
 						
-						String jenkinsRoot = getJenkinsRootUrl();
 						
 						fw.write("def run(ui, repo, **kwargs):\r\n");
 						fw.write("\thttp = HTTPConnection(\"" 
@@ -304,7 +303,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 				@QueryParameter("name") final String name) {
 			boolean updateConfiguration = updateConfiguration(repositoryUrl);
 			if(updateConfiguration){
-				boolean updateHook = updateHook(repositoryUrl, name);
+				boolean updateHook = updateHook(repositoryUrl, getJenkinsRootUrl(), name);
 				if(updateHook) {
 					return FormValidation.ok("Configuration updated");
 				}
