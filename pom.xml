@@ -9,7 +9,7 @@
 
   <name>Pretested integration</name>
   <artifactId>pretest-commit</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.3</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
