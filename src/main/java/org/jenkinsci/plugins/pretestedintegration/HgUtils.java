@@ -216,23 +216,23 @@ public class HgUtils {
 				Iterator itr = hgList.iterator();
 				while(itr.hasNext()) {
 					Object element = itr.next();
-					listener.error("[prteco]" + element.toString());
+					PretestUtils.logError(listener, element.toString());
 				}
 			}	
 
 			throw new AbortException("Failed to execute hg command");
 		} else {
-			PretestUtils.logMessage(listener,
+			PretestUtils.logDebug(listener,
 					"Successfully executed hg command");
 			if (true)
 			{
-				PretestUtils.logMessage(listener,
+				PretestUtils.logDebug(listener,
 					"Debugging, dumping log");
 
 				Iterator itr = hgList.iterator();
 				while(itr.hasNext()) {
 					Object element = itr.next();
-					PretestUtils.logMessage(listener, element.toString());
+					PretestUtils.logDebug(listener, element.toString());
 				}
 			}
 		}
@@ -288,17 +288,17 @@ public class HgUtils {
 		}
 		
 		// Dump it all to the log
-		PretestUtils.logMessage(listener,
+		PretestUtils.logDebug(listener,
 				"SCM log data:");
-		PretestUtils.logMessage(listener,
+		PretestUtils.logDebug(listener,
 				"\tchangeset: " + info.get("changeset"));
-		PretestUtils.logMessage(listener,
+		PretestUtils.logDebug(listener,
 				"\tbranch: " + info.get("branch"));
-		PretestUtils.logMessage(listener,
+		PretestUtils.logDebug(listener,
 				"\tuser: " + info.get("user"));
-		PretestUtils.logMessage(listener,
+		PretestUtils.logDebug(listener,
 				"\tdate: " + info.get("date"));
-		PretestUtils.logMessage(listener,
+		PretestUtils.logDebug(listener,
 				"\tmessage: " + info.get("message"));
 		
 		return info;

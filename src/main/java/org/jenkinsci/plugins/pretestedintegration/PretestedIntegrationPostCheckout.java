@@ -158,29 +158,30 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	 */
 	public boolean work(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		PretestUtils.logMessage(listener, "Beginning post-build step");
 		hasQueue = true;
 		BufferedReader br = new BufferedReader(build.getLogReader());
 		boolean status = getBuildSuccessStatus(build, launcher, listener);
-		PretestUtils.logMessage(listener, "Post build status: " + status);
 		
 		if(status) {
 			PretestUtils.logMessage(listener,
-					"Pushing resulting workspace to CT...");
+					"Pushing resulting workspace to CT");
 			pushToCT(build, launcher, listener);
-			PretestUtils.logMessage(listener, "...done!");
 		} else {
 			//HgUtils.runScmCommand(build, launcher, listener, 
 					//new String[]{"update","-C",oldTip});
 			PretestUtils.logMessage(listener, "Build error. Not pushing to CT");
 		}
 		
-		PretestUtils.logMessage(listener, "Queue available pre release: " +
+		PretestUtils.logDebug(listener, "Queue available pre release: " +
 				CommitQueue.getInstance().available());
 		CommitQueue.getInstance().release();
 		hasQueue = false;
-		PretestUtils.logMessage(listener, "Queue available post release: " +
+		PretestUtils.logDebug(listener, "Queue available post release: " +
 				CommitQueue.getInstance().available());
-
+		
+		PretestUtils.logMessage(listener, "Finished post-build step");
+		
 		return true;
 	}
 	
