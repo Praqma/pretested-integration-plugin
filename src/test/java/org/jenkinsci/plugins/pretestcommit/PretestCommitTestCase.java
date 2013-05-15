@@ -21,7 +21,6 @@ import hudson.tasks.Publisher;
 import hudson.util.StreamTaskListener;
 
 import org.junit.*;
-import org.mockito.*;
 
 /**
  * Base class for testing classes that requires a jenkins instance. This class 
