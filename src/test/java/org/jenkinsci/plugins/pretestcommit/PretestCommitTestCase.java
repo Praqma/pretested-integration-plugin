@@ -220,6 +220,17 @@ public abstract class PretestCommitTestCase extends HudsonTestCase {
 		throw new IOException("Could not create repository");
 	}
 	
+	public static File getTempFile() 
+			throws IOException {
+		final File temp = File.createTempFile("prteco-"+ Long.toString(System.nanoTime()),"");
+	    
+	    if(!(temp.delete()))
+	    {
+	        throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
+	    }
+	    
+	    return temp;
+	}
 	/**
 	 * Borrowed from
 	 * http://stackoverflow.com/questions/617414/create-a-temporary-directory-in-java
@@ -229,15 +240,8 @@ public abstract class PretestCommitTestCase extends HudsonTestCase {
 	public static File createTempDirectory()
 		    throws IOException
 		{
-		    final File temp;
+		    final File temp = getTempFile();
 		   
-		    temp = File.createTempFile("prteco-"+ Long.toString(System.nanoTime()),"");
-		    
-		    if(!(temp.delete()))
-		    {
-		        throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-		    }
-		    
 		    if(!(temp.mkdir()))
 		    {
 		        throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
