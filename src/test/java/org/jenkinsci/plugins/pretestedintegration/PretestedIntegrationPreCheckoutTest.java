@@ -105,6 +105,18 @@ public class PretestedIntegrationPreCheckoutTest extends PretestedIntegrationTes
 		//cleanup the results
 	}
 	
+	public void testShouldFailSetupDirectory() throws Exception {
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
+		
+		File tmp = createTempDirectory();
+		tmp.setWritable(false);
+		File newDir = new File(tmp,"foo");
+		
+		boolean setupResult = descriptor.setupRepositoryDirectory(newDir);
+		assertFalse(setupResult);
+		assertFalse(newDir.exists());
+	}
+	
 	public void testShouldUpdateConfigurationHgrcNotExists() throws Exception {
 		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
 		
