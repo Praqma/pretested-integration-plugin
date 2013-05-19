@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pretestedintegration;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -248,4 +250,15 @@ public abstract class PretestedIntegrationTestCase extends HudsonTestCase {
 		    }
 		    return (temp);
 		}
+	public static Object genericTestConstructor(final Class<?> cls) 
+			   throws InstantiationException, IllegalAccessException, 
+			InvocationTargetException 
+			   { 
+			      final Constructor<?> c = cls.getDeclaredConstructors()[0]; 
+			      c.setAccessible(true); 
+			      final Object n = c.newInstance((Object[])null); 
+			      
+			      Assert.assertNotNull(n); 
+			      return n; 
+			   }   
 }
