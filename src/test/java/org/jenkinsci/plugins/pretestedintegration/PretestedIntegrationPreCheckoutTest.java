@@ -10,9 +10,10 @@ import static org.mockito.Mockito.*;
 public class PretestedIntegrationPreCheckoutTest extends PretestedIntegrationTestCase {
 
 	public void testShouldCreateInstance() throws Exception {
-		final Constructor<?> c = PretestedIntegrationPreCheckout.class.getDeclaredConstructors()[0];
-		final Object instance = c.newInstance((Object[])null);
-		assertNotNull(instance);
+		Constructor <?> c = PretestedIntegrationPreCheckout.class.getConstructor(String.class);
+		Object inst = c.newInstance("foo");
+		
+		assertNotNull(inst);
 	}
 	
 	public void testShouldReturnRepositoryUrl() throws Exception {
