@@ -9,7 +9,7 @@
 
   <name>Pretested integration</name>
   <artifactId>pretest-commit</artifactId>
-  <version>1.5-SNAPSHOT</version>
+  <version>0.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
@@ -32,10 +32,10 @@
       <url>gitsite:git@github.com/pcds2013-team-delta/pretest-commit-plugin.git:core</url>
     </site>
     <snapshotRepository>
-      <!--
       <id>maven.jenkins-ci.org</id>
+      <!--
+      <id>Test</id>
       -->
-      <id>Jenkins</id>
       <url>file:///home/andreas/tmp/mvn</url>
     </snapshotRepository>
   </distributionManagement>

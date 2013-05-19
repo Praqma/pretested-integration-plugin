@@ -98,7 +98,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	 * @param build
 	 * @param launcher
 	 * @param listener
-	 * @return noop Environment class
+	 * @return 
 	 */
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
@@ -293,18 +293,6 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			}
 			return FormValidation.error("Configuration could not be updated");
 		}
-		
-		/**
-		 * Invoked when "save" is hit. 
-		 */
-		
-		@Override
-		public boolean configure(StaplerRequest req, JSONObject formData) 
-				throws FormException {
-			
-			save();
-			return super.configure(req,formData);
-		}
 
 		@Override
 		public boolean isApplicable(AbstractProject<?, ?> arg0) {
@@ -313,8 +301,6 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		}
 	}
 	
-	class NoopEnv extends Environment {
-	}
 	class PretestEnvironment extends Environment {
 	}
 }
