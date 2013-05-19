@@ -124,6 +124,13 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		Result buildResult = build.getResult();
+		if(buildResult.isWorseThan(Result.SUCCESS)) {
+			PretestUtils.logMessage(listener,
+					"Build result is worse than success. Aborting.");
+			return false;
+		}
+		
 		try {
 			return work(build, launcher, listener);
 		} catch(IOException e) {

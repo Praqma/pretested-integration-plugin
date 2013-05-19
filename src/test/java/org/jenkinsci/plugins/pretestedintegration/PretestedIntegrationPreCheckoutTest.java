@@ -2,16 +2,31 @@ package org.jenkinsci.plugins.pretestedintegration;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Scanner;
 
 import static org.mockito.Mockito.*;
 
 public class PretestedIntegrationPreCheckoutTest extends PretestedIntegrationTestCase {
 
+	public void testShouldCreateInstance() throws Exception {
+		Constructor <?> c = PretestedIntegrationPreCheckout.class.getConstructor(String.class);
+		Object inst = c.newInstance("foo");
+		
+		assertNotNull(inst);
+	}
+	
+	public void testShouldReturnRepositoryUrl() throws Exception {
+		String repositoryUrl = "foo";
+		PretestedIntegrationPreCheckout instance = new PretestedIntegrationPreCheckout(repositoryUrl);
+		assertNotNull(instance);
+		assertEquals(instance.getStageRepositoryUrl(), repositoryUrl);
+	}
+	
 	/**
 	 * Tests the validateConfiguration method in the 
 	 */
-	public void testShouldValidateConfiguration() throws Exception{
+	public void testShouldValidateConfiguration() throws Exception {
 		File tmp = setup(true, true);
 		
 		//Given a valid local repository
@@ -103,6 +118,18 @@ public class PretestedIntegrationPreCheckoutTest extends PretestedIntegrationTes
 		assertTrue(tmp.exists());
 		
 		//cleanup the results
+	}
+	
+	public void testShouldFailSetupDirectory() throws Exception {
+		PretestedIntegrationPreCheckout.DescriptorImpl descriptor = new PretestedIntegrationPreCheckout.DescriptorImpl();
+		
+		File tmp = createTempDirectory();
+		tmp.setWritable(false);
+		File newDir = new File(tmp,"foo");
+		
+		boolean setupResult = descriptor.setupRepositoryDirectory(newDir);
+		assertFalse(setupResult);
+		assertFalse(newDir.exists());
 	}
 	
 	public void testShouldUpdateConfigurationHgrcNotExists() throws Exception {
