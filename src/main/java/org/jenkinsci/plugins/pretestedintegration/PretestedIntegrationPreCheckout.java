@@ -83,11 +83,14 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			Dictionary<String, String> newVars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
 			
 			HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"merge", newVars.get("branch")});
+				//new String[]{"merge", newVars.get("branch"),"--tool","internal:fail"});
+				new String[]{"merge", newVars.get("branch"),"--tool","internal:merge"});
+				//new String[]{"merge", newVars.get("branch")});
 			HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"commit", "-m", newVars.get("message")});
-		} catch(AbortException e){
-			System.out.print("Could not update workspace, uh oh!");
+		} catch(AbortException e)
+		{
+			PretestUtils.logError(listener, "Could not merge with branch");
 			throw e;
 		}
 	}
@@ -109,17 +112,21 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		// This is used to determine the triggering build, even if newer commits
 		// are applied while this job is in the queue.
 		Environment environment = new PretestEnvironment();
-		environment.buildEnvVars(HgUtils.getNewestCommitInfo(
-				build, launcher, listener)); //TODO this should be removed
+		///environment.buildEnvVars(HgUtils.getNewestCommitInfo(
+		///		build, launcher, listener)); //TODO this should be removed
 		
 		// Wait in line until no other jobs are running.
 		CommitQueue.getInstance().enqueueAndWait();
 		hasQueue = true;
-
-		mergeWithNewBranch(build,launcher, listener, stageRepositoryUrl);
-		HgUtils.getNewestCommitInfo(build, launcher, listener);
+		try{
+			mergeWithNewBranch(build,launcher, listener, stageRepositoryUrl);
 		
-		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
+		}
+		catch(AbortException e){
+		}
+		///HgUtils.getNewestCommitInfo(build, launcher, listener);
+		
+		///HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
 		
 		//Environment environment2 = build.getEnvironment(null);
 		//environment2.put("stageRepositoryUrl",getStageRepositoryUrl());
@@ -141,9 +148,10 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			PretestUtils.logMessage(listener,"Pre-Checkout plugin version: "
 					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)
 					.getWrapper().getVersion());
-		}
+		}else{
 		PretestUtils.logMessage(listener, "No plugin found with name "
 				+ PLUGIN_NAME);
+		}
 	}
 	
 	@Override
