@@ -36,8 +36,8 @@
   -->
   <distributionManagement>
     <site>
-      <id>github-pages</id>
-      <url>gitsite:git@github.com/pcds2013-team-delta/pretest-commit-plugin.git:core</url>
+      <id>github-project-site</id>
+      <url>gitsite:git@github.com/jenkinsci/pretested-integration-plugin</url>
     </site>
     <repository>
       <id>maven.jenkins-ci.org</id>
@@ -59,6 +59,14 @@
     </pluginRepository>
   </pluginRepositories>
   <build>
+    <extensions>
+      <extension>
+        <groupId>org.kathrynhuxtable.maven.wagon</groupId>
+        <artifactId>wagon-gitsite</artifactId>
+        <version>0.3.1</version>
+      </extension>
+    </extensions>
+  	  
     <plugins>
     	<!--
         <plugin>
