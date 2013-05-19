@@ -293,18 +293,6 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			}
 			return FormValidation.error("Configuration could not be updated");
 		}
-		
-		/**
-		 * Invoked when "save" is hit. 
-		 */
-		
-		@Override
-		public boolean configure(StaplerRequest req, JSONObject formData) 
-				throws FormException {
-			
-			save();
-			return super.configure(req,formData);
-		}
 
 		@Override
 		public boolean isApplicable(AbstractProject<?, ?> arg0) {
