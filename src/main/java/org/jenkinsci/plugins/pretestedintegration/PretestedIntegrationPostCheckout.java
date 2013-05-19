@@ -69,13 +69,13 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
 				build, launcher, listener);
 		//get info regarding which branch that is going to be pushed to company truth	
-		Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
-				build, launcher, listener);
-		String sourceBranch = newCommitInfo.get("branch");
-		PretestUtils.logMessage(listener, "commit is on this branch: "
-				+ sourceBranch);
+		//Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
+		//		build, launcher, listener);
+		//String sourceBranch = newCommitInfo.get("branch");
+		//PretestUtils.logMessage(listener, "commit is on this branch: "
+		//		+ sourceBranch);
 		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"push", "--branch", sourceBranch});
+				new String[]{"push", "--new-branch"});
 	}
 	
 	/**
@@ -124,6 +124,13 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		Result buildResult = build.getResult();
+		if(buildResult.isWorseThan(Result.SUCCESS)) {
+			PretestUtils.logMessage(listener,
+					"Build result is worse than success. Aborting.");
+			return false;
+		}
+		
 		try {
 			return work(build, launcher, listener);
 		} catch(IOException e) {
