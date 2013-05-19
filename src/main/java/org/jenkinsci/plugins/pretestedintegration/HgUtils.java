@@ -187,7 +187,7 @@ public class HgUtils {
 
 		List<String> hgList = new ArrayList<String>();
 		String lastLine = "";
-		if (!cmdList.get(0).equals("log") && !cmdList.get(1).equals("log")) //TODO cahnge this dirty hack!!
+		if (!cmdList.get(0).equals("log") && !cmdList.get(1).equals("log")) //TODO change this dirty hack!!
 		{
 		try {
 			String line;
@@ -203,13 +203,22 @@ public class HgUtils {
 		}	
 		if(exitCode != 0) {
 			// Program ran but failed. Read output to find out what happened.
-			if(lastLine.equals("no changes found")) {
+			if(lastLine.equals("no changes found")) 
+			{
 				// This means that no error actually happened, but the command
 				// did nothing
 				PretestUtils.logError(listener,
 						"No changes found when doing hg command: \'"
 								+ cmdList.get(1) + "\'");
-			} else {
+			}
+			else if(lastLine.equals("use 'hg resolve' to retry unresolved file merges or 'hg update -C .' to abandon")) 
+			{
+				//There was a merge conflict
+				PretestUtils.logError(listener,
+						"A merge conflict occured when executing: \'"
+								+ cmdList.get(1) + "\'");
+			}
+		       	else {
 				// Unknown error, just show it to the user
 				PretestUtils.logError(listener,
 						"An unexpected hg log message occured, dumping log:");
@@ -219,7 +228,6 @@ public class HgUtils {
 					PretestUtils.logError(listener, element.toString());
 				}
 			}	
-
 			throw new AbortException("Failed to execute hg command");
 		} else {
 			PretestUtils.logDebug(listener,
