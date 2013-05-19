@@ -98,7 +98,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	 * @param build
 	 * @param launcher
 	 * @param listener
-	 * @return noop Environment class
+	 * @return 
 	 */
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
@@ -313,8 +313,6 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		}
 	}
 	
-	class NoopEnv extends Environment {
-	}
 	class PretestEnvironment extends Environment {
 	}
 }
