@@ -8,10 +8,22 @@ import static org.mockito.Mockito.*;
 
 public class PretestedIntegrationPreCheckoutTest extends PretestedIntegrationTestCase {
 
+	public void testShouldCreateInstance() throws Exception {
+		PretestedIntegrationPreCheckout instance = new PretestedIntegrationPreCheckout("foo");
+		assertNotNull(instance);
+	}
+	
+	public void testShouldReturnRepositoryUrl() throws Exception {
+		String repositoryUrl = "foo";
+		PretestedIntegrationPreCheckout instance = new PretestedIntegrationPreCheckout(repositoryUrl);
+		assertNotNull(instance);
+		assertEquals(instance.getStageRepositoryUrl(), repositoryUrl);
+	}
+	
 	/**
 	 * Tests the validateConfiguration method in the 
 	 */
-	public void testShouldValidateConfiguration() throws Exception{
+	public void testShouldValidateConfiguration() throws Exception {
 		File tmp = setup(true, true);
 		
 		//Given a valid local repository
