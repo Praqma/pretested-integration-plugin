@@ -9,6 +9,7 @@
   </parent>
 
   <name>Pretested Integration Plugin</name>
+  <description>Maintain a clean repository by only integrating pretested commits.</description>
   <artifactId>pretested-integration</artifactId>
   <version>0.0.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
