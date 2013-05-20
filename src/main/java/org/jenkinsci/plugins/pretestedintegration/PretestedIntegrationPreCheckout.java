@@ -85,8 +85,8 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			
 			HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"merge", newVars.get("branch"),"--tool","internal:merge"});
-			HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"commit", "-m", newVars.get("message")});
+			//HgUtils.runScmCommand(build, launcher, listener,
+			//	new String[]{"commit", "-m", newVars.get("message")});
 		} catch(AbortException e)
 		{
 			PretestUtils.logError(listener, "Could not merge with branch: "+newVars.get("branch"));
@@ -132,7 +132,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	public void preCheckout(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		if(Hudson.getInstance().getPlugin(PLUGIN_NAME) != null) {
-			PretestUtils.logMessage(listener,"Pre-Checkout plugin version: "
+			PretestUtils.logMessage(listener,PLUGIN_NAME+" plugin version: "
 					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)
 					.getWrapper().getVersion());
 		}else{
