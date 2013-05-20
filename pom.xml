@@ -8,7 +8,7 @@
     <version>1.466</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
-  <name>Pretested integration</name>
+  <name>Pretested Integration Plugin</name>
   <artifactId>pretested-integration</artifactId>
   <version>0.0.3-SNAPSHOT</version>
   <packaging>hpi</packaging>
