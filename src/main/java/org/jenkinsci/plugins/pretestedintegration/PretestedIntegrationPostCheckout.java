@@ -74,8 +74,19 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		//String sourceBranch = newCommitInfo.get("branch");
 		//PretestUtils.logMessage(listener, "commit is on this branch: "
 		//		+ sourceBranch);
+		Dictionary<String, String> vars = null;
+		vars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
+
+		try{
+		HgUtils.runScmCommand(build, launcher, listener,
+				new String[]{"commit", "-m", vars.get("message")});
+
 		HgUtils.runScmCommand(build, launcher, listener,
 				new String[]{"push", "--new-branch"});
+		}
+		catch(AbortException e){
+			throw e;
+		}
 	}
 	
 	/**
