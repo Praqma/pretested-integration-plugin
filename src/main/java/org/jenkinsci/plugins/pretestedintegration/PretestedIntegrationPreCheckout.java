@@ -24,6 +24,7 @@ import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 
 import org.ini4j.Ini;
 import org.ini4j.InvalidFileFormatException;
+import org.ini4j.Wini;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -204,7 +205,12 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 				try {
 					File hgrc = new File(repoDir,"hgrc");
 					if(hgrc.canWrite() || hgrc.createNewFile()){
-						Ini ini = new Ini(hgrc);
+						Ini ini;
+						if(File.separatorChar == '\\') {
+							ini = new Wini(hgrc);
+						} else {
+							ini = new Ini(hgrc);
+						}
 						ini.put("hooks","pretxnchangegroup", 
 							"python:.hg/hg_changegroup_hook.py:run");
 						ini.store();
