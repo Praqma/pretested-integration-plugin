@@ -10,7 +10,7 @@
 
   <name>Pretested Integration Plugin</name>
   <artifactId>pretested-integration</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
