@@ -1,19 +1,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin</url>
-
+  
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>1.466</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
-
   <name>Pretested Integration Plugin</name>
   <description>Maintain a clean repository by only integrating pretested commits.</description>
   <artifactId>pretested-integration</artifactId>
   <version>0.0.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
-
+  
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
@@ -21,20 +20,14 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
-
+  
   <!-- setting CSM to git -->
   <scm>
   	<connection>scm:git:ssh://github.com/jenkinsci/pretested-integration-plugin.git</connection>
   	<developerConnection>scm:git:ssh://git@github.com/jenkinsci/pretested-integration-plugin.git</developerConnection>
   	<url>https://github.com/jenkinsci/pretested-integration-plugin</url>
   </scm>
-  <!--
-  <scm>
-    <connection>scm:git:git://github.com/pcds2013-team-delta/pretest-commit-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/pcds2013-team-delta/pretest-commit-plugin.git</developerConnection>
-    <url>https://github.com/pcds2013-team-delta/pretest-commit-plugin</url>
-  </scm>
-  -->
+  
   <distributionManagement>
     <site>
       <id>github-project-site</id>
@@ -44,21 +37,15 @@
       <id>maven.jenkins-ci.org</id>
       <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
     </repository>
-    <!--
-    <snapshotRepository>
-      <id>maven.jenkins-ci.org</id>
-      <id>Test</id>
-      <url>file:///home/andreas/tmp/mvn</url>
-    </snapshotRepository>
-    -->
   </distributionManagement>
-
+  
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
+  
   <build>
     <extensions>
       <extension>
@@ -67,7 +54,6 @@
         <version>0.3.1</version>
       </extension>
     </extensions>
-  	  
     <plugins>
         <plugin>
             <groupId>org.codehaus.mojo</groupId>
@@ -122,11 +108,4 @@
       <version>0.5.2</version>
     </dependency>
   </dependencies>
-  <!--
-  <scm>
-    <connection>scm:svn:https://svn.jenkins-ci.org/tags/pretest-commit-1.3</connection>
-    <developerConnection>scm:svn:https://svn.jenkins-ci.org/tags/pretest-commit-1.3</developerConnection>
-    <url>https://svn.jenkins-ci.org/tags/pretest-commit-1.3</url>
-  </scm>
-  -->
 </project>

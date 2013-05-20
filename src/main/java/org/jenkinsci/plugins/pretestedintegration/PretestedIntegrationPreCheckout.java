@@ -24,6 +24,7 @@ import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 
 import org.ini4j.Ini;
 import org.ini4j.InvalidFileFormatException;
+import org.ini4j.Wini;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -72,6 +73,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		//First get the curent tip info
 		Dictionary<String, String> oldVars = HgUtils.getNewestCommitInfo(build, launcher, listener);
 		String oldTip = oldVars.get("changeset");
+		Dictionary<String, String> newVars = null;
 		
 		try {
 			HgUtils.runScmCommand(build, launcher, listener, 
@@ -80,17 +82,15 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 				new String[]{"pull", "--update", repositoryURL});
 			
 			
-			Dictionary<String, String> newVars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
+			newVars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
 			
 			HgUtils.runScmCommand(build, launcher, listener,
-				//new String[]{"merge", newVars.get("branch"),"--tool","internal:fail"});
 				new String[]{"merge", newVars.get("branch"),"--tool","internal:merge"});
-				//new String[]{"merge", newVars.get("branch")});
-			HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"commit", "-m", newVars.get("message")});
+			//HgUtils.runScmCommand(build, launcher, listener,
+			//	new String[]{"commit", "-m", newVars.get("message")});
 		} catch(AbortException e)
 		{
-			PretestUtils.logError(listener, "Could not merge with branch");
+			PretestUtils.logError(listener, "Could not merge with branch: "+newVars.get("branch"));
 			throw e;
 		}
 	}
@@ -112,24 +112,12 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		// This is used to determine the triggering build, even if newer commits
 		// are applied while this job is in the queue.
 		Environment environment = new PretestEnvironment();
-		///environment.buildEnvVars(HgUtils.getNewestCommitInfo(
-		///		build, launcher, listener)); //TODO this should be removed
 		
 		// Wait in line until no other jobs are running.
 		CommitQueue.getInstance().enqueueAndWait();
 		hasQueue = true;
-		try{
-			mergeWithNewBranch(build,launcher, listener, stageRepositoryUrl);
 		
-		}
-		catch(AbortException e){
-		}
-		///HgUtils.getNewestCommitInfo(build, launcher, listener);
-		
-		///HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
-		
-		//Environment environment2 = build.getEnvironment(null);
-		//environment2.put("stageRepositoryUrl",getStageRepositoryUrl());
+		mergeWithNewBranch(build,launcher, listener, stageRepositoryUrl);
 		
 		PretestUtils.logMessage(listener, "Finished pre-build step");
 		
@@ -145,7 +133,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	public void preCheckout(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		if(Hudson.getInstance().getPlugin(PLUGIN_NAME) != null) {
-			PretestUtils.logMessage(listener,"Pre-Checkout plugin version: "
+			PretestUtils.logMessage(listener,PLUGIN_NAME+" plugin version: "
 					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)
 					.getWrapper().getVersion());
 		}else{
@@ -204,7 +192,12 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 				try {
 					File hgrc = new File(repoDir,"hgrc");
 					if(hgrc.canWrite() || hgrc.createNewFile()){
-						Ini ini = new Ini(hgrc);
+						Ini ini;
+						if(File.separatorChar == '\\') {
+							ini = new Wini(hgrc);
+						} else {
+							ini = new Ini(hgrc);
+						}
 						ini.put("hooks","pretxnchangegroup", 
 							"python:.hg/hg_changegroup_hook.py:run");
 						ini.store();
