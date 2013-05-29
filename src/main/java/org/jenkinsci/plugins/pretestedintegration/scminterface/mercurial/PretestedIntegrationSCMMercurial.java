@@ -10,7 +10,9 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 
 import java.io.IOException;
+import java.util.Dictionary;
 
+import org.jenkinsci.plugins.pretestedintegration.PretestUtils;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface;
 
@@ -23,14 +25,28 @@ import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrat
 public class PretestedIntegrationSCMMercurial implements
 		PretestedIntegrationSCMInterface {
 
-	/* (non-Javadoc)
-	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#prepareWorkspace(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener, org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit)
+	/**
+	 * Checkout 
 	 */
 	public void prepareWorkspace(AbstractBuild build, Launcher launcher,
 			BuildListener listener, PretestedIntegrationSCMCommit commit)
 			throws AbortException, IOException, IllegalArgumentException {
-		// TODO Auto-generated method stub
-
+		
+		try {
+			//Make sure that we are on the integration branch
+			//TODO: Make it dynamic and not just "default"
+			HgUtils.runScmCommand(build, launcher, listener, 
+					new String[]{"update","default"});
+			
+			//Merge the commit into the integration branch
+			HgUtils.runScmCommand(build, launcher, listener,
+				new String[]{"merge", commit.getId(),"--tool","internal:merge"});
+		} catch(AbortException e) {
+			PretestUtils.logError(listener, "Could not merge commit: " + commit.getId());
+			throw e;
+		} catch(InterruptedException e){
+			//wth?
+		}
 	}
 
 	/* (non-Javadoc)

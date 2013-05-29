@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial;
 
 import hudson.AbortException;
 import hudson.EnvVars;
