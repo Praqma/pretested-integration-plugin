@@ -1,6 +1,15 @@
 
 package org.jenkinsci.plugins.pretestedintegration.scminterface;
 
+import java.io.IOException;
+
+import hudson.AbortException;
+import hudson.Launcher;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.AbstractBuild;
+
+
 /**
  * Implements a class that specifies how an SCM can be used by the Pretested Integration Plugin.
  */
@@ -23,7 +32,7 @@ public interface PretestedIntegrationSCMInterface {
 	void prepareWorkspace(
 			AbstractBuild build, Launcher launcher, BuildListener listener,
 			PretestedIntegrationSCMCommit commit)
-			throws AbortException, IOException, InvalidArgumentException;
+			throws AbortException, IOException, IllegalArgumentException;
 	
 	/**
 	 * Test if the list of pending commits is non-empty.
@@ -36,7 +45,7 @@ public interface PretestedIntegrationSCMInterface {
 	 */
 	boolean hasNextCommit(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
-			throws IOException, InvalidArgumentException;
+			throws IOException, IllegalArgumentException;
 	
 	/**
 	 * Return the next pending commit, and advance the commit log to the next
@@ -51,7 +60,7 @@ public interface PretestedIntegrationSCMInterface {
 	 */
 	PretestedIntegrationSCMCommit popCommit(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
-			throws IOException, InvalidArgumentException;
+			throws IOException, IllegalArgumentException;
 	
 	/**
 	 * This is called after the build has run. If the build was successful, the
@@ -66,5 +75,5 @@ public interface PretestedIntegrationSCMInterface {
 	void handlePostBuild(
 			AbstractBuild build, Launcher launcher, BuildListener listener,
 			Result result)
-			throws IOException, InvalidArgumentException;
+			throws IOException, IllegalArgumentException;
 }
