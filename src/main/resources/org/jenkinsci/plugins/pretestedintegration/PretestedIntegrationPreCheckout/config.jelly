@@ -3,10 +3,10 @@ xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
 xmlns:f="/lib/form"> -->
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
   
-	<f:entry title="Stage repository URL" field="stageRepositoryUrl">
+	<!-- <f:entry title="Stage repository" field="stageRepository">
 		<f:textbox />
-	</f:entry>
-  <f:validateButton
+	</f:entry> -->
+  <!-- <f:validateButton
     title="${%Make/update repository}" progress="${%Configuration...}"
-    method="updateRepository" with="stageRepositoryUrl,name" />
+    method="updateRepository" with="stageRepository,name" /> -->
 </j:jelly>
