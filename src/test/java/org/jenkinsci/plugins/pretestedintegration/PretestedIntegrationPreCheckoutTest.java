@@ -11,7 +11,7 @@ public class PretestedIntegrationPreCheckoutTest extends PretestedIntegrationTes
 
 	public void testShouldCreateInstance() throws Exception {
 		Constructor <?> c = PretestedIntegrationPreCheckout.class
-				.getConstructor(String.class);
+				.getConstructor();
 		Object inst = c.newInstance();
 		
 		assertNotNull(inst);
