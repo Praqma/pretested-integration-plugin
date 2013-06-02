@@ -34,15 +34,18 @@ import java.util.Dictionary;
 import java.io.BufferedReader;
 
 import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
+import org.jenkinsci.plugins.pretestedintegration.scminterface
+		.PretestedIntegrationSCMInterface;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * A collection of funtions used post build.
+ * A collection of functions used post build.
  */
 public class PretestedIntegrationPostCheckout extends Publisher {
 	
-	private static final String DISPLAY_NAME = "Run pretested integration post-build step";
+	private static final String DISPLAY_NAME =
+			"Run pretested integration post-build step";
 	
 	private boolean hasQueue;
 	
@@ -53,73 +56,6 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Override
 	public boolean needsToRunAfterFinalized() {
 		return true;
-	}
-	
-	/**
-	 * Pushing to Company Truth
-	 * 
-	 * @param build
-	 * @param launcher
-	 * @param listener
-	 *
-	 * @return void	 
-	 */
-	private void pushToCT(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
-		ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
-				build, launcher, listener);
-		//get info regarding which branch that is going to be pushed to company truth	
-		//Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
-		//		build, launcher, listener);
-		//String sourceBranch = newCommitInfo.get("branch");
-		//PretestUtils.logMessage(listener, "commit is on this branch: "
-		//		+ sourceBranch);
-		Dictionary<String, String> vars = null;
-		vars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
-
-		try{
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"commit", "-m", vars.get("message")});
-
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"push", "--new-branch"});
-		}
-		catch(AbortException e){
-			throw e;
-		}
-	}
-	
-	/**
-	 * Determains the outcome of the build
-	 * 
-	 * @param build
-	 * @param launcher
-	 * @param listener
-	 *
-	 * @return boolean	 
-	 */
-	private boolean getBuildSuccessStatus(AbstractBuild build,
-			Launcher launcher, BuildListener listener) {
-		boolean success = true;
-		try {
-			BufferedReader br = new BufferedReader(build.getLogReader());
-			while(success) {
-				String line = br.readLine();
-				if(line == null) {
-					break;
-				}
-				if(line.startsWith("Build step '")
-						&& line.endsWith("' marked build as failure")) {
-							success = false;
-					break;
-				}
-			}
-		} catch(IOException e) {
-			PretestUtils.logMessage(listener,
-					"Could not read log. Assuming build failure.");
-			success = false;
-		}
-		return success;
 	}
 	
 	/**
@@ -134,71 +70,37 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	 */
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
-		Result buildResult = build.getResult();
-		if(buildResult.isWorseThan(Result.SUCCESS)) {
-			PretestUtils.logMessage(listener,
-					"Build result is worse than success. Aborting.");
-			return false;
-		}
-		
+			BuildListener listener) throws IOException {
 		try {
-			return work(build, launcher, listener);
-		} catch(IOException e) {
-			if (hasQueue) {
-				CommitQueue.getInstance().release();
+			PretestUtils.logMessage(listener, "Beginning post-build step");
+			hasQueue = true;
+			
+			// Get the interface for the SCM according to the chosen SCM
+			PretestedIntegrationSCMInterface scmInterface =
+					PretestUtils.getScmInterface(build, launcher, listener);
+			if(scmInterface == null) {
+				return false;
 			}
-			throw(e);
-			//return false;
-		} catch(InterruptedException e) {
-			if (hasQueue) {
+			
+			scmInterface.handlePostBuild(build, launcher, listener);
+			
+			CommitQueue.getInstance().release();
+			hasQueue = false;
+			
+			PretestUtils.logMessage(listener, "Finished post-build step");
+		} catch(IOException e) {
+			if(hasQueue) {
 				CommitQueue.getInstance().release();
 			}
 			throw(e);
 			//return false;
 		} catch(Exception e) {
-			if (hasQueue) {
+			if(hasQueue) {
 				CommitQueue.getInstance().release();
 			}
 			e.printStackTrace();
 			return false;
 		}
-	}
-		
-	/**
-	 * Gets work from the queue
-	 * 
-	 * @param build
-	 * @param launcher
-	 * @param listener
-	 *
-	 * @return boolean	 
-	 */
-	public boolean work(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
-		PretestUtils.logMessage(listener, "Beginning post-build step");
-		hasQueue = true;
-		BufferedReader br = new BufferedReader(build.getLogReader());
-		boolean status = getBuildSuccessStatus(build, launcher, listener);
-		
-		if(status) {
-			PretestUtils.logMessage(listener,
-					"Pushing resulting workspace to CT");
-			pushToCT(build, launcher, listener);
-		} else {
-			//HgUtils.runScmCommand(build, launcher, listener, 
-					//new String[]{"update","-C",oldTip});
-			PretestUtils.logMessage(listener, "Build error. Not pushing to CT");
-		}
-		
-		PretestUtils.logDebug(listener, "Queue available pre release: " +
-				CommitQueue.getInstance().available());
-		CommitQueue.getInstance().release();
-		hasQueue = false;
-		PretestUtils.logDebug(listener, "Queue available post release: " +
-				CommitQueue.getInstance().available());
-		
-		PretestUtils.logMessage(listener, "Finished post-build step");
 		
 		return true;
 	}

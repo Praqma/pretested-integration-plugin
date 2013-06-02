@@ -3,6 +3,9 @@ package org.jenkinsci.plugins.pretestedintegration.scminterface;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial
+		.PretestedIntegrationSCMMercurial;
+
 public class AvailableInterfaces {
 	
 	private Dictionary<String, Class> classesByName;
@@ -13,7 +16,8 @@ public class AvailableInterfaces {
 	 * Edit here!
 	 */
 	private void setAvailableInterfaces() {
-		// classesByName.put("hudson.plugins.mercurial.MercurialSCM", );
+		classesByName.put("hudson.plugins.mercurial.MercurialSCM",
+				PretestedIntegrationSCMMercurial.class);
 	}
 	
 	private AvailableInterfaces() {
