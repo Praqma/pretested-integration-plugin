@@ -29,6 +29,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
+
 /**
  *
  */

@@ -38,6 +38,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.jenkinsci.plugins.pretestedintegration.PretestUtils;
@@ -335,6 +337,7 @@ public class HgUtils {
 		Hashtable<String, String> info = new Hashtable<String, String>();
 		info.put("branch","default");
 		String line;
+
 		while((line = logStdout.readLine()) != null) {
 			String firstWord = line.split("\\s+")[0];
 			String restOfLine = line.substring(firstWord.length()).trim();
@@ -372,5 +375,163 @@ public class HgUtils {
 				"\tmessage: " + info.get("message"));
 		
 		return info;
+	}
+
+	/**
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return
+	 */	
+	public static boolean hasNextCommit(
+			AbstractBuild build, Launcher launcher, BuildListener listener)
+			throws IOException, InterruptedException, AbortException {
+			
+				String revision = "1";
+				//example: hg log -d ">2013-5-20 15:49"
+				//String modifiedDate = "\">"+date+"\"";
+				//BufferedReader logStdout = runScmCommand(
+				//build, launcher, listener, new String[]{"log", "-d", modifiedDate});
+
+				Hashtable<String, String> info = new Hashtable<String, String>();
+
+				try {
+					BufferedReader logStdout = runScmCommand(
+					build, launcher, listener, new String[]{"log", "-r", revision+":tip"});
+					logToCommitDict(logStdout); //the first entry in the log is the current revision
+					info = logToCommitDict(logStdout);//the second entry is the new commit.
+					
+					if(info == null ){
+						return false;
+				
+					}else{
+						return true;
+					}
+				}
+				//logToCommitDict threw an exception (empty log or got an error in the log)
+				catch(AbortException e)
+				{
+					throw e;
+				}
+				catch(IOException e)
+				{
+					throw e;
+				}
+				catch(InterruptedException e)
+				{
+					throw e;
+				}
+			}
+
+	/**
+	 * 
+	 * @param AbstractBuild
+	 * @param Launcher
+	 * @param BuildListener
+	 *
+	 * @return
+	 */	
+	public static PretestedIntegrationSCMCommit popCommit(
+			AbstractBuild build, Launcher launcher, BuildListener listener)
+			throws IOException, InterruptedException, AbortException {
+			
+				String revision = "1";
+				//example: hg log -d ">2013-5-20 15:49"
+				//String modifiedDate = "\">"+date+"\"";
+				//BufferedReader logStdout = runScmCommand(
+				//build, launcher, listener, new String[]{"log", "-d", modifiedDate});
+				
+				Hashtable<String, String> info = new Hashtable<String, String>();
+
+				try {
+					BufferedReader logStdout = runScmCommand(
+					build, launcher, listener, new String[]{"log", "-r", revision+":tip"});
+					logToCommitDict(logStdout); //the first entry in the log is the current revision
+					info = logToCommitDict(logStdout);//the second entry is the new commit.
+					//TODO update currently build revison variable
+					//CBR = info.get("changeset");
+				
+				}
+				catch(AbortException e)
+				{
+					throw e;
+				}
+				catch(IOException e)
+				{
+					throw e;
+				}
+				catch(InterruptedException e)
+				{
+					throw e;
+				}
+				if (info != null){
+					return new PretestedIntegrationSCMCommit(info.get("changeset"));
+				}
+				else {
+					throw new AbortException("There should have been a second entry in the log");
+					//throw exception, second commit should not be empty
+				}
+			}
+
+
+	/**
+	 *
+	 *	Takes a buffered reader which containts one or more possible commits and
+	 *	converts the newest commit, by date, into a hashtable;
+	 *
+	 * 	@param
+	 *
+	 * 	@return	 A ditionary which contains all information from the hg log.
+	 */
+	public static Hashtable<String, String> logToCommitDict(BufferedReader logStdout)
+			throws AbortException,IOException{
+		// Read one line at a time and put the values into a dictionary
+		Hashtable<String, String> info = new Hashtable<String, String>();
+		info.put("branch","default");
+		String line;
+
+		while((line = logStdout.readLine().trim()) != null) {
+			String firstWord = line.split("\\s+")[0];
+			String restOfLine = line.substring(firstWord.length()).trim();
+			if(firstWord.equals("changeset:")) {
+				String changeset;
+				if(restOfLine.contains(":")){
+					changeset = restOfLine.substring(restOfLine.indexOf(":")+1);
+				} else {
+					changeset = restOfLine;
+				}
+				info.put("changeset", changeset);
+			} else if(firstWord.equals("branch:")) {
+				info.put("branch", restOfLine);
+			} else if(firstWord.equals("user:")) {
+				info.put("user", restOfLine);
+			} else if(firstWord.equals("date:")) {
+				info.put("date", restOfLine);
+			} else if(firstWord.equals("summary:")) {
+				info.put("message", restOfLine);
+			}else {
+				throw new AbortException("The log contained less or more arguments than expected");
+				//the current log message does not match the syntax of a log entry.
+				//dump the log to the user or inform the user in some other way what went wrong.
+			}
+		}
+		
+		//check if we got all information. We dont want to return a dictionary
+		//that does not contain all the information. 
+		if(	info.contains("changeset") &&
+			info.contains("branch") &&
+			info.contains("user") &&
+			info.contains("date") &&
+			info.contains("message"))
+		{
+			return info;
+		}else
+		{
+			return null;
+			//the log was empty.
+			//throw exception?
+		}
 	}
 }

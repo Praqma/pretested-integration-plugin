@@ -37,6 +37,9 @@ import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
+
+
 /**
  * A collection of funtions used post build.
  */
