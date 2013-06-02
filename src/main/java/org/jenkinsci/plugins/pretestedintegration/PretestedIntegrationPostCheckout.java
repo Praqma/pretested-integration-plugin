@@ -40,7 +40,8 @@ import org.jenkinsci.plugins.pretestedintegration.scminterface
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * A collection of functions used post build.
+ * The publisher determines what will happen when the build has been run.
+ * Depending on the chosen SCM, a more specific function will be called.
  */
 public class PretestedIntegrationPostCheckout extends Publisher {
 	
@@ -59,8 +60,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	}
 	
 	/**
-	 * Overridden setup returns a noop class as we don't want to add anything
-	 * here.
+	 * Calls the SCM-specific function according to the chosen SCM.
 	 *
 	 * @param build
 	 * @param launcher
@@ -82,6 +82,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 				return false;
 			}
 			
+			// Do it!
 			scmInterface.handlePostBuild(build, launcher, listener);
 			
 			CommitQueue.getInstance().release();

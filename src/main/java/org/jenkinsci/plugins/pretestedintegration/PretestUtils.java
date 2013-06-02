@@ -66,7 +66,7 @@ public class PretestUtils {
 	}
 	
 	/**
-	 * Get the interface for the SCM according to the chosen SCM
+	 * Get the interface for the SCM according to the chosen SCM.
 	 */
 	public static PretestedIntegrationSCMInterface getScmInterface(
 			AbstractBuild build, Launcher launcher, BuildListener listener) {

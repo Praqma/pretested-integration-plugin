@@ -32,7 +32,8 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
- *
+ * The build wrapper determines what will happen before the build will run.
+ * Depending on the chosen SCM, a more specific function will be called.
  */
 public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
@@ -47,6 +48,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
 	/**
 	 * Jenkins hook that fires after the workspace is initialized.
+	 * Calls the SCM-specific function according to the chosen SCM.
 	 * 
 	 * @param build
 	 * @param launcher
@@ -86,6 +88,8 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	}
 	
 	/**
+	 * Prints out version information.
+	 * 
 	 * @param build
 	 * @param launcher
 	 * @param listener
