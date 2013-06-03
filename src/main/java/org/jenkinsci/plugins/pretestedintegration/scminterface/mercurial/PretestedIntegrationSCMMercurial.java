@@ -13,7 +13,7 @@ import hudson.util.ArgumentListBuilder;
 import java.io.IOException;
 import java.util.Dictionary;
 
-import org.jenkinsci.plugins.pretestedintegration.HgUtils;
+import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
 import org.jenkinsci.plugins.pretestedintegration.PretestUtils;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface;
