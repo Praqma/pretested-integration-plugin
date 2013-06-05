@@ -42,6 +42,11 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
 	private boolean hasQueue;
 	
+	//TODO: Store as privates instead of passing around all the time
+	private AbstractBuild build;
+	private Launcher launcher;
+	private BuildListener listener;
+	
 	@DataBoundConstructor
 	public PretestedIntegrationPreCheckout() {
 	}
@@ -58,6 +63,10 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		this.build = build;
+		this.launcher = launcher;
+		this.listener = listener;
+
 		PretestUtils.logMessage(listener, "Beginning pre-build step");
 		
 		// Wait in line until no other jobs are running.
@@ -94,9 +103,8 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	 * @param launcher
 	 * @param listener
 	 */
-	@Override
-	public void preCheckout(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
+	//@Override
+	public void preCheckout() throws IOException, InterruptedException {
 		if(Hudson.getInstance().getPlugin(PLUGIN_NAME) != null) {
 			PretestUtils.logMessage(listener, PLUGIN_NAME + " plugin version: "
 					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)

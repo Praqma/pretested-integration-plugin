@@ -50,6 +50,10 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	
 	private boolean hasQueue;
 	
+	private AbstractBuild build;
+	private Launcher launcher;
+	private BuildListener listener;
+	
 	@DataBoundConstructor
 	public PretestedIntegrationPostCheckout() {
 	}
@@ -71,6 +75,9 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException {
+		this.build = build;
+		this.launcher = launcher;
+		this.listener = listener;
 		try {
 			PretestUtils.logMessage(listener, "Beginning post-build step");
 			hasQueue = true;
@@ -102,7 +109,6 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 			e.printStackTrace();
 			return false;
 		}
-		
 		return true;
 	}
 	
