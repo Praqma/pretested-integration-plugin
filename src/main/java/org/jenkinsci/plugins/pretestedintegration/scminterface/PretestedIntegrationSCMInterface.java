@@ -73,7 +73,6 @@ public interface PretestedIntegrationSCMInterface {
 	 * condition.
 	 */
 	void handlePostBuild(
-			AbstractBuild build, Launcher launcher, BuildListener listener,
-			Result result)
+			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, IllegalArgumentException;
 }

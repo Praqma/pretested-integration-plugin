@@ -23,8 +23,6 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 import org.jenkinsci.plugins.pretestedintegration.scminterface
 		.PretestedIntegrationSCMInterface;
-import org.jenkinsci.plugins.pretestedintegration.scminterface
-		.AvailableInterfaces;
 
 import org.ini4j.Ini;
 import org.ini4j.InvalidFileFormatException;
@@ -36,7 +34,8 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
 
 /**
- *
+ * The build wrapper determines what will happen before the build will run.
+ * Depending on the chosen SCM, a more specific function will be called.
  */
 public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
@@ -45,18 +44,13 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
 	private boolean hasQueue;
 	
-	private String getScmType(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws AbortException {
-		AbstractProject<?,?> project = build.getProject();
-		return project.getScm().getType();
-	}
-	
 	@DataBoundConstructor
 	public PretestedIntegrationPreCheckout() {
 	}
 	
 	/**
 	 * Jenkins hook that fires after the workspace is initialized.
+	 * Calls the SCM-specific function according to the chosen SCM.
 	 * 
 	 * @param build
 	 * @param launcher
@@ -73,34 +67,9 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		hasQueue = true;
 		
 		// Get the interface for the SCM according to the chosen SCM
-		String scmType = getScmType(build, launcher, listener);
-		if(scmType == null) {
-			PretestUtils.logMessage(
-					listener, "No SCM chosen");
-			return null;
-		}
-		Class scmClass = AvailableInterfaces.getClassByName(scmType);
-		if(scmClass == null) {
-			PretestUtils.logMessage(
-					listener, "No interface found for SCM type: " + scmType);
-			return null;
-		}
-		PretestedIntegrationSCMInterface scmInterface;
-		try {
-			scmInterface = (PretestedIntegrationSCMInterface)
-					scmClass.newInstance();
-		} catch(InstantiationException e) {
-			PretestUtils.logMessage(listener, "Could not instantiate class: "
-					+ AvailableInterfaces.getClassByName(scmType));
-			return null;
-		} catch(IllegalAccessException e) {
-			PretestUtils.logMessage(listener, "Could not instantiate class: "
-					+ AvailableInterfaces.getClassByName(scmType));
-			return null;
-		} catch(ClassCastException e) {
-			PretestUtils.logMessage(listener, "SCM interface class does not"
-					+ " implement the PretestedIntegrationSCMInterface: "
-					+ AvailableInterfaces.getClassByName(scmType));
+		PretestedIntegrationSCMInterface scmInterface =
+				PretestUtils.getScmInterface(build, launcher, listener);
+		if(scmInterface == null) {
 			return null;
 		}
 		
@@ -121,6 +90,8 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	}
 	
 	/**
+	 * Prints out version information.
+	 * 
 	 * @param build
 	 * @param launcher
 	 * @param listener

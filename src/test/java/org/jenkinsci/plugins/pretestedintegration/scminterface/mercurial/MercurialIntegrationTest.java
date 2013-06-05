@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,21 +11,16 @@ import java.util.List;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
-import hudson.model.Build;
 import hudson.model.FreeStyleBuild;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
-import hudson.model.Project;
 import hudson.util.StreamTaskListener;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
 import org.junit.*;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 import org.jvnet.hudson.test.HudsonTestCase;
 import hudson.plugins.mercurial.*;
 
@@ -51,7 +45,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		setup();
 		File dir = createTempDirectory();
 		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
-
+		plugin.setWorkingDirectory(new FilePath(dir));
+		
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
 		//Setup the repository
@@ -59,22 +54,32 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		shell(dir,"touch","foo");
 		hg(dir, "add","foo");
 		hg(dir, "commit","-m","\"added foo\"");
+		hg(dir, "log");
 		hg(dir, "branch","test");
 		shell(dir,"touch","bar");
 		hg(dir, "add","bar");
 		hg(dir, "commit","-m","\"added bar\"");
+		hg(dir, "log");
 		
-		FreeStyleProject project = createFreeStyleProject();
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
 		
-		//Need to get the correct build
+		//Setup build and listener
+		BuildListener blistener = mock(BuildListener.class);
+		
+		FreeStyleBuild build = new FreeStyleBuild(project);
 		
 		String rev = hg(dir, "log","--template","'{node}'","-l","1").toString("UTF-8");	
 		PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit(rev);
 		
-		//plugin.prepareWorkspace(build, launcher, blistener, commit);
+		plugin.prepareWorkspace(build, launcher, blistener, commit);
 		
 		File bar = new File(dir,"bar");
-		//assertTrue(bar.exists());
+		
+		assertTrue(bar.exists());
+		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
+		assertTrue(hg(dir,"branch").toString().startsWith("default"));
 	}
 	
 	//Thank you MercurialSCM

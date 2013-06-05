@@ -4,10 +4,15 @@
 package org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial;
 
 import hudson.AbortException;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
-import hudson.model.Result;
+import hudson.model.Node;
 import hudson.model.AbstractBuild;
+import hudson.model.TaskListener;
+import hudson.plugins.mercurial.MercurialInstallation;
+import hudson.plugins.mercurial.MercurialSCM;
+import hudson.scm.SCM;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.IOException;
@@ -27,8 +32,78 @@ import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrat
 public class PretestedIntegrationSCMMercurial implements
 		PretestedIntegrationSCMInterface {
 
+	private FilePath workingDirectory = null;
+	final static String LOG_PREFIX = "[PREINT-HG] ";
+	
+	public void setWorkingDirectory(FilePath workingDirectory){
+		this.workingDirectory = workingDirectory;
+	}
+	
 	/**
-	 * Checkout 
+	 * Locate the correct mercurial binary to use for commands
+	 * @param build
+	 * @param listener
+	 * @param allowDebug
+	 * @return An ArgumentListBuilder containing the correct hg binary
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	private static ArgumentListBuilder findHgExe(AbstractBuild build, TaskListener listener, boolean allowDebug) throws IOException,
+			InterruptedException {
+		//Cast the current SCM to get the methods we want. 
+		//Throw exception on failure
+		try{
+			SCM scm = build.getProject().getScm();
+			MercurialSCM hg = (MercurialSCM) scm;
+			
+			Node node = build.getBuiltOn();
+			// Run through Mercurial installations and check if they correspond to
+			// the one used in this job
+			for (MercurialInstallation inst
+					: MercurialInstallation.allInstallations()) {
+				if (inst.getName().equals(hg.getInstallation())) {
+					// TODO: what about forEnvironment?
+					String home = inst.getExecutable().replace("INSTALLATION",
+							inst.forNode(node, listener).getHome());
+					ArgumentListBuilder b = new ArgumentListBuilder(home);
+					
+					if (allowDebug && inst.getDebug()) {
+						b.add("--debug");
+					}
+					return b;
+				}
+			}
+			//Just use the default hg
+			return new ArgumentListBuilder(hg.getDescriptor().getHgExe());
+		} catch(ClassCastException e) {
+			listener.getLogger().println(LOG_PREFIX + " configured scm is not mercurial");
+			throw new InterruptedException();
+		}
+	}
+	
+	/**
+	 * Invoke a command with mercurial
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 * @param cmds
+	 * @return The exitcode of command
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public int hg(AbstractBuild build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException{
+		ArgumentListBuilder hg = findHgExe(build, listener, false);
+		hg.add(cmds);
+		//if the working directory has not been manually set use the build workspace
+		if(workingDirectory == null){
+			setWorkingDirectory(build.getWorkspace());
+		}
+		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
+		return exitCode;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#hasNextCommit(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)
 	 */
 	public void prepareWorkspace(AbstractBuild build, Launcher launcher,
 			BuildListener listener, PretestedIntegrationSCMCommit commit)
@@ -36,19 +111,14 @@ public class PretestedIntegrationSCMMercurial implements
 		try {
 			//Make sure that we are on the integration branch
 			//TODO: Make it dynamic and not just "default"
-			HgUtils.runScmCommand(build, launcher, listener, 
-					new String[]{"update","default"});
+			hg(build, launcher, listener, "update","default");
 			
 			//Merge the commit into the integration branch
-			HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"merge", commit.getId(),"--tool","internal:merge"});
-		} catch(AbortException e) {
-			PretestUtils.logError(listener, "Could not merge commit: " + commit.getId());
-			throw e;
+			hg(build, launcher, listener, "merge", commit.getId(),"--tool","internal:merge");
 		} catch(InterruptedException e){
-			//wth?
-		}
-		
+			listener.getLogger().print(LOG_PREFIX + "hg command exited unexpectedly");
+			throw new AbortException();
+		}	
 	}
 
 	/* (non-Javadoc)
@@ -75,7 +145,7 @@ public class PretestedIntegrationSCMMercurial implements
 	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#handlePostBuild(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener, hudson.model.Result)
 	 */
 	public void handlePostBuild(AbstractBuild build, Launcher launcher,
-			BuildListener listener, Result result) throws IOException,
+			BuildListener listener) throws IOException,
 			IllegalArgumentException {
 		try {
 			ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
