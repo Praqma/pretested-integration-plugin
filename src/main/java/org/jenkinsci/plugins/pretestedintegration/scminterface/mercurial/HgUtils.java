@@ -486,7 +486,7 @@ public class HgUtils {
 	 * 	@return	 A ditionary which contains all information from the hg log.
 	 */
 	public static Hashtable<String, String> logToCommitDict(BufferedReader logStdout)
-			throws AbortException,IOException{
+			throws IOException{
 		// Read one line at a time and put the values into a dictionary
 		Hashtable<String, String> info = new Hashtable<String, String>();
 		info.put("branch","default");
@@ -511,10 +511,6 @@ public class HgUtils {
 				info.put("date", restOfLine);
 			} else if(firstWord.equals("summary:")) {
 				info.put("message", restOfLine);
-			}else {
-				throw new AbortException("The log contained less or more arguments than expected");
-				//the current log message does not match the syntax of a log entry.
-				//dump the log to the user or inform the user in some other way what went wrong.
 			}
 		}
 		
