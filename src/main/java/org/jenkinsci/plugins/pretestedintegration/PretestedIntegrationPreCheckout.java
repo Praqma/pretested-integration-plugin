@@ -40,6 +40,11 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 
 	private boolean hasQueue;
 	
+	//TODO: Store as privates instead of passing around all the time
+	private AbstractBuild build;
+	private Launcher launcher;
+	private BuildListener listener;
+	
 	@DataBoundConstructor
 	public PretestedIntegrationPreCheckout(String stageRepositoryUrl) {
 		this.stageRepositoryUrl = stageRepositoryUrl;
@@ -49,8 +54,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		return stageRepositoryUrl;
 	}
 	
-	private String getScmRepositoryURL(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws AbortException {
+	private String getScmRepositoryURL() throws AbortException {
 		//Setup variables to find our executable
 		AbstractProject<?,?> project = build.getProject();
 		//We need to check this cast..
@@ -64,8 +68,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		return scm.getSource();
 	}
 	
-	void mergeWithNewBranch(AbstractBuild build, Launcher launcher,
-			BuildListener listener, String repositoryURL)
+	void mergeWithNewBranch(String repositoryURL)
 			throws IOException, InterruptedException {
 		
 		PretestUtils.logMessage(listener, "Pulling changes from stage");
@@ -103,6 +106,10 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		this.build = build;
+		this.launcher = launcher;
+		this.listener = listener;
+
 		PretestUtils.logMessage(listener, "Beginning pre-build step");
 		
 		// Get info about the newest commit and store it in the environment.
@@ -116,7 +123,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		CommitQueue.getInstance().enqueueAndWait();
 		hasQueue = true;
 
-		mergeWithNewBranch(build,launcher, listener, stageRepositoryUrl);
+		mergeWithNewBranch(stageRepositoryUrl);
 		HgUtils.getNewestCommitInfo(build, launcher, listener);
 		
 		HgUtils.runScmCommand(build, launcher, listener, new String[]{"pull"});
@@ -134,9 +141,8 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	 * @param launcher
 	 * @param listener
 	 */
-	@Override
-	public void preCheckout(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
+	//@Override
+	public void preCheckout() throws IOException, InterruptedException {
 		if(Hudson.getInstance().getPlugin(PLUGIN_NAME) != null) {
 			PretestUtils.logMessage(listener,"Pre-Checkout plugin version: "
 					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)

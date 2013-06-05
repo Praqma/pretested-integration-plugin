@@ -46,6 +46,10 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	
 	private boolean hasQueue;
 	
+	private AbstractBuild build;
+	private Launcher launcher;
+	private BuildListener listener;
+	
 	@DataBoundConstructor
 	public PretestedIntegrationPostCheckout() {
 	}
@@ -64,8 +68,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	 *
 	 * @return void	 
 	 */
-	private void pushToCT(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
+	private void pushToCT() throws IOException, InterruptedException {
 		ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
 				build, launcher, listener);
 		//get info regarding which branch that is going to be pushed to company truth	
@@ -87,8 +90,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	 *
 	 * @return boolean	 
 	 */
-	private boolean getBuildSuccessStatus(AbstractBuild build,
-			Launcher launcher, BuildListener listener) {
+	private boolean getBuildSuccessStatus() {
 		boolean success = true;
 		try {
 			BufferedReader br = new BufferedReader(build.getLogReader());
@@ -124,8 +126,12 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		this.build = build;
+		this.launcher = launcher;
+		this.listener = listener;
+		
 		try {
-			return work(build, launcher, listener);
+			return work();
 		} catch(IOException e) {
 			if (hasQueue) {
 				CommitQueue.getInstance().release();
@@ -156,17 +162,16 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	 *
 	 * @return boolean	 
 	 */
-	public boolean work(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
+	public boolean work() throws IOException, InterruptedException {
 		PretestUtils.logMessage(listener, "Beginning post-build step");
 		hasQueue = true;
 		BufferedReader br = new BufferedReader(build.getLogReader());
-		boolean status = getBuildSuccessStatus(build, launcher, listener);
+		boolean status = getBuildSuccessStatus();
 		
 		if(status) {
 			PretestUtils.logMessage(listener,
 					"Pushing resulting workspace to CT");
-			pushToCT(build, launcher, listener);
+			pushToCT();
 		} else {
 			//HgUtils.runScmCommand(build, launcher, listener, 
 					//new String[]{"update","-C",oldTip});
