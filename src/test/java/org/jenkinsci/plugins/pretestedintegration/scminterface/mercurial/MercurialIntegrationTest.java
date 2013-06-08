@@ -153,10 +153,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		//Setup the repository
 		hg(dir, "init");
-		hg(dir, "branch","test");
+		hg(dir, "branch","devtest");
 		shell(dir,"touch","foo");
-		
-		//shell(dir,"echo", "text",">>","foo");
 		hg(dir, "add","foo");
 		hg(dir, "commit","-m","\"added foo\"");
 		
