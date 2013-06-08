@@ -7,14 +7,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Future;
 
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
+import hudson.model.Action;
 import hudson.model.FreeStyleBuild;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
+import hudson.model.Result;
 import hudson.util.StreamTaskListener;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -80,6 +83,109 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(bar.exists());
 		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
 		assertTrue(hg(dir,"branch").toString().startsWith("default"));
+	}
+	
+	/**
+	 * Given that there are uncomitted changes in the integration branch
+	 * And that the build is marked successful
+	 * When handlePostBuild has been invoked
+	 * Then there should be no more changes on the integration branch
+	 * And the integration branch has a new commit with the changes
+	 * @throws Exception
+	 */
+	public void testShouldCommitChanges() throws Exception {
+		setup();
+		File dir = createTempDirectory();
+		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
+		
+		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		plugin.setWorkingDirectory(new FilePath(dir));
+		
+		hg(dir, "init");
+		shell(dir,"touch","foo");
+		hg(dir, "add","foo");
+		hg(dir, "commit","-m","\"added foo\"");
+		hg(dir, "branch","test");
+		shell(dir,"touch","bar");
+		hg(dir, "add","bar");
+		hg(dir, "commit","-m","\"added bar\"");
+		hg(dir, "update","default");
+		hg(dir, "merge","test");
+		
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
+
+		Future<FreeStyleBuild> b = project.scheduleBuild2(0);
+		FreeStyleBuild build = spy(b.get());
+		when(build.getResult()).thenReturn(Result.SUCCESS);
+
+		BuildListener bListener = mock(BuildListener.class);
+		assertTrue(hg(dir,"branch").toString().startsWith("default"));
+		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
+		assertNotNull(build.getResult());
+		
+		plugin.handlePostBuild(build, launcher, bListener);
+		
+		assertTrue(hg(dir,"branch").toString().startsWith("default"));
+		assertTrue(hg(dir,"status").toString().isEmpty());
+		
+		assertTrue(hg(dir,"log","-rtip","--template","{desc}").
+				toString()
+				.startsWith("Successfully integrated development branch"));
+		
+	}
+	
+	/**
+	 * Given that there are uncomitted changes in the integration branch
+	 * And that the build is marked unsuccessful
+	 * When handlePostBuild has been invoked
+	 * Then the changes should no longer exist in the working tree
+	 * And the history of the integation branch should be unchanged
+	 * @param launcher
+	 * @return
+	 */
+	public void testShouldRevertChanges() throws Exception {
+		setup();
+		File dir = createTempDirectory();
+		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
+		
+		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		plugin.setWorkingDirectory(new FilePath(dir));
+		
+		hg(dir, "init");
+		shell(dir,"touch","foo");
+		hg(dir, "add","foo");
+		hg(dir, "commit","-m","added foo");
+		
+		hg(dir, "branch","test");
+		shell(dir,"touch","bar");
+		hg(dir, "add","bar");
+		hg(dir, "commit","-m","added bar");
+		hg(dir, "update","default");
+		hg(dir, "merge","test");
+		
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
+
+		Future<FreeStyleBuild> b = project.scheduleBuild2(0);
+		FreeStyleBuild build = spy(b.get());
+		when(build.getResult()).thenReturn(Result.UNSTABLE);
+		assertNotNull(build);
+		
+		String head = hg(dir,"tip","--template","{node}").toString();
+		
+		BuildListener bListener = mock(BuildListener.class);
+		assertTrue(hg(dir,"branch").toString().startsWith("default"));
+		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
+		
+		plugin.handlePostBuild(build, launcher, bListener);
+		
+		assertTrue(hg(dir,"branch").toString().startsWith("default"));
+		assertTrue(hg(dir,"status").toString().isEmpty());
+		assertTrue(hg(dir,"tip","--template","{node}").
+				toString().equals(head));
 	}
 	
 	//Thank you MercurialSCM

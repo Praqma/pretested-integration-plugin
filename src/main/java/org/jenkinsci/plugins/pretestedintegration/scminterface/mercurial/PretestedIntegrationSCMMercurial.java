@@ -7,8 +7,11 @@ import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Hudson;
+import hudson.model.Result;
 import hudson.model.Node;
 import hudson.model.AbstractBuild;
+import hudson.model.Cause;
 import hudson.model.TaskListener;
 import hudson.plugins.mercurial.MercurialInstallation;
 import hudson.plugins.mercurial.MercurialSCM;
@@ -141,7 +144,7 @@ public class PretestedIntegrationSCMMercurial implements
 			//Merge the commit into the integration branch
 			hg(build, launcher, listener, "merge", commit.getId(),"--tool","internal:merge");
 		} catch(InterruptedException e){
-			throw new AbortException("hg command exited unexpectedly");
+			throw new AbortException("Merge into integration branch exited unexpectedly");
 		}	
 	}
 
@@ -215,40 +218,31 @@ public class PretestedIntegrationSCMMercurial implements
 	public void handlePostBuild(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException,
 			IllegalArgumentException {
-		try {
-			ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
-					build, launcher, listener);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		//get info regarding which branch that is going to be pushed to company truth	
-		//Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
-		//		build, launcher, listener);
-		//String sourceBranch = newCommitInfo.get("branch");
-		//PretestUtils.logMessage(listener, "commit is on this branch: "
-		//		+ sourceBranch);
-		Dictionary<String, String> vars = null;
-		try {
-			vars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		try{
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"commit", "-m", vars.get("message")});
-
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"push", "--new-branch"});
-		}
-		catch(AbortException e){
-			throw e;
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		
+		Result result = build.getResult();
+		//TODO: make the success criteria configurable
+		if(result != null && result.isBetterOrEqualTo(Result.SUCCESS)){ //Commit the changes
+			//TODO: get this string dynamic
+			try {
+				hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
+				stageBuild(build, launcher, listener);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				throw new AbortException("Commiting changes on integration branch exited unexpectedly");
+			}
+		} else { //Rollback changes
+			try {
+				hg(build, launcher, listener, "update","-C");
+				stageBuild(build, launcher, listener);
+			} catch (InterruptedException e) {
+				throw new AbortException("Unable to revert changes in integration branch");
+			}
 		}
 	}
 
+	public void stageBuild(AbstractBuild build, Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException {
+		if(hasNextCommit(build, launcher, listener)){
+			build.getProject().scheduleBuild(new Cause.UpstreamCause(build));
+		} //do nothing
+	}
 }
