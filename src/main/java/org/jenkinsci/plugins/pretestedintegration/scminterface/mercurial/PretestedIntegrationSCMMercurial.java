@@ -187,18 +187,20 @@ public class PretestedIntegrationSCMMercurial implements
 
 				String revision = "0";
 				
-				//PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit();
-
 				try {
 					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 					int exitCode = hg(build, launcher, listener,logStdout, new String[]
 							{"log", "-r", revision+":tip","--template","\"{node}\\n\"" });
 					
-					if(logStdout.toString().split("\\n").length<2 ){
+					String [] commitArray = logStdout.toString().split("\\n");
+					if(commitArray.length<2 ){
 						return null;
 				
 					}else{
-						return null;
+						
+						
+						PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit(commitArray[1]);
+						return commit;
 					}
 				}
 				catch(IOException e)

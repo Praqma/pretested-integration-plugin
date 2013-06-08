@@ -177,7 +177,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
 		plugin.setWorkingDirectory(new FilePath(dir));
 
-		//System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
+		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
 		//Setup the repository
 		hg(dir, "init");
