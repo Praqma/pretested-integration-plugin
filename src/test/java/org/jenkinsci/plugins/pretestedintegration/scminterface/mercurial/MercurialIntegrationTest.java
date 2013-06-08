@@ -141,4 +141,67 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		}
 		return (temp);
 	}
+
+	public void testShouldNotHaveNextCommit() throws Exception {
+
+		setup();
+		File dir = createTempDirectory();
+		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		plugin.setWorkingDirectory(new FilePath(dir));
+
+		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
+		
+		//Setup the repository
+		hg(dir, "init");
+		hg(dir, "branch","test");
+		shell(dir,"touch","foo");
+		
+		//shell(dir,"echo", "text",">>","foo");
+		hg(dir, "add","foo");
+		hg(dir, "commit","-m","\"added foo\"");
+		
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
+		
+		//Setup build and listener
+		BuildListener blistener = mock(BuildListener.class);
+		FreeStyleBuild build = new FreeStyleBuild(project);	
+		
+		assertFalse(plugin.hasNextCommit(build, launcher, blistener));
+	}
+	public void testShouldHaveNextCommit() throws Exception {
+
+		setup();
+		File dir = createTempDirectory();
+		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		plugin.setWorkingDirectory(new FilePath(dir));
+
+		//System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
+		
+		//Setup the repository
+		hg(dir, "init");
+		shell(dir,"touch","foo");
+		hg(dir, "add","foo");
+		hg(dir, "commit","-m","\"added foo\"");
+		hg(dir, "branch","test");
+		shell(dir,"touch","bar");
+		hg(dir, "add","bar");
+		hg(dir, "commit","-m","\"added bar\"");
+		shell(dir,"touch","bar3");
+		hg(dir, "add","bar3");
+		hg(dir, "commit","-m","\"added bar3\"");
+		
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
+		
+		//Setup build and listener
+		BuildListener blistener = mock(BuildListener.class);
+		FreeStyleBuild build = new FreeStyleBuild(project);	
+		
+		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
+	}
+
+
 }

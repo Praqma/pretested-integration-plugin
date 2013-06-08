@@ -400,9 +400,12 @@ public class HgUtils {
 				try {
 					BufferedReader logStdout = runScmCommand(
 					build, launcher, listener, new String[]{"log", "-r", revision+":tip"});
-					logToCommitDict(logStdout); //the first entry in the log is the current revision
+					//logToCommitDict(logStdout); //the first entry in the log is the current revision
 					info = logToCommitDict(logStdout);//the second entry is the new commit.
+					//info = logToCommitDict(logStdout);//the second entry is the new commit.
 					
+					
+
 					if(info == null ){
 						return false;
 				
@@ -516,11 +519,11 @@ public class HgUtils {
 		
 		//check if we got all information. We dont want to return a dictionary
 		//that does not contain all the information. 
-		if(	info.contains("changeset") &&
-			info.contains("branch") &&
-			info.contains("user") &&
-			info.contains("date") &&
-			info.contains("message"))
+		if(	info.containsKey("changeset") &&
+			info.containsKey("branch") &&
+			info.containsKey("user") &&
+			info.containsKey("date") &&
+			info.containsKey("message"))
 		{
 			return info;
 		}else

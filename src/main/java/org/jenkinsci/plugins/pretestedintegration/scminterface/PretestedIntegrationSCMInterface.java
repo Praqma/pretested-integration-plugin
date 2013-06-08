@@ -51,9 +51,8 @@ public interface PretestedIntegrationSCMInterface {
 	 * Return the next pending commit, and advance the commit log to the next
 	 * element.
 	 *
-	 * @return The next pending commit.
+	 * @return The next pending commit. If no commit is pending null is returned.
 	 *
-	 * @throws AbortException There is no pending commit.
 	 * @throws IOException A repository could not be reached.
 	 * @throws InvalidArgumentException The given repository is not in a valid
 	 * condition.

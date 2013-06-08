@@ -16,9 +16,12 @@ import hudson.scm.SCM;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Dictionary;
 
-import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
+//import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
 import org.jenkinsci.plugins.pretestedintegration.PretestUtils;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface;
@@ -102,6 +105,27 @@ public class PretestedIntegrationSCMMercurial implements
 		return exitCode;
 	}
 	
+/**
+	 * Invoke a command with mercurial
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 * @param cmds
+	 * @return The exitcode of command
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public int hg(AbstractBuild build, Launcher launcher, TaskListener listener,OutputStream out, String... cmds) throws IOException, InterruptedException{
+		ArgumentListBuilder hg = findHgExe(build, listener, false);
+		hg.add(cmds);
+		//if the working directory has not been manually set use the build workspace
+		if(workingDirectory == null){
+			setWorkingDirectory(build.getWorkspace());
+		}
+		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
+		return exitCode;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#hasNextCommit(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)
 	 */
@@ -127,8 +151,29 @@ public class PretestedIntegrationSCMMercurial implements
 	public boolean hasNextCommit(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException,
 			IllegalArgumentException {
-		// TODO Auto-generated method stub
-		return false;
+			
+				String revision = "0";
+				try {
+					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
+					int exitCode = hg(build, launcher, listener,logStdout, new String[]
+							{"log", "-r", revision+":tip","--template","\"{node}\\n\"" });
+					
+					if(logStdout.toString().split("\\n").length<2 ){
+						return false;
+				
+					}else{
+						return true;
+					}
+				}
+				catch(IOException e)
+				{
+					throw e;
+				}
+				catch(InterruptedException e)
+				{
+					throw new IOException(e.getMessage());
+				}
+				
 	}
 
 	/* (non-Javadoc)
@@ -137,7 +182,34 @@ public class PretestedIntegrationSCMMercurial implements
 	public PretestedIntegrationSCMCommit popCommit(AbstractBuild build,
 			Launcher launcher, BuildListener listener) throws IOException,
 			IllegalArgumentException {
-		// TODO Auto-generated method stub
+			
+
+
+				String revision = "0";
+				
+				PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit();
+
+				try {
+					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
+					int exitCode = hg(build, launcher, listener,logStdout, new String[]
+							{"log", "-r", revision+":tip","--template","\"{node}\\n\"" });
+					
+					if(logStdout.toString().split("\\n").length<2 ){
+						return null;
+				
+					}else{
+						return true;
+					}
+				}
+				catch(IOException e)
+				{
+					throw e;
+				}
+				catch(InterruptedException e)
+				{
+					throw new IOException(e.getMessage());
+				}
+
 		return null;
 	}
 
