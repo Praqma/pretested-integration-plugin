@@ -82,11 +82,13 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 			return null;
 		}
 		
+		PretestUtils.logMessage(listener, "begin has next");
 		// Verify that there is anything to do
 		if(!scmInterface.hasNextCommit(build, launcher, listener)) {
 			PretestUtils.logMessage(listener, "Nothing to build. Aborting.");
 			return null;
 		}
+		PretestUtils.logMessage(listener, "end has next");
 		
 		// Prepare for build
 		scmInterface.prepareWorkspace(build, launcher, listener,
