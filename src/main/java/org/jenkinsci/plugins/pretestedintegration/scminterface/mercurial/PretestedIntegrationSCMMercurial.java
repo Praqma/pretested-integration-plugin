@@ -186,15 +186,12 @@ public class PretestedIntegrationSCMMercurial implements
 			int exitCode = hg(build, launcher, listener,logStdout, "log", "-r", revision+":tip","--template","{node}\\n");
 			String outString = logStdout.toString().trim();
 			String [] commitArray = outString.split("\\n");
-			System.out.println("The result: " + outString);
 			if(commitArray.length > 1) {
-				System.out.println("Returning true \\o/");
 				return true;
 			}
 		} catch(InterruptedException e) {
 			throw new IOException(e.getMessage());
 		}
-		System.out.println("Return false :(");
 		return false;
 	}
 
