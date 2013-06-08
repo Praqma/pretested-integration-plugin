@@ -39,8 +39,6 @@ import org.jenkinsci.plugins.pretestedintegration.scminterface
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
-
 
 /**
  * The publisher determines what will happen when the build has been run.
