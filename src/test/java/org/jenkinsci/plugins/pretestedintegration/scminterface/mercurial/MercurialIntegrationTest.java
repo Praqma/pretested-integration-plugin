@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -274,6 +275,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		assertFalse(plugin.hasNextCommit(build, launcher, blistener));
 	}
+	
 	public void testShouldHaveNextCommit() throws Exception {
 
 		setup();
@@ -307,5 +309,40 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
 	}
 
+	/**
+	 * Given that there are commits after a specified time
+	 * When commitFromDate is invoked
+	 * Then the next commit is returned
+	 * @throws Exception
+	 */
+	public void testShouldGiveNextCommit() throws Exception {
+
+		setup();
+		File dir = createTempDirectory();
+		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		plugin.setWorkingDirectory(new FilePath(dir));
+
+		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
+		Date date = new Date();
+		hg(dir,"init");
+		shell(dir,"touch","foo");
+		hg(dir,"add","foo");
+		hg(dir, "commit","-m","\"added foo\"");
+		String rev = hg(dir,"tip","--template","{node}").toString();
+		shell(dir,"touch","bar");
+		hg(dir, "add","bar");
+		hg(dir, "commit","-m","\"added bar\"");
+		
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
+		
+		//Setup build and listener
+		BuildListener blistener = mock(BuildListener.class);
+		FreeStyleBuild build = new FreeStyleBuild(project);	
+		
+		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
+		assertTrue(plugin.commitFromDate(build, launcher, blistener, date).getId().equals(rev));
+	}
 
 }

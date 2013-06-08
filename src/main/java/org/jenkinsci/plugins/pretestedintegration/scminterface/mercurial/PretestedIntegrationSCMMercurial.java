@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Dictionary;
 
 //import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
@@ -108,8 +111,8 @@ public class PretestedIntegrationSCMMercurial implements
 		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
 		return exitCode;
 	}
-	
-/**
+
+	/**
 	 * Invoke a command with mercurial
 	 * @param build
 	 * @param launcher
@@ -128,6 +131,28 @@ public class PretestedIntegrationSCMMercurial implements
 		}
 		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
 		return exitCode;
+	}
+	
+	/**
+	 * Given a date, search through the revision history and find the first changeset committed on or after the specified date.
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 * @param date
+	 * @return A commit representation of the next commit made at the specified date, or null
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+
+	public PretestedIntegrationSCMCommit commitFromDate(AbstractBuild build, Launcher launcher, TaskListener listener, Date date) throws IOException, InterruptedException{
+		PretestedIntegrationSCMCommit commit = null;
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+		hg(build, launcher, listener, out, "log","-r","0:tip","-l1","--date",">" + dateFormat.format(date), "--template","{node}");
+		String revision = out.toString();
+		if(revision.length() > 0)
+			commit = new PretestedIntegrationSCMCommit(revision);
+		return commit;
 	}
 
 	/* (non-Javadoc)
@@ -242,7 +267,7 @@ public class PretestedIntegrationSCMMercurial implements
 
 	public void stageBuild(AbstractBuild build, Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException {
 		if(hasNextCommit(build, launcher, listener)){
-			build.getProject().scheduleBuild(new Cause.UpstreamCause(build));
+			build.getProject().scheduleBuild2(0);
 		} //do nothing
 	}
 }
