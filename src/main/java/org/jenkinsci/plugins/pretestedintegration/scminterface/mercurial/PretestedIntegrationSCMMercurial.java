@@ -35,8 +35,10 @@ import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrat
 public class PretestedIntegrationSCMMercurial implements
 		PretestedIntegrationSCMInterface {
 
+	/**
+	 * The directory in which to execute hg commands
+	 */
 	private FilePath workingDirectory = null;
-	final static String LOG_PREFIX = "[PREINT-HG] ";
 	
 	public void setWorkingDirectory(FilePath workingDirectory){
 		this.workingDirectory = workingDirectory;
@@ -79,8 +81,7 @@ public class PretestedIntegrationSCMMercurial implements
 			//Just use the default hg
 			return new ArgumentListBuilder(hg.getDescriptor().getHgExe());
 		} catch(ClassCastException e) {
-			listener.getLogger().println(LOG_PREFIX + " configured scm is not mercurial");
-			throw new InterruptedException();
+			throw new InterruptedException("Configured scm is not mercurial");
 		}
 	}
 	
@@ -140,8 +141,7 @@ public class PretestedIntegrationSCMMercurial implements
 			//Merge the commit into the integration branch
 			hg(build, launcher, listener, "merge", commit.getId(),"--tool","internal:merge");
 		} catch(InterruptedException e){
-			listener.getLogger().print(LOG_PREFIX + "hg command exited unexpectedly");
-			throw new AbortException();
+			throw new AbortException("hg command exited unexpectedly");
 		}	
 	}
 
