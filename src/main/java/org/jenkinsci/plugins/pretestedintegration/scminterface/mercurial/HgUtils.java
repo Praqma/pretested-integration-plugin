@@ -389,7 +389,7 @@ public class HgUtils {
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, InterruptedException, AbortException {
 			
-				String revision = "1";
+				String revision = "0";
 				//example: hg log -d ">2013-5-20 15:49"
 				//String modifiedDate = "\">"+date+"\"";
 				//BufferedReader logStdout = runScmCommand(
