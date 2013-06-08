@@ -152,28 +152,22 @@ public class PretestedIntegrationSCMMercurial implements
 			BuildListener listener) throws IOException,
 			IllegalArgumentException {
 			
-				String revision = "0";
-				try {
-					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
-					int exitCode = hg(build, launcher, listener,logStdout, new String[]
-							{"log", "-r", revision+":tip","--template","\"{node}\\n\"" });
-					
-					if(logStdout.toString().split("\\n").length<2 ){
-						return false;
-				
-					}else{
-						return true;
-					}
-				}
-				catch(IOException e)
-				{
-					throw e;
-				}
-				catch(InterruptedException e)
-				{
-					throw new IOException(e.getMessage());
-				}
-				
+		String revision = "0";
+		try {
+			ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
+			int exitCode = hg(build, launcher, listener,logStdout, "log", "-r", revision+":tip","--template","{node}\\n");
+			String outString = logStdout.toString().trim();
+			String [] commitArray = outString.split("\\n");
+			System.out.println("The result: " + outString);
+			if(commitArray.length > 1) {
+				System.out.println("Returning true \\o/");
+				return true;
+			}
+		} catch(InterruptedException e) {
+			throw new IOException(e.getMessage());
+		}
+		System.out.println("Return false :(");
+		return false;
 	}
 
 	/* (non-Javadoc)
