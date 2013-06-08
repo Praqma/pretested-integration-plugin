@@ -187,7 +187,7 @@ public class PretestedIntegrationSCMMercurial implements
 
 				String revision = "0";
 				
-				PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit();
+				//PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit();
 
 				try {
 					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
@@ -198,7 +198,7 @@ public class PretestedIntegrationSCMMercurial implements
 						return null;
 				
 					}else{
-						return true;
+						return null;
 					}
 				}
 				catch(IOException e)
@@ -210,7 +210,7 @@ public class PretestedIntegrationSCMMercurial implements
 					throw new IOException(e.getMessage());
 				}
 
-		return null;
+		//return null;
 	}
 
 	/* (non-Javadoc)
