@@ -200,6 +200,7 @@ public class PretestedIntegrationSCMMercurial implements
 						
 						
 						PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit(commitArray[1]);
+						//TODO update current revision here
 						return commit;
 					}
 				}
