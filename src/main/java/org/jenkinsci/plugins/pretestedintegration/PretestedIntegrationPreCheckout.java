@@ -72,7 +72,6 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		PretestUtils.logMessage(listener, "Beginning pre-build step");
 		
 		// Wait in line until no other jobs are running.
-		CommitQueue.getInstance().enqueueAndWait();
 		hasQueue = true;
 		
 		// Get the interface for the SCM according to the chosen SCM
@@ -84,7 +83,9 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		
 		PretestUtils.logMessage(listener, "begin has next");
 		// Verify that there is anything to do
-		if(!scmInterface.hasNextCommit(build, launcher, listener)) {
+		boolean hasNextCommit = scmInterface.hasNextCommit(build, launcher, listener);
+		listener.getLogger().println("Has next commit? " + hasNextCommit);
+		if(!hasNextCommit) {
 			PretestUtils.logMessage(listener, "Nothing to build. Aborting.");
 			return null;
 		}

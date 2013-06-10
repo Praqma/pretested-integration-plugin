@@ -79,9 +79,10 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		this.build = build;
 		this.launcher = launcher;
 		this.listener = listener;
+		listener.getLogger().println("Perform invoked");
 		try {
 			PretestUtils.logMessage(listener, "Beginning post-build step");
-			hasQueue = true;
+			//hasQueue = true;
 			
 			// Get the interface for the SCM according to the chosen SCM
 			PretestedIntegrationSCMInterface scmInterface =
@@ -91,10 +92,11 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 			}
 			
 			// Do it!
+			listener.getLogger().println("Invoking postbuild step");
 			scmInterface.handlePostBuild(build, launcher, listener);
 			
-			CommitQueue.getInstance().release();
-			hasQueue = false;
+			//CommitQueue.getInstance().release();
+			//hasQueue = false;
 			
 			PretestUtils.logMessage(listener, "Finished post-build step");
 		} catch(IOException e) {

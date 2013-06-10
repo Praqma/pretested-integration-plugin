@@ -197,10 +197,15 @@ public class PretestedIntegrationSCMMercurial implements
 		try {
 			//Make sure that we are on the integration branch
 			//TODO: Make it dynamic and not just "default"
-			hg(build, launcher, listener, "update","default");
+
+			hg(build, launcher, listener, "update","-C","default");
 			
 			//Merge the commit into the integration branch
-			hg(build, launcher, listener, "merge", commit.getId(),"--tool","internal:merge");
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			int exitCode = hg(build, launcher, listener, out, "merge", commit.getId(),"--tool","internal:merge");
+			listener.getLogger().println("Exitcode for merge" + exitCode);
+			listener.getLogger().println("Output of command" + out.toString());
+			
 		} catch(InterruptedException e){
 			throw new AbortException("Merge into integration branch exited unexpectedly");
 		}	
@@ -212,9 +217,10 @@ public class PretestedIntegrationSCMMercurial implements
 	public boolean hasNextCommit(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException,
 			IllegalArgumentException {
-			
 		String revision = "0";
 		try {
+			int pullExit = hg(build, launcher, listener, "pull");
+			
 			if(workingDirectory == null){
 				setWorkingDirectory(build.getWorkspace());
 			}
@@ -228,11 +234,12 @@ public class PretestedIntegrationSCMMercurial implements
 			}
 			
 			ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
-			int exitCode = hg(build, launcher, listener,logStdout, "log", "-r", revision+":tip","--template","{node}\\n");
+			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}");
 			
-			String [] commitArray = logStdout.toString().trim().split("\\n");
-
-			if(commitArray.length > 1) {
+			String outString = logStdout.toString().trim();
+			String [] outArray = outString.split("\n");
+			
+			if(outString.length() > 40 || revision.equals("0")) {
 				return true;
 			}
 		} catch(InterruptedException e) {
@@ -272,17 +279,12 @@ public class PretestedIntegrationSCMMercurial implements
 						}
 					
 					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
-					int exitCode = hg(build, launcher, listener,logStdout, new String[]
-							{"log", "-r", revision+":tip","--template","{node}\\n" });
-					
+					int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}\\n");
+					 
 					String [] commitArray = logStdout.toString().split("\\n");
-					if(commitArray.length<2 ){
-						return null;
-				
-					}else{
+					if(commitArray.length > 0){
 						
-						
-						PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit(commitArray[1]);
+						PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit(commitArray[0]);
 
 						PrintWriter writer = new PrintWriter(file, "UTF-8");
 						System.out.println(commit.getId());
@@ -301,7 +303,7 @@ public class PretestedIntegrationSCMMercurial implements
 					throw new IOException(e.getMessage());
 				}
 
-		//return null;
+		return null;
 	}
 
 	/* (non-Javadoc)
