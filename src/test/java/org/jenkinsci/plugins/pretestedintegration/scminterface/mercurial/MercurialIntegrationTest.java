@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
@@ -354,4 +355,57 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(plugin.commitFromDate(build, launcher, blistener, date).getId().equals(rev));
 	}
 
+	public void testShouldCauseMergeConflict() throws Exception {
+		setup();
+		File dir = createTempDirectory();
+		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		plugin.setWorkingDirectory(new FilePath(dir));
+
+		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
+		
+		hg(dir,"init");
+		File hello = new File(dir,"hello");
+		
+		PrintWriter writer = new PrintWriter(hello, "UTF-8");
+		writer.println("hello");
+		writer.close();
+		writer = null;
+		
+		hg(dir,"add","hello");
+		hg(dir,"commit","-m","Added hello");
+		hg(dir,"branch","test");
+		
+		writer = new PrintWriter(hello,"UTF-8");
+		writer.println("hello, world");
+		writer.close();
+		writer = null;
+		
+		hg(dir,"commit","-m","Changed contents of hello in test branch");
+		String revision = hg(dir,"tip","--template","{node}").toString();
+		hg(dir,"update","-C","default");
+		
+		writer = new PrintWriter(hello,"UTF-8");
+		writer.println("hello, jenkins");
+		writer.close();
+		writer = null;
+		
+		hg(dir,"commit","-m","Changed contents of hello in default branch");
+		
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
+		
+		//Setup build and listener
+		BuildListener blistener = mock(BuildListener.class);
+		FreeStyleBuild build = new FreeStyleBuild(project);	
+		
+		boolean exceptionThrown = false;
+		try{
+			plugin.prepareWorkspace(build, launcher, blistener, new PretestedIntegrationSCMCommit(revision));
+		} catch (AbortException e){
+			exceptionThrown = true;
+		}
+		
+		assertTrue(exceptionThrown);
+	}
 }

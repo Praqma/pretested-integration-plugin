@@ -203,7 +203,8 @@ public class PretestedIntegrationSCMMercurial implements
 			//Merge the commit into the integration branch
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			int exitCode = hg(build, launcher, listener, out, "merge", commit.getId(),"--tool","internal:merge");
-			
+			if(exitCode != 0)
+				throw new AbortException("Merging branches caused conflict");
 		} catch(InterruptedException e){
 			throw new AbortException("Merge into integration branch exited unexpectedly");
 		}	
