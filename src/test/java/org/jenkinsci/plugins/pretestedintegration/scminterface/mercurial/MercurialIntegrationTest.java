@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +44,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
         listener = new StreamTaskListener(System.out,Charset.defaultCharset());
         launcher = Hudson.getInstance().createLauncher(listener);
     }
-	/*
+	
 	//@Test
 	public void testShouldPrepareWithDevBranch() throws Exception{
 		setup();
@@ -84,7 +85,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(bar.exists());
 		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
 		assertTrue(hg(dir,"branch").toString().startsWith("default"));
-	}*/
+	}
 	
 	/**
 	 * Given that there are uncomitted changes in the integration branch
@@ -248,7 +249,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		}
 		return (temp);
 	}
-	/*
+	
 	public void testShouldNotHaveNextCommit() throws Exception {
 
 		setup();
@@ -264,6 +265,12 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		shell(dir,"touch","foo");
 		hg(dir, "add","foo");
 		hg(dir, "commit","-m","\"added foo\"");
+		String revision = hg(dir,"log","-l1","--template","{node}").toString();
+		//shell(dir, "echo",revision,">",".hg/currentBuildFile");
+		File buildFile = new File(dir,".hg/currentBuildFile");
+		PrintWriter writer = new PrintWriter(buildFile, "UTF-8");
+		writer.println(revision);
+		writer.close();
 		
 		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
@@ -273,7 +280,9 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		BuildListener blistener = mock(BuildListener.class);
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
-		assertFalse(plugin.hasNextCommit(build, launcher, blistener));
+		boolean result = plugin.hasNextCommit(build, launcher, blistener);
+		
+		assertFalse(result);
 	}
 	
 	public void testShouldHaveNextCommit() throws Exception {
@@ -307,14 +316,14 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
 		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
-	}*/
+	}
 
 	/**
 	 * Given that there are commits after a specified time
 	 * When commitFromDate is invoked
 	 * Then the next commit is returned
 	 * @throws Exception
-	 *//*
+	 */
 	public void testShouldGiveNextCommit() throws Exception {
 
 		setup();
@@ -343,6 +352,6 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
 		assertTrue(plugin.commitFromDate(build, launcher, blistener, date).getId().equals(rev));
-	}*/
+	}
 
 }

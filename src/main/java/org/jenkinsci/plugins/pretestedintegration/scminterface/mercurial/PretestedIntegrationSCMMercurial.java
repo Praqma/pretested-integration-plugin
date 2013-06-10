@@ -219,13 +219,14 @@ public class PretestedIntegrationSCMMercurial implements
 			IllegalArgumentException {
 		String revision = "0";
 		try {
-			int pullExit = hg(build, launcher, listener, "pull");
 			
 			if(workingDirectory == null){
 				setWorkingDirectory(build.getWorkspace());
 			}
+			int pullExit = hg(build, launcher, listener, "pull");
 			
 			File f = new File(getWorkingDirectory().toString()+"/.hg/currentBuildFile");
+			System.out.println("file: " + f.getAbsolutePath());
 			if(f.exists()) 
 			{
 				BufferedReader br =  new BufferedReader(new FileReader(f));
@@ -235,9 +236,8 @@ public class PretestedIntegrationSCMMercurial implements
 			
 			ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}");
-			
+
 			String outString = logStdout.toString().trim();
-			String [] outArray = outString.split("\n");
 			
 			if(outString.length() > 40 || revision.equals("0")) {
 				return true;
