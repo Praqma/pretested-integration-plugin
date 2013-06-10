@@ -30,10 +30,7 @@ import java.util.Dictionary;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter; 
-<<<<<<< HEAD
 import java.io.PrintWriter; 
-=======
->>>>>>> corrected popcommit and hasnext
 import java.io.FileReader; 
 import java.io.File;
 
@@ -139,7 +136,7 @@ public class PretestedIntegrationSCMMercurial implements
 		//if the working directory has not been manually set use the build workspace
 		if(workingDirectory == null){
 			setWorkingDirectory(build.getWorkspace());
-			setCurentBuildFilePath(getWorkingDirectory().toString()+"/.hg/curentBuildFile");
+			setCurrentBuildFilePath(getWorkingDirectory().toString()+"/.hg/curentBuildFile");
 		}
 		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
 		return exitCode;
@@ -198,17 +195,6 @@ public class PretestedIntegrationSCMMercurial implements
 			BuildListener listener, PretestedIntegrationSCMCommit commit)
 			throws AbortException, IOException, IllegalArgumentException {
 		try {
-
-			//String path = getWorkingDirectory().toString()+"/.hg/curentBuildFile";
-			File f = new File(getCurentBuildFilePath());
-			if(!f.exists()) 
-			{
- 				File file = new File(getCurentBuildFilePath());
-        			BufferedWriter br = new BufferedWriter(new FileWriter(file));
-				br.write("0"); //this should be what ever commit we want to start off with
-
-			}
-			
 			//Make sure that we are on the integration branch
 			//TODO: Make it dynamic and not just "default"
 			hg(build, launcher, listener, "update","default");
@@ -229,6 +215,10 @@ public class PretestedIntegrationSCMMercurial implements
 			
 		String revision = "0";
 		try {
+			if(workingDirectory == null){
+				setWorkingDirectory(build.getWorkspace());
+			}
+			
 			File f = new File(getWorkingDirectory().toString()+"/.hg/currentBuildFile");
 			if(f.exists()) 
 			{
@@ -260,7 +250,11 @@ public class PretestedIntegrationSCMMercurial implements
 			
 					String revision = "0";
 					try {
-						File file = new File(getWorkingDirectory().toString()+"/.hg/currentBuildFile");
+						if(workingDirectory == null){
+							setWorkingDirectory(build.getWorkspace());
+						}
+						
+						File file = new File(getWorkingDirectory()+"/.hg/currentBuildFile");
 						if(file.exists()) 
 						{
 							BufferedReader br =  new BufferedReader(new FileReader(file));
@@ -279,7 +273,7 @@ public class PretestedIntegrationSCMMercurial implements
 					
 					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 					int exitCode = hg(build, launcher, listener,logStdout, new String[]
-							{"log", "-r", revision+":tip","--template","\"{node}\\n\"" });
+							{"log", "-r", revision+":tip","--template","{node}\\n" });
 					
 					String [] commitArray = logStdout.toString().split("\\n");
 					if(commitArray.length<2 ){
@@ -289,6 +283,12 @@ public class PretestedIntegrationSCMMercurial implements
 						
 						
 						PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit(commitArray[1]);
+
+						PrintWriter writer = new PrintWriter(file, "UTF-8");
+						System.out.println(commit.getId());
+						writer.println(commit.getId());
+						writer.close();
+
 						return commit;
 					}
 				}
