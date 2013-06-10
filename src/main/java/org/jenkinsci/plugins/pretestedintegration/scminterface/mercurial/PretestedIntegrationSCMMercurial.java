@@ -30,7 +30,10 @@ import java.util.Dictionary;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter; 
+<<<<<<< HEAD
 import java.io.PrintWriter; 
+=======
+>>>>>>> corrected popcommit and hasnext
 import java.io.FileReader; 
 import java.io.File;
 
@@ -68,6 +71,7 @@ public class PretestedIntegrationSCMMercurial implements
 	}
 	
 	public void setCurrentBuildFilePath(String currentBuildFilePath){
+
 		this.currentBuildFile = currentBuildFilePath;
 	}
 	
@@ -135,6 +139,7 @@ public class PretestedIntegrationSCMMercurial implements
 		//if the working directory has not been manually set use the build workspace
 		if(workingDirectory == null){
 			setWorkingDirectory(build.getWorkspace());
+			setCurentBuildFilePath(getWorkingDirectory().toString()+"/.hg/curentBuildFile");
 		}
 		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
 		return exitCode;
@@ -156,7 +161,9 @@ public class PretestedIntegrationSCMMercurial implements
 		//if the working directory has not been manually set use the build workspace
 		if(workingDirectory == null){
 			setWorkingDirectory(build.getWorkspace());
+
 			setCurrentBuildFilePath(getWorkingDirectory().toString()+"/.hg/currentBuildFile");
+
 		}
 		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
 		return exitCode;
@@ -191,16 +198,17 @@ public class PretestedIntegrationSCMMercurial implements
 			BuildListener listener, PretestedIntegrationSCMCommit commit)
 			throws AbortException, IOException, IllegalArgumentException {
 		try {
-			//String path = getWorkingDirectory().toString()+"/.hg/currentBuildFile";
-			//File f = new File(getCurrentBuildFilePath());
-			//if(!f.exists()) 
-			//{
- 			//	File file = new File(getCurrentBuildFilePath());
-        		//	BufferedWriter br = new BufferedWriter(new FileWriter(file));
-			//	br.write("0"); //this should be what ever commit we want to start off with
-			//}
-			
 
+			//String path = getWorkingDirectory().toString()+"/.hg/curentBuildFile";
+			File f = new File(getCurentBuildFilePath());
+			if(!f.exists()) 
+			{
+ 				File file = new File(getCurentBuildFilePath());
+        			BufferedWriter br = new BufferedWriter(new FileWriter(file));
+				br.write("0"); //this should be what ever commit we want to start off with
+
+			}
+			
 			//Make sure that we are on the integration branch
 			//TODO: Make it dynamic and not just "default"
 			hg(build, launcher, listener, "update","default");
@@ -233,7 +241,7 @@ public class PretestedIntegrationSCMMercurial implements
 			int exitCode = hg(build, launcher, listener,logStdout, "log", "-r", revision+":tip","--template","{node}\\n");
 			
 			String [] commitArray = logStdout.toString().trim().split("\\n");
-			
+
 			if(commitArray.length > 1) {
 				return true;
 			}
