@@ -7,8 +7,11 @@ import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Hudson;
+import hudson.model.Result;
 import hudson.model.Node;
 import hudson.model.AbstractBuild;
+import hudson.model.Cause;
 import hudson.model.TaskListener;
 import hudson.plugins.mercurial.MercurialInstallation;
 import hudson.plugins.mercurial.MercurialSCM;
@@ -19,6 +22,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Dictionary;
 
 import java.io.BufferedReader;
@@ -41,6 +47,9 @@ import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrat
 public class PretestedIntegrationSCMMercurial implements
 		PretestedIntegrationSCMInterface {
 
+	/**
+	 * The directory in which to execute hg commands
+	 */
 	private FilePath workingDirectory = null;
 	final static String LOG_PREFIX = "[PREINT-HG] ";
 	private String currentBuildFile = null; 
@@ -105,8 +114,7 @@ public class PretestedIntegrationSCMMercurial implements
 			//Just use the default hg
 			return new ArgumentListBuilder(hg.getDescriptor().getHgExe());
 		} catch(ClassCastException e) {
-			listener.getLogger().println(LOG_PREFIX + " configured scm is not mercurial");
-			throw new InterruptedException();
+			throw new InterruptedException("Configured scm is not mercurial");
 		}
 	}
 	
@@ -131,8 +139,8 @@ public class PretestedIntegrationSCMMercurial implements
 		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
 		return exitCode;
 	}
-	
-/**
+
+	/**
 	 * Invoke a command with mercurial
 	 * @param build
 	 * @param launcher
@@ -152,6 +160,28 @@ public class PretestedIntegrationSCMMercurial implements
 		}
 		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
 		return exitCode;
+	}
+	
+	/**
+	 * Given a date, search through the revision history and find the first changeset committed on or after the specified date.
+	 * @param build
+	 * @param launcher
+	 * @param listener
+	 * @param date
+	 * @return A commit representation of the next commit made at the specified date, or null
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+
+	public PretestedIntegrationSCMCommit commitFromDate(AbstractBuild build, Launcher launcher, TaskListener listener, Date date) throws IOException, InterruptedException{
+		PretestedIntegrationSCMCommit commit = null;
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		hg(build, launcher, listener, out, "log","-r","0:tip","-l1","--date",">" + dateFormat.format(date), "--template","{node}");
+		String revision = out.toString();
+		if(revision.length() > 0)
+			commit = new PretestedIntegrationSCMCommit(revision);
+		return commit;
 	}
 
 	/* (non-Javadoc)
@@ -179,8 +209,7 @@ public class PretestedIntegrationSCMMercurial implements
 			//Merge the commit into the integration branch
 			hg(build, launcher, listener, "merge", commit.getId(),"--tool","internal:merge");
 		} catch(InterruptedException e){
-			listener.getLogger().print(LOG_PREFIX + "hg command exited unexpectedly");
-			throw new AbortException();
+			throw new AbortException("Merge into integration branch exited unexpectedly");
 		}	
 	}
 
@@ -281,40 +310,31 @@ public class PretestedIntegrationSCMMercurial implements
 	public void handlePostBuild(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException,
 			IllegalArgumentException {
-		try {
-			ArgumentListBuilder cmd = HgUtils.createArgumentListBuilder(
-					build, launcher, listener);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		//get info regarding which branch that is going to be pushed to company truth	
-		//Dictionary<String, String> newCommitInfo = HgUtils.getNewestCommitInfo(
-		//		build, launcher, listener);
-		//String sourceBranch = newCommitInfo.get("branch");
-		//PretestUtils.logMessage(listener, "commit is on this branch: "
-		//		+ sourceBranch);
-		Dictionary<String, String> vars = null;
-		try {
-			vars =  HgUtils.getNewestCommitInfo(build, launcher, listener);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		try{
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"commit", "-m", vars.get("message")});
-
-		HgUtils.runScmCommand(build, launcher, listener,
-				new String[]{"push", "--new-branch"});
-		}
-		catch(AbortException e){
-			throw e;
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		
+		Result result = build.getResult();
+		//TODO: make the success criteria configurable
+		if(result != null && result.isBetterOrEqualTo(Result.SUCCESS)){ //Commit the changes
+			//TODO: get this string dynamic
+			try {
+				hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
+				stageBuild(build, launcher, listener);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				throw new AbortException("Commiting changes on integration branch exited unexpectedly");
+			}
+		} else { //Rollback changes
+			try {
+				hg(build, launcher, listener, "update","-C");
+				stageBuild(build, launcher, listener);
+			} catch (InterruptedException e) {
+				throw new AbortException("Unable to revert changes in integration branch");
+			}
 		}
 	}
 
+	public void stageBuild(AbstractBuild build, Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException {
+		if(hasNextCommit(build, launcher, listener)){
+			build.getProject().scheduleBuild2(0);
+		} //do nothing
+	}
 }
