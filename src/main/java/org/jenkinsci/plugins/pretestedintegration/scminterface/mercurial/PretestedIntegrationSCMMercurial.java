@@ -65,7 +65,6 @@ public class PretestedIntegrationSCMMercurial implements
 	public void writeToBuildFile(String rev)
 	{
 
-	
 	}
 
 	
