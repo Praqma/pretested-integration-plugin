@@ -30,6 +30,7 @@ import java.util.Dictionary;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter; 
+import java.io.PrintWriter; 
 import java.io.FileReader; 
 import java.io.File;
 
@@ -62,11 +63,11 @@ public class PretestedIntegrationSCMMercurial implements
 		return this.workingDirectory;
 	}
 	
-	public String getCurentBuildFilePath(){
+	public String getCurrentBuildFilePath(){
 		return this.currentBuildFile;
 	}
 	
-	public void setCurentBuildFilePath(String currentBuildFilePath){
+	public void setCurrentBuildFilePath(String currentBuildFilePath){
 		this.currentBuildFile = currentBuildFilePath;
 	}
 	
@@ -134,7 +135,6 @@ public class PretestedIntegrationSCMMercurial implements
 		//if the working directory has not been manually set use the build workspace
 		if(workingDirectory == null){
 			setWorkingDirectory(build.getWorkspace());
-			setCurentBuildFilePath(getWorkingDirectory().toString()+"/.hg/curentBuildFile");
 		}
 		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
 		return exitCode;
@@ -156,7 +156,7 @@ public class PretestedIntegrationSCMMercurial implements
 		//if the working directory has not been manually set use the build workspace
 		if(workingDirectory == null){
 			setWorkingDirectory(build.getWorkspace());
-			setCurentBuildFilePath(getWorkingDirectory().toString()+"/.hg/curentBuildFile");
+			setCurrentBuildFilePath(getWorkingDirectory().toString()+"/.hg/currentBuildFile");
 		}
 		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
 		return exitCode;
@@ -191,15 +191,14 @@ public class PretestedIntegrationSCMMercurial implements
 			BuildListener listener, PretestedIntegrationSCMCommit commit)
 			throws AbortException, IOException, IllegalArgumentException {
 		try {
-			//String path = getWorkingDirectory().toString()+"/.hg/curentBuildFile";
-			File f = new File(getCurentBuildFilePath());
-			if(!f.exists()) 
-			{
- 				File file = new File(getCurentBuildFilePath());
-        			BufferedWriter br = new BufferedWriter(new FileWriter(file));
-				br.write("0"); //this should be what ever commit we want to start off with
-
-			}
+			//String path = getWorkingDirectory().toString()+"/.hg/currentBuildFile";
+			//File f = new File(getCurrentBuildFilePath());
+			//if(!f.exists()) 
+			//{
+ 			//	File file = new File(getCurrentBuildFilePath());
+        		//	BufferedWriter br = new BufferedWriter(new FileWriter(file));
+			//	br.write("0"); //this should be what ever commit we want to start off with
+			//}
 			
 
 			//Make sure that we are on the integration branch
@@ -222,23 +221,17 @@ public class PretestedIntegrationSCMMercurial implements
 			
 		String revision = "0";
 		try {
-			setWorkingDirectory(build.getWorkspace());
-			setCurentBuildFilePath(getWorkingDirectory().toString()+"/.hg/curentBuildFile");
-
-			if (getCurentBuildFilePath() != null)
+			File f = new File(getWorkingDirectory().toString()+"/.hg/currentBuildFile");
+			if(f.exists()) 
 			{
-				File f = new File(getCurentBuildFilePath());
-				if(f.exists()) 
-				{
-					BufferedReader br =  new BufferedReader(
-								new FileReader(getCurentBuildFilePath()));
-					revision = br.readLine();
- 
-				}
+				BufferedReader br =  new BufferedReader(new FileReader(f));
+				revision = br.readLine();
+				br.close();
 			}
+			
 			ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 			int exitCode = hg(build, launcher, listener,logStdout, "log", "-r", revision+":tip","--template","{node}\\n");
-			//String outString = logStdout.toString().trim();
+			
 			String [] commitArray = logStdout.toString().trim().split("\\n");
 			
 			if(commitArray.length > 1) {
@@ -257,26 +250,25 @@ public class PretestedIntegrationSCMMercurial implements
 			Launcher launcher, BuildListener listener) throws IOException,
 			IllegalArgumentException {
 			
-			PretestUtils.logMessage(listener, "test begin");
-
 					String revision = "0";
 					try {
-
-						File f = new File(getCurentBuildFilePath());
-						if(f.exists()) 
+						File file = new File(getWorkingDirectory().toString()+"/.hg/currentBuildFile");
+						if(file.exists()) 
 						{
-							BufferedReader br =  new BufferedReader(
-								new FileReader(getCurentBuildFilePath()));
+							BufferedReader br =  new BufferedReader(new FileReader(file));
 							revision = br.readLine();
- 
+							br.close();
 						}else
 						{
-							File file = new File(getCurentBuildFilePath());
-        						BufferedWriter br = new BufferedWriter(new FileWriter(file));
-							br.write("0");
-						}
-			PretestUtils.logMessage(listener, "test end");
+							PrintWriter writer = new PrintWriter(file, "UTF-8");
+							writer.println("0");
+							writer.close();
 
+							//File file = new File(getCurrentBuildFilePath());
+        						//BufferedWriter br = new BufferedWriter(new FileWriter(file));
+							//br.write("0");
+						}
+					
 					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 					int exitCode = hg(build, launcher, listener,logStdout, new String[]
 							{"log", "-r", revision+":tip","--template","\"{node}\\n\"" });
