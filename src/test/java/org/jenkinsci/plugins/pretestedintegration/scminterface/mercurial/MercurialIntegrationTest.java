@@ -43,7 +43,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
         listener = new StreamTaskListener(System.out,Charset.defaultCharset());
         launcher = Hudson.getInstance().createLauncher(listener);
     }
-	
+	/*
 	//@Test
 	public void testShouldPrepareWithDevBranch() throws Exception{
 		setup();
@@ -84,7 +84,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(bar.exists());
 		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
 		assertTrue(hg(dir,"branch").toString().startsWith("default"));
-	}
+	}*/
 	
 	/**
 	 * Given that there are uncomitted changes in the integration branch
@@ -248,7 +248,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		}
 		return (temp);
 	}
-
+	/*
 	public void testShouldNotHaveNextCommit() throws Exception {
 
 		setup();
@@ -307,14 +307,14 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
 		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
-	}
+	}*/
 
 	/**
 	 * Given that there are commits after a specified time
 	 * When commitFromDate is invoked
 	 * Then the next commit is returned
 	 * @throws Exception
-	 */
+	 *//*
 	public void testShouldGiveNextCommit() throws Exception {
 
 		setup();
@@ -343,6 +343,6 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
 		assertTrue(plugin.commitFromDate(build, launcher, blistener, date).getId().equals(rev));
-	}
+	}*/
 
 }
