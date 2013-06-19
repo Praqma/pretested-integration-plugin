@@ -38,13 +38,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 	StreamTaskListener listener;
 	Launcher launcher;
 	
-	//@Before
-	public void setup() throws IOException {
-		//listener = mock(StreamTaskListener.class); //new StreamTaskListener(System.out, Charset.defaultCharset());
-        //launcher = mock(Launcher.class);
-        listener = new StreamTaskListener(System.out,Charset.defaultCharset());
-        launcher = Hudson.getInstance().createLauncher(listener);
-    }
+	/* Integration test cases */
 	
 	//@Test
 	public void testShouldPrepareWithDevBranch() throws Exception{
@@ -190,67 +184,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(hg(dir,"tip","--template","{node}").
 				toString().equals(head));
 	}
-	
-	//Thank you MercurialSCM
-		static ProcStarter launch(Launcher launcher) {
-			return launcher.launch().envs(Collections.singletonMap("HGPLAIN", "true"));
-			
-		}
-		protected final void shell(String... cmds) throws Exception {
-	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
-			Assert.assertEquals(0, launcher.launch().cmds(cmds).stdout(out).join());
-		}
-		protected final void shell(File dir, String... cmds) throws Exception {
-	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
-			Assert.assertEquals(0, launcher.launch().cmds(cmds).pwd(dir).stdout(out).join());
-		}
-		
-	    protected final void hg(String... args) throws Exception {
-	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
-	        List<String> cmds = assembleHgCommand(args);
-	        Assert.assertEquals(0, launch(launcher).cmds(cmds).stdout(out).join());
-	    }
 
-	    protected final ByteArrayOutputStream hg(File dir, String... args) throws Exception {
-	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
-	        List<String> cmds = assembleHgCommand(args);
-	        Assert.assertEquals(0, launch(launcher).cmds(cmds).pwd(dir).stdout(out).join());
-	        return out;
-	    }	
-	    
-		public List<String> assembleHgCommand(String[] args){
-	        List<String> cmds = new ArrayList<String>();
-	        cmds.add("hg");
-	        cmds.add("--config");
-	        cmds.add("ui.username=nobody@nowhere.net");
-	        cmds.addAll(Arrays.asList(args));
-	        return cmds;
-		}
-	
-	public static File getTempFile() 
-			throws IOException {
-		final File temp = File.createTempFile("prteco-"+ Long.toString(System.nanoTime()),"");
-	    
-	    if(!(temp.delete()))
-	    {
-	        throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-	    }
-	    
-	    return temp;
-	}
-	
-	public static File createTempDirectory()
-		    throws IOException
-	{
-		final File temp = getTempFile();
-		   
-		if(!(temp.mkdir()))
-		{
-			throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-		}
-		return (temp);
-	}
-	
 	public void testShouldNotHaveNextCommit() throws Exception {
 
 		setup();
@@ -408,4 +342,76 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		assertTrue(exceptionThrown);
 	}
+	
+	/* Helper functions for the test cases */
+
+	//@Before
+	public void setup() throws IOException {
+		//listener = mock(StreamTaskListener.class); //new StreamTaskListener(System.out, Charset.defaultCharset());
+        //launcher = mock(Launcher.class);
+        listener = new StreamTaskListener(System.out,Charset.defaultCharset());
+        launcher = Hudson.getInstance().createLauncher(listener);
+    }
+	
+	//Thank you MercurialSCM
+		static ProcStarter launch(Launcher launcher) {
+			return launcher.launch().envs(Collections.singletonMap("HGPLAIN", "true"));
+			
+		}
+		protected final void shell(String... cmds) throws Exception {
+	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+			Assert.assertEquals(0, launcher.launch().cmds(cmds).stdout(out).join());
+		}
+		protected final void shell(File dir, String... cmds) throws Exception {
+	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+			Assert.assertEquals(0, launcher.launch().cmds(cmds).pwd(dir).stdout(out).join());
+		}
+		
+	    protected final void hg(String... args) throws Exception {
+	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	        List<String> cmds = assembleHgCommand(args);
+	        Assert.assertEquals(0, launch(launcher).cmds(cmds).stdout(out).join());
+	    }
+
+	    protected final ByteArrayOutputStream hg(File dir, String... args) throws Exception {
+	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	        List<String> cmds = assembleHgCommand(args);
+	        Assert.assertEquals(0, launch(launcher).cmds(cmds).pwd(dir).stdout(out).join());
+	        return out;
+	    }	
+	    
+		public List<String> assembleHgCommand(String[] args){
+	        List<String> cmds = new ArrayList<String>();
+	        cmds.add("hg");
+	        cmds.add("--config");
+	        cmds.add("ui.username=nobody@nowhere.net");
+	        cmds.addAll(Arrays.asList(args));
+	        return cmds;
+		}
+	
+	public static File getTempFile() 
+			throws IOException {
+		final File temp = File.createTempFile("prteco-"+ Long.toString(System.nanoTime()),"");
+	    
+	    if(!(temp.delete()))
+	    {
+	        throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
+	    }
+	    
+	    return temp;
+	}
+	
+	public static File createTempDirectory()
+		    throws IOException
+	{
+		final File temp = getTempFile();
+		   
+		if(!(temp.mkdir()))
+		{
+			throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
+		}
+		return (temp);
+	}
+	
+
 }
