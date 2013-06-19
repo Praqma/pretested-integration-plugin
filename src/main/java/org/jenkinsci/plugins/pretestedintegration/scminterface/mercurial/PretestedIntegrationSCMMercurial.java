@@ -318,7 +318,6 @@ public class PretestedIntegrationSCMMercurial implements
 			//TODO: get this string dynamic
 			try {
 				hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
-				stageBuild(build, launcher, listener);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				throw new AbortException("Commiting changes on integration branch exited unexpectedly");
@@ -326,16 +325,11 @@ public class PretestedIntegrationSCMMercurial implements
 		} else { //Rollback changes
 			try {
 				hg(build, launcher, listener, "update","-C");
-				stageBuild(build, launcher, listener);
 			} catch (InterruptedException e) {
 				throw new AbortException("Unable to revert changes in integration branch");
 			}
 		}
 	}
 
-	public void stageBuild(AbstractBuild build, Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException {
-		if(hasNextCommit(build, launcher, listener)){
-			build.getProject().scheduleBuild2(0);
-		} //do nothing
-	}
+	
 }

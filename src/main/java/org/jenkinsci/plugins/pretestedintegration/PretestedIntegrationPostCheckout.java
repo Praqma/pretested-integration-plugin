@@ -63,6 +63,9 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 			listener.getLogger().println("Invoking postbuild step");
 			scmInterface.handlePostBuild(build, launcher, listener);
 			
+			if(scmInterface.hasNextCommit(build, launcher, listener)){
+				build.getProject().scheduleBuild2(0);
+			} 
 			//CommitQueue.getInstance().release();
 			//hasQueue = false;
 			

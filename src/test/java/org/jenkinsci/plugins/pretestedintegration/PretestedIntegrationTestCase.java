@@ -85,10 +85,11 @@ public abstract class PretestedIntegrationTestCase extends HudsonTestCase {
 	// 			
 	// }
 	// 
-	// public File setup() throws Exception, IOException {
-	// 	return setup(false);
-	// }
-	// 
+	 public void setup() throws Exception, IOException {
+		 listener = new StreamTaskListener(System.out, Charset.defaultCharset());
+		 launcher = Hudson.getInstance().createLauncher(listener);
+	 }
+	 
 	// public File setup(boolean setupRepositories) throws Exception, IOException {
 	// 	
 	// 	return setup(setupRepositories, false);
@@ -222,34 +223,34 @@ public abstract class PretestedIntegrationTestCase extends HudsonTestCase {
 	// 		throw new IOException("Could not create repository");
 	// 	}
 	// 	
-	// 	public static File getTempFile() 
-	// 			throws IOException {
-	// 		final File temp = File.createTempFile("prteco-"+ Long.toString(System.nanoTime()),"");
-	// 	    
-	// 	    if(!(temp.delete()))
-	// 	    {
-	// 	        throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-	// 	    }
-	// 	    
-	// 	    return temp;
-	// 	}
-	// 	/**
-	// 	 * Borrowed from
-	// 	 * http://stackoverflow.com/questions/617414/create-a-temporary-directory-in-java
-	// 	 * potentially unsafe, but we only use it for testing, so it suffice.
-	// 	 * @return A filepointer to a temporary directory
-	// 	 */
-	// 	public static File createTempDirectory()
-	// 		    throws IOException
-	// 		{
-	// 		    final File temp = getTempFile();
-	// 		   
-	// 		    if(!(temp.mkdir()))
-	// 		    {
-	// 		        throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-	// 		    }
-	// 		    return (temp);
-	// 		}
+	 	public static File getTempFile() 
+	 			throws IOException {
+	 		final File temp = File.createTempFile("prteco-"+ Long.toString(System.nanoTime()),"");
+	 	    
+	 	    if(!(temp.delete()))
+	 	    {
+	 	        throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
+	 	    }
+	 	    
+	 	    return temp;
+	 	}
+	 	/**
+	 	 * Borrowed from
+	 	 * http://stackoverflow.com/questions/617414/create-a-temporary-directory-in-java
+	 	 * potentially unsafe, but we only use it for testing, so it suffice.
+	 	 * @return A filepointer to a temporary directory
+	 	 */
+	 	public static File createTempDirectory()
+	 		    throws IOException
+	 		{
+	 		    final File temp = getTempFile();
+	 		   
+	 		    if(!(temp.mkdir()))
+	 		    {
+	 		        throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
+	 		    }
+	 		    return (temp);
+	 		}
 		public static Object genericTestConstructor(final Class<?> cls) 
 				   throws InstantiationException, IllegalAccessException, 
 				InvocationTargetException 
