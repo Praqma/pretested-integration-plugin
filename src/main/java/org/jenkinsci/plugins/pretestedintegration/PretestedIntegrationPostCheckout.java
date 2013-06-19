@@ -1,38 +1,13 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.AbortException;
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
-import hudson.model.Environment;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.model.Cause.LegacyCodeCause;
-import hudson.tasks.BuildWrapper;
-import hudson.tasks.BuildTrigger;
-import hudson.tasks.BuildStep;
-import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
 import hudson.tasks.BuildStepMonitor;
-import hudson.model.*;
-import hudson.plugins.mercurial.*;
-import hudson.tasks.BuildWrapper;
-import hudson.tasks.BuildTrigger;
-import hudson.tasks.BuildStep;
-import hudson.util.ArgumentListBuilder;
-import hudson.FilePath;
-
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Dictionary;
-import java.io.BufferedReader;
-
 import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
 import org.jenkinsci.plugins.pretestedintegration.scminterface
 		.PretestedIntegrationSCMInterface;
@@ -50,10 +25,6 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 			"Run pretested integration post-build step";
 	
 	private boolean hasQueue;
-	
-	private AbstractBuild build;
-	private Launcher launcher;
-	private BuildListener listener;
 	
 	@DataBoundConstructor
 	public PretestedIntegrationPostCheckout() {
@@ -76,9 +47,6 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException {
-		this.build = build;
-		this.launcher = launcher;
-		this.listener = listener;
 		listener.getLogger().println("Perform invoked");
 		try {
 			PretestUtils.logMessage(listener, "Beginning post-build step");
@@ -115,7 +83,6 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		return true;
 	}
 	
-	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.BUILD;
 	}
