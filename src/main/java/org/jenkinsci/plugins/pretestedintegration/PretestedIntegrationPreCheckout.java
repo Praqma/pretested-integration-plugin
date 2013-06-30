@@ -1,34 +1,19 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.AbortException;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
-import hudson.plugins.mercurial.MercurialSCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
-import hudson.util.FormValidation;
-
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Dictionary;
-
-import javax.servlet.ServletException;
+import java.util.List;
 
 import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
-import org.jenkinsci.plugins.pretestedintegration.scminterface
-		.PretestedIntegrationSCMInterface;
 
-import org.ini4j.Ini;
-import org.ini4j.InvalidFileFormatException;
-import org.ini4j.Wini;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 //import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.HgUtils;
@@ -44,13 +29,16 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
 	private boolean hasQueue;
 	
-	//TODO: Store as privates instead of passing around all the time
-	private AbstractBuild build;
-	private Launcher launcher;
+	private AbstractSCMInterface asi;
 	private BuildListener listener;
 	
 	@DataBoundConstructor
-	public PretestedIntegrationPreCheckout() {
+	public PretestedIntegrationPreCheckout(AbstractSCMInterface asi) {
+		this.asi = asi;
+	}
+	
+	public AbstractSCMInterface getAsi(){
+		return this.asi;
 	}
 	
 	/**
@@ -65,8 +53,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		this.build = build;
-		this.launcher = launcher;
+		
 		this.listener = listener;
 
 		PretestUtils.logMessage(listener, "Beginning pre-build step");
@@ -129,12 +116,23 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	public static class DescriptorImpl extends BuildWrapperDescriptor {
 		
 		public String getDisplayName() {
-			return DISPLAY_NAME;
+			return "Use pretested integration";
+		}
+		
+		public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+			PretestedIntegrationPreCheckout b = (PretestedIntegrationPreCheckout) super.newInstance(req,formData);
+			SCMInterfaceDescriptor<AbstractSCMInterface> d = (SCMInterfaceDescriptor<AbstractSCMInterface>) b.getAsi().getDescriptor();
+			b.asi = d.newInstance(req, formData);
+			save();
+			return b;
+		}
+		
+		public List<SCMInterfaceDescriptor<?>>getSCMs(){
+			return AbstractSCMInterface.getDescriptors();
 		}
 		
 		@Override
 		public boolean isApplicable(AbstractProject<?, ?> arg0) {
-			// TODO Auto-generated method stub
 			return true;
 		}
 	}
