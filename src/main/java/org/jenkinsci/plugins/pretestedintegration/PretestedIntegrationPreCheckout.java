@@ -13,6 +13,7 @@ import java.util.List;
 
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 

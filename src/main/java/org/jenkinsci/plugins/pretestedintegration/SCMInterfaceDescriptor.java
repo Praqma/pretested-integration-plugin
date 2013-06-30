@@ -15,10 +15,6 @@ public class SCMInterfaceDescriptor<T extends AbstractSCMInterface> extends
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	protected SCMInterfaceDescriptor(Class<? extends AbstractSCMInterface> clazz) {
-        super(clazz);
-    }
 
     public AbstractSCMInterface newInstance(StaplerRequest req, JSONObject formData) throws FormException {
     	return super.newInstance(req, formData);
