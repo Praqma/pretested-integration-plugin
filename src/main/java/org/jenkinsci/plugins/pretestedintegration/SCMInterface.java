@@ -7,7 +7,7 @@ import hudson.model.AbstractBuild;
 
 import java.io.IOException;
 
-public interface SCMInterface {
+public interface SCMInterface<T> {
 	/**
 	 * This function is called after the SCM plugin has updated the workspace
 	 * with remote changes. When this function has been run, the workspace must
@@ -24,7 +24,7 @@ public interface SCMInterface {
 	 */
 	void prepareWorkspace(
 			AbstractBuild build, Launcher launcher, BuildListener listener,
-			AbstractCommit commit)
+			AbstractCommit<T> commit)
 			throws AbortException, IOException, IllegalArgumentException;
 	
 	/**
@@ -50,7 +50,7 @@ public interface SCMInterface {
 	 * @throws InvalidArgumentException The given repository is not in a valid
 	 * condition.
 	 */
-	AbstractCommit popCommit(
+	AbstractCommit<T> popCommit(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, IllegalArgumentException;
 	

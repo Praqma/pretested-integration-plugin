@@ -10,7 +10,7 @@ import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 
-public abstract class AbstractSCMInterface implements SCMInterface, Describable<AbstractSCMInterface>, ExtensionPoint {
+public abstract class AbstractSCMInterface implements Describable<AbstractSCMInterface>, ExtensionPoint {
 	
     public Descriptor<AbstractSCMInterface> getDescriptor() {
         return (SCMInterfaceDescriptor<?>)Jenkins.getInstance().getDescriptorOrDie(getClass());

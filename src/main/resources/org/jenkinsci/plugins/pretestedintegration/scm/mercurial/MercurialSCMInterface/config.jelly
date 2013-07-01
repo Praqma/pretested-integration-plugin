@@ -1,0 +1,10 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+	<f:block>
+		<f:entry title="Latest commit" field="latest">
+			<f:textbox value="${it.latest}" />
+		</f:entry>
+		<f:entry title="Pattern" field="pattern">
+			<f:textbox value="${it.pattern}" />
+		</f:entry>
+	</f:block>
+</j:jelly>
