@@ -48,9 +48,11 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 	 * @throws InvalidArgumentException The given repository is not in a valid
 	 * condition.
 	 */
-	public abstract void prepareWorkspace(
+	public void prepareWorkspace(
 			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch, Commit<?> commit)
-			throws AbortException, IOException, IllegalArgumentException;
+			throws AbortException, IOException, IllegalArgumentException {
+		//nop
+	}
 	
 	/**
 	 * Calculate and return the next commit from the argument 
@@ -67,8 +69,12 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 		return null;
 	}
 	
-	public abstract void commit(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException;
-	public abstract void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException;
+	public void commit(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+		//nop
+	}
+	public void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+		//nop
+	}
 	
 	/**
 	 * This is called after the build has run. If the build was successful, the
