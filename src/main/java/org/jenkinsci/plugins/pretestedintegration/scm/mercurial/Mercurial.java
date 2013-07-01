@@ -339,9 +339,20 @@ public class Mercurial extends AbstractSCMInterface implements SCMInterface<Stri
 	@Extension
 	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
 		
+		public String getDisplayName(){
+			return "Mercurial";
+		}
+		
 		@Override
 		public Mercurial newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			Mercurial i = (Mercurial) super.newInstance(req, formData);
+			
+			
+			String latest = formData.getJSONObject("scmInterface").getString("latest");
+			String pattern = formData.getJSONObject("scmInterface").getString("pattern");
+			i.latest = latest;
+			i.pattern = pattern;
+			
 			save();
 			return i;
 		}

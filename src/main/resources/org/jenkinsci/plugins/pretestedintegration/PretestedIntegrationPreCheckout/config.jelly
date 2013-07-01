@@ -2,7 +2,11 @@
 xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
 xmlns:f="/lib/form">
 	<f:block>
-  		<f:descriptorList descriptors="${descriptor.getSCMs()}" field="asi" />
+  		<!--<f:descriptorList descriptors="${descriptor.getSCMInterfaces()}" instances="${descriptor.getInstances()}" /> -->
+  		<!--<f:entry field="scmInterface" title="SCM Type">
+  			<f:select />
+  		</f:entry>-->
+  		<f:hetero-radio descriptors="${descriptor.getSCMInterfaces()}" field="scmInterface" />
   	</f:block>
 	<!-- <f:entry title="Stage repository" field="stageRepository">
 		<f:textbox />

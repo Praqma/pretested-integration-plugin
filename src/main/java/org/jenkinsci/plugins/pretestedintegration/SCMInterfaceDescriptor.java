@@ -5,7 +5,6 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
 import hudson.model.Descriptor;
-import hudson.model.Descriptor.FormException;
 
 public class SCMInterfaceDescriptor<T extends AbstractSCMInterface> extends
 		Descriptor<AbstractSCMInterface> {

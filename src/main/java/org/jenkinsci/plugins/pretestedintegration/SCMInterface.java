@@ -23,8 +23,7 @@ public interface SCMInterface<T> {
 	 * condition.
 	 */
 	void prepareWorkspace(
-			AbstractBuild build, Launcher launcher, BuildListener listener,
-			AbstractCommit<T> commit)
+			AbstractBuild build, Launcher launcher, BuildListener listener, AbstractCommit<T> commit)
 			throws AbortException, IOException, IllegalArgumentException;
 	
 	/**

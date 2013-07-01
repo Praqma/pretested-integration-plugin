@@ -3,13 +3,22 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Describable;
+import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.ListBoxModel;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import net.sf.json.JSONObject;
 
@@ -30,17 +39,28 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	
 	private boolean hasQueue;
 	
-	private AbstractSCMInterface asi;
+	private Map<Descriptor, Describable> instances;
+	private AbstractSCMInterface scmInterface;
 	private BuildListener listener;
 	
+/*	@DataBoundConstructor
+	public PretestedIntegrationPreCheckout(Map<Descriptor, Describable> instances) {
+		this.instances = instances;
+	}*/
+	
 	@DataBoundConstructor
-	public PretestedIntegrationPreCheckout(AbstractSCMInterface asi) {
-		this.asi = asi;
+	public PretestedIntegrationPreCheckout(AbstractSCMInterface scmInterface){
+		this.scmInterface = scmInterface;
 	}
 	
-	public AbstractSCMInterface getAsi(){
-		return this.asi;
+	public AbstractSCMInterface getScmInterface(){
+		return this.scmInterface;
 	}
+	/*
+	public Map<Descriptor, Describable> getInstances(){
+		return this.instances;
+	}*/
+	
 	
 	/**
 	 * Jenkins hook that fires after the workspace is initialized.
@@ -122,14 +142,34 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		
 		public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			PretestedIntegrationPreCheckout b = (PretestedIntegrationPreCheckout) super.newInstance(req,formData);
-			SCMInterfaceDescriptor<AbstractSCMInterface> d = (SCMInterfaceDescriptor<AbstractSCMInterface>) b.getAsi().getDescriptor();
-			b.asi = d.newInstance(req, formData);
+			
+			SCMInterfaceDescriptor<AbstractSCMInterface> d = (SCMInterfaceDescriptor<AbstractSCMInterface>) b.getScmInterface().getDescriptor();
+			b.scmInterface = d.newInstance(req, formData);
+
+//			List<AbstractSCMInterface> is = new ArrayList<AbstractSCMInterface>();
+			/*Map<Descriptor,Describable> instances = new HashMap<Descriptor,Describable>();
+			List<SCMInterfaceDescriptor<?>> descriptors = getSCMs();
+			Iterator<SCMInterfaceDescriptor<?>> it = descriptors.iterator();
+			
+			while(it.hasNext()){
+				SCMInterfaceDescriptor<?> d = it.next();
+				instances.put(d, d.newInstance(req,formData));
+			}
+			b.instances = instances;*/
 			save();
 			return b;
 		}
-		
-		public List<SCMInterfaceDescriptor<?>>getSCMs(){
+
+		public List<SCMInterfaceDescriptor<?>>getSCMInterfaces(){
 			return AbstractSCMInterface.getDescriptors();
+		}
+		
+		public ListBoxModel doFillScmInterfaceItems() {
+			ListBoxModel items = new ListBoxModel();
+			for(Descriptor d : getSCMInterfaces()){
+				items.add(d.getDisplayName(),d.getId());
+			}
+			return items;
 		}
 		
 		@Override
