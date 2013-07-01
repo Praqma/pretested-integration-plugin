@@ -29,13 +29,12 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.AbstractCommit;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
-import org.jenkinsci.plugins.pretestedintegration.SCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-public class Mercurial extends AbstractSCMInterface implements SCMInterface<String> {
+public class Mercurial extends AbstractSCMInterface {
 
 	private String latest;
 	private String pattern;
@@ -356,5 +355,27 @@ public class Mercurial extends AbstractSCMInterface implements SCMInterface<Stri
 			save();
 			return i;
 		}
+	}
+
+	@Override
+	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,
+			BuildListener listener, String branch, AbstractCommit<?> commit)
+			throws AbortException, IOException, IllegalArgumentException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void commit(AbstractBuild<?, ?> build, Launcher launcher,
+			BuildListener listener) throws InterruptedException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void rollback(AbstractBuild<?, ?> build, Launcher launcher,
+			BuildListener listener) throws InterruptedException {
+		// TODO Auto-generated method stub
+		
 	}
 }
