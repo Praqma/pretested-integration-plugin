@@ -67,22 +67,6 @@ public class Mercurial extends AbstractSCMInterface {
 		return this.workingDirectory;
 	}
 	
-	public String getCurrentBuildFilePath(){
-		return this.currentBuildFile;
-	}
-	
-	public void setCurrentBuildFilePath(String currentBuildFilePath){
-
-		this.currentBuildFile = currentBuildFilePath;
-	}
-	
-	
-	public void writeToBuildFile(String rev)
-	{
-
-	}
-
-	
 	/**
 	 * Locate the correct mercurial binary to use for commands
 	 * @param build
@@ -140,7 +124,6 @@ public class Mercurial extends AbstractSCMInterface {
 		//if the working directory has not been manually set use the build workspace
 		if(workingDirectory == null){
 			setWorkingDirectory(build.getWorkspace());
-			setCurrentBuildFilePath(getWorkingDirectory().readToString()+"/.hg/curentBuildFile");
 		}
 		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
 		return exitCode;
@@ -162,9 +145,6 @@ public class Mercurial extends AbstractSCMInterface {
 		//if the working directory has not been manually set use the build workspace
 		if(workingDirectory == null){
 			setWorkingDirectory(build.getWorkspace());
-
-			setCurrentBuildFilePath(getWorkingDirectory().readToString()+"/.hg/currentBuildFile");
-
 		}
 		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
 		return exitCode;
@@ -192,148 +172,6 @@ public class Mercurial extends AbstractSCMInterface {
 		return commit;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#hasNextCommit(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)
-	 */
-	public void prepareWorkspace(AbstractBuild build, Launcher launcher,
-			BuildListener listener, Commit<String> commit)
-			throws AbortException, IOException, IllegalArgumentException {
-		try {
-			//Make sure that we are on the integration branch
-			//TODO: Make it dynamic and not just "default"
-
-			hg(build, launcher, listener, "update","-C","default");
-			
-			//Merge the commit into the integration branch
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			int exitCode = hg(build, launcher, listener, out, "merge",(String) commit.getId(),"--tool","internal:merge");
-			if(exitCode != 0)
-				throw new AbortException("Merging branches caused conflict");
-		} catch(InterruptedException e){
-			throw new AbortException("Merge into integration branch exited unexpectedly");
-		}	
-	}
-
-	/* (non-Javadoc)
-	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#hasNextCommit(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)
-	 */
-	public boolean hasNextCommit(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException,
-			IllegalArgumentException {
-		String revision = "0";
-		try {
-			
-			if(workingDirectory == null){
-				setWorkingDirectory(build.getWorkspace());
-			}
-			int pullExit = hg(build, launcher, listener, "pull");
-			File f = new File(build.getWorkspace().readToString()+"/.hg/currentBuildFile");
-			System.out.println("file: " + f.getAbsolutePath());
-			if(f.exists()) 
-			{
-				BufferedReader br =  new BufferedReader(new FileReader(f));
-				revision = br.readLine();
-				br.close();
-			}
-			
-			ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
-			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}");
-
-			String outString = logStdout.toString().trim();
-			
-			if(outString.length() > 40 || revision.equals("0")) {
-				return true;
-			}
-		} catch(InterruptedException e) {
-			throw new IOException(e.getMessage());
-		}
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#popCommit(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)
-	 */
-	public Commit<String> popCommit(AbstractBuild build,
-			Launcher launcher, BuildListener listener) throws IOException,
-			IllegalArgumentException {
-			
-					String revision = "0";
-					try {
-						if(workingDirectory == null){
-							setWorkingDirectory(build.getWorkspace());
-						}
-						
-						File file = new File(getWorkingDirectory()+"/.hg/currentBuildFile");
-						if(file.exists()) 
-						{
-							BufferedReader br =  new BufferedReader(new FileReader(file));
-							revision = br.readLine();
-							br.close();
-						}else
-						{
-							PrintWriter writer = new PrintWriter(file, "UTF-8");
-							writer.println("0");
-							writer.close();
-
-							//File file = new File(getCurrentBuildFilePath());
-        						//BufferedWriter br = new BufferedWriter(new FileWriter(file));
-							//br.write("0");
-						}
-					
-					ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
-					int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}\\n");
-					 
-					String [] commitArray = logStdout.toString().split("\\n");
-					if(commitArray.length > 0){
-						
-						Commit<String> commit = new Commit<String>(commitArray[0]);
-
-						PrintWriter writer = new PrintWriter(file, "UTF-8");
-						System.out.println(commit.getId());
-						writer.println(commit.getId());
-						writer.close();
-
-						return commit;
-					}
-				}
-				catch(IOException e)
-				{
-					throw e;
-				}
-				catch(InterruptedException e)
-				{
-					throw new IOException(e.getMessage());
-				}
-
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#handlePostBuild(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener, hudson.model.Result)
-	 */
-	public void handlePostBuild(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException,
-			IllegalArgumentException {
-		
-		Result result = build.getResult();
-		//TODO: make the success criteria configurable
-		if(result != null && result.isBetterOrEqualTo(Result.SUCCESS)){ //Commit the changes
-			//TODO: get this string dynamic
-			try {
-				hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				throw new AbortException("Commiting changes on integration branch exited unexpectedly");
-			}
-		} else { //Rollback changes
-			try {
-				hg(build, launcher, listener, "update","-C");
-			} catch (InterruptedException e) {
-				throw new AbortException("Unable to revert changes in integration branch");
-			}
-		}
-	}
-	
 	@Extension
 	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
 		
@@ -356,24 +194,56 @@ public class Mercurial extends AbstractSCMInterface {
 		}
 	}
 
+	@Override
 	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener, String branch, Commit<?> commit)
 			throws AbortException, IOException, IllegalArgumentException {
-		// TODO Auto-generated method stub
-		
+		try {
+			//Make sure that we are on the integration branch
+			//TODO: Make it dynamic and not just "default"
+
+			hg(build, launcher, listener, "update","-C","default");
+			
+			//Merge the commit into the integration branch
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			int exitCode = hg(build, launcher, listener, out, "merge",(String) commit.getId(),"--tool","internal:merge");
+			if(exitCode != 0)
+				throw new AbortException("Merging branches caused conflict");
+		} catch(InterruptedException e){
+			throw new AbortException("Merge into integration branch exited unexpectedly");
+		}	
+	}
+	
+	@Override
+	public Commit<?> nextCommit(
+			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
+			throws IOException, IllegalArgumentException{
+		String revision = (String) commit.getId();
+		ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
+		try {
+			//TODO: Check up on the exitcode
+			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}\\n");
+		} catch (InterruptedException e){
+			throw new IOException(e.getMessage());
+		}
+		String [] commitArray = logStdout.toString().split("\\n");
+		if(commitArray.length > 0){			
+			Commit<String> next = new Commit<String>(commitArray[0]);
+			return next;
+		}
+		return null;
 	}
 
 	@Override
 	public void commit(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener) throws InterruptedException {
-		//hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
+			BuildListener listener) throws IOException, InterruptedException {
+		hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
 		
 	}
 
 	@Override
 	public void rollback(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener) throws InterruptedException {
-		// TODO Auto-generated method stub
-		
+			BuildListener listener) throws IOException, InterruptedException {
+		hg(build, launcher, listener, "update","-C");
 	}
 }

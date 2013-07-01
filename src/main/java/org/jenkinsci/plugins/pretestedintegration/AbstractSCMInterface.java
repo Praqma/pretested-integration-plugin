@@ -69,10 +69,12 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 		return null;
 	}
 	
-	public void commit(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+	public void commit(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) 
+			throws IOException, InterruptedException {
 		//nop
 	}
-	public void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+	public void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) 
+			throws IOException, InterruptedException {
 		//nop
 	}
 	
@@ -96,14 +98,12 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 			
 			try {
 				commit(build, launcher, listener);
-				//hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
 			} catch (InterruptedException e) {
 				throw new AbortException("Commiting changes on integration branch exited unexpectedly");
 			}
 		} else { //Rollback changes
 			try {
 				rollback(build, launcher, listener);
-				//hg(build, launcher, listener, "update","-C");
 			} catch (InterruptedException e) {
 				throw new AbortException("Unable to revert changes in integration branch");
 			}
