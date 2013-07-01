@@ -23,7 +23,7 @@ public interface SCMInterface<T> {
 	 * condition.
 	 */
 	void prepareWorkspace(
-			AbstractBuild build, Launcher launcher, BuildListener listener, AbstractCommit<T> commit)
+			AbstractBuild build, Launcher launcher, BuildListener listener, Commit<T> commit)
 			throws AbortException, IOException, IllegalArgumentException;
 	
 	/**
@@ -49,7 +49,7 @@ public interface SCMInterface<T> {
 	 * @throws InvalidArgumentException The given repository is not in a valid
 	 * condition.
 	 */
-	AbstractCommit<T> popCommit(
+	Commit<T> popCommit(
 			AbstractBuild build, Launcher launcher, BuildListener listener)
 			throws IOException, IllegalArgumentException;
 	

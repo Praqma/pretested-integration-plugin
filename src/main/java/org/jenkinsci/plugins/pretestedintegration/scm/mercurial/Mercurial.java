@@ -26,9 +26,8 @@ import java.util.Date;
 
 import net.sf.json.JSONObject;
 
-import org.jenkinsci.plugins.pretestedintegration.AbstractCommit;
-import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -197,7 +196,7 @@ public class Mercurial extends AbstractSCMInterface {
 	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#hasNextCommit(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)
 	 */
 	public void prepareWorkspace(AbstractBuild build, Launcher launcher,
-			BuildListener listener, AbstractCommit<String> commit)
+			BuildListener listener, Commit<String> commit)
 			throws AbortException, IOException, IllegalArgumentException {
 		try {
 			//Make sure that we are on the integration branch
@@ -254,7 +253,7 @@ public class Mercurial extends AbstractSCMInterface {
 	/* (non-Javadoc)
 	 * @see org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface#popCommit(hudson.model.AbstractBuild, hudson.Launcher, hudson.model.BuildListener)
 	 */
-	public AbstractCommit<String> popCommit(AbstractBuild build,
+	public Commit<String> popCommit(AbstractBuild build,
 			Launcher launcher, BuildListener listener) throws IOException,
 			IllegalArgumentException {
 			
@@ -357,9 +356,8 @@ public class Mercurial extends AbstractSCMInterface {
 		}
 	}
 
-	@Override
 	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener, String branch, AbstractCommit<?> commit)
+			BuildListener listener, String branch, Commit<?> commit)
 			throws AbortException, IOException, IllegalArgumentException {
 		// TODO Auto-generated method stub
 		
@@ -368,7 +366,7 @@ public class Mercurial extends AbstractSCMInterface {
 	@Override
 	public void commit(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws InterruptedException {
-		// TODO Auto-generated method stub
+		//hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
 		
 	}
 
