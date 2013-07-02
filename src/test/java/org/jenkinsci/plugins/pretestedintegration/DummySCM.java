@@ -16,6 +16,18 @@ public class DummySCM extends AbstractSCMInterface {
 	
 	private boolean commited = false;
 	private boolean rolledBack = false;
+	private Commit<?> commit = null;
+	
+	public void setCommit(Commit<?> commit){
+		this.commit = commit;
+	}
+	
+	@Override
+	public Commit<?> nextCommit(
+			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
+			throws IOException, IllegalArgumentException {
+		return this.commit;
+	}
 	
 	@Override
 	public void commit(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) 
@@ -23,6 +35,7 @@ public class DummySCM extends AbstractSCMInterface {
 		commited = true;
 	}
 	
+	@Override
 	public void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) 
 			throws IOException, InterruptedException {
 		rolledBack = true;
