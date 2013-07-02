@@ -24,7 +24,10 @@ import hudson.model.Result;
 import hudson.util.StreamTaskListener;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
+import org.jenkinsci.plugins.pretestedintegration.Commit;
+import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.Mercurial;
+
 import org.junit.*;
 
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -44,7 +47,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 	public void testShouldPrepareWithDevBranch() throws Exception{
 		setup();
 		File dir = createTempDirectory();
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -70,8 +73,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		FreeStyleBuild build = new FreeStyleBuild(project);
 		
-		String rev = hg(dir, "log","--template","'{node}'","-l","1").toString("UTF-8");	
-		PretestedIntegrationSCMCommit commit = new PretestedIntegrationSCMCommit(rev);
+		String rev = hg(dir, "log","--template","{node}","-l","1").toString("UTF-8");	
+		Commit<String> commit = new Commit<String>(rev);
 		
 		plugin.prepareWorkspace(build, launcher, blistener, commit);
 		
@@ -95,7 +98,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		File dir = createTempDirectory();
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		hg(dir, "init");
@@ -147,7 +150,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		File dir = createTempDirectory();
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		hg(dir, "init");
@@ -189,7 +192,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -202,10 +205,6 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir, "commit","-m","\"added foo\"");
 		String revision = hg(dir,"log","-l1","--template","{node}").toString();
 		//shell(dir, "echo",revision,">",".hg/currentBuildFile");
-		File buildFile = new File(dir,".hg/currentBuildFile");
-		PrintWriter writer = new PrintWriter(buildFile, "UTF-8");
-		writer.println(revision);
-		writer.close();
 		
 		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
@@ -215,16 +214,16 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		BuildListener blistener = mock(BuildListener.class);
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
-		boolean result = plugin.hasNextCommit(build, launcher, blistener);
+		Commit<String> result = plugin.nextCommit(build, launcher, blistener, new Commit<String>(revision));
 		
-		assertFalse(result);
+		assertNull(result);
 	}
 	
 	public void testShouldHaveNextCommit() throws Exception {
 
 		setup();
 		File dir = createTempDirectory();
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -250,7 +249,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		BuildListener blistener = mock(BuildListener.class);
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
-		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
+		assertNotNull(plugin.nextCommit(build, launcher, blistener, new Commit<String>("0")));
 	}
 
 	/**
@@ -263,7 +262,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -273,6 +272,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir,"add","foo");
 		hg(dir, "commit","-m","\"added foo\"");
 		String rev = hg(dir,"tip","--template","{node}").toString();
+		hg(dir, "branch","test");
 		shell(dir,"touch","bar");
 		hg(dir, "add","bar");
 		hg(dir, "commit","-m","\"added bar\"");
@@ -283,16 +283,19 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		//Setup build and listener
 		BuildListener blistener = mock(BuildListener.class);
-		FreeStyleBuild build = new FreeStyleBuild(project);	
-		
-		assertTrue(plugin.hasNextCommit(build, launcher, blistener));
-		assertTrue(plugin.commitFromDate(build, launcher, blistener, date).getId().equals(rev));
+		//FreeStyleBuild build = new FreeStyleBuild(project);	
+		Future<FreeStyleBuild> f = project.scheduleBuild2(0);
+		FreeStyleBuild build = f.get();
+		System.out.println("Revision: " + rev);
+		assertNotNull(plugin.nextCommit(build, launcher, blistener, new Commit<String>(rev)));
+		//assertTrue(plugin.hasNextCommit(build, launcher, blistener));
+		//assertTrue(plugin.commitFromDate(build, launcher, blistener, date).getId().equals(rev));
 	}
 
 	public void testShouldCauseMergeConflict() throws Exception {
 		setup();
 		File dir = createTempDirectory();
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -335,7 +338,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		boolean exceptionThrown = false;
 		try{
-			plugin.prepareWorkspace(build, launcher, blistener, new PretestedIntegrationSCMCommit(revision));
+			plugin.prepareWorkspace(build, launcher, blistener, new Commit<String>(revision));
 		} catch (AbortException e){
 			exceptionThrown = true;
 		}

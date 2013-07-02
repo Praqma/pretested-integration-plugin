@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
-import org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial.PretestedIntegrationSCMMercurial;
+import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.Mercurial;
 
 public class PretestedIntegrationIntegrationTest extends
 		PretestedIntegrationTestCase {
@@ -25,7 +25,8 @@ public class PretestedIntegrationIntegrationTest extends
 	public void testShouldScheduleMultipleBuilds() throws Exception {
 		setup();
 		File dir = createTempDirectory();
-		PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		//PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
+		Mercurial plugin = new Mercurial("0","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -47,7 +48,7 @@ public class PretestedIntegrationIntegrationTest extends
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 
-		project.getBuildWrappersList().add(new PretestedIntegrationPreCheckout());
+		project.getBuildWrappersList().add(new PretestedIntegrationPreCheckout(plugin));
 		project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 		//Setup build and listener
 		BuildListener blistener = mock(BuildListener.class);

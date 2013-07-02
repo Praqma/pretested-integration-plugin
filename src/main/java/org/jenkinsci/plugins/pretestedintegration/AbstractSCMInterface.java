@@ -89,7 +89,7 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 	 * @throws InvalidArgumentException The given repository is not in a valid
 	 * condition.
 	 */
-	void handlePostBuild(
+	public void handlePostBuild(
 			AbstractBuild<?,?> build, Launcher launcher, BuildListener listener)
 			throws IOException, IllegalArgumentException {
 		Result result = build.getResult();

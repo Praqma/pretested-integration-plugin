@@ -200,8 +200,8 @@ public class Mercurial extends AbstractSCMInterface {
 			//Merge the commit into the integration branch
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			int exitCode = hg(build, launcher, listener, out, "merge",(String) commit.getId(),"--tool","internal:merge");
-			if(exitCode != 0)
-				throw new AbortException("Merging branches caused conflict");
+			if(exitCode > 0)
+				throw new AbortException("Merging branches caused conflict: " + out.toString());
 		} catch(InterruptedException e){
 			throw new AbortException("Merge into integration branch exited unexpectedly");
 		}	
@@ -211,32 +211,42 @@ public class Mercurial extends AbstractSCMInterface {
 	public Commit<String> nextCommit(
 			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
 			throws IOException, IllegalArgumentException{
+		Commit<String> next = null;
 		String revision;
-		Integer idx = 0;
-		if(commit == null) {
+		if(commit == null || commit.getId().equals("0")) {
 			revision = "0";
 		} else {
 			revision = (String) commit.getId();
-			idx = 1; //Second element index
 		}
 		ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 		try {
-			//TODO: Check up on the exitcode
-			hg(build, launcher, listener,"pull");
+			hg(build, launcher, listener,"pull"); //wow this is bad
 			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}\\n");
+			//System.out.println("exitCode: " + exitCode);
+		
+			String output = logStdout.toString();
+			//System.out.println("Resulting string" + output);
+			
+			String [] commitArray = logStdout.toString().split("\\n");
+		
+			if(!(exitCode > 0) && commitArray.length > 0){
+				if(commitArray[0].equals(revision)){
+					//System.out.println("Already seen this commit, move along");
+					if(commitArray.length > 1) {
+						//System.out.println("Wow there was another commit");
+						next = new Commit<String>(commitArray[1]);
+					}
+				} else {
+					//System.out.println("Getting a commit!");
+					next = new Commit<String>(commitArray[0]);
+				}
+				if(next != null)
+					this.latest = next.getId();
+			}
 		} catch (InterruptedException e){
 			throw new IOException(e.getMessage());
 		}
-		String output = logStdout.toString();
-		
-		String [] commitArray = logStdout.toString().split("\\n");
-		
-		if(commitArray.length > idx){
-			Commit<String> next = new Commit<String>(commitArray[idx]);
-			this.latest = next.getId();
-			return next;
-		}
-		return null;
+		return next;
 	}
 
 	@Override
