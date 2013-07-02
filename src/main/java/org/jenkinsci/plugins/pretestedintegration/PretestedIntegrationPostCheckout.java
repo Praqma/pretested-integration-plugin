@@ -8,9 +8,6 @@ import hudson.model.Descriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.BuildStepMonitor;
 import java.io.IOException;
-import org.jenkinsci.plugins.pretestedintegration.CommitQueue;
-import org.jenkinsci.plugins.pretestedintegration.scminterface
-		.PretestedIntegrationSCMInterface;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -48,42 +45,9 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException {
 		listener.getLogger().println("Perform invoked");
-		try {
-			PretestUtils.logMessage(listener, "Beginning post-build step");
-			//hasQueue = true;
-			
-			// Get the interface for the SCM according to the chosen SCM
-			PretestedIntegrationSCMInterface scmInterface =
-					PretestUtils.getScmInterface(build, launcher, listener);
-			if(scmInterface == null) {
-				return false;
-			}
-			
-			// Do it!
-			listener.getLogger().println("Invoking postbuild step");
-			scmInterface.handlePostBuild(build, launcher, listener);
-			
-			if(scmInterface.hasNextCommit(build, launcher, listener)){
-				build.getProject().scheduleBuild2(0);
-			} 
-			//CommitQueue.getInstance().release();
-			//hasQueue = false;
-			
-			PretestUtils.logMessage(listener, "Finished post-build step");
-		} catch(IOException e) {
-			if(hasQueue) {
-				CommitQueue.getInstance().release();
-			}
-			throw(e);
-			//return false;
-		} catch(Exception e) {
-			if(hasQueue) {
-				CommitQueue.getInstance().release();
-			}
-			e.printStackTrace();
-			return false;
-		}
-		return true;
+		
+		PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
+		return action.finalise();
 	}
 	
 	public BuildStepMonitor getRequiredMonitorService() {

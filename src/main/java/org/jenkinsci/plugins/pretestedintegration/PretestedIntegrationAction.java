@@ -22,6 +22,12 @@ public class PretestedIntegrationAction implements Action {
 		this.launcher = launcher;
 		this.listener = listener;
 		this.scmInterface = scmInterface;
+		Commit<?> last = null;
+		try{
+			last = build.getPreviousBuild().getAction(PretestedIntegrationAction.class).getCommit();
+		} catch(NullPointerException e){
+			//This occur when there is no previous build
+		}
 		this.commit = scmInterface.nextCommit(build, launcher, listener, last);
 	}
 
@@ -54,10 +60,11 @@ public class PretestedIntegrationAction implements Action {
 	public boolean initialise() throws IllegalArgumentException, AbortException, IOException{
 		boolean result = false;
 
-		Commit<?> next = scmInterface.nextCommit(build, launcher, listener, commit);
-		if(next != null){
+		//Commit<?> next = scmInterface.nextCommit(build, launcher, listener, commit);
+		Commit<?> commit = getCommit();
+		if(commit != null){
 			result = true;
-			scmInterface.prepareWorkspace(build, launcher, listener, next);
+			scmInterface.prepareWorkspace(build, launcher, listener, commit);
 		}
 		return result;
 	}
@@ -68,8 +75,8 @@ public class PretestedIntegrationAction implements Action {
 	 * @throws IOException
 	 */
 
-	public void finalise() throws IllegalArgumentException, IOException{
-		
+	public boolean finalise() throws IllegalArgumentException, IOException{
+		listener.getLogger().println("Finalising");
 		scmInterface.handlePostBuild(build, launcher, listener);
 
 		scmInterface.getDescriptor().save();
@@ -77,8 +84,10 @@ public class PretestedIntegrationAction implements Action {
 		//Trigger a new build if there are more commits
 		Commit<?> next = scmInterface.nextCommit(build, launcher, listener, getCommit());
 		if(next != null){
+			listener.getLogger().println("Triggering new build");
 			build.getProject().scheduleBuild2(0);
 		} 
+		return true;
 	}
 
 }

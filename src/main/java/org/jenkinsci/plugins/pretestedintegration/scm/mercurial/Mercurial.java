@@ -16,6 +16,7 @@ import hudson.util.ArgumentListBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -24,7 +25,6 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
-import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMCommit;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -155,7 +155,7 @@ public class Mercurial extends AbstractSCMInterface {
 	 * @throws InterruptedException
 	 */
 
-	public PretestedIntegrationSCMCommit commitFromDate(AbstractBuild build, Launcher launcher, TaskListener listener, Date date) throws IOException, InterruptedException{
+	/*public PretestedIntegrationSCMCommit commitFromDate(AbstractBuild build, Launcher launcher, TaskListener listener, Date date) throws IOException, InterruptedException{
 		PretestedIntegrationSCMCommit commit = null;
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -164,7 +164,7 @@ public class Mercurial extends AbstractSCMInterface {
 		if(revision.length() > 0)
 			commit = new PretestedIntegrationSCMCommit(revision);
 		return commit;
-	}
+	}*/
 
 	@Extension
 	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
@@ -176,7 +176,6 @@ public class Mercurial extends AbstractSCMInterface {
 		@Override
 		public Mercurial newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			Mercurial i = (Mercurial) super.newInstance(req, formData);
-			
 			
 			String latest = formData.getJSONObject("scmInterface").getString("latest");
 			String pattern = formData.getJSONObject("scmInterface").getString("pattern");
@@ -212,17 +211,28 @@ public class Mercurial extends AbstractSCMInterface {
 	public Commit<String> nextCommit(
 			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
 			throws IOException, IllegalArgumentException{
-		String revision = (String) commit.getId();
+		String revision;
+		Integer idx = 0;
+		if(commit == null) {
+			revision = "0";
+		} else {
+			revision = (String) commit.getId();
+			idx = 1; //Second element index
+		}
 		ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 		try {
 			//TODO: Check up on the exitcode
+			hg(build, launcher, listener,"pull");
 			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}\\n");
 		} catch (InterruptedException e){
 			throw new IOException(e.getMessage());
 		}
+		String output = logStdout.toString();
+		
 		String [] commitArray = logStdout.toString().split("\\n");
-		if(commitArray.length > 1){			
-			Commit<String> next = new Commit<String>(commitArray[0]);
+		
+		if(commitArray.length > idx){
+			Commit<String> next = new Commit<String>(commitArray[idx]);
 			this.latest = next.getId();
 			return next;
 		}

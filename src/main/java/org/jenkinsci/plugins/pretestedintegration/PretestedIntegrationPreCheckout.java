@@ -22,7 +22,6 @@ import java.util.Map;
 
 import net.sf.json.JSONObject;
 
-import org.jenkinsci.plugins.pretestedintegration.scminterface.PretestedIntegrationSCMInterface;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -37,11 +36,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	private static final String DISPLAY_NAME = "Use pretested integration";
 	private static final String PLUGIN_NAME = "pretested-integration";
 	
-	private boolean hasQueue;
-	
-	private Map<Descriptor, Describable> instances;
 	private AbstractSCMInterface scmInterface;
-	private BuildListener listener;
 	
 /*	@DataBoundConstructor
 	public PretestedIntegrationPreCheckout(Map<Descriptor, Describable> instances) {
@@ -74,36 +69,17 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		
-		this.listener = listener;
 
-		PretestUtils.logMessage(listener, "Beginning pre-build step");
+		//PretestUtils.logMessage(listener, "Beginning pre-build step");
 		
-		// Wait in line until no other jobs are running.
-		hasQueue = true;
+		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
+		build.addAction(action);
+		boolean result = action.initialise();
 		
-		// Get the interface for the SCM according to the chosen SCM
-		PretestedIntegrationSCMInterface scmInterface =
-				PretestUtils.getScmInterface(build, launcher, listener);
-		if(scmInterface == null) {
-			return null;
-		}
+		if(!result)
+			build.setResult(Result.NOT_BUILT);
 		
-		PretestUtils.logMessage(listener, "begin has next");
-		// Verify that there is anything to do
-		boolean hasNextCommit = scmInterface.hasNextCommit(build, launcher, listener);
-		listener.getLogger().println("Has next commit? " + hasNextCommit);
-		if(!hasNextCommit) {
-			PretestUtils.logMessage(listener, "Nothing to build. Aborting.");
-			return null;
-		}
-		PretestUtils.logMessage(listener, "end has next");
-		
-		// Prepare for build
-		scmInterface.prepareWorkspace(build, launcher, listener,
-				scmInterface.popCommit(build, launcher, listener));
-		
-		PretestUtils.logMessage(listener, "Finished pre-build step");
+		//PretestUtils.logMessage(listener, "Finished pre-build step");
 		
 		Environment environment = new PretestEnvironment();
 		return environment;
@@ -118,14 +94,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	 */
 	//@Override
 	public void preCheckout() throws IOException, InterruptedException {
-		if(Hudson.getInstance().getPlugin(PLUGIN_NAME) != null) {
-			PretestUtils.logMessage(listener, PLUGIN_NAME + " plugin version: "
-					+ Hudson.getInstance().getPlugin(PLUGIN_NAME)
-					.getWrapper().getVersion());
-		} else {
-			PretestUtils.logMessage(listener, "No plugin found with name "
-					+ PLUGIN_NAME);
-		}
+		//nop
 	}
 	
 	@Override
