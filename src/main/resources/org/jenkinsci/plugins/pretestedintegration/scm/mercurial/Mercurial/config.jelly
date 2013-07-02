@@ -3,8 +3,8 @@
 		<f:entry title="Latest commit" field="latest">
 			<f:textbox value="${it.latest}" />
 		</f:entry>
-		<f:entry title="Pattern" field="pattern">
-			<f:textbox value="${it.pattern}" />
+		<f:entry title="Integration branch" field="branch">
+			<f:textbox value="${it.branch}" />
 		</f:entry>
 	</f:block>
 </j:jelly>

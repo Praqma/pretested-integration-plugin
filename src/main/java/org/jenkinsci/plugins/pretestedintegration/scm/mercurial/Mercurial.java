@@ -31,20 +31,21 @@ import org.kohsuke.stapler.StaplerRequest;
 public class Mercurial extends AbstractSCMInterface {
 
 	private String latest;
-	private String pattern;
+	private String branch;
 	
 	@DataBoundConstructor
-	public Mercurial(String latest, String pattern){
+	public Mercurial(String latest, String branch){
 		this.latest = latest;
-		this.pattern = pattern;
+		if(branch != null && !branch.equals(""))
+			this.branch = branch;
 	}
 	
 	public String getLatest(){
 		return this.latest;
 	}
 	
-	public String getPattern() {
-		return this.pattern;
+	public String getBranch() {
+		return this.branch == null ? "default" : this.branch;
 	}
 	
 	/**
@@ -178,9 +179,9 @@ public class Mercurial extends AbstractSCMInterface {
 			Mercurial i = (Mercurial) super.newInstance(req, formData);
 			
 			String latest = formData.getJSONObject("scmInterface").getString("latest");
-			String pattern = formData.getJSONObject("scmInterface").getString("pattern");
+			String branch = formData.getJSONObject("scmInterface").getString("branch");
 			i.latest = latest;
-			i.pattern = pattern;
+			i.branch = branch;
 			
 			save();
 			return i;
@@ -195,7 +196,7 @@ public class Mercurial extends AbstractSCMInterface {
 			//Make sure that we are on the integration branch
 			//TODO: Make it dynamic and not just "default"
 
-			hg(build, launcher, listener, "update","-C","default");
+			hg(build, launcher, listener, "update","-C", getBranch());
 			
 			//Merge the commit into the integration branch
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -221,7 +222,8 @@ public class Mercurial extends AbstractSCMInterface {
 		ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
 		try {
 			hg(build, launcher, listener,"pull"); //wow this is bad
-			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch(default) and "+revision+":tip","--template","{node}\\n");
+			String branch = getBranch();
+			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch("+branch+") and "+revision+":tip","--template","{node}\\n");
 			//System.out.println("exitCode: " + exitCode);
 		
 			String output = logStdout.toString();
@@ -259,6 +261,6 @@ public class Mercurial extends AbstractSCMInterface {
 	@Override
 	public void rollback(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-		hg(build, launcher, listener, "update","-C");
+		hg(build, launcher, listener, "update","-C", getBranch());
 	}
 }
