@@ -8,6 +8,7 @@ import hudson.model.Descriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.BuildStepMonitor;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -18,10 +19,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class PretestedIntegrationPostCheckout extends Publisher {
 	
-	private static final String DISPLAY_NAME =
-			"Run pretested integration post-build step";
+	private static Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 	
-	private boolean hasQueue;
 	
 	@DataBoundConstructor
 	public PretestedIntegrationPostCheckout() {
@@ -44,7 +43,8 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException {
-		listener.getLogger().println("Perform invoked");
+		
+		logger.finest("Perform invoked");
 		
 		PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
 		return action.finalise();
@@ -57,7 +57,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	@Extension
 	public static final class DescriptorImpl extends Descriptor<Publisher> {
 		public String getDisplayName() {
-			return DISPLAY_NAME;
+			return "Pretested Integration post-build";
 		}
 	}
 }
