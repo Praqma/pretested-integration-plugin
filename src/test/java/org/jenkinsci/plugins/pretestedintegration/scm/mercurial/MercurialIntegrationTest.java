@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestedintegration.scminterface.mercurial;
+package org.jenkinsci.plugins.pretestedintegration.scm.mercurial;
 
 import java.io.File;
 import java.io.IOException;
