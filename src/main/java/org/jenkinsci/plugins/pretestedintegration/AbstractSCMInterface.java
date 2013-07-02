@@ -49,7 +49,7 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 	 * condition.
 	 */
 	public void prepareWorkspace(
-			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch, Commit<?> commit)
+			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
 			throws AbortException, IOException, IllegalArgumentException {
 		//nop
 	}

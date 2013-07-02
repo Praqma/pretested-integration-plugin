@@ -7,20 +7,15 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.Node;
-import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.plugins.mercurial.MercurialInstallation;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.scm.SCM;
 import hudson.util.ArgumentListBuilder;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -57,7 +52,6 @@ public class Mercurial extends AbstractSCMInterface {
 	 */
 	private FilePath workingDirectory = null;
 	final static String LOG_PREFIX = "[PREINT-HG] ";
-	private String currentBuildFile = null; 
 
 	public void setWorkingDirectory(FilePath workingDirectory){
 		this.workingDirectory = workingDirectory;
@@ -196,7 +190,7 @@ public class Mercurial extends AbstractSCMInterface {
 
 	@Override
 	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener, String branch, Commit<?> commit)
+			BuildListener listener, Commit<?> commit)
 			throws AbortException, IOException, IllegalArgumentException {
 		try {
 			//Make sure that we are on the integration branch
@@ -215,7 +209,7 @@ public class Mercurial extends AbstractSCMInterface {
 	}
 	
 	@Override
-	public Commit<?> nextCommit(
+	public Commit<String> nextCommit(
 			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
 			throws IOException, IllegalArgumentException{
 		String revision = (String) commit.getId();
@@ -227,8 +221,9 @@ public class Mercurial extends AbstractSCMInterface {
 			throw new IOException(e.getMessage());
 		}
 		String [] commitArray = logStdout.toString().split("\\n");
-		if(commitArray.length > 0){			
+		if(commitArray.length > 1){			
 			Commit<String> next = new Commit<String>(commitArray[0]);
+			this.latest = next.getId();
 			return next;
 		}
 		return null;

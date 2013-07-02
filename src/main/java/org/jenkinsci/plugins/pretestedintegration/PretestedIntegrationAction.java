@@ -17,17 +17,12 @@ public class PretestedIntegrationAction implements Action {
 	Commit<?> last;
 	Commit<?> commit;
 	
-	public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMInterface scmInterface) {
+	public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMInterface scmInterface) throws IllegalArgumentException, IOException {
 		this.build = build;
 		this.launcher = launcher;
 		this.listener = listener;
 		this.scmInterface = scmInterface;
-		Commit<?> last = build.getProject()
-				.getLastBuild()
-				.getAction(PretestedIntegrationAction.class)
-				.getCommit();
-		//this.last = last;
-		//this.commit = scmInterface.nextCommit(build, launcher, listener, last);
+		this.commit = scmInterface.nextCommit(build, launcher, listener, last);
 	}
 
 	public String getDisplayName() {
@@ -59,11 +54,11 @@ public class PretestedIntegrationAction implements Action {
 	public boolean initialise() throws IllegalArgumentException, AbortException, IOException{
 		boolean result = false;
 
-		//Commit<?> next = scmInterface.nextCommit(build, launcher, listener, commit);
-	/*	if(scmInterface.hasNextCommit(build, launcher, listener)){
-			scmInterface.prepareWorkspace(build, launcher, listener, 
-					scmInterface.popCommit(build, launcher, listener));
-		}*/
+		Commit<?> next = scmInterface.nextCommit(build, launcher, listener, commit);
+		if(next != null){
+			result = true;
+			scmInterface.prepareWorkspace(build, launcher, listener, next);
+		}
 		return result;
 	}
 	
@@ -75,13 +70,15 @@ public class PretestedIntegrationAction implements Action {
 
 	public void finalise() throws IllegalArgumentException, IOException{
 		
-		//scmInterface.handlePostBuild(build, launcher, listener);
+		scmInterface.handlePostBuild(build, launcher, listener);
+
+		scmInterface.getDescriptor().save();
 		
 		//Trigger a new build if there are more commits
-		//Commit<?> next = scmInterface.nextCommit(build, launcher, listener, getCommit());
-		/*if(next != null){
+		Commit<?> next = scmInterface.nextCommit(build, launcher, listener, getCommit());
+		if(next != null){
 			build.getProject().scheduleBuild2(0);
-		} */
+		} 
 	}
 
 }
