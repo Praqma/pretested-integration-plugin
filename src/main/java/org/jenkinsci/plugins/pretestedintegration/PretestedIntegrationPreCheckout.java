@@ -10,6 +10,7 @@ import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
@@ -21,6 +22,7 @@ import org.kohsuke.stapler.StaplerRequest;
  * Depending on the chosen SCM, a more specific function will be called.
  */
 public class PretestedIntegrationPreCheckout extends BuildWrapper {
+	private static Logger logger = Logger.getLogger(PretestedIntegrationPreCheckout.class.getName());
 	
 	private AbstractSCMInterface scmInterface;
 	
@@ -45,17 +47,17 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
-
-		//PretestUtils.logMessage(listener, "Beginning pre-build step");
-		
+		logger.finest("Entering setUp");
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		build.addAction(action);
 		boolean result = action.initialise();
 		
-		if(!result)
+		if(!result) {
+			logger.finest("Set result to NOT_BUILT");
 			build.setResult(Result.NOT_BUILT);
+		}
 		
-		//PretestUtils.logMessage(listener, "Finished pre-build step");
+		logger.finest("Exiting setUp");
 		
 		Environment environment = new PretestEnvironment();
 		return environment;
