@@ -32,12 +32,10 @@ public class PretestedIntegrationAction implements Action {
 	}
 
 	public String getDisplayName() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public String getIconFileName() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	
