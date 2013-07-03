@@ -228,7 +228,7 @@ public class Mercurial extends AbstractSCMInterface {
 			
 			hg(build, launcher, listener,"pull"); //wow this is bad
 			String branch = getBranch();
-			
+			out.reset();
 			int exitCode = hg(build, launcher, listener,out,"log", "-r", "not branch("+branch+") and "+revision+":tip","--template","{node}\\n");
 			//System.out.println("exitCode: " + exitCode);
 		
