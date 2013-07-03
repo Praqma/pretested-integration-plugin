@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Describable;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -57,12 +58,21 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 			build.setResult(Result.NOT_BUILT);
 		}
 		
+		ensurePublisher(build);
+		
 		logger.finest("Exiting setUp");
 		
 		Environment environment = new PretestEnvironment();
 		return environment;
 	}
 	
+	public void ensurePublisher(AbstractBuild<?,?> build) throws IOException {
+		Describable<?> describable = build.getProject().getPublishersList().get(PretestedIntegrationPostCheckout.class);
+		if(describable == null) {
+			logger.info("Adding publisher to project");
+			build.getProject().getPublishersList().add(new PretestedIntegrationPostCheckout());
+		}
+	}
 	/**
 	 * Prints out version information.
 	 * 
