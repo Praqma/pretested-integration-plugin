@@ -26,7 +26,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		
-		assertTrue(action.initialise());
+		assertTrue(action.initialise(launcher, listener));
 	}
 	
 	public void testShouldNotInitialise() throws Exception {
@@ -37,7 +37,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		
-		assertFalse(action.initialise());
+		assertFalse(action.initialise(launcher, listener));
 	}
 	
 	public PretestedIntegrationAction mockedAction() throws IOException {
