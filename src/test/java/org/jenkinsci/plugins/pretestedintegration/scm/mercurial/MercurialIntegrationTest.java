@@ -23,6 +23,7 @@ import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.util.StreamTaskListener;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
@@ -83,6 +84,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(bar.exists());
 		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
 		assertTrue(hg(dir,"branch").toString().startsWith("default"));
+		cleanup(dir);
 	}
 	
 	/**
@@ -133,7 +135,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(hg(dir,"log","-rtip","--template","{desc}").
 				toString()
 				.startsWith("Successfully integrated development branch"));
-		
+
+		cleanup(dir);
 	}
 	
 	/**
@@ -186,6 +189,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(hg(dir,"status").toString().isEmpty());
 		assertTrue(hg(dir,"tip","--template","{node}").
 				toString().equals(head));
+		cleanup(dir);
 	}
 
 	public void testShouldNotHaveNextCommit() throws Exception {
@@ -217,6 +221,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		Commit<String> result = plugin.nextCommit(build, launcher, blistener, new Commit<String>(revision));
 		
 		assertNull(result);
+		cleanup(dir);
 	}
 	
 	public void testShouldHaveNextCommit() throws Exception {
@@ -250,6 +255,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
 		assertNotNull(plugin.nextCommit(build, launcher, blistener, new Commit<String>("0")));
+		cleanup(dir);
 	}
 
 	/**
@@ -290,6 +296,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertNotNull(plugin.nextCommit(build, launcher, blistener, new Commit<String>(rev)));
 		//assertTrue(plugin.hasNextCommit(build, launcher, blistener));
 		//assertTrue(plugin.commitFromDate(build, launcher, blistener, date).getId().equals(rev));
+		cleanup(dir);
 	}
 
 	public void testShouldCauseMergeConflict() throws Exception {
@@ -416,5 +423,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		return (temp);
 	}
 	
+	public static void cleanup(File path) throws IOException{
+		FileUtils.deleteDirectory(path);
+	}
 
 }
