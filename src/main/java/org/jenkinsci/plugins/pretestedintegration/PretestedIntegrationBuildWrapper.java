@@ -21,13 +21,13 @@ import org.kohsuke.stapler.StaplerRequest;
  * The build wrapper determines what will happen before the build will run.
  * Depending on the chosen SCM, a more specific function will be called.
  */
-public class PretestedIntegrationPreCheckout extends BuildWrapper {
-	private static Logger logger = Logger.getLogger(PretestedIntegrationPreCheckout.class.getName());
+public class PretestedIntegrationBuildWrapper extends BuildWrapper {
+	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 	
 	private AbstractSCMInterface scmInterface;
 	
 	@DataBoundConstructor
-	public PretestedIntegrationPreCheckout(AbstractSCMInterface scmInterface){
+	public PretestedIntegrationBuildWrapper(AbstractSCMInterface scmInterface){
 		this.scmInterface = scmInterface;
 	}
 	
@@ -88,7 +88,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		}
 		
 		public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			PretestedIntegrationPreCheckout b = (PretestedIntegrationPreCheckout) super.newInstance(req,formData);
+			PretestedIntegrationBuildWrapper b = (PretestedIntegrationBuildWrapper) super.newInstance(req,formData);
 			
 			SCMInterfaceDescriptor<AbstractSCMInterface> d = (SCMInterfaceDescriptor<AbstractSCMInterface>) b.getScmInterface().getDescriptor();
 			b.scmInterface = d.newInstance(req, formData);

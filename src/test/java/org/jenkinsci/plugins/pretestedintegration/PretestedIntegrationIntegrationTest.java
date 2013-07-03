@@ -48,7 +48,7 @@ public class PretestedIntegrationIntegrationTest extends
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 
-		project.getBuildWrappersList().add(new PretestedIntegrationPreCheckout(plugin));
+		project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(plugin));
 		project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 		//Setup build and listener
 		BuildListener blistener = mock(BuildListener.class);
