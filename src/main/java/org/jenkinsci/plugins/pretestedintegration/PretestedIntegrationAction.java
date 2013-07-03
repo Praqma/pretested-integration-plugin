@@ -11,16 +11,16 @@ import hudson.model.AbstractBuild;
 public class PretestedIntegrationAction implements Action {
 
 	AbstractBuild<?, ?> build;
-	Launcher launcher;
-	BuildListener listener;
+	//Launcher launcher;
+	//BuildListener listener;
 	AbstractSCMInterface scmInterface;
 	Commit<?> last;
 	Commit<?> commit;
 	
 	public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMInterface scmInterface) throws IllegalArgumentException, IOException {
 		this.build = build;
-		this.launcher = launcher;
-		this.listener = listener;
+		//this.launcher = launcher;
+		//this.listener = listener;
 		this.scmInterface = scmInterface;
 		Commit<?> last = null;
 		try{
@@ -55,7 +55,7 @@ public class PretestedIntegrationAction implements Action {
 	 * @throws AbortException 
 	 * @throws IllegalArgumentException 
 	 */
-	public boolean initialise() throws IllegalArgumentException, AbortException, IOException{
+	public boolean initialise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, AbortException, IOException{
 		boolean result = false;
 
 		//Commit<?> next = scmInterface.nextCommit(build, launcher, listener, commit);
@@ -73,7 +73,7 @@ public class PretestedIntegrationAction implements Action {
 	 * @throws IOException
 	 */
 
-	public boolean finalise() throws IllegalArgumentException, IOException{
+	public boolean finalise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException{
 		listener.getLogger().println("Finalising");
 		scmInterface.handlePostBuild(build, launcher, listener);
 

@@ -47,7 +47,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		logger.finest("Perform invoked");
 		
 		PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
-		return action.finalise();
+		return action.finalise(launcher, listener);
 	}
 	
 	public BuildStepMonitor getRequiredMonitorService() {

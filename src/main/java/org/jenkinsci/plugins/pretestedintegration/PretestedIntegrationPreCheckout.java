@@ -50,7 +50,7 @@ public class PretestedIntegrationPreCheckout extends BuildWrapper {
 		logger.finest("Entering setUp");
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		build.addAction(action);
-		boolean result = action.initialise();
+		boolean result = action.initialise(launcher, listener);
 		
 		if(!result) {
 			logger.finest("Set result to NOT_BUILT");
