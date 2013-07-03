@@ -215,28 +215,27 @@ public class Mercurial extends AbstractSCMInterface {
 			throws IOException, IllegalArgumentException{
 		Commit<String> next = null;
 		String revision;
-		if(commit == null || commit.getId().equals("0")) {
-			revision = "0";
-		} else if(reset) {
-			revision = (String) build
-					.getPreviousSuccessfulBuild()
-					.getAction(PretestedIntegrationAction.class)
-					.getCommit()
-					.getId();
-		} else {
-			revision = (String) commit.getId();
-		}
-		ByteArrayOutputStream logStdout = new ByteArrayOutputStream();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+
 		try {
+			if(commit == null || reset) {
+				//Get the last build on the integration branch
+				hg(build,launcher, listener, out,"heads",getBranch(),"--template","{node}");
+				revision = out.toString();
+			} else {
+				revision = (String) commit.getId();
+			}
+			
 			hg(build, launcher, listener,"pull"); //wow this is bad
 			String branch = getBranch();
-			int exitCode = hg(build, launcher, listener,logStdout,"log", "-r", "not branch("+branch+") and "+revision+":tip","--template","{node}\\n");
+			
+			int exitCode = hg(build, launcher, listener,out,"log", "-r", "not branch("+branch+") and "+revision+":tip","--template","{node}\\n");
 			//System.out.println("exitCode: " + exitCode);
 		
-			String output = logStdout.toString();
+			String commits = out.toString();
 			//System.out.println("Resulting string" + output);
 			
-			String [] commitArray = logStdout.toString().split("\\n");
+			String [] commitArray = commits.split("\\n");
 		
 			if(!(exitCode > 0) && commitArray.length > 0){
 				if(commitArray[0].equals(revision)){
@@ -253,6 +252,7 @@ public class Mercurial extends AbstractSCMInterface {
 		} catch (InterruptedException e){
 			throw new IOException(e.getMessage());
 		}
+		this.reset = false;
 		return next;
 	}
 
