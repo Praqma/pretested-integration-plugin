@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 	<f:block>
-		<f:entry title="Latest commit" field="latest">
-			<f:textbox value="${it.latest}" />
+		<f:entry title="Reset to latest integrated commit" field="reset">
+			<f:checkbox value="${it.reset}" />
 		</f:entry>
 		<f:entry title="Integration branch" field="branch">
 			<f:textbox value="${it.branch}" />

@@ -48,7 +48,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 	public void testShouldPrepareWithDevBranch() throws Exception{
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial("0","");
+		Mercurial plugin = new Mercurial(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -100,7 +100,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		File dir = createTempDirectory();
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
-		Mercurial plugin = new Mercurial("0","");
+		Mercurial plugin = new Mercurial(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		hg(dir, "init");
@@ -153,7 +153,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		File dir = createTempDirectory();
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
-		Mercurial plugin = new Mercurial("0","");
+		Mercurial plugin = new Mercurial(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		hg(dir, "init");
@@ -196,7 +196,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial("0","");
+		Mercurial plugin = new Mercurial(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -228,7 +228,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial("0","");
+		Mercurial plugin = new Mercurial(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -268,7 +268,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial("0","");
+		Mercurial plugin = new Mercurial(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -302,7 +302,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 	public void testShouldCauseMergeConflict() throws Exception {
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial("0","");
+		Mercurial plugin = new Mercurial(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());

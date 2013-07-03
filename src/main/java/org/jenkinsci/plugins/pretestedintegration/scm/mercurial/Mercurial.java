@@ -24,24 +24,25 @@ import net.sf.json.JSONObject;
 
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 public class Mercurial extends AbstractSCMInterface {
 
-	private String latest;
+	private boolean reset;
 	private String branch;
 	
 	@DataBoundConstructor
-	public Mercurial(String latest, String branch){
-		this.latest = latest;
+	public Mercurial(boolean reset, String branch){
+		this.reset = reset;
 		if(branch != null && !branch.equals(""))
 			this.branch = branch;
 	}
 	
-	public String getLatest(){
-		return this.latest;
+	public boolean getReset(){
+		return this.reset;
 	}
 	
 	public String getBranch() {
@@ -178,9 +179,9 @@ public class Mercurial extends AbstractSCMInterface {
 		public Mercurial newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			Mercurial i = (Mercurial) super.newInstance(req, formData);
 			
-			String latest = formData.getJSONObject("scmInterface").getString("latest");
+			boolean reset = formData.getJSONObject("scmInterface").getBoolean("reset");
 			String branch = formData.getJSONObject("scmInterface").getString("branch");
-			i.latest = latest;
+			i.reset = reset;
 			i.branch = branch;
 			
 			save();
@@ -216,6 +217,12 @@ public class Mercurial extends AbstractSCMInterface {
 		String revision;
 		if(commit == null || commit.getId().equals("0")) {
 			revision = "0";
+		} else if(reset) {
+			revision = (String) build
+					.getPreviousSuccessfulBuild()
+					.getAction(PretestedIntegrationAction.class)
+					.getCommit()
+					.getId();
 		} else {
 			revision = (String) commit.getId();
 		}
@@ -242,8 +249,6 @@ public class Mercurial extends AbstractSCMInterface {
 					//System.out.println("Getting a commit!");
 					next = new Commit<String>(commitArray[0]);
 				}
-				if(next != null)
-					this.latest = next.getId();
 			}
 		} catch (InterruptedException e){
 			throw new IOException(e.getMessage());
