@@ -19,7 +19,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class PretestedIntegrationPostCheckout extends Publisher {
 	
-	private static Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 	
 	
 	@DataBoundConstructor
@@ -60,4 +59,6 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 			return "Pretested Integration post-build";
 		}
 	}
+	
+	private static Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 }

@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import hudson.AbortException;
 import hudson.Launcher;
@@ -88,4 +89,5 @@ public class PretestedIntegrationAction implements Action {
 		return true;
 	}
 
+	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 }

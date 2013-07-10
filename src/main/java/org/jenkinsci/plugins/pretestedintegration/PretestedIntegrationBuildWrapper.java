@@ -23,7 +23,6 @@ import org.kohsuke.stapler.StaplerRequest;
  * Depending on the chosen SCM, a more specific function will be called.
  */
 public class PretestedIntegrationBuildWrapper extends BuildWrapper {
-	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 	
 	private AbstractSCMInterface scmInterface;
 	
@@ -119,4 +118,6 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 	
 	class PretestEnvironment extends Environment {
 	}
+	
+	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 }

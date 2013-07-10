@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pretestedintegration;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
 
@@ -109,4 +110,6 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 			}
 		}
 	}
+	
+	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 }

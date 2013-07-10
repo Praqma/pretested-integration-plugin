@@ -19,12 +19,14 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -268,4 +270,6 @@ public class Mercurial extends AbstractSCMInterface {
 			BuildListener listener) throws IOException, InterruptedException {
 		hg(build, launcher, listener, "update","-C", getBranch());
 	}
+	
+	private static Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 }

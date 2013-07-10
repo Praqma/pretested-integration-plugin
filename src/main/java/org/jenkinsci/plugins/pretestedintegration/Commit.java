@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import java.util.logging.Logger;
+
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Hudson;
@@ -19,4 +21,6 @@ public class Commit<T> implements ExtensionPoint {
 	public static ExtensionList<Commit> all() {
 		return Hudson.getInstance().getExtensionList(Commit.class);
 	}
+	
+	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 }
