@@ -195,36 +195,43 @@ public class Mercurial extends AbstractSCMInterface {
 	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener, Commit<?> commit)
 			throws AbortException, IOException, IllegalArgumentException {
+		logger.finest("Mercurial plugin, prepareWorkspace invoked");
 		try {
+			logger.finest("Updating the position to the integration branch");
 			//Make sure that we are on the integration branch
-			//TODO: Make it dynamic and not just "default"
-
 			hg(build, launcher, listener, "update","-C", getBranch());
 			
+			logger.finest("Merging the commit into the integration branch");
 			//Merge the commit into the integration branch
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			int exitCode = hg(build, launcher, listener, out, "merge",(String) commit.getId(),"--tool","internal:merge");
-			if(exitCode > 0)
-				throw new AbortException("Merging branches caused conflict: " + out.toString());
+			if(exitCode > 0){
+				logger.finest("hg command failed with exitcode: " + exitCode);
+				throw new AbortException("Could not merge. Mercurial output: " + out.toString());
+			}
 		} catch(InterruptedException e){
 			throw new AbortException("Merge into integration branch exited unexpectedly");
 		}	
+		logger.finest("Mercurial plugin, prepareWorkspace returning");
 	}
 	
 	@Override
 	public Commit<String> nextCommit(
 			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
 			throws IOException, IllegalArgumentException{
+		logger.finest("Mercurial plugin, nextCommit invoked");
 		Commit<String> next = null;
 		String revision;
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 		try {
 			if(commit == null || reset) {
+				logger.finest("Resetting revision to last successful build");
 				//Get the last build on the integration branch
 				hg(build,launcher, listener, out,"heads",getBranch(),"--template","{node}");
 				revision = out.toString();
 			} else {
+				logger.finest("Setting revision to previous build");
 				revision = (String) commit.getId();
 			}
 			
@@ -240,14 +247,15 @@ public class Mercurial extends AbstractSCMInterface {
 			String [] commitArray = commits.split("\\n");
 		
 			if(!(exitCode > 0) && commitArray.length > 0){
+				logger.finest("New revisions found");
 				if(commitArray[0].equals(revision)){
-					//System.out.println("Already seen this commit, move along");
+					logger.finest("This is not the commit we're looking for");
 					if(commitArray.length > 1) {
-						//System.out.println("Wow there was another commit");
+						logger.finest("Getting the next commit in line");
 						next = new Commit<String>(commitArray[1]);
 					}
 				} else {
-					//System.out.println("Getting a commit!");
+					logger.finest("Grabbing the next commit naively");
 					next = new Commit<String>(commitArray[0]);
 				}
 			}
@@ -255,12 +263,14 @@ public class Mercurial extends AbstractSCMInterface {
 			throw new IOException(e.getMessage());
 		}
 		this.reset = false;
+		logger.finest("Mercurial plugin, nextCommit returning");
 		return next;
 	}
 
 	@Override
 	public void commit(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		logger.finest("Mercurial plugin commiting");
 		hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
 		
 	}
@@ -268,6 +278,7 @@ public class Mercurial extends AbstractSCMInterface {
 	@Override
 	public void rollback(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
+		logger.finest("Mercurial plugin rolling back");
 		hg(build, launcher, listener, "update","-C", getBranch());
 	}
 	
