@@ -1,0 +1,16 @@
+syntax: glob
+*.class
+target/*
+work/*
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+*.swp
+*~
+# Eclipse files #
+.classpath
+.project
+.settings/
