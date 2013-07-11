@@ -102,10 +102,5 @@
       <artifactId>mercurial</artifactId>
       <version>1.35</version>
     </dependency>
-    <dependency>
-      <groupId>org.ini4j</groupId>
-      <artifactId>ini4j</artifactId>
-      <version>0.5.2</version>
-    </dependency>
   </dependencies>
 </project>
