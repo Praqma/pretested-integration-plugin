@@ -147,28 +147,6 @@ public class Mercurial extends AbstractSCMInterface {
 		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
 		return exitCode;
 	}
-	
-	/**
-	 * Given a date, search through the revision history and find the first changeset committed on or after the specified date.
-	 * @param build
-	 * @param launcher
-	 * @param listener
-	 * @param date
-	 * @return A commit representation of the next commit made at the specified date, or null
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-
-	/*public PretestedIntegrationSCMCommit commitFromDate(AbstractBuild build, Launcher launcher, TaskListener listener, Date date) throws IOException, InterruptedException{
-		PretestedIntegrationSCMCommit commit = null;
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		hg(build, launcher, listener, out, "log","-r","0:tip","-l1","--date",">" + dateFormat.format(date), "--template","{node}");
-		String revision = out.toString();
-		if(revision.length() > 0)
-			commit = new PretestedIntegrationSCMCommit(revision);
-		return commit;
-	}*/
 
 	@Extension
 	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
