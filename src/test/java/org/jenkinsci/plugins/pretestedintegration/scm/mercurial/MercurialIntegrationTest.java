@@ -65,7 +65,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir, "commit","-m","\"added bar\"");
 		hg(dir, "log");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 		
@@ -114,7 +114,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir, "update","default");
 		hg(dir, "merge","test");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 
@@ -168,7 +168,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir, "update","default");
 		hg(dir, "merge","test");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 
@@ -210,7 +210,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		String revision = hg(dir,"log","-l1","--template","{node}").toString();
 		//shell(dir, "echo",revision,">",".hg/currentBuildFile");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 		
@@ -246,7 +246,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir, "add","bar3");
 		hg(dir, "commit","-m","\"added bar3\"");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 		
@@ -283,7 +283,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir, "add","bar");
 		hg(dir, "commit","-m","\"added bar\"");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 		
@@ -335,7 +335,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		hg(dir,"commit","-m","Changed contents of hello in default branch");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true, false);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 		
