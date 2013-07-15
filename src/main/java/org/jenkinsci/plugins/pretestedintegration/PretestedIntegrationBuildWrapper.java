@@ -24,6 +24,7 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 	
+	private static String LOG_PREFIX = "[PREINT] ";
 	private AbstractSCMInterface scmInterface;
 	
 	@DataBoundConstructor
@@ -54,13 +55,14 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 		
 		if(!result) {
 			logger.finest("Set result to NOT_BUILT");
+			listener.getLogger().println(LOG_PREFIX + "Nothing to do, setting result to NOT_BUILT");
 			build.setResult(Result.NOT_BUILT);
 		}
 		
 		ensurePublisher(build);
 		
 		logger.finest("Exiting setUp");
-		
+		listener.getLogger().println(LOG_PREFIX + "Building commit: " + action.getClass());
 		Environment environment = new PretestEnvironment();
 		return environment;
 	}
