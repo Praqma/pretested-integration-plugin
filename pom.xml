@@ -12,7 +12,13 @@
   <artifactId>pretested-integration</artifactId>
   <version>0.0.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  
+ 
+  <developers>
+    <developer>
+      <id>rlindsgaard</id>
+      <name>Ronni Elken Lindsgaard</name>
+    </developer>
+  </developers> 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
