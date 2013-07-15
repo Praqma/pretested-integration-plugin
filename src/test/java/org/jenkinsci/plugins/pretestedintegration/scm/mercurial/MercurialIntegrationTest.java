@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.pretestedintegration.scm.mercurial;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import hudson.Launcher.ProcStarter;
 import hudson.model.Action;
 import hudson.model.FreeStyleBuild;
 import hudson.model.BuildListener;
+import hudson.model.StreamBuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Result;
@@ -27,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.Mercurial;
 
 import org.junit.*;
@@ -215,7 +218,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		project.setScm(scm);
 		
 		//Setup build and listener
-		BuildListener blistener = mock(BuildListener.class);
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener blistener = new StreamBuildListener(out);
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
 		Commit<String> result = plugin.nextCommit(build, launcher, blistener, new Commit<String>(revision));
@@ -251,7 +255,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		project.setScm(scm);
 		
 		//Setup build and listener
-		BuildListener blistener = mock(BuildListener.class);
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener blistener = new StreamBuildListener(out);
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
 		assertNotNull(plugin.nextCommit(build, launcher, blistener, new Commit<String>("0")));
@@ -288,7 +293,8 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		project.setScm(scm);
 		
 		//Setup build and listener
-		BuildListener blistener = mock(BuildListener.class);
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener blistener = new StreamBuildListener(out);
 		//FreeStyleBuild build = new FreeStyleBuild(project);	
 		Future<FreeStyleBuild> f = project.scheduleBuild2(0);
 		FreeStyleBuild build = f.get();
@@ -353,8 +359,51 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		assertTrue(exceptionThrown);
 	}
 	
+	/**
+	 * When a build is marked as NOT_BUILD
+	 * And more builds are started
+	 * And there are no changes
+	 * Then all following builds should also be marked NOT_BUILD
+	 */
+	public void testShouldMarkBuildsAsNotBuilt() throws Exception {
+		setup();
+		File dir = createTempDirectory();
+		Mercurial plugin = new Mercurial(false,"default");
+		plugin.setWorkingDirectory(new FilePath(dir));
+
+		hg(dir,"init");
+		shell(dir,"touch","foo");
+		hg(dir,"add","foo");
+		hg(dir, "commit","-m","\"added foo\"");
+		//String rev = hg(dir,"tip","--template","{node}").toString();
+		hg(dir, "branch","test");
+		shell(dir,"touch","bar");
+		hg(dir, "add","bar");
+		hg(dir, "commit","-m","\"added bar\"");
+		
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),"test",null,null,null, true);
+		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
+		project.setScm(scm);
+		project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(plugin));
+
+		Future<FreeStyleBuild> f = project.scheduleBuild2(0);
+		FreeStyleBuild build = f.get();
+		assertEquals(Result.SUCCESS,build.getResult());
+		f = project.scheduleBuild2(0);
+		build = f.get();
+		assertEquals(Result.NOT_BUILT, build.getResult());
+		f = project.scheduleBuild2(0);
+		build = f.get();
+		assertEquals(Result.NOT_BUILT, build.getResult());
+		cleanup(dir);
+	}
+	
 	/* Helper functions for the test cases */
 
+	/**
+	 * 
+	 * @throws IOException
+	 */
 	//@Before
 	public void setup() throws IOException {
 		//listener = mock(StreamTaskListener.class); //new StreamTaskListener(System.out, Charset.defaultCharset());
