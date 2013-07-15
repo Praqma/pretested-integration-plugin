@@ -214,12 +214,19 @@ public class Mercurial extends AbstractSCMInterface {
 			}
 			
 			hg(build, launcher, listener,"pull"); //wow this is bad
-			String branch = getBranch();
+			
+			//We need the instance of the installed scm here
+			SCM scm = build.getProject().getScm();
+			MercurialSCM hg = (MercurialSCM) scm;
+			
+			String branch = hg.getBranch();
 			out.reset();
-			int exitCode = hg(build, launcher, listener,out,"log", "-r", "not branch("+branch+") and "+revision+":tip","--template","{node}\\n");
+			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+branch+") and "+revision+":tip","--template","{node}\\n");
 			//System.out.println("exitCode: " + exitCode);
 		
 			String commits = out.toString();
+			logger.finest("hg exitcode: " + exitCode);
+			logger.finest("hg log result: " + commits);
 			//System.out.println("Resulting string" + output);
 			
 			String [] commitArray = commits.split("\\n");
@@ -239,6 +246,8 @@ public class Mercurial extends AbstractSCMInterface {
 			}
 		} catch (InterruptedException e){
 			throw new IOException(e.getMessage());
+		} catch (ClassCastException e) {
+			logger.finest("Configured scm is not mercurial. Aborting...");
 		}
 		this.reset = false;
 		logger.finest("Mercurial plugin, nextCommit returning");

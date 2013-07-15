@@ -283,7 +283,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		hg(dir, "add","bar");
 		hg(dir, "commit","-m","\"added bar\"");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),"test",null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 		
