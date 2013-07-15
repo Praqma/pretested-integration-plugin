@@ -199,7 +199,7 @@ public class Mercurial extends AbstractSCMInterface {
 			throws IOException, IllegalArgumentException{
 		logger.finest("Mercurial plugin, nextCommit invoked");
 		Commit<String> next = null;
-		String revision;
+		String revision = "0";
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 		try {
@@ -213,7 +213,7 @@ public class Mercurial extends AbstractSCMInterface {
 				revision = (String) commit.getId();
 			}
 			
-			hg(build, launcher, listener,"pull"); //wow this is bad
+			listener.getLogger().println(LOG_PREFIX + "Calculating next revision from " + revision);
 			
 			//We need the instance of the installed scm here
 			SCM scm = build.getProject().getScm();
@@ -227,20 +227,23 @@ public class Mercurial extends AbstractSCMInterface {
 			String commits = out.toString();
 			logger.finest("hg exitcode: " + exitCode);
 			logger.finest("hg log result: " + commits);
-			//System.out.println("Resulting string" + output);
+			listener.getLogger().println("Resulting string" + commits);
 			
 			String [] commitArray = commits.split("\\n");
 		
-			if(!(exitCode > 0) && commitArray.length > 0){
+			if(!(exitCode > 0) && commits.length() > 0){
 				logger.finest("New revisions found");
 				if(commitArray[0].equals(revision)){
+					listener.getLogger().println(LOG_PREFIX + "Already seen commit: " + revision);
 					logger.finest("This is not the commit we're looking for");
 					if(commitArray.length > 1) {
+						listener.getLogger().println(LOG_PREFIX + "Next commit is: " + commitArray[1]);
 						logger.finest("Getting the next commit in line");
 						next = new Commit<String>(commitArray[1]);
 					}
 				} else {
 					logger.finest("Grabbing the next commit naively");
+					listener.getLogger().println("Next commit is: " + commitArray[0]);
 					next = new Commit<String>(commitArray[0]);
 				}
 			}
