@@ -25,7 +25,8 @@ public class PretestedIntegrationAction implements Action {
 		this.scmInterface = scmInterface;
 		Commit<?> last = null;
 		try{
-			last = build.getPreviousBuild().getAction(PretestedIntegrationAction.class).getCommit();
+			
+			last = build.getPreviousBuiltBuild().getAction(PretestedIntegrationAction.class).getCommit();
 		} catch(NullPointerException e){
 			//This occur when there is no previous build
 		}
