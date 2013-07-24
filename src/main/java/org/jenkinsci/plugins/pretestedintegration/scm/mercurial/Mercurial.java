@@ -206,7 +206,7 @@ public class Mercurial extends AbstractSCMInterface {
 			if(commit == null || reset) {
 				logger.finest("Resetting revision to last successful build");
 				//Get the last build on the integration branch
-				hg(build,launcher, listener, out,"heads",getBranch(),"--template","{node}");
+				hg(build,launcher, listener, out, "heads", branch, "--template", "{node}");
 				revision = out.toString();
 			} else {
 				logger.finest("Setting revision to previous build");
@@ -215,15 +215,18 @@ public class Mercurial extends AbstractSCMInterface {
 			
 			listener.getLogger().println(LOG_PREFIX + "Calculating next revision from " + revision);
 			
+			//Make sure we have updated version of the integration branch
+			hg(build, launcher, listener, "pull", branch);
+			
 			//We need the instance of the installed scm here
 			SCM scm = build.getProject().getScm();
 			MercurialSCM hg = (MercurialSCM) scm;
 			
-			String branch = hg.getBranch();
+			//Get the staging branch from mercurial
+			String stageBranch = hg.getBranch();
 			out.reset();
-			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+branch+") and "+revision+":tip","--template","{node}\\n");
-			//System.out.println("exitCode: " + exitCode);
-		
+			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stageBranch+") and "+revision+":tip","--template","{node}\\n");
+			
 			String commits = out.toString();
 			logger.finest("hg exitcode: " + exitCode);
 			logger.finest("hg log result: " + commits);
