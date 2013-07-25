@@ -103,21 +103,22 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		File dir = createTempDirectory();
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
-		Mercurial plugin = new Mercurial(false,"");
+		Mercurial plugin = new Mercurial(false,"default");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		hg(dir, "init");
 		shell(dir,"touch","foo");
 		hg(dir, "add","foo");
-		hg(dir, "commit","-m","\"added foo\"");
+		hg(dir, "commit","-m","added foo");
 		hg(dir, "branch","test");
+		String revision = hg(dir,"tip","--template","{node}").toString();
 		shell(dir,"touch","bar");
 		hg(dir, "add","bar");
-		hg(dir, "commit","-m","\"added bar\"");
+		hg(dir, "commit","-m","added bar");
 		hg(dir, "update","default");
 		hg(dir, "merge","test");
 		
-		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
+		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),"test",null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 
@@ -125,10 +126,14 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		FreeStyleBuild build = spy(b.get());
 		when(build.getResult()).thenReturn(Result.SUCCESS);
 
-		BuildListener bListener = mock(BuildListener.class);
+
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener bListener = new StreamBuildListener(out);
 		assertTrue(hg(dir,"branch").toString().startsWith("default"));
 		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
 		assertNotNull(build.getResult());
+		
+		plugin.nextCommit(build, launcher, bListener, null);
 		
 		plugin.handlePostBuild(build, launcher, bListener);
 		
@@ -137,7 +142,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		assertTrue(hg(dir,"log","-rtip","--template","{desc}").
 				toString()
-				.startsWith("Successfully integrated development branch"));
+				.startsWith("added bar"));
 
 		cleanup(dir);
 	}
