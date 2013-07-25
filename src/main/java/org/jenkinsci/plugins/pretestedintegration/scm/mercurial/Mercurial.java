@@ -275,7 +275,7 @@ public class Mercurial extends AbstractSCMInterface {
 	public void commit(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		logger.finest("Mercurial plugin commiting");
-		hg(build, launcher, listener,"commit","-m", "Merge of branch" + stage + " into integration branch succesfull.");
+		hg(build, launcher, listener,"commit","-m", "Merge of branch " + stage + " into integration branch succesfull.");
 	}
 
 	@Override
