@@ -35,7 +35,7 @@ public class Mercurial extends AbstractSCMInterface {
 
 	private boolean reset;
 	private String branch;
-	private String commitMessage = "Succesfully integrated changes";
+	private String stage = "";
 	
 	@DataBoundConstructor
 	public Mercurial(boolean reset, String branch){
@@ -224,9 +224,9 @@ public class Mercurial extends AbstractSCMInterface {
 			MercurialSCM hg = (MercurialSCM) scm;
 			
 			//Get the staging branch from mercurial
-			String stageBranch = hg.getBranch();
+			stage = hg.getBranch();
 			out.reset();
-			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stageBranch+") and "+revision+":tip","--template","{node}\n");
+			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stage+") and "+revision+":tip","--template","{node}\n");
 			
 			String commits = out.toString();
 			logger.finest("hg exitcode: " + exitCode);
@@ -248,11 +248,6 @@ public class Mercurial extends AbstractSCMInterface {
 
 						out.reset();
 						hg(build, launcher, listener, out, "log", "-r", commitArray[1],"--template","{desc}");
-						commitMessage = out.toString();
-						
-						String logMessage = LOG_PREFIX + "Setting commit message: " + commitMessage;
-						logger.finest(logMessage);
-						listener.getLogger().println(logMessage);
 						
 						next = new Commit<String>(commitArray[1]);
 					}
@@ -260,11 +255,6 @@ public class Mercurial extends AbstractSCMInterface {
 					logger.finest("Grabbing the next commit naively");
 					out.reset();
 					hg(build, launcher, listener, out, "log", "-r", commitArray[0],"--template","{desc}");
-					commitMessage = out.toString();
-					
-					String logMessage = LOG_PREFIX + "Setting commit message: " + commitMessage;
-					logger.finest(logMessage);
-					listener.getLogger().println(logMessage);
 					
 					listener.getLogger().println("Next commit is: " + commitArray[0]);
 					
@@ -285,7 +275,7 @@ public class Mercurial extends AbstractSCMInterface {
 	public void commit(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		logger.finest("Mercurial plugin commiting");
-		hg(build, launcher, listener,"commit","-m", commitMessage);
+		hg(build, launcher, listener,"commit","-m", "Merge of branch" + stage + " into integration branch succesfull.");
 	}
 
 	@Override
