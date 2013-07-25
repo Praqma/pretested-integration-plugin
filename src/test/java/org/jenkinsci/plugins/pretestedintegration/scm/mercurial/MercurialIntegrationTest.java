@@ -142,7 +142,7 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		assertTrue(hg(dir,"log","-rtip","--template","{desc}").
 				toString()
-				.startsWith("added bar"));
+				.startsWith("Merge of branch test into integration branch succesfull."));
 
 		cleanup(dir);
 	}
