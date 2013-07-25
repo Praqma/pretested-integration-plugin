@@ -35,6 +35,7 @@ public class Mercurial extends AbstractSCMInterface {
 
 	private boolean reset;
 	private String branch;
+	private String commitMessage = "Succesfully integrated changes";
 	
 	@DataBoundConstructor
 	public Mercurial(boolean reset, String branch){
@@ -225,7 +226,7 @@ public class Mercurial extends AbstractSCMInterface {
 			//Get the staging branch from mercurial
 			String stageBranch = hg.getBranch();
 			out.reset();
-			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stageBranch+") and "+revision+":tip","--template","{node}\\n");
+			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stageBranch+") and "+revision+":tip","--template","{node}");
 			
 			String commits = out.toString();
 			logger.finest("hg exitcode: " + exitCode);
@@ -236,17 +237,37 @@ public class Mercurial extends AbstractSCMInterface {
 		
 			if(!(exitCode > 0) && commits.length() > 0){
 				logger.finest("New revisions found");
+				
+				
 				if(commitArray[0].equals(revision)){
 					listener.getLogger().println(LOG_PREFIX + "Already seen commit: " + revision);
 					logger.finest("This is not the commit we're looking for");
 					if(commitArray.length > 1) {
 						listener.getLogger().println(LOG_PREFIX + "Next commit is: " + commitArray[1]);
 						logger.finest("Getting the next commit in line");
+
+						out.reset();
+						hg(build, launcher, listener, out, "log", "-r", commitArray[1],"--template","{desc}");
+						commitMessage = out.toString();
+						
+						String logMessage = LOG_PREFIX + "Setting commit message: " + commitMessage;
+						logger.finest(logMessage);
+						listener.getLogger().println(logMessage);
+						
 						next = new Commit<String>(commitArray[1]);
 					}
 				} else {
 					logger.finest("Grabbing the next commit naively");
+					out.reset();
+					hg(build, launcher, listener, out, "log", "-r", commitArray[0],"--template","{desc}");
+					commitMessage = out.toString();
+					
+					String logMessage = LOG_PREFIX + "Setting commit message: " + commitMessage;
+					logger.finest(logMessage);
+					listener.getLogger().println(logMessage);
+					
 					listener.getLogger().println("Next commit is: " + commitArray[0]);
+					
 					next = new Commit<String>(commitArray[0]);
 				}
 			}
@@ -264,8 +285,7 @@ public class Mercurial extends AbstractSCMInterface {
 	public void commit(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws IOException, InterruptedException {
 		logger.finest("Mercurial plugin commiting");
-		hg(build, launcher, listener,"commit","-m", "Successfully integrated development branch");
-		
+		hg(build, launcher, listener,"commit","-m", commitMessage);
 	}
 
 	@Override
