@@ -226,7 +226,7 @@ public class Mercurial extends AbstractSCMInterface {
 			//Get the staging branch from mercurial
 			String stageBranch = hg.getBranch();
 			out.reset();
-			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stageBranch+") and "+revision+":tip","--template","{node}");
+			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stageBranch+") and "+revision+":tip","--template","{node}\n");
 			
 			String commits = out.toString();
 			logger.finest("hg exitcode: " + exitCode);
