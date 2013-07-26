@@ -16,16 +16,12 @@ import hudson.util.ArgumentListBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -75,7 +71,7 @@ public class Mercurial extends AbstractSCMInterface {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	private static ArgumentListBuilder findHgExe(AbstractBuild build, TaskListener listener, boolean allowDebug) throws IOException,
+	private static ArgumentListBuilder findHgExe(AbstractBuild<?, ?> build, TaskListener listener, boolean allowDebug) throws IOException,
 			InterruptedException {
 		//Cast the current SCM to get the methods we want. 
 		//Throw exception on failure
@@ -117,7 +113,7 @@ public class Mercurial extends AbstractSCMInterface {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public int hg(AbstractBuild build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException{
+	public int hg(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException{
 		ArgumentListBuilder hg = findHgExe(build, listener, false);
 		hg.add(cmds);
 		//if the working directory has not been manually set use the build workspace
@@ -138,7 +134,7 @@ public class Mercurial extends AbstractSCMInterface {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public int hg(AbstractBuild build, Launcher launcher, TaskListener listener,OutputStream out, String... cmds) throws IOException, InterruptedException{
+	public int hg(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener,OutputStream out, String... cmds) throws IOException, InterruptedException{
 		ArgumentListBuilder hg = findHgExe(build, listener, false);
 		hg.add(cmds);
 		//if the working directory has not been manually set use the build workspace
@@ -149,26 +145,6 @@ public class Mercurial extends AbstractSCMInterface {
 		return exitCode;
 	}
 
-	@Extension
-	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
-		
-		public String getDisplayName(){
-			return "Mercurial";
-		}
-		
-		@Override
-		public Mercurial newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			Mercurial i = (Mercurial) super.newInstance(req, formData);
-			
-			boolean reset = formData.getJSONObject("scmInterface").getBoolean("reset");
-			String branch = formData.getJSONObject("scmInterface").getString("branch");
-			i.reset = reset;
-			i.branch = branch;
-			
-			save();
-			return i;
-		}
-	}
 
 	@Override
 	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,
@@ -285,6 +261,27 @@ public class Mercurial extends AbstractSCMInterface {
 			BuildListener listener) throws IOException, InterruptedException {
 		logger.finest("Mercurial plugin rolling back");
 		hg(build, launcher, listener, "update","-C", getBranch());
+	}
+
+	@Extension
+	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
+		
+		public String getDisplayName(){
+			return "Mercurial";
+		}
+		
+		@Override
+		public Mercurial newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+			Mercurial i = (Mercurial) super.newInstance(req, formData);
+			
+			boolean reset = formData.getJSONObject("scmInterface").getBoolean("reset");
+			String branch = formData.getJSONObject("scmInterface").getString("branch");
+			i.reset = reset;
+			i.branch = branch;
+			
+			save();
+			return i;
+		}
 	}
 	
 	private static Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
