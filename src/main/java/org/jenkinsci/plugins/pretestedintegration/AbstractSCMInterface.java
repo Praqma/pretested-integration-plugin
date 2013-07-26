@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import net.sf.json.JSONObject;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
+
 import jenkins.model.Jenkins;
 
 import hudson.AbortException;
@@ -16,8 +21,13 @@ import hudson.model.Describable;
 import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Result;
+import hudson.model.Descriptor.FormException;
 
 public abstract class AbstractSCMInterface implements Describable<AbstractSCMInterface>, ExtensionPoint {
+	
+	@DataBoundConstructor
+	public AbstractSCMInterface(){
+	}
 	
     public Descriptor<AbstractSCMInterface> getDescriptor() {
         return (SCMInterfaceDescriptor<?>)Jenkins.getInstance().getDescriptorOrDie(getClass());
@@ -79,6 +89,10 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 		//nop
 	}
 	
+	public Result getRequiredResult(){
+		return Result.SUCCESS; 
+	}
+	
 	/**
 	 * This is called after the build has run. If the build was successful, the
 	 * changes should be committed, otherwise the workspace is cleared as before 
@@ -95,21 +109,23 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 			throws IOException, IllegalArgumentException {
 		Result result = build.getResult();
 		//TODO: make the success criteria configurable in post-build step
-		if(result != null && result.isBetterOrEqualTo(Result.SUCCESS)){ //Commit the changes
+		if(result != null && result.isBetterOrEqualTo(getRequiredResult())){ //Commit the changes
 			
 			try {
+				listener.getLogger().println("Committing...");
 				commit(build, launcher, listener);
 			} catch (InterruptedException e) {
 				throw new AbortException("Commiting changes on integration branch exited unexpectedly");
 			}
 		} else { //Rollback changes
 			try {
+				listener.getLogger().println("Rolling back");
 				rollback(build, launcher, listener);
 			} catch (InterruptedException e) {
 				throw new AbortException("Unable to revert changes in integration branch");
 			}
 		}
 	}
-	
+
 	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 }
