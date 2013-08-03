@@ -4,9 +4,12 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
+import hudson.model.StreamBuildListener;
 
+import java.io.OutputStream;
 import java.util.List;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jvnet.hudson.test.HudsonTestCase;
 import static org.mockito.Mockito.*;
 
@@ -40,7 +43,10 @@ public class AbstractSCMInterfaceTest extends HudsonTestCase {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		when(build.getResult()).thenReturn(Result.SUCCESS);
 		Launcher launcher = mock(Launcher.class);
-		BuildListener listener = mock(BuildListener.class);
+
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener listener = new StreamBuildListener(out);
+		
 		assertFalse(scm.isCommited());
 		scm.handlePostBuild(build, launcher, listener);
 		assertTrue(scm.isCommited());
@@ -51,7 +57,10 @@ public class AbstractSCMInterfaceTest extends HudsonTestCase {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		when(build.getResult()).thenReturn(Result.UNSTABLE);
 		Launcher launcher = mock(Launcher.class);
-		BuildListener listener = mock(BuildListener.class);
+
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener listener = new StreamBuildListener(out);
+		
 		assertFalse(scm.isRolledBack());
 		scm.handlePostBuild(build, launcher, listener);
 		assertTrue(scm.isRolledBack());

@@ -33,10 +33,11 @@ public class Mercurial extends AbstractSCMInterface {
 	private boolean reset;
 	private String branch;
 	private String revId;
-	private String result;
+	//private String result;
 	
 	@DataBoundConstructor
-	public Mercurial(boolean reset, String branch, String result){
+	//public Mercurial(boolean reset, String branch, String result){
+	public Mercurial(boolean reset, String branch){
 		this.reset = reset;
 		if(branch != null && !branch.equals(""))
 			this.branch = branch;
@@ -50,9 +51,10 @@ public class Mercurial extends AbstractSCMInterface {
 		return this.branch == null ? "default" : this.branch;
 	}
 	
+	/*
 	public String getResult() {
 		return this.result;
-	}
+	}*/
 	
 	/**
 	 * The directory in which to execute hg commands
@@ -269,10 +271,10 @@ public class Mercurial extends AbstractSCMInterface {
 		hg(build, launcher, listener, "update","-C", getBranch());
 	}
 
-	@Override
+	/*@Override
 	public Result getRequiredResult(){
 		return Result.fromString(result);
-	}
+	}*/
 	
 	@Extension
 	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
@@ -287,11 +289,11 @@ public class Mercurial extends AbstractSCMInterface {
 			
 			boolean reset = formData.getJSONObject("scmInterface").getBoolean("reset");
 			String branch = formData.getJSONObject("scmInterface").getString("branch");
-			String result = formData.getJSONObject("scmInterface").getString("result");
+			//String result = formData.getJSONObject("scmInterface").getString("result");
 			
 			i.reset = reset;
 			i.branch = branch;
-			i.result = result;
+			//i.result = result;
 			
 			save();
 			return i;
