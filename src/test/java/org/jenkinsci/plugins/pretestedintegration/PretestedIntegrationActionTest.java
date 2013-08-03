@@ -19,6 +19,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		PretestedIntegrationAction action = mockedAction();
 		assertNull(action.getIconFileName());
 		assertNull(action.getDisplayName());
+		assertEquals("pretested-integration", action.getUrlName());
 	}
 	
 	public void testShouldInitialise() throws Exception {
@@ -42,6 +43,24 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		
 		assertFalse(action.initialise(launcher, listener));
+	}
+	
+	public void testShouldInvokeNewBuild() throws Exception {
+		FreeStyleProject project = mock(FreeStyleProject.class);
+		FreeStyleBuild build = mock(FreeStyleBuild.class);
+		when(build.getProject()).thenReturn(project);
+		Launcher launcher = mock(Launcher.class);
+
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener listener = new StreamBuildListener(out);
+		DummySCM scmInterface = new DummySCM();
+		
+		scmInterface.setCommit(new Commit<String>("test"));
+		
+		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
+		action.finalise(launcher, listener);
+		
+		verify(project, times(1)).scheduleBuild2(0);
 	}
 	
 	public void testShouldNotInvokeNewBuild() throws Exception {
