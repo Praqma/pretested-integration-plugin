@@ -31,8 +31,8 @@ It is possible to obtain false negatives in the build phase, causing verifiable 
 ### Something about not_build
 If a build is triggered and no commits for integration are found, then the build will be marked as NOT_BUILT
 
-# Setting up pretested integration with Mercurial
-## Development workflow
+## Setting up pretested integration with Mercurial
+### Development workflow
 The workflow is adapted from the personal branch version of the branchy approach described in https://wiki.jenkins-ci.org/display/JENKINS/Designing+pre-tested+commit.
 
 1. A named branch is used as the team integration branch (defaults to 'default'). 
@@ -40,52 +40,52 @@ The workflow is adapted from the personal branch version of the branchy approach
 3. Every team member has a designated staging branch (also a named branch) unto where she merges the changes and pushes this branch. (hg update stage-branch && merge feature-branch && hg commit -m "Finished development of feature")
 4. Jenkins looks for changes on the stage branch, and integrates verified changes in the integration branch and pushes the updated branch.
 
-## Jenkins setup
+### Jenkins setup
 For each staging branch, a Jenkins job is configured to poll for changes and trigger a build. A build is created for every found commit, and is sequentially merged into the integration branch if the commit is verified. 
 Subsequent jobs can be configured to run further tests, deploy or push the updated integration branch to the repository.
 
-### Job configuration
+#### Job configuration
 1. Under "Source Code Management" select Mercurial. For "Repository URL" use the repository url. Type in the name of the staging branch into "Branch".
 2. Under Build Environment, check "Use pretested integration"
 3. Select Mercurial and type in the name of the integration branch into "Integration branch".
 
 _Note: A post-build action can also be configured, however it will automatically be activated by the plugin the first time a build is triggered._
 
-### Reset to latest integrated commit
+#### Reset to latest integrated commit
 The Mercurial SCM interface makes it possible to handle false negatives by resetting the internal state to check all subsequent changes not integrated from the last integrated commit in the stage branch history.
 This is done by checking the checkbox named "Reset to latest integrated commit" under the Mercurial SCM interface in the job configuration.
 False negatives which occur before a successful integration will need to be recommitted to be re-tested and integrated. 
 
-## Currently known issues
+### Currently known issues
 - Only builds with Result.STABLE is committed.
 
-# Setting up pretested integration with Git
+## Setting up pretested integration with Git
 Not implemented yet
 
-# Extending the Pretested Integration Plugin
+## Extending the Pretested Integration Plugin
 An example module is available at https://github.com/rlindsgaard/interface-example
 
-## Creating an SCM interface
+### Creating an SCM interface
 To define a new SCM interface, create a public class which extends "org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface" and override the following functions. 
 
-### Interface methods
-#### nextCommit
+#### Interface methods
+##### nextCommit
 The method should return an extension of the AbstractCommit<?> class specifying the next commit to be merged and verified calculated from the last commit residing on both integration and staging branch.
 
-#### prepareWorkspace
+##### prepareWorkspace
 The method is invoked before the build starts, and after the SCM plugin has downloaded repository changes. 
 A branch with the merge of the integration branch and the passed commit should be checked out.
 
-#### handlePostBuild
+##### handlePostBuild
 After the build completes, depending on the build result, the method either integrates the commit being verified or rolls the workspace back preparing for the next build.
 
 _Note: A default implementation exists that invokes commit() or rollback(), so it should it is not necessary to implement this method._
 
-#### commit
+##### commit
 Actually merge the commit into the integration branch in the workspace.
 
-#### rollback
+##### rollback
 If anything needs to be undone, do it here.
 
-## Identifying a commit
+### Identifying a commit
 For Git and Mercurial, it is possible to uniquely identify a commit by a hash value. It is possible to parameterise "org.jenkinsci.plugins.pretestedintegration.Commit" in order to use a custom class or type which uniquely identifies the commit.
