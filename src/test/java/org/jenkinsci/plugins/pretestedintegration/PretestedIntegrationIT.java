@@ -14,7 +14,7 @@ import java.util.Date;
 
 import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.Mercurial;
 
-public class PretestedIntegrationIntegrationTest extends
+public class PretestedIntegrationIT extends
 		PretestedIntegrationTestCase {
 	/**
 	 * Given there are more than one commit waiting in line
