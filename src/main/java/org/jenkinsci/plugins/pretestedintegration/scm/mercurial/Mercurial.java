@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.Node;
 import hudson.model.TaskListener;
@@ -32,8 +33,10 @@ public class Mercurial extends AbstractSCMInterface {
 	private boolean reset;
 	private String branch;
 	private String revId;
+	//private String result;
 	
 	@DataBoundConstructor
+	//public Mercurial(boolean reset, String branch, String result){
 	public Mercurial(boolean reset, String branch){
 		this.reset = reset;
 		if(branch != null && !branch.equals(""))
@@ -47,6 +50,11 @@ public class Mercurial extends AbstractSCMInterface {
 	public String getBranch() {
 		return this.branch == null ? "default" : this.branch;
 	}
+	
+	/*
+	public String getResult() {
+		return this.result;
+	}*/
 	
 	/**
 	 * The directory in which to execute hg commands
@@ -263,6 +271,11 @@ public class Mercurial extends AbstractSCMInterface {
 		hg(build, launcher, listener, "update","-C", getBranch());
 	}
 
+	/*@Override
+	public Result getRequiredResult(){
+		return Result.fromString(result);
+	}*/
+	
 	@Extension
 	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
 		
@@ -276,8 +289,11 @@ public class Mercurial extends AbstractSCMInterface {
 			
 			boolean reset = formData.getJSONObject("scmInterface").getBoolean("reset");
 			String branch = formData.getJSONObject("scmInterface").getString("branch");
+			//String result = formData.getJSONObject("scmInterface").getString("result");
+			
 			i.reset = reset;
 			i.branch = branch;
+			//i.result = result;
 			
 			save();
 			return i;

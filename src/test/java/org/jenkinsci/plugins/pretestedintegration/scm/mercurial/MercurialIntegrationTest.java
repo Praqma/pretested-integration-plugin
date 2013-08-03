@@ -187,11 +187,14 @@ public class MercurialIntegrationTest extends HudsonTestCase {
 		
 		String head = hg(dir,"tip","--template","{node}").toString();
 		
-		BuildListener bListener = mock(BuildListener.class);
+
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener blistener = new StreamBuildListener(out);
+		
 		assertTrue(hg(dir,"branch").toString().startsWith("default"));
 		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
 		
-		plugin.handlePostBuild(build, launcher, bListener);
+		plugin.handlePostBuild(build, launcher, blistener);
 		
 		assertTrue(hg(dir,"branch").toString().startsWith("default"));
 		assertTrue(hg(dir,"status").toString().isEmpty());
