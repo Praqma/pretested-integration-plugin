@@ -20,15 +20,15 @@ An extension point called an SCM interface is used to perform action on the work
 3. The Pretested Integration plugin asks the SCM interface to check out the integration branch and merge the found commit leaving the workspace in a state that makes it possible to build and test the changes invoked by the commit.
 4. The build phase builds the software
 5. The Pretested Integration plugin asks the SCM interface to act on the build result
-6. If the build is verified, the commit should be integrated on the integration branch
+6. If the build is verified, the commit should be integrated on the integration branch and pushed back to the repository by the SCM interface
 7. If the build is not verified, the workspace should be rolled back so that another commit can be tested
 8. The Pretested Integration plugin asks the SCM interface for the next commit to be tested
 9. If any commits are found, a new build is triggered.
 
 ### Handling false negatives
-It is possible to obtain false negatives in the build phase, causing verifiable commits to be rejected. Resetting the job to rerun tests is an SCM interface implementation and is not handled by the Pretested Integration plugin.
+It is possible to obtain false negatives in the build phase, causing verifiable commits to be rejected. Resetting the job to rerun tests is an SCM interface implementation and is not handled by the Pretested Integration plugin natively.
 
-### Something about not_build
+### Build with no changes
 If a build is triggered and no commits for integration are found, then the build will be marked as NOT_BUILT
 
 ## Setting up pretested integration with Mercurial
@@ -42,7 +42,7 @@ The workflow is adapted from the personal branch version of the branchy approach
 
 ### Jenkins setup
 For each staging branch, a Jenkins job is configured to poll for changes and trigger a build. A build is created for every found commit, and is sequentially merged into the integration branch if the commit is verified. 
-Subsequent jobs can be configured to run further tests, deploy or push the updated integration branch to the repository.
+Subsequent jobs should be configured by listening on the integration branch and commense further tests, deployment etc.
 
 #### Job configuration
 1. Under "Source Code Management" select Mercurial. For "Repository URL" use the repository url. Type in the name of the staging branch into "Branch".
@@ -57,16 +57,20 @@ This is done by checking the checkbox named "Reset to latest integrated commit" 
 False negatives which occur before a successful integration will need to be recommitted to be re-tested and integrated. 
 
 ### Currently known issues
-- Only builds with Result.STABLE is committed.
+* Only builds with Result.STABLE is committed.
+* It is not possible to customise the integration message
+* If the integration branch does not exist, the plugin will fail.
 
 ## Setting up pretested integration with Git
 Not implemented yet
 
 ## Extending the Pretested Integration Plugin
 An example module is available at https://github.com/rlindsgaard/interface-example
+### Contributing
+The official repository is at https://bitbucket.org/rlindsgaard/pretested-integration-plugin please use this repository for the current development branch and pull requests.
 
 ### Creating an SCM interface
-To define a new SCM interface, create a public class which extends "org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface" and override the following functions. 
+To define a new SCM interface, create a public class which extends "org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface" and overrides the following methods. 
 
 #### Interface methods
 ##### nextCommit
@@ -82,7 +86,7 @@ After the build completes, depending on the build result, the method either inte
 _Note: A default implementation exists that invokes commit() or rollback(), so it should it is not necessary to implement this method._
 
 ##### commit
-Actually merge the commit into the integration branch in the workspace.
+Actually merge the commit into the integration branch in the workspace. This method is also responsible for 
 
 ##### rollback
 If anything needs to be undone, do it here.
