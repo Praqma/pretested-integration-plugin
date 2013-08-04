@@ -10,7 +10,7 @@
   
   <name>Pretested integration</name>
   <artifactId>pretested-integration</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
  
   <developers>
