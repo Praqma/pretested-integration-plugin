@@ -202,6 +202,7 @@ public class Mercurial extends AbstractSCMInterface {
 			
 			//Make sure we have updated version of the integration branch
 			hg(build, launcher, listener, "pull", branch);
+			//TODO: Failsafe for when the branch does not exist
 			
 			//We need the instance of the installed scm here
 			SCM scm = build.getProject().getScm();
@@ -262,6 +263,9 @@ public class Mercurial extends AbstractSCMInterface {
 			BuildListener listener) throws IOException, InterruptedException {
 		logger.finest("Mercurial plugin commiting");
 		hg(build, launcher, listener,"commit","-m", "Merge of revision " + revId + " succesfull.");
+		
+		//push the changes back to the repo
+		hg(build, launcher, listener,"push");
 	}
 
 	@Override

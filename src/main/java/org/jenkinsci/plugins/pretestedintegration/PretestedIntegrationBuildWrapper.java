@@ -47,22 +47,50 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 	 */
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException {
+			BuildListener listener) {
 		logger.finest("Entering setUp");
-		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
-		build.addAction(action);
-		boolean result = action.initialise(launcher, listener);
 		
-		if(!result) {
-			logger.finest("Set result to NOT_BUILT");
-			listener.getLogger().println(LOG_PREFIX + "Nothing to do, setting result to NOT_BUILT");
-			build.setResult(Result.NOT_BUILT);
+		//There can be only one... at a time
+		BuildQueue.getInstance().enqueueAndWait();
+		
+		PretestedIntegrationAction action;
+		try {
+			action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
+
+			build.addAction(action);
+			boolean result = action.initialise(launcher, listener);
+			if(!result) {
+				logger.finest("Set result to NOT_BUILT");
+				listener.getLogger().println(LOG_PREFIX + "Nothing to do, setting result to NOT_BUILT");
+				build.setResult(Result.NOT_BUILT);
+			}
+
+			try {
+				ensurePublisher(build);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				logger.finest("Could not add publisher" + e.getMessage());
+				BuildQueue.getInstance().release();
+			}
+			
+			logger.finest("Exiting setUp");
+			listener.getLogger().println(LOG_PREFIX + "Building commit: " + action.getClass());
+			
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			logger.finest("An exeption occured while settings up the build." + e.getMessage());
+			build.setResult(Result.FAILURE);
+			BuildQueue.getInstance().release();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			logger.finest("An exeption occured while settings up the build." + e.getMessage());
+			build.setResult(Result.FAILURE);
+			BuildQueue.getInstance().release();
 		}
 		
-		ensurePublisher(build);
-		
-		logger.finest("Exiting setUp");
-		listener.getLogger().println(LOG_PREFIX + "Building commit: " + action.getClass());
 		Environment environment = new PretestEnvironment();
 		return environment;
 	}

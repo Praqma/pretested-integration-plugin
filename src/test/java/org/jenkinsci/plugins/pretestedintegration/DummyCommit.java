@@ -7,7 +7,7 @@ public class DummyCommit extends Commit<String> {
 
 	/* for unit testing purposes */
 	public DummyCommit(){
-		super(null);
+		super("");
 	}
 	
 	public DummyCommit(String commitId) {
