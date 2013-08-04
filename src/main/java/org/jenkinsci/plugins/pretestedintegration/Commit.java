@@ -11,6 +11,7 @@ public class Commit<T> implements ExtensionPoint {
 	private T commitId;
 	
 	public Commit(T commitId){
+		logger.finest("Creating commit with id: " + commitId.toString());
 		this.commitId = commitId;
 	}
 	
@@ -22,5 +23,5 @@ public class Commit<T> implements ExtensionPoint {
 		return Hudson.getInstance().getExtensionList(Commit.class);
 	}
 	
-	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
+	private static Logger logger = Logger.getLogger(Commit.class.getName());
 }

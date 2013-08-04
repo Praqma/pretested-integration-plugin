@@ -5,6 +5,7 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
+import hudson.model.Result;
 import hudson.tasks.Publisher;
 import hudson.tasks.BuildStepMonitor;
 import java.io.IOException;
@@ -41,12 +42,26 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 	 */
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException {
+			BuildListener listener) {
 		
 		logger.finest("Perform invoked");
 		
 		PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
-		return action.finalise(launcher, listener);
+		Boolean result = false;
+		try {
+			result = action.finalise(launcher, listener);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			logger.finest("Could not finalise build" + e.getMessage());
+			build.setResult(Result.FAILURE);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			logger.finest("Could not finalise build" + e.getMessage());
+		}
+		BuildQueue.getInstance().release();
+		return result;
 	}
 	
 	public BuildStepMonitor getRequiredMonitorService() {

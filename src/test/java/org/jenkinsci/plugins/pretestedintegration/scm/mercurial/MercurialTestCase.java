@@ -82,7 +82,7 @@ public abstract class MercurialTestCase extends HudsonTestCase {
 		    throws IOException
 	{
 		final File temp = getTempFile();
-		   
+		System.out.println("Creating test repository at repository: " + temp.getAbsolutePath());
 		if(!(temp.mkdir()))
 		{
 			throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
