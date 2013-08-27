@@ -97,6 +97,72 @@ public class MercurialIT extends MercurialTestCase {
 		revArr = revisions.toString().split("\n");
 		assertTrue(revArr[5].startsWith("Merge of revision " + bobRevision2));
 	}
+
+	/**
+	 * Test that a merge fail commit can be fixed and merged
+	 */
+	public void testFailedMergeIntegration() throws Exception {
+		//Create a commit that cannot be merged
+		//Resolve the merge issues (by synching the integration branch)
+		//now the commit should be integrated
+		setup();
+		File remote = createTempDirectory();
+		hg(remote,"init");
+		File foo = new File(remote,"foo");
+		FileUtils.touch(foo);
+		hg(remote,"add","foo");
+		hg(remote,"commit","-m","Initial import");
+		
+		hg(remote,"branch","alice");
+		FileUtils.writeStringToFile(foo, "Hello from alice");
+		hg(remote,"commit","-m","Added hello message from alice");
+		String aliceRevision = hg(remote,"tip","--template","{node}").toString();
+		assertNotNull(aliceRevision);
+		
+		hg(remote,"update","-C","default");
+		hg(remote,"branch","bob");
+		FileUtils.writeStringToFile(foo, "Hello from bob");
+		hg(remote,"commit","-m","Added hello message from bob");
+		String bobRevision = hg(remote,"tip","--template","{node}").toString();
+		
+		FreeStyleProject alice = createJob(remote.getAbsolutePath(),"alice","alice","default");
+		FreeStyleProject bob = createJob(remote.getAbsolutePath(),"bob","bob","default");
+
+		//run alices integration then bobs
+		Future<FreeStyleBuild> aliceBuild = alice.scheduleBuild2(0);
+		Future<FreeStyleBuild> bobBuild = bob.scheduleBuild2(0);
+		
+		aliceBuild.get();
+		FreeStyleBuild b = bobBuild.get();
+
+		//the jobs should now be present in the integration branch merged in the same order as comitted.
+		ByteArrayOutputStream revisions = hg(remote,"log","--branch","default","--template","{desc}\n","-r",":");
+		String[] revArr = revisions.toString().split("\n");
+		//The first element is the initial commit
+		assertTrue(revArr.length == 2);
+		assertTrue(revArr[1].startsWith("Merge of revision " + aliceRevision));
+		assertEquals(Result.FAILURE,b.getResult());
+		
+		//it should get rejected
+		//then rebase with 
+		
+		//make sure we are on bob
+		hg(remote,"update","bob");
+		hg(remote,1,"merge","default");
+		FileUtils.writeStringToFile(foo, "Hello from alice\nHello from bob");
+		hg(remote,"resolve","--mark","foo");
+		hg(remote,"commit","-m","Merged integration branch into bob");
+		String bobRevision2 = hg(remote,"tip","--template","{node}").toString();
+		
+		Future<FreeStyleBuild> bobBuild2 = bob.scheduleBuild2(0);
+		bobBuild2.get();
+		
+		revisions = hg(remote,"log","--branch","default","--template","{desc}\n","-r",":");
+		revArr = revisions.toString().split("\n");
+		//The first element is the initial commit
+		assertTrue(revArr[2].startsWith("Merge of revision " + bobRevision2));
+		
+	}
 	
 	/**
 	 * Test that a merge conflict does not ruin the integration branch

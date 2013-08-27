@@ -57,6 +57,13 @@ public abstract class MercurialTestCase extends HudsonTestCase {
 	        return out;
 	    }	
 	    
+	    protected final ByteArrayOutputStream hg(File dir, int expect, String... args) throws Exception {
+	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	        List<String> cmds = assembleHgCommand(args);
+	        Assert.assertEquals(expect, launch(launcher).cmds(cmds).pwd(dir).stdout(out).join());
+	        return out;
+	    }
+	    
 		public List<String> assembleHgCommand(String[] args){
 	        List<String> cmds = new ArrayList<String>();
 	        cmds.add("hg");
