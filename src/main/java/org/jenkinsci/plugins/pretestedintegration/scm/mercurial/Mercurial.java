@@ -4,12 +4,14 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.plugins.mercurial.MercurialInstallation;
+
+import hudson.plugins.mercurial.HgExe;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.scm.SCM;
 import hudson.util.ArgumentListBuilder;
@@ -69,47 +71,29 @@ public class Mercurial extends AbstractSCMInterface {
 	public FilePath getWorkingDirectory(){
 		return this.workingDirectory;
 	}
-	
-	/**
-	 * Locate the correct mercurial binary to use for commands
-	 * @param build
-	 * @param listener
-	 * @param allowDebug
-	 * @return An ArgumentListBuilder containing the correct hg binary
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	private static ArgumentListBuilder findHgExe(AbstractBuild<?, ?> build, TaskListener listener, boolean allowDebug) throws IOException,
-			InterruptedException {
-		//Cast the current SCM to get the methods we want. 
-		//Throw exception on failure
-		try{
-			SCM scm = build.getProject().getScm();
-			MercurialSCM hg = (MercurialSCM) scm;
-			
-			Node node = build.getBuiltOn();
-			// Run through Mercurial installations and check if they correspond to
-			// the one used in this job
-			for (MercurialInstallation inst
-					: MercurialInstallation.allInstallations()) {
-				if (inst.getName().equals(hg.getInstallation())) {
-					// TODO: what about forEnvironment?
-					String home = inst.getExecutable().replace("INSTALLATION",
-							inst.forNode(node, listener).getHome());
-					ArgumentListBuilder b = new ArgumentListBuilder(home);
-					
-					if (allowDebug && inst.getDebug()) {
-						b.add("--debug");
-					}
-					return b;
-				}
-			}
-			//Just use the default hg
-			return new ArgumentListBuilder(hg.getDescriptor().getHgExe());
-		} catch(ClassCastException e) {
-			throw new InterruptedException("Configured scm is not mercurial");
+
+    private MercurialSCM findScm(AbstractBuild<?,?> build) throws InterruptedException {
+        try{
+            SCM scm = build.getProject().getScm();
+            MercurialSCM hg = (MercurialSCM) scm;
+            return hg;
+        } catch (ClassCastException e) {
+            throw new InterruptedException("Configured scm is not mercurial");
+        }
+    }
+    
+    private ProcStarter buildCommand(AbstractBuild<?,?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException {
+    	MercurialSCM scm = findScm(build);
+        HgExe hg = new HgExe(scm, launcher, build, listener, build.getEnvironment());
+        ArgumentListBuilder b = new ArgumentListBuilder();
+
+        b.add(cmds);
+		//if the working directory has not been manually set use the build workspace
+		if(workingDirectory == null){
+			setWorkingDirectory(build.getWorkspace());
 		}
-	}
+		return hg.run(b).pwd(workingDirectory);
+    }
 	
 	/**
 	 * Invoke a command with mercurial
@@ -122,13 +106,8 @@ public class Mercurial extends AbstractSCMInterface {
 	 * @throws InterruptedException
 	 */
 	public int hg(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException{
-		ArgumentListBuilder hg = findHgExe(build, listener, false);
-		hg.add(cmds);
-		//if the working directory has not been manually set use the build workspace
-		if(workingDirectory == null){
-			setWorkingDirectory(build.getWorkspace());
-		}
-		int exitCode = launcher.launch().cmds(hg).pwd(workingDirectory).join();
+		ProcStarter hg = buildCommand(build, launcher, listener,cmds);
+		int exitCode = hg.join();
 		return exitCode;
 	}
 
@@ -143,16 +122,10 @@ public class Mercurial extends AbstractSCMInterface {
 	 * @throws InterruptedException
 	 */
 	public int hg(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener,OutputStream out, String... cmds) throws IOException, InterruptedException{
-		ArgumentListBuilder hg = findHgExe(build, listener, false);
-		hg.add(cmds);
-		//if the working directory has not been manually set use the build workspace
-		if(workingDirectory == null){
-			setWorkingDirectory(build.getWorkspace());
-		}
-		int exitCode = launcher.launch().cmds(hg).stdout(out).pwd(workingDirectory).join();
+		ProcStarter hg = buildCommand(build, launcher, listener,cmds);
+		int exitCode = hg.stdout(out).join();
 		return exitCode;
 	}
-
 
 	@Override
 	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,

@@ -71,25 +71,27 @@ public class MercurialTest extends MercurialTestCase {
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
-		
+
+		File bar = new File(dir,"bar");
 		//Setup the repository
 		hg(dir, "init");
-		shell(dir,"touch","foo");
+		FileUtils.writeStringToFile(new File(dir,"foo"), "");
 		hg(dir, "add","foo");
 		hg(dir, "commit","-m","\"added foo\"");
-		hg(dir, "log");
+		//hg(dir, "log");
 		hg(dir, "branch","test");
-		shell(dir,"touch","bar");
+		FileUtils.writeStringToFile(bar, "");
 		hg(dir, "add","bar");
 		hg(dir, "commit","-m","\"added bar\"");
-		hg(dir, "log");
+		//hg(dir, "log");
 		
 		MercurialSCM scm = new MercurialSCM(null,dir.getAbsolutePath(),null,null,null,null, true);
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		project.setScm(scm);
 		
 		//Setup build and listener
-		BuildListener blistener = mock(BuildListener.class);
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener blistener = new StreamBuildListener(out);
 		
 		FreeStyleBuild build = new FreeStyleBuild(project);
 		
@@ -98,7 +100,6 @@ public class MercurialTest extends MercurialTestCase {
 		
 		plugin.prepareWorkspace(build, launcher, blistener, commit);
 		
-		File bar = new File(dir,"bar");
 		
 		assertTrue(bar.exists());
 		assertTrue(hg(dir,"status").toString().startsWith("M bar"));
@@ -370,7 +371,8 @@ public class MercurialTest extends MercurialTestCase {
 		project.setScm(scm);
 		
 		//Setup build and listener
-		BuildListener blistener = mock(BuildListener.class);
+		OutputStream out = new ByteArrayOutputStream();
+		BuildListener blistener = new StreamBuildListener(out);
 		FreeStyleBuild build = new FreeStyleBuild(project);	
 		
 		boolean exceptionThrown = false;
