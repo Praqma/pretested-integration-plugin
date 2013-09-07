@@ -6,9 +6,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
-import hudson.model.Result;
 import hudson.model.AbstractBuild;
-import hudson.model.Node;
 import hudson.model.TaskListener;
 
 import hudson.plugins.mercurial.HgExe;
