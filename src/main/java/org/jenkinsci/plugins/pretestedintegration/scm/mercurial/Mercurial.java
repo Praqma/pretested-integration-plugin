@@ -6,9 +6,8 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
-import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
-
+import hudson.model.AbstractBuild;
 import hudson.plugins.mercurial.HgExe;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.scm.SCM;
@@ -21,9 +20,8 @@ import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
-import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
+import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -31,7 +29,6 @@ import org.kohsuke.stapler.StaplerRequest;
 public class Mercurial extends AbstractSCMInterface {
 
 	private boolean reset;
-	private String branch;
 	private String revId;
 	//private String result;
 	
@@ -124,29 +121,24 @@ public class Mercurial extends AbstractSCMInterface {
 		int exitCode = hg.stdout(out).join();
 		return exitCode;
 	}
-
+	
 	@Override
-	public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener, Commit<?> commit)
-			throws AbortException, IOException, IllegalArgumentException {
-		logger.finest("Mercurial plugin, prepareWorkspace invoked");
-		try {
-			logger.finest("Updating the position to the integration branch");
-			//Make sure that we are on the integration branch
-			hg(build, launcher, listener, "update","-C", getBranch());
-			
-			logger.finest("Merging the commit into the integration branch");
-			//Merge the commit into the integration branch
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			int exitCode = hg(build, launcher, listener, out, "merge",(String) commit.getId(),"--tool","internal:merge");
-			if(exitCode > 0){
-				logger.finest("hg command failed with exitcode: " + exitCode);
-				throw new AbortException("Could not merge. Mercurial output: " + out.toString());
-			}
-		} catch(InterruptedException e){
-			throw new AbortException("Merge into integration branch exited unexpectedly");
-		}	
-		logger.finest("Mercurial plugin, prepareWorkspace returning");
+	protected void ensureBranch(AbstractBuild<?,?> build, Launcher launcher, TaskListener listener, String branch) 
+		throws IOException, InterruptedException {
+
+		logger.finest("Updating the position to the integration branch");
+		//Make sure that we are on the integration branch
+		hg(build, launcher, listener, "update","-C", getBranch());
+	}
+	
+	@Override
+	protected void mergeChanges(AbstractBuild<?,?> build, Launcher launcher, TaskListener listener, Commit<?> commit) throws IOException, InterruptedException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		int exitCode = hg(build, launcher, listener, out, "merge",(String) commit.getId(),"--tool","internal:merge");
+		if(exitCode > 0){
+			logger.finest("hg command failed with exitcode: " + exitCode);
+			throw new AbortException("Could not merge. Mercurial output: " + out.toString());
+		}
 	}
 	
 	@Override
@@ -275,5 +267,5 @@ public class Mercurial extends AbstractSCMInterface {
 		}
 	}
 	
-	private static Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
+	private static Logger logger = Logger.getLogger(Mercurial.class.getName());
 }

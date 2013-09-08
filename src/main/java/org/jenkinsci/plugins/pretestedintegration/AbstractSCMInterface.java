@@ -21,12 +21,20 @@ import hudson.model.Describable;
 import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.model.Descriptor.FormException;
 
 public abstract class AbstractSCMInterface implements Describable<AbstractSCMInterface>, ExtensionPoint {
 	
+	protected String branch;
+	final static String LOG_PREFIX = "[PREINT-SCM] ";
+	
 	@DataBoundConstructor
 	public AbstractSCMInterface(){
+	}
+	
+	public String getBranch() {
+		return branch;
 	}
 	
     public Descriptor<AbstractSCMInterface> getDescriptor() {
@@ -62,9 +70,26 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 	public void prepareWorkspace(
 			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
 			throws AbortException, IOException, IllegalArgumentException {
-		//nop
+		logger.finest(LOG_PREFIX + "Entering prepareWorkspace");
+		try {
+			logger.finest(LOG_PREFIX + "Invoking ensureBranch with branch: " + branch);
+			ensureBranch(build, launcher, listener, branch);
+			logger.finest(LOG_PREFIX + "Invoking mergeChanges with commit: " + commit.getId().toString());
+			mergeChanges(build, launcher, listener, commit);
+		} catch (InterruptedException e){
+			throw new AbortException(LOG_PREFIX + "Could not prepare workspace. Error message: "  + e.getMessage());
+		}
+		logger.finest(LOG_PREFIX + "Exiting prepareWorkspace");
 	}
 	
+	protected void mergeChanges(AbstractBuild<?,?> build, Launcher launcher,TaskListener listener, Commit<?> commit) throws IOException, InterruptedException {
+		//nop
+	}
+
+	protected void ensureBranch(AbstractBuild<?,?> build, Launcher launcher,TaskListener listener, String branch) throws IOException, InterruptedException {
+		//nop
+	}
+
 	/**
 	 * Calculate and return the next commit from the argument 
 	 *
@@ -107,25 +132,26 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 	public void handlePostBuild(
 			AbstractBuild<?,?> build, Launcher launcher, BuildListener listener)
 			throws IOException, IllegalArgumentException {
+		logger.finest(LOG_PREFIX + "Entering handlePostBuild");
 		Result result = build.getResult();
 		//TODO: make the success criteria configurable in post-build step
 		if(result != null && result.isBetterOrEqualTo(getRequiredResult())){ //Commit the changes
-			
 			try {
-				listener.getLogger().println("Committing...");
+				listener.getLogger().println(LOG_PREFIX + "Commiting changes");
 				commit(build, launcher, listener);
 			} catch (InterruptedException e) {
-				throw new AbortException("Commiting changes on integration branch exited unexpectedly");
+				throw new AbortException(LOG_PREFIX + "Commiting changes on integration branch exited unexpectedly");
 			}
 		} else { //Rollback changes
 			try {
-				listener.getLogger().println("Rolling back");
+				listener.getLogger().println(LOG_PREFIX + "Rolling back changes");
 				rollback(build, launcher, listener);
 			} catch (InterruptedException e) {
-				throw new AbortException("Unable to revert changes in integration branch");
+				throw new AbortException(LOG_PREFIX + "Unable to revert changes in integration branch");
 			}
 		}
+		logger.finest(LOG_PREFIX + "Exiting handlePostBuild");
 	}
 
-	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
+	private static Logger logger = Logger.getLogger(AbstractSCMInterface.class.getName());
 }
