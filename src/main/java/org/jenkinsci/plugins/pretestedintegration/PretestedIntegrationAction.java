@@ -83,6 +83,7 @@ public class PretestedIntegrationAction implements Action {
 		
 		//Trigger a new build if there are more commits
 		Commit<?> next = scmInterface.nextCommit(build, launcher, listener, getCommit());
+		//TODO: Add a condition such that builds are only triggered if no more builds are scheduled
 		if(next != null){
 			listener.getLogger().println("Triggering new build");
 			build.getProject().scheduleBuild2(0);
@@ -90,5 +91,5 @@ public class PretestedIntegrationAction implements Action {
 		return true;
 	}
 
-	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
+	private static Logger logger = Logger.getLogger(PretestedIntegrationAction.class.getName());
 }
