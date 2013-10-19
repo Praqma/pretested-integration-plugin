@@ -40,26 +40,26 @@ public class MercurialTest extends MercurialTestCase {
 	public void testShouldBeExtension(){
 		boolean inDescriptorList = false;
 		for(SCMInterfaceDescriptor<AbstractSCMInterface> d : AbstractSCMInterface.all()) {
-			if(d.getDisplayName().equals("Mercurial"))
+			if(d.getDisplayName().equals("MercurialBridge"))
 				inDescriptorList = true;
 		}
 		assertTrue(inDescriptorList);
 	}
 	
 	public void testShouldInitialise() throws Exception {
-		Mercurial mercurial = new Mercurial(true,"test");
+		MercurialBridge mercurial = new MercurialBridge(true,"test");
 		assertTrue(mercurial.getReset());
 		assertEquals("test",mercurial.getBranch());
 		
-		mercurial = new Mercurial(false,"test");
+		mercurial = new MercurialBridge(false,"test");
 		assertFalse(mercurial.getReset());
 		assertEquals("test",mercurial.getBranch());
 		
-		mercurial = new Mercurial(false,"");
+		mercurial = new MercurialBridge(false,"");
 		assertFalse(mercurial.getReset());
 		assertEquals("default",mercurial.getBranch());
 		
-		mercurial = new Mercurial(false,null);
+		mercurial = new MercurialBridge(false,null);
 		assertFalse(mercurial.getReset());
 		assertEquals("default",mercurial.getBranch());
 	}
@@ -67,7 +67,7 @@ public class MercurialTest extends MercurialTestCase {
 	public void testShouldPrepareWithDevBranch() throws Exception{
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -120,7 +120,7 @@ public class MercurialTest extends MercurialTestCase {
 		File dir = createTempDirectory();
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
-		Mercurial plugin = new Mercurial(false,"default");
+		MercurialBridge plugin = new MercurialBridge(false,"default");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		hg(dir, "init");
@@ -178,7 +178,7 @@ public class MercurialTest extends MercurialTestCase {
 		File dir = createTempDirectory();
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
 		
-		Mercurial plugin = new Mercurial(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 		
 		hg(dir, "init");
@@ -224,7 +224,7 @@ public class MercurialTest extends MercurialTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -257,7 +257,7 @@ public class MercurialTest extends MercurialTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -298,7 +298,7 @@ public class MercurialTest extends MercurialTestCase {
 
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -333,7 +333,7 @@ public class MercurialTest extends MercurialTestCase {
 	public void testShouldCauseMergeConflict() throws Exception {
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
@@ -394,7 +394,7 @@ public class MercurialTest extends MercurialTestCase {
 	public void testShouldMarkBuildsAsNotBuilt() throws Exception {
 		setup();
 		File dir = createTempDirectory();
-		Mercurial plugin = new Mercurial(false,"default");
+		MercurialBridge plugin = new MercurialBridge(false,"default");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		hg(dir,"init");

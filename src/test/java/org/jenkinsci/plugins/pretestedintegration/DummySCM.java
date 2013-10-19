@@ -9,7 +9,7 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor.FormException;
 import net.sf.json.JSONObject;
 
-import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.Mercurial;
+import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.MercurialBridge;
 import org.kohsuke.stapler.StaplerRequest;
 
 public class DummySCM extends AbstractSCMInterface {
@@ -50,15 +50,15 @@ public class DummySCM extends AbstractSCMInterface {
 	}
 	
 	@Extension
-	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
+	public static final class DescriptorImpl extends SCMInterfaceDescriptor<MercurialBridge> {
 		
 		public String getDisplayName(){
 			return "DummySCM";
 		}
 		
 		@Override
-		public Mercurial newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			Mercurial i = (Mercurial) super.newInstance(req, formData);
+		public MercurialBridge newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+			MercurialBridge i = (MercurialBridge) super.newInstance(req, formData);
 			
 			save();
 			return i;

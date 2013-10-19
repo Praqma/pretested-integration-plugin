@@ -26,7 +26,7 @@ import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-public class Mercurial extends AbstractSCMInterface {
+public class MercurialBridge extends AbstractSCMInterface {
 
 	private boolean reset;
 	private String revId;
@@ -34,7 +34,7 @@ public class Mercurial extends AbstractSCMInterface {
 	
 	@DataBoundConstructor
 	//public Mercurial(boolean reset, String branch, String result){
-	public Mercurial(boolean reset, String branch){
+	public MercurialBridge(boolean reset, String branch){
 		this.reset = reset;
 		if(branch != null && !branch.equals(""))
 			this.branch = branch;
@@ -79,7 +79,7 @@ public class Mercurial extends AbstractSCMInterface {
     
     private ProcStarter buildCommand(AbstractBuild<?,?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException {
     	MercurialSCM scm = findScm(build);
-        HgExe hg = new HgExe(scm, launcher, build, listener, build.getEnvironment());
+        HgExe hg = new HgExe(scm, launcher, build, listener);
         ArgumentListBuilder b = new ArgumentListBuilder();
 
         b.add(cmds);
@@ -244,15 +244,15 @@ public class Mercurial extends AbstractSCMInterface {
 	}*/
 	
 	@Extension
-	public static final class DescriptorImpl extends SCMInterfaceDescriptor<Mercurial> {
+	public static final class DescriptorImpl extends SCMInterfaceDescriptor<MercurialBridge> {
 		
 		public String getDisplayName(){
 			return "Mercurial";
 		}
 		
 		@Override
-		public Mercurial newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			Mercurial i = (Mercurial) super.newInstance(req, formData);
+		public MercurialBridge newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+			MercurialBridge i = (MercurialBridge) super.newInstance(req, formData);
 			
 			boolean reset = formData.getJSONObject("scmInterface").getBoolean("reset");
 			String branch = formData.getJSONObject("scmInterface").getString("branch");
@@ -267,5 +267,5 @@ public class Mercurial extends AbstractSCMInterface {
 		}
 	}
 	
-	private static Logger logger = Logger.getLogger(Mercurial.class.getName());
+	private static Logger logger = Logger.getLogger(MercurialBridge.class.getName());
 }

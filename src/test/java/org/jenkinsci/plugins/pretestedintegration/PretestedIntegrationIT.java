@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
-import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.Mercurial;
+import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.MercurialBridge;
 
 public class PretestedIntegrationIT extends
 		PretestedIntegrationTestCase {
@@ -26,7 +26,7 @@ public class PretestedIntegrationIT extends
 		setup();
 		File dir = createTempDirectory();
 		//PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
-		Mercurial plugin = new Mercurial(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());
