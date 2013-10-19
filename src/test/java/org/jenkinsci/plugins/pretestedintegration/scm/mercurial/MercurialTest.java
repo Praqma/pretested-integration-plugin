@@ -40,7 +40,7 @@ public class MercurialTest extends MercurialTestCase {
 	public void testShouldBeExtension(){
 		boolean inDescriptorList = false;
 		for(SCMInterfaceDescriptor<AbstractSCMInterface> d : AbstractSCMInterface.all()) {
-			if(d.getDisplayName().equals("MercurialBridge"))
+			if(d.getDisplayName().equals("Mercurial"))
 				inDescriptorList = true;
 		}
 		assertTrue(inDescriptorList);
