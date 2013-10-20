@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.logging.Logger;
 
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
@@ -16,16 +17,20 @@ import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.MercurialTagAction;
 import hudson.plugins.mercurial.PollComparator;
 import hudson.scm.PollingResult.Change;
+import hudson.scm.SCM;
 
+@Extension
 public class MercurialComparator extends PollComparator {
 
 	private String LOG_PREFIX = "[PREINT-HG] ";
-	public Change compare(MercurialSCM scm, Launcher launcher, TaskListener listener, MercurialTagAction baseline, PrintStream output, Node node, FilePath repository, AbstractProject<?,?> project) 
+	
+	@Override
+	public Change compare(SCM scm, Launcher launcher, TaskListener listener, MercurialTagAction baseline, PrintStream output, Node node, FilePath repository, AbstractProject<?,?> project) 
 			throws IOException, InterruptedException {
-	/*	
-		logger.finest("Entering MercurialComparator compare");
 		
-		HgExe hg = new HgExe(scm, launcher, node, listener, new EnvVars());
+		logger.finest("Entering MercurialComparator compare");
+		listener.getLogger().println(LOG_PREFIX + "Entering comparator, this is going to be exiting!");
+		/*HgExe hg = new HgExe(scm, launcher, node, listener, new EnvVars());
 		
 		hg.run("pull").join();
 		
@@ -37,9 +42,9 @@ public class MercurialComparator extends PollComparator {
 			return Change.SIGNIFICANT;
 		}
 		
-		logger.finest("Exiting MercurialComparator compare");
-		return Change.NONE;*/
-		return Change.SIGNIFICANT;
+		logger.finest("Exiting MercurialComparator compare without result");
+		listener.getLogger().println(LOG_PREFIX + "No changes found. Move along, nothing to see here.");*/
+		return Change.NONE;
 	}
 	
 	private static final long serialVersionUID = 1L;
