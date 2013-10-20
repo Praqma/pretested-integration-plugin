@@ -32,10 +32,10 @@ public class MercurialComparator extends PollComparator {
 		listener.getLogger().println(LOG_PREFIX + "Entering comparator, this is going to be exiting!");
 		HgExe hg = new HgExe((MercurialSCM) scm, launcher, node, listener, new EnvVars());
 		
-		hg.run("pull").join();
+		hg.run("pull").pwd(project.getWorkspace()).join();
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		int exitCode = hg.run("log","-r","not(branch(default))","--template","{node}\n").stdout(out).join();
+		int exitCode = hg.run("log","-r","not(branch(default))","--template","{node}\n").stdout(out).pwd(project.getWorkspace()).join();
 		
 		
 		if(exitCode == 0 && out.size() > 0) {
