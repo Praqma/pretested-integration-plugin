@@ -30,20 +30,21 @@ public class MercurialComparator extends PollComparator {
 		
 		logger.finest("Entering MercurialComparator compare");
 		listener.getLogger().println(LOG_PREFIX + "Entering comparator, this is going to be exiting!");
-		/*HgExe hg = new HgExe(scm, launcher, node, listener, new EnvVars());
+		HgExe hg = new HgExe((MercurialSCM) scm, launcher, node, listener, new EnvVars());
 		
 		hg.run("pull").join();
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		hg.run("log","-r","not(branch(default))","--template","{node}\n").stdout(out).join();
+		int exitCode = hg.run("log","-r","not(branch(default))","--template","{node}\n").stdout(out).join();
 		
-		if(out.size() > 0) {
+		
+		if(exitCode == 0 && out.size() > 0) {
 			listener.getLogger().println(LOG_PREFIX + "Changes found, triggering build");
 			return Change.SIGNIFICANT;
 		}
 		
 		logger.finest("Exiting MercurialComparator compare without result");
-		listener.getLogger().println(LOG_PREFIX + "No changes found. Move along, nothing to see here.");*/
+		listener.getLogger().println(LOG_PREFIX + "No changes found. Move along, nothing to see here.");
 		return Change.NONE;
 	}
 	
