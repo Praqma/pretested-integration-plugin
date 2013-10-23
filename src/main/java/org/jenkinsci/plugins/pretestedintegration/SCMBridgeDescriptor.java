@@ -7,10 +7,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
 
-public abstract class SCMInterfaceDescriptor<T extends AbstractSCMInterface> extends
-		Descriptor<AbstractSCMInterface> {
+public abstract class SCMBridgeDescriptor<T extends AbstractSCMBridge> extends
+		Descriptor<AbstractSCMBridge> {
 
-	public AbstractSCMInterface newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+	public AbstractSCMBridge newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 		return super.newInstance(req, formData);
 	}
    

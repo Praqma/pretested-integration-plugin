@@ -14,15 +14,15 @@ public class PretestedIntegrationAction implements Action {
 	AbstractBuild<?, ?> build;
 	//Launcher launcher;
 	//BuildListener listener;
-	AbstractSCMInterface scmInterface;
+	AbstractSCMBridge scmBridge;
 	Commit<?> last;
 	Commit<?> commit;
 	
-	public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMInterface scmInterface) throws IllegalArgumentException, IOException {
+	public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge scmBridge) throws IllegalArgumentException, IOException {
 		this.build = build;
 		//this.launcher = launcher;
 		//this.listener = listener;
-		this.scmInterface = scmInterface;
+		this.scmBridge = scmBridge;
 		Commit<?> last = null;
 		try{
 			
@@ -30,7 +30,7 @@ public class PretestedIntegrationAction implements Action {
 		} catch(NullPointerException e){
 			//This occur when there is no previous build
 		}
-		this.commit = scmInterface.nextCommit(build, launcher, listener, last);
+		this.commit = scmBridge.nextCommit(build, launcher, listener, last);
 	}
 
 	public String getDisplayName() {
@@ -60,11 +60,11 @@ public class PretestedIntegrationAction implements Action {
 	public boolean initialise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, AbortException, IOException{
 		boolean result = false;
 
-		//Commit<?> next = scmInterface.nextCommit(build, launcher, listener, commit);
+		//Commit<?> next = scmBridge.nextCommit(build, launcher, listener, commit);
 		Commit<?> commit = getCommit();
 		if(commit != null){
 			result = true;
-			scmInterface.prepareWorkspace(build, launcher, listener, commit);
+			scmBridge.prepareWorkspace(build, launcher, listener, commit);
 		}
 		return result;
 	}
@@ -77,12 +77,12 @@ public class PretestedIntegrationAction implements Action {
 
 	public boolean finalise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException{
 		listener.getLogger().println("Finalising");
-		scmInterface.handlePostBuild(build, launcher, listener);
+		scmBridge.handlePostBuild(build, launcher, listener);
 
-		scmInterface.getDescriptor().save();
+		scmBridge.getDescriptor().save();
 		
 		//Trigger a new build if there are more commits
-		Commit<?> next = scmInterface.nextCommit(build, launcher, listener, getCommit());
+		Commit<?> next = scmBridge.nextCommit(build, launcher, listener, getCommit());
 		//TODO: Add a condition such that builds are only triggered if no more builds are scheduled
 		if(next != null){
 			listener.getLogger().println("Triggering new build");

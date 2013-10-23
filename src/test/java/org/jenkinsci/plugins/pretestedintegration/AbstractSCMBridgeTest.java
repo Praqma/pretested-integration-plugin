@@ -13,20 +13,20 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jvnet.hudson.test.HudsonTestCase;
 import static org.mockito.Mockito.*;
 
-public class AbstractSCMInterfaceTest extends HudsonTestCase {
+public class AbstractSCMBridgeTest extends HudsonTestCase {
 
 	public void testShouldIncludeDummySCMExtension() throws Exception {
 		boolean includedInInterfaceDescriptors = false;
 		boolean includedInDescriptors = false;
-		List<SCMInterfaceDescriptor<AbstractSCMInterface>> interfaceDescriptors = AbstractSCMInterface.all();
-		for(SCMInterfaceDescriptor<AbstractSCMInterface> i : interfaceDescriptors){
+		List<SCMBridgeDescriptor<AbstractSCMBridge>> interfaceDescriptors = AbstractSCMBridge.all();
+		for(SCMBridgeDescriptor<AbstractSCMBridge> i : interfaceDescriptors){
 			if(i.getDisplayName().equals("DummySCM"))
 				includedInInterfaceDescriptors = true;
 		}
 		assertTrue(includedInInterfaceDescriptors);
 		
-		List<SCMInterfaceDescriptor<?>> descriptors = AbstractSCMInterface.getDescriptors();
-		for(SCMInterfaceDescriptor<?> d : descriptors){
+		List<SCMBridgeDescriptor<?>> descriptors = AbstractSCMBridge.getDescriptors();
+		for(SCMBridgeDescriptor<?> d : descriptors){
 			if(d.getDisplayName().equals("DummySCM"))
 				includedInDescriptors = true;
 		}

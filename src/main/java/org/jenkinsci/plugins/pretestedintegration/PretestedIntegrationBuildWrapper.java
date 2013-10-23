@@ -25,15 +25,15 @@ import org.kohsuke.stapler.StaplerRequest;
 public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 	
 	private static String LOG_PREFIX = "[PREINT] ";
-	private AbstractSCMInterface scmInterface;
+	private AbstractSCMBridge scmBridge;
 	
 	@DataBoundConstructor
-	public PretestedIntegrationBuildWrapper(AbstractSCMInterface scmInterface){
-		this.scmInterface = scmInterface;
+	public PretestedIntegrationBuildWrapper(AbstractSCMBridge scmBridge){
+		this.scmBridge = scmBridge;
 	}
 	
-	public AbstractSCMInterface getScmInterface(){
-		return this.scmInterface;
+	public AbstractSCMBridge getScmInterface(){
+		return this.scmBridge;
 	}
 	
 	/**
@@ -55,7 +55,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 		
 		PretestedIntegrationAction action;
 		try {
-			action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
+			action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);
 
 			build.addAction(action);
 			boolean result = action.initialise(launcher, listener);
@@ -129,15 +129,15 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 		public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			PretestedIntegrationBuildWrapper b = (PretestedIntegrationBuildWrapper) super.newInstance(req,formData);
 			
-			SCMInterfaceDescriptor<AbstractSCMInterface> d = (SCMInterfaceDescriptor<AbstractSCMInterface>) b.getScmInterface().getDescriptor();
-			b.scmInterface = d.newInstance(req, formData);
+			SCMBridgeDescriptor<AbstractSCMBridge> d = (SCMBridgeDescriptor<AbstractSCMBridge>) b.getScmInterface().getDescriptor();
+			b.scmBridge = d.newInstance(req, formData);
 
 			save();
 			return b;
 		}
 
-		public List<SCMInterfaceDescriptor<?>>getSCMInterfaces(){
-			return AbstractSCMInterface.getDescriptors();
+		public List<SCMBridgeDescriptor<?>>getSCMBridges(){
+			return AbstractSCMBridge.getDescriptors();
 		}
 		
 		@Override

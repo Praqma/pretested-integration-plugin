@@ -27,10 +27,10 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
-import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.junit.Assert;
 import org.jvnet.hudson.test.HudsonTestCase;
 import static org.mockito.Mockito.*;
@@ -39,7 +39,7 @@ public class MercurialTest extends MercurialTestCase {
 
 	public void testShouldBeExtension(){
 		boolean inDescriptorList = false;
-		for(SCMInterfaceDescriptor<AbstractSCMInterface> d : AbstractSCMInterface.all()) {
+		for(SCMBridgeDescriptor<AbstractSCMBridge> d : AbstractSCMBridge.all()) {
 			if(d.getDisplayName().equals("Mercurial"))
 				inDescriptorList = true;
 		}

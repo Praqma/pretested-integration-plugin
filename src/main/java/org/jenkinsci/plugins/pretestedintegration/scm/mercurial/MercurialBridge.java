@@ -20,13 +20,13 @@ import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
-import org.jenkinsci.plugins.pretestedintegration.AbstractSCMInterface;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
-import org.jenkinsci.plugins.pretestedintegration.SCMInterfaceDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-public class MercurialBridge extends AbstractSCMInterface {
+public class MercurialBridge extends AbstractSCMBridge {
 
 	private boolean reset;
 	private String revId;
@@ -244,7 +244,7 @@ public class MercurialBridge extends AbstractSCMInterface {
 	}*/
 	
 	@Extension
-	public static final class DescriptorImpl extends SCMInterfaceDescriptor<MercurialBridge> {
+	public static final class DescriptorImpl extends SCMBridgeDescriptor<MercurialBridge> {
 		
 		public String getDisplayName(){
 			return "Mercurial";

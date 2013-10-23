@@ -38,7 +38,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		Launcher launcher = mock(Launcher.class);
 		BuildListener listener = mock(BuildListener.class);
-		AbstractSCMInterface scmInterface = new DummySCM();
+		AbstractSCMBridge scmInterface = new DummySCM();
 		
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		

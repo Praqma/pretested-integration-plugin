@@ -24,30 +24,30 @@ import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.Descriptor.FormException;
 
-public abstract class AbstractSCMInterface implements Describable<AbstractSCMInterface>, ExtensionPoint {
+public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 	
 	protected String branch;
 	final static String LOG_PREFIX = "[PREINT-SCM] ";
 	
 	@DataBoundConstructor
-	public AbstractSCMInterface(){
+	public AbstractSCMBridge(){
 	}
 	
 	public String getBranch() {
 		return branch;
 	}
 	
-    public Descriptor<AbstractSCMInterface> getDescriptor() {
-        return (SCMInterfaceDescriptor<?>)Jenkins.getInstance().getDescriptorOrDie(getClass());
+    public Descriptor<AbstractSCMBridge> getDescriptor() {
+        return (SCMBridgeDescriptor<?>)Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
-    public static DescriptorExtensionList<AbstractSCMInterface, SCMInterfaceDescriptor<AbstractSCMInterface>> all() {
-        return Jenkins.getInstance().<AbstractSCMInterface, SCMInterfaceDescriptor<AbstractSCMInterface>>getDescriptorList(AbstractSCMInterface.class);
+    public static DescriptorExtensionList<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>> all() {
+        return Jenkins.getInstance().<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>>getDescriptorList(AbstractSCMBridge.class);
     }
     
-    public static List<SCMInterfaceDescriptor<?>> getDescriptors() {
-    	List<SCMInterfaceDescriptor<?>> list = new ArrayList<SCMInterfaceDescriptor<?>>();
-    	for(SCMInterfaceDescriptor<?> d : all()) {
+    public static List<SCMBridgeDescriptor<?>> getDescriptors() {
+    	List<SCMBridgeDescriptor<?>> list = new ArrayList<SCMBridgeDescriptor<?>>();
+    	for(SCMBridgeDescriptor<?> d : all()) {
     		list.add(d);
     	}
     	return list;
@@ -153,5 +153,5 @@ public abstract class AbstractSCMInterface implements Describable<AbstractSCMInt
 		logger.finest(LOG_PREFIX + "Exiting handlePostBuild");
 	}
 
-	private static Logger logger = Logger.getLogger(AbstractSCMInterface.class.getName());
+	private static Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
 }

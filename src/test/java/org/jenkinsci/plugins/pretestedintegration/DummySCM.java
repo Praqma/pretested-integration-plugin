@@ -12,7 +12,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.scm.mercurial.MercurialBridge;
 import org.kohsuke.stapler.StaplerRequest;
 
-public class DummySCM extends AbstractSCMInterface {
+public class DummySCM extends AbstractSCMBridge {
 	
 	private boolean commited = false;
 	private boolean rolledBack = false;
@@ -50,7 +50,7 @@ public class DummySCM extends AbstractSCMInterface {
 	}
 	
 	@Extension
-	public static final class DescriptorImpl extends SCMInterfaceDescriptor<MercurialBridge> {
+	public static final class DescriptorImpl extends SCMBridgeDescriptor<MercurialBridge> {
 		
 		public String getDisplayName(){
 			return "DummySCM";
