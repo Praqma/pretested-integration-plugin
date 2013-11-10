@@ -48,6 +48,9 @@ public class MercurialBridge extends AbstractSCMBridge {
 		return this.branch == null ? "default" : this.branch;
 	}
 	
+	public String getRevId() {
+		return this.revId;
+	}
 	/*
 	public String getResult() {
 		return this.result;
@@ -153,12 +156,14 @@ public class MercurialBridge extends AbstractSCMBridge {
 		try {
 			if(commit == null || reset) {
 				logger.finest("Resetting revision to last successful build");
+				
 				//Get the last build on the integration branch
 				hg(build,launcher, listener, out, "heads", branch, "--template", "{node}");
 				revision = out.toString();
+				listener.getLogger().println(LOG_PREFIX + "Resetting revision to " + revision);
 			} else {
-				logger.finest("Setting revision to previous build");
 				revision = (String) commit.getId();
+				logger.finest(LOG_PREFIX + "Setting revision to previous build: " + revision);
 			}
 			
 			listener.getLogger().println(LOG_PREFIX + "Calculating next revision from " + revision);
@@ -172,9 +177,11 @@ public class MercurialBridge extends AbstractSCMBridge {
 			MercurialSCM hg = (MercurialSCM) scm;
 			
 			//Get the staging branch from mercurial
-			String stage = hg.getBranch();
+			//String stage = hg.getBranch();
+			
+			String branches = "dev_.*";
 			out.reset();
-			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch("+stage+") and "+revision+":tip","--template","{node}\n");
+			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch('re:"+branches+"') and "+revision+":tip","--template","{node}\n");
 			
 			String commits = out.toString();
 			logger.finest("hg exitcode: " + exitCode);

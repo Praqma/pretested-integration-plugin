@@ -50,7 +50,7 @@ public class MercurialComparator extends PollComparator {
 			}
 			
 			if(buildWrapper != null && buildWrapper.getScmBridge() instanceof MercurialBridge) {
-				AbstractSCMBridge bridge = buildWrapper.getScmBridge();
+				MercurialBridge bridge = (MercurialBridge) buildWrapper.getScmBridge();
 				
 				HgExe hg = new HgExe((MercurialSCM) scm, launcher, node, listener, new EnvVars());
 					
@@ -59,7 +59,8 @@ public class MercurialComparator extends PollComparator {
 				
 				String integrationBranch = bridge.getBranch();
 				String branches = "dev_.*"; //bridge.getBranches();
-				String revset = "not(branch(" + integrationBranch + ")) and branch('re:" + branches + "')";
+				String baserev = bridge.getRevId();
+				String revset = "not(branch(" + integrationBranch + ")) and branch('re:" + branches + "') and " + baserev + ":tip";
 				
 				listener.getLogger().println(revset);
 				//Get a list of changes after a certain point in time (not functional yet)
@@ -68,10 +69,11 @@ public class MercurialComparator extends PollComparator {
 						.stdout(out)
 						.pwd(p.getSomeWorkspace())
 						.join();
-					
+				String[] commits = out.toString().split("\\n");
 				//If any changes are found, the change is significant enough to trigger
-				if(exitCode == 0 && out.size() > 0) {
+				if(exitCode == 0 && commits.length > 1) {
 					listener.getLogger().println(LOG_PREFIX + "Changes found, triggering build");
+					listener.getLogger().println(LOG_PREFIX + "Out: " + commits[1]);
 					return Change.SIGNIFICANT;
 				}
 			}
