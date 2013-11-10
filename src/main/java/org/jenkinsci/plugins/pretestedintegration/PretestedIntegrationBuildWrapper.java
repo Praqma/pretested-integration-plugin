@@ -32,7 +32,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 		this.scmBridge = scmBridge;
 	}
 	
-	public AbstractSCMBridge getScmInterface(){
+	public AbstractSCMBridge getScmBridge(){
 		return this.scmBridge;
 	}
 	
@@ -129,7 +129,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 		public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			PretestedIntegrationBuildWrapper b = (PretestedIntegrationBuildWrapper) super.newInstance(req,formData);
 			
-			SCMBridgeDescriptor<AbstractSCMBridge> d = (SCMBridgeDescriptor<AbstractSCMBridge>) b.getScmInterface().getDescriptor();
+			SCMBridgeDescriptor<AbstractSCMBridge> d = (SCMBridgeDescriptor<AbstractSCMBridge>) b.getScmBridge().getDescriptor();
 			b.scmBridge = d.newInstance(req, formData);
 
 			save();

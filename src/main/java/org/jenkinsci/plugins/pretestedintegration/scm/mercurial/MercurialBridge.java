@@ -254,9 +254,8 @@ public class MercurialBridge extends AbstractSCMBridge {
 		public MercurialBridge newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			MercurialBridge i = (MercurialBridge) super.newInstance(req, formData);
 			
-			boolean reset = formData.getJSONObject("scmInterface").getBoolean("reset");
-			String branch = formData.getJSONObject("scmInterface").getString("branch");
-			//String result = formData.getJSONObject("scmInterface").getString("result");
+			boolean reset = formData.getJSONObject("scmBridge").getBoolean("reset");
+			String branch = formData.getJSONObject("scmBridge").getString("branch");
 			
 			i.reset = reset;
 			i.branch = branch;

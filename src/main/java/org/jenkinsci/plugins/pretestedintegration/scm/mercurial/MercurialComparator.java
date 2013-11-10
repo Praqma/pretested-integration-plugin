@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Logger;
 
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 
 import hudson.EnvVars;
@@ -47,17 +48,26 @@ public class MercurialComparator extends PollComparator {
 					buildWrapper = (PretestedIntegrationBuildWrapper) b;
 				}
 			}
-				
-			if(buildWrapper != null && buildWrapper.getScmInterface() instanceof MercurialBridge) {
+			
+			if(buildWrapper != null && buildWrapper.getScmBridge() instanceof MercurialBridge) {
+				AbstractSCMBridge bridge = buildWrapper.getScmBridge();
 				
 				HgExe hg = new HgExe((MercurialSCM) scm, launcher, node, listener, new EnvVars());
 					
 				//Refresh all branches, we're gonna need the data
 				hg.run("pull").pwd(p.getSomeWorkspace()).join();
-					
+				
+				String integrationBranch = bridge.getBranch();
+				String branches = "dev_.*"; //bridge.getBranches();
+				String revset = "not(branch(" + integrationBranch + ")) and branch('re:" + branches + "')";
+				
+				listener.getLogger().println(revset);
 				//Get a list of changes after a certain point in time (not functional yet)
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				int exitCode = hg.run("log","-r","not(branch(default))","--template","{node}\n").stdout(out).pwd(p.getSomeWorkspace()).join();
+				int exitCode = hg.run("log", "-r" ,revset, "--template","{node}\n")
+						.stdout(out)
+						.pwd(p.getSomeWorkspace())
+						.join();
 					
 				//If any changes are found, the change is significant enough to trigger
 				if(exitCode == 0 && out.size() > 0) {
