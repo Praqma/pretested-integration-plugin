@@ -20,13 +20,13 @@ import hudson.model.TaskListener;
 import hudson.plugins.mercurial.HgExe;
 import hudson.plugins.mercurial.MercurialSCM;
 import hudson.plugins.mercurial.MercurialTagAction;
-import hudson.plugins.mercurial.PollComparator;
+import hudson.plugins.mercurial.AbstractComparator;
 import hudson.scm.PollingResult.Change;
 import hudson.scm.SCM;
 import hudson.tasks.BuildWrapper;
 
 @Extension
-public class MercurialComparator extends PollComparator {
+public class MercurialComparator extends AbstractComparator {
 
 	private String LOG_PREFIX = "[PREINT-HG] ";
 	
