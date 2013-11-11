@@ -3,6 +3,9 @@
 		<f:entry title="Reset to latest integrated commit" field="reset">
 			<f:checkbox value="${it.reset}" />
 		</f:entry>
+		<f:entry title="Branch specification" field="branches">
+			<f:textbox value="${it.branches}" />
+		</f:entry>
 		<f:entry title="Integration branch" field="branch">
 			<f:textbox value="${it.branch}" />
 		</f:entry>

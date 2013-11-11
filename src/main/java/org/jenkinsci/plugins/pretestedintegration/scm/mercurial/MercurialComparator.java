@@ -58,7 +58,7 @@ public class MercurialComparator extends AbstractComparator {
 				hg.run("pull").pwd(p.getSomeWorkspace()).join();
 				
 				String integrationBranch = bridge.getBranch();
-				String branches = "dev_.*"; //bridge.getBranches();
+				String branches = bridge.getBranches();
 				String baserev = bridge.getRevId();
 				String revset = "not(branch(" + integrationBranch + ")) and branch('re:" + branches + "') and " + baserev + ":tip";
 				

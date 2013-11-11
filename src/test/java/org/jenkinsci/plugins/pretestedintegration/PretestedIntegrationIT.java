@@ -26,7 +26,7 @@ public class PretestedIntegrationIT extends
 		setup();
 		File dir = createTempDirectory();
 		//PretestedIntegrationSCMMercurial plugin = new PretestedIntegrationSCMMercurial();
-		MercurialBridge plugin = new MercurialBridge(false,"");
+		MercurialBridge plugin = new MercurialBridge(false,"","");
 		plugin.setWorkingDirectory(new FilePath(dir));
 
 		System.out.println("Creating test repository at repository: " + dir.getAbsolutePath());

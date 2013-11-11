@@ -314,7 +314,7 @@ public class MercurialIT extends MercurialTestCase {
 		alice.getBuildWrappersList().remove(PretestedIntegrationBuildWrapper.class);
 		
 		//now reset the internal pointer
-		PretestedIntegrationBuildWrapper buildWrapper = new PretestedIntegrationBuildWrapper(new MercurialBridge(true,"default"));
+		PretestedIntegrationBuildWrapper buildWrapper = new PretestedIntegrationBuildWrapper(new MercurialBridge(true,"alice","default"));
 		alice.getBuildWrappersList().add(buildWrapper);
 		
 		//TODO: Figure out how to wait for the two builds to terminate
@@ -335,7 +335,7 @@ public class MercurialIT extends MercurialTestCase {
 		MercurialSCM scm = new MercurialSCM(null,source,developmentBranch,null,null,null, true);
 		project.setScm(scm);
 		
-		MercurialBridge mercurial = new MercurialBridge(false, integrationBranch);
+		MercurialBridge mercurial = new MercurialBridge(false, developmentBranch, integrationBranch);
 		PretestedIntegrationBuildWrapper buildWrapper = new PretestedIntegrationBuildWrapper(mercurial);
 		project.getBuildWrappersList().add(buildWrapper);
 		return project;

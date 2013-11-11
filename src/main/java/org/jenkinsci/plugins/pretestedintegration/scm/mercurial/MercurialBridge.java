@@ -30,18 +30,24 @@ public class MercurialBridge extends AbstractSCMBridge {
 
 	private boolean reset;
 	private String revId;
+	private String branches;
 	//private String result;
 	
 	@DataBoundConstructor
 	//public Mercurial(boolean reset, String branch, String result){
-	public MercurialBridge(boolean reset, String branch){
+	public MercurialBridge(boolean reset, String branches, String branch){
 		this.reset = reset;
+		this.branches = branches;
 		if(branch != null && !branch.equals(""))
 			this.branch = branch;
 	}
 	
 	public boolean getReset(){
 		return this.reset;
+	}
+	
+	public String getBranches() {
+		return this.branches;
 	}
 	
 	public String getBranch() {
@@ -179,7 +185,7 @@ public class MercurialBridge extends AbstractSCMBridge {
 			//Get the staging branch from mercurial
 			//String stage = hg.getBranch();
 			
-			String branches = "dev_.*";
+			String branches = getBranches();
 			out.reset();
 			int exitCode = hg(build, launcher, listener,out,"log", "-r", "branch('re:"+branches+"') and "+revision+":tip","--template","{node}\n");
 			
@@ -262,9 +268,11 @@ public class MercurialBridge extends AbstractSCMBridge {
 			MercurialBridge i = (MercurialBridge) super.newInstance(req, formData);
 			
 			boolean reset = formData.getJSONObject("scmBridge").getBoolean("reset");
+			String branches = formData.getJSONObject("scmBridge").getString("branches");
 			String branch = formData.getJSONObject("scmBridge").getString("branch");
 			
 			i.reset = reset;
+			i.branches = branches;
 			i.branch = branch;
 			//i.result = result;
 			
