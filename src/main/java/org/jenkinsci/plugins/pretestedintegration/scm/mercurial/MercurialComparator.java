@@ -64,12 +64,16 @@ public class MercurialComparator extends AbstractComparator {
 						.stdout(out)
 						.pwd(p.getSomeWorkspace())
 						.join();
-				String[] commits = out.toString().split("\\n");
+				String foo = out.toString().trim();
+				output.println("Log output:" + foo);
+				String[] commits = foo.split("\\n");
 				//If any changes are found, the change is significant enough to trigger
-				if(exitCode == 0 && commits.length > 1) {
-					listener.getLogger().println(LOG_PREFIX + "Changes found, triggering build");
-					listener.getLogger().println(LOG_PREFIX + "Out: " + commits[1]);
-					return Change.SIGNIFICANT;
+				if(exitCode == 0 && commits.length > 0) {
+					if(commits.length > 1 || !(commits[0].equals(""))) {
+						listener.getLogger().println(LOG_PREFIX + "Changes found, triggering build");
+						listener.getLogger().println(LOG_PREFIX + "Out: " + commits[0]);
+						return Change.SIGNIFICANT;
+					}
 				}
 			}
 		} catch (ClassCastException e) {
