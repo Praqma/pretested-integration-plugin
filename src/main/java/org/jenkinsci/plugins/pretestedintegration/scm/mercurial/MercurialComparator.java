@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Logger;
 
+import org.jenkinsci.plugins.pretestedintegration.Commit;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 
 import hudson.EnvVars;
@@ -14,6 +16,7 @@ import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Node;
 import hudson.model.Project;
+import hudson.model.Build;
 import hudson.model.TaskListener;
 import hudson.plugins.mercurial.HgExe;
 import hudson.plugins.mercurial.MercurialSCM;
@@ -47,6 +50,8 @@ public class MercurialComparator extends AbstractComparator {
 			
 			if(buildWrapper != null && buildWrapper.getScmBridge() instanceof MercurialBridge) {
 				MercurialBridge bridge = (MercurialBridge) buildWrapper.getScmBridge();
+
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				
 				//Refresh all branches, we're gonna need the data
 				hg.run("pull").pwd(p.getSomeWorkspace()).join();
@@ -54,22 +59,38 @@ public class MercurialComparator extends AbstractComparator {
 				String integrationBranch = bridge.getBranch();
 				String branches = bridge.getBranches();
 				String baserev = bridge.getRevId();
+				
+				if(baserev == null) {
+					try {
+						PretestedIntegrationAction action = project.getLastSuccessfulBuild().getAction(PretestedIntegrationAction.class);
+						Commit<?> c = action.getCommit();
+						baserev = (String) c.getId();
+					} catch (NullPointerException e) {
+						hg.run("heads", integrationBranch, "--template", "{node}")
+						.stdout(out)
+						.pwd(p.getSomeWorkspace())
+						.join();
+						
+						baserev = out.toString();
+					
+					}
+				}
 
 				String revset = "not(branch(" + integrationBranch + ")) and branch('re:" + branches + "') and " + baserev + ":tip";
 				
 				listener.getLogger().println(revset);
 				//Get a list of changes after a certain point in time (not functional yet)
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				int exitCode = hg.run("log", "-r" ,revset, "--template","{node}\n")
 						.stdout(out)
 						.pwd(p.getSomeWorkspace())
 						.join();
-				String foo = out.toString().trim();
+				String foo = out.toString();
 				output.println("Log output:" + foo);
 				String[] commits = foo.split("\\n");
 				//If any changes are found, the change is significant enough to trigger
+				out.reset();
 				if(exitCode == 0 && commits.length > 0) {
-					if(commits.length > 1 || !(commits[0].equals(""))) {
+					if(commits.length > 1 || !(commits[0].equals("") || commits[0].equals(baserev))) {
 						listener.getLogger().println(LOG_PREFIX + "Changes found, triggering build");
 						listener.getLogger().println(LOG_PREFIX + "Out: " + commits[0]);
 						return Change.SIGNIFICANT;

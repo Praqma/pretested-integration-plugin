@@ -50,6 +50,9 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		Boolean result = false;
 		try {
 			result = action.finalise(launcher, listener);
+		} catch (NullPointerException e) {
+			
+			build.setResult(Result.FAILURE);
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
