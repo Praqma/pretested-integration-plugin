@@ -16,7 +16,6 @@ import org.jvnet.hudson.test.HudsonTestCase;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.model.*;
-import hudson.plugins.mercurial.MercurialSCM;
 import hudson.scm.SCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.Publisher;
