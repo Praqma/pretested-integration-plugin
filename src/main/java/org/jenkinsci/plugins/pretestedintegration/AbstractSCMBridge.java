@@ -5,10 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 
 import jenkins.model.Jenkins;
 
@@ -22,7 +20,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.TaskListener;
-import hudson.model.Descriptor.FormException;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 	

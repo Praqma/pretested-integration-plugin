@@ -267,5 +267,5 @@ public class MercurialBridge extends AbstractSCMBridge {
 		}
 	}
 	
-	private static Logger logger = Logger.getLogger(MercurialBridge.class.getName());
+	private static final Logger logger = Logger.getLogger(MercurialBridge.class.getName());
 }

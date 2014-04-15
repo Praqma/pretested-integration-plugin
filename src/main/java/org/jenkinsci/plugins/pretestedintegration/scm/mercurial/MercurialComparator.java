@@ -48,7 +48,7 @@ public class MercurialComparator extends PollComparator {
 				}
 			}
 				
-			if(buildWrapper != null && buildWrapper.getScmInterface() instanceof MercurialBridge) {
+			if(buildWrapper != null && buildWrapper.scmBridge instanceof MercurialBridge) {
 				
 				HgExe hg = new HgExe((MercurialSCM) scm, launcher, node, listener, new EnvVars());
 					

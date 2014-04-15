@@ -13,10 +13,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
-import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * The build wrapper determines what will happen before the build will run.
@@ -24,18 +22,13 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 	
-	private static String LOG_PREFIX = "[PREINT] ";
-	private AbstractSCMBridge scmBridge;
+	private static final String LOG_PREFIX = "[PREINT] ";
+	public final AbstractSCMBridge scmBridge;
 	
 	@DataBoundConstructor
-	public PretestedIntegrationBuildWrapper(AbstractSCMBridge scmBridge){
+	public PretestedIntegrationBuildWrapper(final AbstractSCMBridge scmBridge){
 		this.scmBridge = scmBridge;
 	}
-	
-	public AbstractSCMBridge getScmInterface(){
-		return this.scmBridge;
-	}
-	
 	/**
 	 * Jenkins hook that fires after the workspace is initialized.
 	 * Calls the SCM-specific function according to the chosen SCM.
@@ -121,19 +114,13 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 	
 	@Extension
 	public static class DescriptorImpl extends BuildWrapperDescriptor {
+            
+                public DescriptorImpl () {
+                    load();
+                }
 		
 		public String getDisplayName() {
 			return "Use pretested integration";
-		}
-		
-		public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			PretestedIntegrationBuildWrapper b = (PretestedIntegrationBuildWrapper) super.newInstance(req,formData);
-			
-			SCMBridgeDescriptor<AbstractSCMBridge> d = (SCMBridgeDescriptor<AbstractSCMBridge>) b.getScmInterface().getDescriptor();
-			b.scmBridge = d.newInstance(req, formData);
-
-			save();
-			return b;
 		}
 
 		public List<SCMBridgeDescriptor<?>>getSCMBridges(){
@@ -146,8 +133,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 		}
 	}
 	
-	class PretestEnvironment extends Environment {
-	}
+	class PretestEnvironment extends Environment { }
 	
-	private static Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
+	private static final Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 }

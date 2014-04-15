@@ -2,15 +2,6 @@
 xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson"
 xmlns:f="/lib/form">
 	<f:block>
-  		<!-- This is what would be preferred
-  		<f:descriptorList descriptors="${descriptor.getSCMInterfaces()}" instances="${descriptor.getInstances()}" /> 
-  		-->
-  		<!-- This is acceptable, but does not work
-  		<f:entry field="scmInterface" title="SCM Type">
-  			<f:select />
-  		</f:entry>
-  		-->
-  		<!-- This works, but is ugly -->
-  		<f:hetero-radio descriptors="${descriptor.getSCMInterfaces()}" field="scmInterface" />
+  		<f:hetero-radio descriptors="${descriptor.getSCMBridges()}" field="scmBridge" />
   	</f:block>
 </j:jelly>
