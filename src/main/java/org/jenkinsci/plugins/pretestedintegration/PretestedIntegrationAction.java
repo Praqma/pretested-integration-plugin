@@ -68,22 +68,15 @@ public class PretestedIntegrationAction implements Action {
      * Invoked by the notifier, responsible for commiting or rolling back the
      * workspace
      *
+     * @param launcher
+     * @param listener
      * @throws IllegalArgumentException
      * @throws IOException
+     
      */
     public boolean finalise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException {
         listener.getLogger().println("Finalising");
         scmBridge.handlePostBuild(build, launcher, listener);
-
-        scmBridge.getDescriptor().save();
-
-        //Trigger a new build if there are more commits
-        //Commit<?> next = scmBridge.nextCommit(build, launcher, listener, getCommit());
-        //TODO: Add a condition such that builds are only triggered if no more builds are scheduled        
-        if (getCommit() != null) {            
-            listener.getLogger().println(String.format( "Triggering new build for commit: %s%nLast commit was: %s", getCommit().getId(), last != null ? last.getId() : "no previous commit") );
-            build.getProject().scheduleBuild2(0);
-        }
         return true;
     }
 
