@@ -50,8 +50,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		Boolean result = false;
 		try {
 			result = action.finalise(launcher, listener);
-		} catch (NullPointerException e) {
-			
+		} catch (NullPointerException e) {			
 			build.setResult(Result.FAILURE);
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
@@ -78,5 +77,5 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		}
 	}
 	
-	private static Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
+	private static final Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 }

@@ -50,15 +50,16 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 		PretestedIntegrationAction action;
 		try {
 			action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);
-
-			build.addAction(action);
 			boolean result = action.initialise(launcher, listener);
+                        build.addAction(action);
+                        
 			if(!result) {
 				logger.finest("Set result to NOT_BUILT");
 				listener.getLogger().println(LOG_PREFIX + "Nothing to do, setting result to NOT_BUILT");
 				build.setResult(Result.NOT_BUILT);
 			}
-
+                        
+                        
 			try {
 				ensurePublisher(build);
 			} catch (IOException e) {
