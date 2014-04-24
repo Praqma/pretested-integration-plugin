@@ -17,6 +17,10 @@
       <id>rlindsgaard</id>
       <name>Ronni Elken Lindsgaard</name>
     </developer>
+    <developer>
+        <id>MadsNielsen</id>
+        <name>Mads Nielsen</name>
+    </developer>
   </developers> 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>

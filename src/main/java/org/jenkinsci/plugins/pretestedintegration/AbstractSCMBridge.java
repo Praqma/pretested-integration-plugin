@@ -71,8 +71,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws AbortException It is not possible to leave the workspace in a
      * state as described above.
      * @throws IOException A repository could not be reached.
-     * @throws InvalidArgumentException The given repository is not in a valid
-     * condition.
      */
     public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws AbortException, IOException, IllegalArgumentException {
         logger.finest(LOG_PREFIX + "Entering prepareWorkspace");
@@ -130,10 +128,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * the changes
      *
      * @param build The status of the build.
+     * @param launcher
+     * @param listener
      *
      * @throws IOException A repository could not be reached.
-     * @throws InvalidArgumentException The given repository is not in a valid
-     * condition.
      */
     public void handlePostBuild(
             AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)

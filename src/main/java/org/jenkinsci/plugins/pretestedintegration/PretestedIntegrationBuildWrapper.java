@@ -91,12 +91,10 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
     /**
      * Prints out version information.
-     *
-     * @param build
-     * @param launcher
-     * @param listener
+     * @throws java.io.IOException
+     * @throws java.lang.InterruptedException
      */
-    //@Override
+    
     public void preCheckout() throws IOException, InterruptedException {
         //nop
     }

@@ -16,10 +16,6 @@ import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- *
- * @author Mads
- */
 public abstract class SCMPostBuildBehaviour implements Describable<SCMPostBuildBehaviour>, ExtensionPoint {  
     public abstract void applyBehaviour(AbstractBuild build, Launcher launcher, BuildListener listener);
     

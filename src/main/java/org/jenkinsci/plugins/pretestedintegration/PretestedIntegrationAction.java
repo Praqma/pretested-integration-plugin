@@ -48,11 +48,13 @@ public class PretestedIntegrationAction implements Action {
      * Invoked before the build is started, responsible for preparing the
      * workspace
      *
+     * @param launcher
+     * @param listener
      * @return True if any changes are made and the workspace has been prepared,
      * false otherwise
      * @throws IOException
      * @throws AbortException
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException    
      */
     public boolean initialise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, AbortException, IOException {
         boolean result = false;
@@ -72,6 +74,7 @@ public class PretestedIntegrationAction implements Action {
      * @param listener
      * @throws IllegalArgumentException
      * @throws IOException
+     * @return {@link Boolean} indicating success or failure
      
      */
     public boolean finalise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException {

@@ -8,7 +8,7 @@ import hudson.model.Hudson;
 
 public class Commit<T> implements ExtensionPoint {
 	
-	private T commitId;
+	private final T commitId;
 	
 	public Commit(T commitId){
 		logger.finest("Creating commit with id: " + commitId.toString());
@@ -23,5 +23,5 @@ public class Commit<T> implements ExtensionPoint {
 		return Hudson.getInstance().getExtensionList(Commit.class);
 	}
 	
-	private static Logger logger = Logger.getLogger(Commit.class.getName());
+	private static final Logger logger = Logger.getLogger(Commit.class.getName());
 }

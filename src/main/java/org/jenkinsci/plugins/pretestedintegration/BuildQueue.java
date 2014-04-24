@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.pretestedintegration;
 import java.util.concurrent.Semaphore;
 
 public final class BuildQueue {
-	// Singleton instance
 	private static BuildQueue instance;
 	
 	Semaphore semaphore;
@@ -44,6 +43,7 @@ public final class BuildQueue {
 	
 	/**
 	* Test if the lock is available, without blocking.
+        * @return boolean indicating if the queue is not occupied 
 	*/	
 	public boolean available() {
 		return semaphore.availablePermits() > 0;
