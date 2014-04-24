@@ -60,7 +60,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		action.finalise(launcher, listener);
 		
-		verify(project, times(1)).scheduleBuild2(0);
+		verify(project, times(0)).scheduleBuild2(0);
 	}
 	
 	public void testShouldNotInvokeNewBuild() throws Exception {
