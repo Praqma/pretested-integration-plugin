@@ -8,6 +8,7 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.StreamBuildListener;
+import java.io.PrintStream;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -28,7 +29,8 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		BuildListener listener = mock(BuildListener.class);
 		DummySCM scmInterface = new DummySCM();
 		scmInterface.setCommit(new Commit<String>("test"));
-		
+                doReturn(System.out).when(listener.getLogger());
+                
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		
 		assertTrue(action.initialise(launcher, listener));
