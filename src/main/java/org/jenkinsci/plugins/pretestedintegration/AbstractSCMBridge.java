@@ -19,7 +19,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.TaskListener;
-import org.kohsuke.stapler.DataBoundSetter;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
@@ -166,9 +165,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         
         logger.finest(LOG_PREFIX + "Exiting handlePostBuild");
     }
-
-    private static Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
-
     /**
      * @return the behaves
      */
@@ -179,8 +175,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * @param behaves the behaves to set
      */
-    @DataBoundSetter
     public void setBehaves(List<SCMPostBuildBehaviour> behaves) {
         this.behaves = behaves;
     }
+    
+    private static Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
+
 }
