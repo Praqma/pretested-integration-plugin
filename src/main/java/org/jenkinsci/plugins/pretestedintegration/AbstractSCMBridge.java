@@ -19,16 +19,19 @@ import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.TaskListener;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
     protected String branch;
+    private List<SCMPostBuildBehaviour> behaves = new ArrayList<SCMPostBuildBehaviour>();
+    
     final static String LOG_PREFIX = "[PREINT-SCM] ";
 
     @DataBoundConstructor
     public AbstractSCMBridge() {
     }
-
+    
     public String getBranch() {
         return branch;
     }
@@ -48,6 +51,15 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         }
         return list;
     }
+    
+    public static List<SCMPostBuildBehaviourDescriptor<?>> getBehaviours() {
+        List<SCMPostBuildBehaviourDescriptor<?>> list = new ArrayList<SCMPostBuildBehaviourDescriptor<?>>();
+        for(SCMPostBuildBehaviourDescriptor<?> descr : SCMPostBuildBehaviour.all()) {
+           list.add(descr);
+        }        
+        return list;
+    }
+    
 
     /**
      * This function is called after the SCM plugin has updated the workspace
@@ -88,24 +100,24 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * Calculate and return the next commit from the argument
      *
+     * @param build
+     * @param launcher
+     * @param listener
+     * @param commit
      * @return The next pending commit. If no commit is pending null is
      * returned.
      *
      * @throws IOException A repository could not be reached.
-     * @throws InvalidArgumentException The given repository is not in a valid
-     * condition.
      */
     public Commit<?> nextCommit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws IOException, IllegalArgumentException {
         return null;
     }
 
-    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws IOException, InterruptedException {
+    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         //nop
     }
 
-    public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws IOException, InterruptedException {
+    public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         //nop
     }
 
@@ -145,8 +157,30 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
                 throw new AbortException(LOG_PREFIX + "Unable to revert changes in integration branch");
             }
         }
+        
+        for(SCMPostBuildBehaviour behaviour : getBehaves()) {
+            if(behaviour != null) {
+                behaviour.applyBehaviour(build, launcher, listener);
+            }
+        }
+        
         logger.finest(LOG_PREFIX + "Exiting handlePostBuild");
     }
 
     private static Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
+
+    /**
+     * @return the behaves
+     */
+    public List<SCMPostBuildBehaviour> getBehaves() {
+        return behaves;
+    }
+
+    /**
+     * @param behaves the behaves to set
+     */
+    @DataBoundSetter
+    public void setBehaves(List<SCMPostBuildBehaviour> behaves) {
+        this.behaves = behaves;
+    }
 }
