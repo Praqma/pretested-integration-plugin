@@ -29,10 +29,8 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		BuildListener listener = mock(BuildListener.class);
 		DummySCM scmInterface = new DummySCM();
 		scmInterface.setCommit(new Commit<String>("test"));
-                doReturn(System.out).when(listener.getLogger());
-                
-		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
-		
+                when(listener.getLogger()).thenReturn(System.out);                
+		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);		
 		assertTrue(action.initialise(launcher, listener));
 	}
 	
