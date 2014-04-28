@@ -34,12 +34,12 @@ public class AbstractSCMBridgeTest extends HudsonTestCase {
 	}
 	
 	public void testShouldGetCorrectDescriptor(){
-		DummySCM scm = new DummySCM();
+		DummySCM scm = new DummySCM(null);
 		assertEquals("DummySCM",scm.getDescriptor().getDisplayName());
 	}
 	
 	public void testShouldBeCommited() throws Exception {
-		DummySCM scm = new DummySCM();
+		DummySCM scm = new DummySCM(null);
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		when(build.getResult()).thenReturn(Result.SUCCESS);
 		Launcher launcher = mock(Launcher.class);
@@ -53,7 +53,7 @@ public class AbstractSCMBridgeTest extends HudsonTestCase {
 	}
 	
 	public void testShouldBeRolledBack() throws Exception {
-		DummySCM scm = new DummySCM();
+		DummySCM scm = new DummySCM(null);
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		when(build.getResult()).thenReturn(Result.UNSTABLE);
 		Launcher launcher = mock(Launcher.class);

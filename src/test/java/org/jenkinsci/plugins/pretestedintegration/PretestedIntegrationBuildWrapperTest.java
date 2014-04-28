@@ -10,7 +10,7 @@ public class PretestedIntegrationBuildWrapperTest extends HudsonTestCase {
 
 	public void testShouldEnsurePublisher() throws Exception {
 		
-		PretestedIntegrationBuildWrapper buildWrapper = new PretestedIntegrationBuildWrapper(new DummySCM());
+		PretestedIntegrationBuildWrapper buildWrapper = new PretestedIntegrationBuildWrapper(new DummySCM(null));
 		
 		FreeStyleProject project = Hudson.getInstance().createProject(FreeStyleProject.class, "testproject");
 		FreeStyleBuild build = new FreeStyleBuild(project);

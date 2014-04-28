@@ -8,7 +8,6 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.StreamBuildListener;
-import java.io.PrintStream;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -27,7 +26,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		Launcher launcher = mock(Launcher.class);
 		BuildListener listener = mock(BuildListener.class);
-		DummySCM scmInterface = new DummySCM();
+		DummySCM scmInterface = new DummySCM(null);
 		scmInterface.setCommit(new Commit<String>("test"));
                 when(listener.getLogger()).thenReturn(System.out);                
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);		
@@ -38,7 +37,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		Launcher launcher = mock(Launcher.class);
 		BuildListener listener = mock(BuildListener.class);
-		AbstractSCMBridge scmInterface = new DummySCM();
+		AbstractSCMBridge scmInterface = new DummySCM(null);
 		
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		
@@ -53,7 +52,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 
 		OutputStream out = new ByteArrayOutputStream();
 		BuildListener listener = new StreamBuildListener(out);
-		DummySCM scmInterface = new DummySCM();
+		DummySCM scmInterface = new DummySCM(null);
 		
 		scmInterface.setCommit(new Commit<String>("test"));
 		
@@ -71,7 +70,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 
 		OutputStream out = new ByteArrayOutputStream();
 		BuildListener listener = new StreamBuildListener(out);
-		DummySCM scmInterface = new DummySCM();
+		DummySCM scmInterface = new DummySCM(null);
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		action.finalise(launcher, listener);
 		verify(project, times(0)).scheduleBuild2(0);
@@ -81,7 +80,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		Launcher launcher = mock(Launcher.class);
 		BuildListener listener = mock(BuildListener.class);
-		DummySCM scmInterface = new DummySCM();
+		DummySCM scmInterface = new DummySCM(null);
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		return action;
 	}

@@ -13,11 +13,12 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import java.io.IOException;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public abstract class SCMPostBuildBehaviour implements Describable<SCMPostBuildBehaviour>, ExtensionPoint {  
-    public abstract void applyBehaviour(AbstractBuild build, Launcher launcher, BuildListener listener);
+    public abstract void applyBehaviour(AbstractBuild build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IOException, InterruptedException;
     
     @DataBoundConstructor
     public SCMPostBuildBehaviour() { }

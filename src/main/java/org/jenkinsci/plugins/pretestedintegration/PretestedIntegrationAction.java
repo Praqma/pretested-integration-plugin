@@ -15,18 +15,21 @@ public class PretestedIntegrationAction implements Action {
     AbstractSCMBridge scmBridge;
     Commit<?> last;
     Commit<?> commit;
+    private Commit<?> currentIntegrationTip;
 
     public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge scmBridge) throws IllegalArgumentException, IOException {
         this.build = build;
         this.scmBridge = scmBridge;
+        this.currentIntegrationTip = scmBridge.determineIntegrationHead(build, launcher, listener);
         try {
-
             this.last = build.getPreviousBuiltBuild().getAction(PretestedIntegrationAction.class).getCommit();
         } catch (NullPointerException e) {
             last = null;
         }
         this.commit = scmBridge.nextCommit(build, launcher, listener, last);
     }
+    
+
 
     public String getDisplayName() {
         return null;
@@ -84,4 +87,18 @@ public class PretestedIntegrationAction implements Action {
     }
 
     private static final Logger logger = Logger.getLogger(PretestedIntegrationAction.class.getName());
+
+    /**
+     * @return the currentIntegrationTip
+     */
+    public Commit<?> getCurrentIntegrationTip() {
+        return currentIntegrationTip;
+    }
+
+    /**
+     * @param currentIntegrationTip the currentIntegrationTip to set
+     */
+    public void setCurrentIntegrationTip(Commit<?> currentIntegrationTip) {
+        this.currentIntegrationTip = currentIntegrationTip;
+    }
 }

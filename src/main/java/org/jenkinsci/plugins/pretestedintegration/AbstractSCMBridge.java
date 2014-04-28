@@ -23,12 +23,13 @@ import hudson.model.TaskListener;
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
     protected String branch;
-    private List<SCMPostBuildBehaviour> behaves = new ArrayList<SCMPostBuildBehaviour>();
+    public List<SCMPostBuildBehaviour> behaves = new ArrayList<SCMPostBuildBehaviour>();
     
     final static String LOG_PREFIX = "[PREINT-SCM] ";
 
     @DataBoundConstructor
-    public AbstractSCMBridge() {
+    public AbstractSCMBridge(List<SCMPostBuildBehaviour> behaves) {
+        this.behaves = behaves;
     }
     
     public String getBranch() {
@@ -66,6 +67,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * be ready to perform a build and tests. The integration branch must be
      * checked out, and the given commit must be merged into it.
      *
+     * @param build
+     * @param launcher
+     * @param listener
      * @param commit This commit represents the code that must be checked out.
      *
      * @throws AbortException It is not possible to leave the workspace in a
@@ -76,8 +80,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         logger.finest(LOG_PREFIX + "Entering prepareWorkspace");
         try {
             listener.getLogger().println( LOG_PREFIX + "Invoking ensureBranch with branch: " + branch);            
-            ensureBranch(build, launcher, listener, branch);
-            
+            ensureBranch(build, launcher, listener, branch);            
             listener.getLogger().println( LOG_PREFIX + "Invoking mergeChanges with commit: " + commit.getId().toString());
             mergeChanges(build, launcher, listener, commit);
         } catch (InterruptedException e) {
@@ -92,6 +95,17 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
 
     protected void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String branch) throws IOException, InterruptedException {
         //nop
+    }
+    
+    /**
+     * Override this to associate an integrated commit with a pointer with the starting point before merge. This is used to roll back in case of integraion failure
+     * @param build
+     * @param launcher
+     * @param listener
+     * @return 
+     */
+    protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
+        return null;
     }
 
     /**
@@ -133,9 +147,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @throws IOException A repository could not be reached.
      */
-    public void handlePostBuild(
-            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws IOException, IllegalArgumentException {
+    public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, IllegalArgumentException {
         logger.finest(LOG_PREFIX + "Entering handlePostBuild");
         Result result = build.getResult();
         //TODO: make the success criteria configurable in post-build step
@@ -146,23 +158,19 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
             } catch (InterruptedException e) {
                 throw new AbortException(LOG_PREFIX + "Commiting changes on integration branch exited unexpectedly");
             }
-        } else { //Rollback changes
-            try {
-                listener.getLogger().println(LOG_PREFIX + "Rolling back changes");
-                rollback(build, launcher, listener);
-            } catch (InterruptedException e) {
-                throw new AbortException(LOG_PREFIX + "Unable to revert changes in integration branch");
-            }
         }
         
         for(SCMPostBuildBehaviour behaviour : getBehaves()) {
             if(behaviour != null) {
-                behaviour.applyBehaviour(build, launcher, listener);
+                try {
+                    behaviour.applyBehaviour(build, launcher, listener, this);
+                } catch (InterruptedException ex) {                    
+                    throw new AbortException("Unable to apply behaviour "+behaviour.getDescriptor().getDisplayName());
+                }
             }
         }
-        
-        logger.finest(LOG_PREFIX + "Exiting handlePostBuild");
     }
+    
     /**
      * @return the behaves
      */
@@ -177,6 +185,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         this.behaves = behaves;
     }
     
-    private static Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
+    private static final Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
 
 }
