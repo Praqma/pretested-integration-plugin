@@ -7,6 +7,7 @@ import hudson.model.Describable;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
@@ -49,13 +50,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         try {
             action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
             build.addAction(action);
-            boolean result = action.initialise(launcher, listener);
-
-            if (!result) {
-                logger.finest("Set result to NOT_BUILT");
-                listener.getLogger().println(LOG_PREFIX + "Nothing to do, setting result to NOT_BUILT");
-                build.setResult(Result.NOT_BUILT);
-            }
+            action.initialise(launcher, listener);
 
             try {
                 ensurePublisher(build);
@@ -121,7 +116,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
         @Override
         public boolean isApplicable(AbstractProject<?, ?> arg0) {
-            return true;
+            return arg0 instanceof FreeStyleProject;
         }
     }
 

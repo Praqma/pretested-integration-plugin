@@ -7,7 +7,6 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor.FormException;
-import java.util.List;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.StaplerRequest;
@@ -18,7 +17,7 @@ public class DummySCM extends AbstractSCMBridge {
 	private boolean rolledBack = false;
 	private Commit<?> commit = null;
 
-        public DummySCM(List<SCMPostBuildBehaviour> behaves) {
+        public DummySCM(IntegrationStrategy behaves) {
             super(behaves);
         }
 	

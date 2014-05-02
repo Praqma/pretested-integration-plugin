@@ -23,13 +23,13 @@ import hudson.model.TaskListener;
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
     protected String branch;
-    public List<SCMPostBuildBehaviour> behaves = new ArrayList<SCMPostBuildBehaviour>();
+    public IntegrationStrategy integrationStrategy;
     
     final static String LOG_PREFIX = "[PREINT-SCM] ";
 
     @DataBoundConstructor
-    public AbstractSCMBridge(List<SCMPostBuildBehaviour> behaves) {
-        this.behaves = behaves;
+    public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {
+        this.integrationStrategy = integrationStrategy;
     }
     
     public String getBranch() {
@@ -52,9 +52,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         return list;
     }
     
-    public static List<SCMPostBuildBehaviourDescriptor<?>> getBehaviours() {
-        List<SCMPostBuildBehaviourDescriptor<?>> list = new ArrayList<SCMPostBuildBehaviourDescriptor<?>>();
-        for(SCMPostBuildBehaviourDescriptor<?> descr : SCMPostBuildBehaviour.all()) {
+    public static List<IntegrationStrategyDescriptor<?>> getBehaviours() {
+        List<IntegrationStrategyDescriptor<?>> list = new ArrayList<IntegrationStrategyDescriptor<?>>();
+        for(IntegrationStrategyDescriptor<?> descr : IntegrationStrategy.all()) {
            list.add(descr);
         }        
         return list;
@@ -89,11 +89,20 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         logger.finest(LOG_PREFIX + "Exiting prepareWorkspace");
     }
 
-    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, Commit<?> commit) throws IOException, InterruptedException {
-        //nop
+    /**
+     * Default is to use the selected integration strategy
+     * @param build
+     * @param launcher
+     * @param listener
+     * @param commit
+     * @throws IOException
+     * @throws InterruptedException 
+     */
+    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws IOException, InterruptedException {
+        integrationStrategy.integrate(build, launcher, listener, this, commit);
     }
 
-    protected void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String branch) throws IOException, InterruptedException {
+    protected void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws IOException, InterruptedException {
         //nop
     }
     
@@ -159,30 +168,20 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
                 throw new AbortException(LOG_PREFIX + "Commiting changes on integration branch exited unexpectedly");
             }
         }
-        
-        for(SCMPostBuildBehaviour behaviour : getBehaves()) {
-            if(behaviour != null) {
-                try {
-                    behaviour.applyBehaviour(build, launcher, listener, this);
-                } catch (InterruptedException ex) {                    
-                    throw new AbortException("Unable to apply behaviour "+behaviour.getDescriptor().getDisplayName());
-                }
-            }
-        }
     }
     
     /**
      * @return the behaves
      */
-    public List<SCMPostBuildBehaviour> getBehaves() {
-        return behaves;
+    public IntegrationStrategy getIntegrationStrategy() {
+        return integrationStrategy;
     }
 
     /**
-     * @param behaves the behaves to set
+     * @param integrationStrategy the behaves to set
      */
-    public void setBehaves(List<SCMPostBuildBehaviour> behaves) {
-        this.behaves = behaves;
+    public void setIntegrationStrategy(IntegrationStrategy integrationStrategy) {
+        this.integrationStrategy = integrationStrategy;
     }
     
     private static final Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());

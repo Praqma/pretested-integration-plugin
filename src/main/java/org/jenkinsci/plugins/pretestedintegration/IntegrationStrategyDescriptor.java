@@ -7,8 +7,6 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.model.Descriptor;
-import java.util.ArrayList;
-import java.util.List;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -17,11 +15,11 @@ import org.kohsuke.stapler.StaplerRequest;
  * @author Mads
  * @param <T>
  */
-public abstract class SCMPostBuildBehaviourDescriptor<T extends SCMPostBuildBehaviour> extends Descriptor<SCMPostBuildBehaviour> {
+public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrategy> extends Descriptor<IntegrationStrategy> {
 
     @Override
-    public SCMPostBuildBehaviour newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        return req.bindJSON(SCMPostBuildBehaviour.class, formData);
+    public IntegrationStrategy newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        return req.bindJSON(IntegrationStrategy.class, formData);
     }
     
 }
