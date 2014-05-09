@@ -19,11 +19,13 @@ import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.TaskListener;
+import java.util.logging.Level;
+import org.apache.commons.lang.StringUtils;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
     protected String branch;
-    public IntegrationStrategy integrationStrategy;
+    public final IntegrationStrategy integrationStrategy;
     
     final static String LOG_PREFIX = "[PREINT-SCM] ";
 
@@ -140,6 +142,14 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         //nop
     }
+    
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        //nop
+    }
+    
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        
+    }
 
     public Result getRequiredResult() {
         return Result.SUCCESS;
@@ -164,24 +174,30 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
             try {
                 listener.getLogger().println(LOG_PREFIX + "Commiting changes");
                 commit(build, launcher, listener);
+                deleteIntegratedBranch(build, launcher, listener);
             } catch (InterruptedException e) {
                 throw new AbortException(LOG_PREFIX + "Commiting changes on integration branch exited unexpectedly");
+            } finally {
+                try {
+                    updateBuildDescription(build, launcher, listener);
+                } catch (Exception ex) {
+                    //Don't care
+                }
             }
-        }
-    }
-    
-    /**
-     * @return the behaves
-     */
-    public IntegrationStrategy getIntegrationStrategy() {
-        return integrationStrategy;
-    }
-
-    /**
-     * @param integrationStrategy the behaves to set
-     */
-    public void setIntegrationStrategy(IntegrationStrategy integrationStrategy) {
-        this.integrationStrategy = integrationStrategy;
+        } else {
+            try {
+                rollback(build, launcher, listener);
+            } catch (InterruptedException ex) {
+                listener.getLogger().println("Fatal error occured when trying to undo changes");
+                ex.printStackTrace(listener.getLogger());
+            } finally {
+                try {
+                    updateBuildDescription(build, launcher, listener);
+                } catch (Exception ex) {
+                    //Don't care
+                } 
+            }
+        }  
     }
     
     private static final Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
