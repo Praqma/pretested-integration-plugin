@@ -76,18 +76,17 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @throws AbortException It is not possible to leave the workspace in a
      * state as described above.
-     * @throws IOException A repository could not be reached.
+     * @throws java.lang.InterruptedException
+     * @throws IOException
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws AbortException, IOException, IllegalArgumentException {
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws IOException, InterruptedException {
         logger.finest(LOG_PREFIX + "Entering prepareWorkspace");
-        try {
-            listener.getLogger().println( LOG_PREFIX + "Invoking ensureBranch with branch: " + branch);            
-            ensureBranch(build, launcher, listener, branch);            
-            listener.getLogger().println( LOG_PREFIX + "Invoking mergeChanges with commit: " + commit.getId().toString());
-            mergeChanges(build, launcher, listener, commit);
-        } catch (InterruptedException e) {
-            throw new AbortException(LOG_PREFIX + "Could not prepare workspace. Error message: " + e.getMessage());
-        }
+        
+        listener.getLogger().println( LOG_PREFIX + "Invoking ensureBranch with branch: " + branch);            
+        ensureBranch(build, launcher, listener, branch);            
+        listener.getLogger().println( LOG_PREFIX + "Invoking mergeChanges with commit: " + commit.getId().toString());
+        mergeChanges(build, launcher, listener, commit);
+
         logger.finest(LOG_PREFIX + "Exiting prepareWorkspace");
     }
 
@@ -104,9 +103,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         integrationStrategy.integrate(build, launcher, listener, this, commit);
     }
 
-    protected void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws IOException, InterruptedException {
-        //nop
-    }
+    public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws IOException, InterruptedException;
     
     /**
      * Override this to associate an integrated commit with a pointer with the starting point before merge. This is used to roll back in case of integraion failure
@@ -166,7 +163,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @throws IOException A repository could not be reached.
      */
-    public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, IllegalArgumentException {
+    public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
         logger.finest(LOG_PREFIX + "Entering handlePostBuild");
         Result result = build.getResult();
         //TODO: make the success criteria configurable in post-build step

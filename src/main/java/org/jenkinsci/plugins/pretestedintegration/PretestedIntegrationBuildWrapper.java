@@ -42,7 +42,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
         logger.finest("Entering setUp");
-
+        boolean everythingOk = true;
         //There can be only one... at a time
         BuildQueue.getInstance().enqueueAndWait();
 
@@ -55,25 +55,25 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             try {
                 ensurePublisher(build);
             } catch (IOException e) {
-                e.printStackTrace(listener.getLogger());
-                BuildQueue.getInstance().release();
-            }
+                BuildQueue.getInstance().release();                
+            }  
 
-            logger.finest("Exiting setUp");
-            listener.getLogger().println(LOG_PREFIX + "Building commit: " + action.getClass());
-
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace(listener.getLogger());
-            build.setResult(Result.FAILURE);
+        } catch (NothingToDoException ex) {
+            build.setResult(Result.NOT_BUILT);
             BuildQueue.getInstance().release();
+            everythingOk = false;
         } catch (IOException e) {
-            e.printStackTrace(listener.getLogger());
             build.setResult(Result.FAILURE);
             BuildQueue.getInstance().release();
+            everythingOk = false;
+        } catch (InterruptedException interruptedException) {
+            build.setResult(Result.FAILURE);
+            BuildQueue.getInstance().release();
+            everythingOk = false;
         }
 
         BuildWrapper.Environment environment = new PretestEnvironment();
-        return environment;
+        return everythingOk ? environment : null;
     }
 
     public void ensurePublisher(AbstractBuild<?, ?> build) throws IOException {

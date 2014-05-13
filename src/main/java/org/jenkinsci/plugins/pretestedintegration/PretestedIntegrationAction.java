@@ -59,7 +59,7 @@ public class PretestedIntegrationAction implements Action {
      * @throws AbortException
      * @throws IllegalArgumentException    
      */
-    public boolean initialise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, AbortException, IOException {
+    public boolean initialise(Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         boolean result = false;
         
         if (commit != null) {

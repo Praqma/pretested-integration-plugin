@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
+import hudson.model.Cause.UserIdCause;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.tasks.Publisher;
@@ -38,7 +39,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
      * @return boolean
      */
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println("Performing pre-verified post build steps");
         PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
         Boolean result = false;
@@ -55,6 +56,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
             e.printStackTrace(listener.getLogger());
             build.setResult(Result.FAILURE);
         }
+        
         BuildQueue.getInstance().release();
         return result;
     }

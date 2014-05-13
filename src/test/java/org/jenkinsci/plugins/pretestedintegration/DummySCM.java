@@ -51,6 +51,11 @@ public class DummySCM extends AbstractSCMBridge {
 	public boolean isRolledBack() {
 		return rolledBack;
 	}
+
+    @Override
+    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws IOException, InterruptedException {
+        
+    }
 	
 	@Extension
 	public static final class DescriptorImpl extends SCMBridgeDescriptor<DummyBridge> {
