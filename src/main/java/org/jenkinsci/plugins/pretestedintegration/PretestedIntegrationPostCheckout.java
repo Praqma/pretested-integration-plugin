@@ -4,7 +4,6 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
-import hudson.model.Cause.UserIdCause;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.tasks.Publisher;

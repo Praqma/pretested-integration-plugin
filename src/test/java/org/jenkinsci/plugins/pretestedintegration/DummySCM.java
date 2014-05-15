@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
 import java.io.IOException;
 
 import hudson.Extension;
@@ -8,6 +10,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor.FormException;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
 
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -28,19 +32,17 @@ public class DummySCM extends AbstractSCMBridge {
 	@Override
 	public Commit<?> nextCommit(
 			AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit)
-			throws IOException, IllegalArgumentException {
+			throws NextCommitFailureException {
 		return this.commit;
 	}
 	
 	@Override
-	public void commit(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) 
-			throws IOException, InterruptedException {
+	public void commit(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
 		commited = true;
 	}
 	
 	@Override
-	public void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) 
-			throws IOException, InterruptedException {
+	public void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {
 		rolledBack = true;
 	}
 	
@@ -53,7 +55,7 @@ public class DummySCM extends AbstractSCMBridge {
 	}
 
     @Override
-    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws IOException, InterruptedException {
+    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         
     }
 	
@@ -66,11 +68,9 @@ public class DummySCM extends AbstractSCMBridge {
 		
 		@Override
 		public DummyBridge newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			DummyBridge i = (DummyBridge) super.newInstance(req, formData);
-			
+			DummyBridge i = (DummyBridge) super.newInstance(req, formData);			
 			save();
 			return i;
-		}
-		
+		}		
 	}
 }

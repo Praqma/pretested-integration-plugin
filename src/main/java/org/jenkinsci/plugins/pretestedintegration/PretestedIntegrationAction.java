@@ -1,5 +1,9 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -17,7 +21,7 @@ public class PretestedIntegrationAction implements Action {
     Commit<?> commit;
     private Commit<?> currentIntegrationTip;
 
-    public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge scmBridge) throws IllegalArgumentException, IOException {
+    public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge scmBridge) throws NextCommitFailureException {
         this.build = build;
         this.scmBridge = scmBridge;
         this.currentIntegrationTip = scmBridge.determineIntegrationHead(build, launcher, listener);
@@ -55,11 +59,11 @@ public class PretestedIntegrationAction implements Action {
      * @param listener
      * @return True if any changes are made and the workspace has been prepared,
      * false otherwise
-     * @throws IOException
-     * @throws AbortException
-     * @throws IllegalArgumentException    
+     * @throws IntegationFailedExeception
+     * @throws NothingToDoException
+     * @throws EstablishWorkspaceException    
      */
-    public boolean initialise(Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public boolean initialise(Launcher launcher, BuildListener listener) throws IntegationFailedExeception, NothingToDoException, EstablishWorkspaceException {
         boolean result = false;
         
         if (commit != null) {
@@ -80,7 +84,7 @@ public class PretestedIntegrationAction implements Action {
      * @return {@link Boolean} indicating success or failure
      
      */
-    public boolean finalise(Launcher launcher, BuildListener listener) throws IllegalArgumentException, IOException {
+    public boolean finalise(Launcher launcher, BuildListener listener) throws IOException {
         listener.getLogger().println("Finalising");
         scmBridge.handlePostBuild(build, launcher, listener);
         return true;

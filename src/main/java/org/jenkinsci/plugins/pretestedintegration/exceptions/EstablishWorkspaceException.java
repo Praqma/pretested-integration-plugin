@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.exceptions;
 
 import java.io.IOException;
 
@@ -12,8 +12,8 @@ import java.io.IOException;
  *
  * @author Mads
  */
-public class NothingToDoException extends IOException {
-    public NothingToDoException() {
-        super("Nothing to do");
+public class EstablishWorkspaceException extends IOException {
+    public EstablishWorkspaceException(Exception ex) {
+        super("Failed to establish workspace", ex);
     }
 }

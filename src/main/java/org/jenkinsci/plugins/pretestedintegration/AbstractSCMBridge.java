@@ -1,15 +1,15 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
 import org.kohsuke.stapler.DataBoundConstructor;
-
 import jenkins.model.Jenkins;
-
-import hudson.AbortException;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.Launcher;
@@ -19,8 +19,9 @@ import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.TaskListener;
-import java.util.logging.Level;
-import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
@@ -74,19 +75,16 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param listener
      * @param commit This commit represents the code that must be checked out.
      *
-     * @throws AbortException It is not possible to leave the workspace in a
-     * state as described above.
-     * @throws java.lang.InterruptedException
-     * @throws IOException
+     * @throws IntegationFailedExeception 
+     * @throws EstablishWorkspaceException
+     * @throws NothingToDoException
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws IOException, InterruptedException {
-        logger.finest(LOG_PREFIX + "Entering prepareWorkspace");
-        
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws EstablishWorkspaceException, NothingToDoException, IntegationFailedExeception {
+        logger.finest(LOG_PREFIX + "Entering prepareWorkspace");        
         listener.getLogger().println( LOG_PREFIX + "Invoking ensureBranch with branch: " + branch);            
         ensureBranch(build, launcher, listener, branch);            
         listener.getLogger().println( LOG_PREFIX + "Invoking mergeChanges with commit: " + commit.getId().toString());
         mergeChanges(build, launcher, listener, commit);
-
         logger.finest(LOG_PREFIX + "Exiting prepareWorkspace");
     }
 
@@ -96,14 +94,14 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param launcher
      * @param listener
      * @param commit
-     * @throws IOException
-     * @throws InterruptedException 
+     * @throws NothingToDoException
+     * @throws IntegationFailedExeception 
      */
-    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws IOException, InterruptedException {
+    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws NothingToDoException, IntegationFailedExeception {
         integrationStrategy.integrate(build, launcher, listener, this, commit);
     }
 
-    public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws IOException, InterruptedException;
+    public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException;
     
     /**
      * Override this to associate an integrated commit with a pointer with the starting point before merge. This is used to roll back in case of integraion failure
@@ -126,26 +124,26 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @return The next pending commit. If no commit is pending null is
      * returned.
      *
-     * @throws IOException A repository could not be reached.
+     * @throws NextCommitFailureException
      */
-    public Commit<?> nextCommit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws IOException, IllegalArgumentException {
+    public Commit<?> nextCommit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws NextCommitFailureException {
         return null;
     }
 
-    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
         //nop
     }
 
-    public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {
         //nop
     }
     
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException {
         //nop
     }
     
-    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+        //nop
     }
 
     public Result getRequiredResult() {
@@ -166,33 +164,22 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
         logger.finest(LOG_PREFIX + "Entering handlePostBuild");
         Result result = build.getResult();
-        //TODO: make the success criteria configurable in post-build step
+        
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) { //Commit the changes
             try {
                 listener.getLogger().println(LOG_PREFIX + "Commiting changes");
                 commit(build, launcher, listener);
                 deleteIntegratedBranch(build, launcher, listener);
-            } catch (InterruptedException e) {
-                throw new AbortException(LOG_PREFIX + "Commiting changes on integration branch exited unexpectedly");
-            } finally {
-                try {
-                    updateBuildDescription(build, launcher, listener);
-                } catch (Exception ex) {
-                    //Don't care
-                }
+            }  finally {
+                updateBuildDescription(build, launcher, listener);
             }
         } else {
             try {
                 rollback(build, launcher, listener);
-            } catch (InterruptedException ex) {
-                listener.getLogger().println("Fatal error occured when trying to undo changes");
-                ex.printStackTrace(listener.getLogger());
+            } catch (RollbackFailureException ex) {
+                listener.getLogger().println(ex.getMessage());                
             } finally {
-                try {
-                    updateBuildDescription(build, launcher, listener);
-                } catch (Exception ex) {
-                    //Don't care
-                } 
+                updateBuildDescription(build, launcher, listener);
             }
         }  
     }

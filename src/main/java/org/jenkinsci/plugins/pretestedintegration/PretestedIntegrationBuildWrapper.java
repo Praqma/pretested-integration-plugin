@@ -1,5 +1,9 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
@@ -62,11 +66,15 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             build.setResult(Result.NOT_BUILT);
             BuildQueue.getInstance().release();
             everythingOk = false;
-        } catch (IOException e) {
+        } catch (IntegationFailedExeception e) {
             build.setResult(Result.FAILURE);
             BuildQueue.getInstance().release();
             everythingOk = false;
-        } catch (InterruptedException interruptedException) {
+        } catch (EstablishWorkspaceException established) {
+            build.setResult(Result.FAILURE);
+            BuildQueue.getInstance().release();
+            everythingOk = false;
+        } catch (NextCommitFailureException ex) {
             build.setResult(Result.FAILURE);
             BuildQueue.getInstance().release();
             everythingOk = false;
