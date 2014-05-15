@@ -17,6 +17,7 @@ import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -45,23 +46,21 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      */
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        logger.finest("Entering setUp");
+        listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
         boolean everythingOk = true;
         //There can be only one... at a time
-        BuildQueue.getInstance().enqueueAndWait();
-
+        BuildQueue.getInstance().enqueueAndWait();        
         PretestedIntegrationAction action;
         try {
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
             action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
             build.addAction(action);
             action.initialise(launcher, listener);
-
             try {
                 ensurePublisher(build);
             } catch (IOException e) {
                 BuildQueue.getInstance().release();                
             }  
-
         } catch (NothingToDoException ex) {
             build.setResult(Result.NOT_BUILT);
             BuildQueue.getInstance().release();

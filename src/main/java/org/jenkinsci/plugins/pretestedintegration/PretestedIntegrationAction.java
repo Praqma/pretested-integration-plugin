@@ -7,7 +7,6 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoExceptio
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import hudson.AbortException;
 import hudson.Launcher;
 import hudson.model.Action;
 import hudson.model.BuildListener;
@@ -85,7 +84,6 @@ public class PretestedIntegrationAction implements Action {
      
      */
     public boolean finalise(Launcher launcher, BuildListener listener) throws IOException {
-        listener.getLogger().println("Finalising");
         scmBridge.handlePostBuild(build, launcher, listener);
         return true;
     }

@@ -79,13 +79,8 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws EstablishWorkspaceException
      * @throws NothingToDoException
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws EstablishWorkspaceException, NothingToDoException, IntegationFailedExeception {
-        logger.finest(LOG_PREFIX + "Entering prepareWorkspace");        
-        listener.getLogger().println( LOG_PREFIX + "Invoking ensureBranch with branch: " + branch);            
-        ensureBranch(build, launcher, listener, branch);            
-        listener.getLogger().println( LOG_PREFIX + "Invoking mergeChanges with commit: " + commit.getId().toString());
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws EstablishWorkspaceException, NothingToDoException, IntegationFailedExeception {    
         mergeChanges(build, launcher, listener, commit);
-        logger.finest(LOG_PREFIX + "Exiting prepareWorkspace");
     }
 
     /**
@@ -162,9 +157,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IOException A repository could not be reached.
      */
     public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        logger.finest(LOG_PREFIX + "Entering handlePostBuild");
-        Result result = build.getResult();
-        
+        Result result = build.getResult();       
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) { //Commit the changes
             try {
                 listener.getLogger().println(LOG_PREFIX + "Commiting changes");
