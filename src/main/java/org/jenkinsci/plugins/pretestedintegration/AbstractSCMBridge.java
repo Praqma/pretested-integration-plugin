@@ -160,10 +160,17 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         Result result = build.getResult();       
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) { //Commit the changes
             try {
-                listener.getLogger().println(LOG_PREFIX + "Commiting changes");
+                listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
                 commit(build, launcher, listener);
+                listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
                 deleteIntegratedBranch(build, launcher, listener);
-            }  finally {
+            } catch (CommitChangesFailureException ex) {
+                rollback(build, launcher, listener);
+                throw ex;
+            } catch (DeleteIntegratedBranchException delex) {
+                rollback(build, launcher, listener);
+                throw delex;
+            } finally {
                 updateBuildDescription(build, launcher, listener);
             }
         } else {
