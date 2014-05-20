@@ -52,18 +52,4 @@ public class AbstractSCMBridgeTest extends HudsonTestCase {
 		assertTrue(scm.isCommited());
 	}
 	
-	public void testShouldBeRolledBack() throws Exception {
-		DummySCM scm = new DummySCM(null);
-		FreeStyleBuild build = mock(FreeStyleBuild.class);
-		when(build.getResult()).thenReturn(Result.UNSTABLE);
-		Launcher launcher = mock(Launcher.class);
-
-		OutputStream out = new ByteArrayOutputStream();
-		BuildListener listener = new StreamBuildListener(out);
-		
-		assertFalse(scm.isRolledBack());
-		scm.handlePostBuild(build, launcher, listener);
-		assertTrue(scm.isRolledBack());
-	}
-	
 }
