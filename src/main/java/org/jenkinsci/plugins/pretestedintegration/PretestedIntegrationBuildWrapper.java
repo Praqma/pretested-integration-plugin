@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -51,8 +52,18 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         //There can be only one... at a time
         BuildQueue.getInstance().enqueueAndWait();        
         PretestedIntegrationAction action;
-        try {
+        try {            
             scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
+            
+            /**
+             * If the previous build failed...then we revert to the state of master prior to that particular commit being integrated.
+             */
+            if(build.getPreviousBuild() != null ) {               
+                if(build.getPreviousBuild().getResult() != null && build.getPreviousBuild().getResult().isWorseThan(scmBridge.getRequiredResult())) {
+                    scmBridge.rollback(build.getPreviousBuild(), launcher, listener);
+                }
+            }
+            
             action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
             build.addAction(action);
             action.initialise(launcher, listener);
@@ -77,6 +88,10 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             build.setResult(Result.FAILURE);
             BuildQueue.getInstance().release();
             everythingOk = false;
+        } catch (RollbackFailureException ex) {
+            build.setResult(Result.FAILURE); 
+            BuildQueue.getInstance().release();
+            everythingOk = false;        
         }
 
         BuildWrapper.Environment environment = new PretestEnvironment();

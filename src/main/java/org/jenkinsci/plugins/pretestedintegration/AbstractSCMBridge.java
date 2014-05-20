@@ -157,31 +157,16 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IOException A repository could not be reached.
      */
     public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        Result result = build.getResult();       
-        if (result != null && result.isBetterOrEqualTo(getRequiredResult())) { //Commit the changes
-            try {
-                listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
-                commit(build, launcher, listener);
-                listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
-                deleteIntegratedBranch(build, launcher, listener);
-            } catch (CommitChangesFailureException ex) {
-                rollback(build, launcher, listener);
-                throw ex;
-            } catch (DeleteIntegratedBranchException delex) {
-                rollback(build, launcher, listener);
-                throw delex;
-            } finally {
-                updateBuildDescription(build, launcher, listener);
-            }
-        } else {
-            try {
-                rollback(build, launcher, listener);
-            } catch (RollbackFailureException ex) {
-                listener.getLogger().println(ex.getMessage());                
-            } finally {
-                updateBuildDescription(build, launcher, listener);
-            }
-        }  
+        Result result = build.getResult();
+        updateBuildDescription(build, launcher, listener);
+        
+        if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
+            listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
+            commit(build, launcher, listener);
+            listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
+            deleteIntegratedBranch(build, launcher, listener);            
+        } 
+        
     }
     
     private static final Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());

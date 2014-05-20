@@ -9,6 +9,7 @@ import hudson.model.Result;
 import hudson.tasks.Publisher;
 import hudson.tasks.BuildStepMonitor;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -18,7 +19,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * Depending on the chosen SCM, a more specific function will be called.
  */
 public class PretestedIntegrationPostCheckout extends Publisher {
-
+    
     @DataBoundConstructor
     public PretestedIntegrationPostCheckout() {
     }
@@ -48,11 +49,15 @@ public class PretestedIntegrationPostCheckout extends Publisher {
         } catch (NullPointerException e) {
             e.printStackTrace(listener.getLogger());
             build.setResult(Result.FAILURE);
+            logger.log(Level.SEVERE, "IO Exception caught", e);
         } catch (IllegalArgumentException e) {
             e.printStackTrace(listener.getLogger());
             build.setResult(Result.FAILURE);
+            logger.log(Level.SEVERE, "IllegalArgumentException in post checkout", e);
         } catch (IOException e) {
-            e.printStackTrace(listener.getLogger());
+            //All our know errors are IOExceptions. Just print the message...but log the error
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, "IO Exception in post checkout", e);
             build.setResult(Result.FAILURE);
         }
         
