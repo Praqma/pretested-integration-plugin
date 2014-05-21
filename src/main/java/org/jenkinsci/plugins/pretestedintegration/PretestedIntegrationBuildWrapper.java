@@ -55,6 +55,10 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         try {            
             scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
             
+            //Crete the action. Record the state of master branch
+            action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
+            build.addAction(action);
+            
             /**
              * If the previous build failed...then we revert to the state of master prior to that particular commit being integrated.
              */
@@ -64,8 +68,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
                 }
             }
             
-            action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
-            build.addAction(action);
+            
             action.initialise(launcher, listener);
             try {
                 ensurePublisher(build);
