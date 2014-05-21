@@ -30,10 +30,34 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
     private static final String LOG_PREFIX = "[PREINT] ";
     public final AbstractSCMBridge scmBridge;
+    private final boolean rollbackEnabled = false;
 
     @DataBoundConstructor
     public PretestedIntegrationBuildWrapper(final AbstractSCMBridge scmBridge) {
         this.scmBridge = scmBridge;
+    }
+    
+    /**
+     * Goes through the list of builds..finds the latest build which was a pre-test integration.
+     * @param build
+     * @return 
+     */
+    private AbstractBuild<?,?> findLatestBuildWithPreTestedIntegrationAction(AbstractBuild<?,?> build) {        
+        AbstractBuild<?,?> start = build.getPreviousBuild();;
+        for(AbstractBuild<?,?> i = start; i != null; i = i.getNextBuild()) {
+            //If the previous build was not pre-test enabled, take next
+            if(i.getAction(PretestedIntegrationAction.class) == null) {
+                continue;
+            }
+            
+            //if the build is pre-test. Then we only return non-null in case the build was failed.
+            if(i.getResult().isWorseThan(scmBridge.getRequiredResult())) {
+                return i;
+            } else {
+                return null;
+            }
+        }
+        return null;
     }
 
     /**
@@ -55,19 +79,19 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         try {            
             scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
             
-            //Crete the action. Record the state of master branch
+            //Create the action. Record the state of master branch
             action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
             build.addAction(action);
             
-            /**
-             * If the previous build failed...then we revert to the state of master prior to that particular commit being integrated.
-             */
-            if(build.getPreviousBuild() != null ) {               
-                if(build.getPreviousBuild().getResult() != null && build.getPreviousBuild().getResult().isWorseThan(scmBridge.getRequiredResult())) {
-                    scmBridge.rollback(build.getPreviousBuild(), launcher, listener);
+            if(rollbackEnabled) {
+                /**
+                 * If the previous build failed...then we revert to the state of master prior to that particular commit being integrated.
+                 */
+                AbstractBuild<?,?> latestBuildWithPreTest = findLatestBuildWithPreTestedIntegrationAction(build);            
+                if(latestBuildWithPreTest != null ) {                
+                    scmBridge.rollback(latestBuildWithPreTest.getPreviousBuild(), launcher, listener);                
                 }
-            }
-            
+            }            
             
             action.initialise(launcher, listener);
             try {
