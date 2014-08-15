@@ -44,6 +44,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BuildData gitBuildData = build.getAction(BuildData.class);
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+        GitClient client;
 
         String integrationSHA = "Not specified";
         try {
@@ -53,7 +54,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s(%s)", gitDataBranch.getSHA1String(), bridge.getBranch(), integrationSHA) );
         boolean found = false;
         try {
-            GitClient client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
+            client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
 
             for(Branch b : client.getRemoteBranches()) {
                 if(b.getName().equals(gitDataBranch.getName())) {
@@ -76,6 +77,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         }
 
         try {
+            String commitMessage = client.showRevision(gitDataBranch.getSHA1()).get(5).trim();
+
             String[] split = gitDataBranch.getName().split("/");
             String branchNameWithNoRemote = "";
             for (int i = 1; i < split.length; i++) {
@@ -85,7 +88,9 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
 
             exitCode = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
-            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "-m", String.format("Integrated %s", branchNameWithNoRemote));
+            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "-m", String.format("%s [%s]",
+                                                                                                        commitMessage,
+                                                                                                        branchNameWithNoRemote));
         } catch (Exception ex) { /*Handled below */ }
 
         if (exitCode != 0) {
