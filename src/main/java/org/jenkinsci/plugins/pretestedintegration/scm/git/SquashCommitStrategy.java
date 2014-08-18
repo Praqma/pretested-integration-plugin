@@ -69,7 +69,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
         if(!found) {
             try {
-                build.setDescription(String.format("Noting to do"));
+                build.setDescription(String.format("Nothing to do"));
             } catch (IOException ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
