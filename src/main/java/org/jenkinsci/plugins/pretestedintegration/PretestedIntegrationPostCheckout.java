@@ -40,10 +40,13 @@ public class PretestedIntegrationPostCheckout extends Publisher {
      */
     @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) {
-        listener.getLogger().println("Performing pre-verified post build steps");
         PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
+        if (action == null)
+            return true;
+
+        listener.getLogger().println("Performing pre-verified post build steps");
         Boolean result = false;
-        
+
         try {
             result = action.finalise(launcher, listener);
         } catch (NullPointerException e) {

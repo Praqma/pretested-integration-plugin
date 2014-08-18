@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
@@ -160,7 +162,16 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         Result result = build.getResult();
         updateBuildDescription(build, launcher, listener);
         
+        BuildData gitBuildData = build.getAction(BuildData.class);
+        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+        String devBranchName = gitDataBranch.getName();
+        if (devBranchName.isEmpty() || devBranchName.contains("master")) {
+            listener.getLogger().println(LOG_PREFIX + "Using the master branch for development is not allowed.");
+            build.setResult(Result.FAILURE);
+        }
+
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
+
             listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
             commit(build, launcher, listener);
             listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
