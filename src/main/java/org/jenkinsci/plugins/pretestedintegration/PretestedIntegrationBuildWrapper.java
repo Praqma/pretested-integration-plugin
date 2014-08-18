@@ -79,7 +79,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         try {            
             scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
             
-            //Create the action. Record the state of master branch
+            //Create the action. Record the state of integration branch
             action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
             build.addAction(action);
             
