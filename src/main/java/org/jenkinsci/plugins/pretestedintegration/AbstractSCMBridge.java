@@ -161,7 +161,8 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
         Result result = build.getResult();
         updateBuildDescription(build, launcher, listener);
-        
+
+        // The purpose of this section of code is to disallow usage of the master branch as the dev branch.
         BuildData gitBuildData = build.getAction(BuildData.class);
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         String devBranchName = gitDataBranch.getName();
