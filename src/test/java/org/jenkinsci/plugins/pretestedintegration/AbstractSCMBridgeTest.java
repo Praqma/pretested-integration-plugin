@@ -7,8 +7,13 @@ import hudson.model.Result;
 import hudson.model.StreamBuildListener;
 
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.Revision;
+import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuildData;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jvnet.hudson.test.HudsonTestCase;
 import static org.mockito.Mockito.*;
@@ -43,6 +48,21 @@ public class AbstractSCMBridgeTest extends HudsonTestCase {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		when(build.getResult()).thenReturn(Result.SUCCESS);
 		Launcher launcher = mock(Launcher.class);
+
+        BuildData gitBuildData = mock(BuildData.class);
+        Build lastBuild = mock(Build.class);
+        Revision rev = mock(Revision.class);
+        Branch gitBranchData = mock(Branch.class);
+
+        gitBuildData.lastBuild = lastBuild;
+        lastBuild.revision = rev;
+
+        when(build.getAction(BuildData.class)).thenReturn(gitBuildData);
+
+        List<Branch> branches = new ArrayList<Branch>();
+        branches.add(gitBranchData);
+        when(gitBuildData.lastBuild.revision.getBranches()).thenReturn(branches);
+        when(gitBranchData.getName()).thenReturn("origin/ready/f1");
 
 		OutputStream out = new ByteArrayOutputStream();
 		BuildListener listener = new StreamBuildListener(out);
