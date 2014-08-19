@@ -166,7 +166,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         BuildData gitBuildData = build.getAction(BuildData.class);
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         String devBranchName = gitDataBranch.getName();
-        if (devBranchName.isEmpty() || devBranchName.contains("master")) {
+        if (devBranchName.contains("master")) {
             listener.getLogger().println(LOG_PREFIX + "Using the master branch for development is not allowed.");
             build.setResult(Result.FAILURE);
         }
