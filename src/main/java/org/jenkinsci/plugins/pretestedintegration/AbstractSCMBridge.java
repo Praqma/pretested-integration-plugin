@@ -162,12 +162,13 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         Result result = build.getResult();
         updateBuildDescription(build, launcher, listener);
 
-        // The purpose of this section of code is to disallow usage of the master branch as the dev branch.
+        // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
         BuildData gitBuildData = build.getAction(BuildData.class);
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         String devBranchName = gitDataBranch.getName();
         if (devBranchName.contains("master")) {
-            listener.getLogger().println(LOG_PREFIX + "Using the master branch for development is not allowed.");
+            listener.getLogger().println(LOG_PREFIX + "Using the master branch for polling and development is not" +
+                    " allowed since it will attempt to merge it to other branches and delete it after.");
             build.setResult(Result.FAILURE);
         }
 
