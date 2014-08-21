@@ -81,9 +81,10 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             String branchNameWithNoRemote = GitUtils.removeRemoteFromBranchName(client.getRepository(), gitDataBranch.getName());
 
             exitCode = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
-            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "-m", String.format("%s [%s]",
-                                                                                                        commitMessage,
-                                                                                                        branchNameWithNoRemote));
+            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "-m", String.format("[%s] %s",
+                                                                                                        branchNameWithNoRemote,
+                                                                                                        commitMessage
+                                                                                                        ));
         } catch (Exception ex) { /*Handled below */ }
 
         if (exitCode != 0) {
