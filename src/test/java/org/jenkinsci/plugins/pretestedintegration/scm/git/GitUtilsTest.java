@@ -5,6 +5,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.junit.After;
@@ -23,6 +24,9 @@ public class GitUtilsTest {
     final String COMMIT_MESSAGE_1 = "commit message 1";
     final String COMMIT_MESSAGE_2 = "commit message 2";
 
+    final String REMOTE_NAME_1 = "myOrigin";
+    final String REMOTE_NAME_2 = "my/remote";
+
     Repository repository;
     RevCommit headCommit = null;
 
@@ -38,6 +42,11 @@ public class GitUtilsTest {
         if (!repository.isBare() && repository.getBranch() == null) {
             repository.create();
         }
+
+        StoredConfig config = repository.getConfig();
+        config.setString("remote", REMOTE_NAME_1, "url", "https://github.com/centic9/jgit-cookbook.git");
+        config.setString("remote", REMOTE_NAME_2, "url", "https://github.com/centic9/jgit-cookbook.git");
+        config.save();
 
         Git git = new Git(repository);
 
@@ -104,35 +113,41 @@ public class GitUtilsTest {
 
     @Test
     public void CanRemoveRemoteFromBranchName() {
-        final String remoteBranch_1 = "origin/ready/dev_myname";
-        final String expectedResult_1 = "ready/dev_myname";
+        final String remoteBranch_1 = REMOTE_NAME_1 + "/master";
+        final String expectedResult_1 = "master";
 
-        final String remoteBranch_2 = "origin/ready-devename";
-        final String expectedResult_2 = "ready-devename";
+        final String remoteBranch_2 = REMOTE_NAME_2 + "/master";
+        final String expectedResult_2 = "master";
 
-        final String remoteBranch_3 = "myremote/feature-branch";
-        final String expectedResult_3 = "feature-branch";
-
-        final String result_1 = GitUtils.removeRemoteFromBranchName(remoteBranch_1);
-        final String result_2 = GitUtils.removeRemoteFromBranchName(remoteBranch_2);
-        final String result_3 = GitUtils.removeRemoteFromBranchName(remoteBranch_3);
+        final String result_1 = GitUtils.removeRemoteFromBranchName(repository, remoteBranch_1);
+        final String result_2 = GitUtils.removeRemoteFromBranchName(repository, remoteBranch_2);
 
         Assert.assertEquals("Remote should be removed from the branch name", expectedResult_1, result_1);
         Assert.assertEquals("Remote should be removed from the branch name", expectedResult_2, result_2);
-        Assert.assertEquals("Remote should be removed from the branch name", expectedResult_3, result_3);
+    }
+
+    @Test
+    public void ShouldReturnSameBranchNameIfNoRemoteMatches() {
+        final String remoteBranch = "nonExistingRemote/master";
+        final String expectedResult = remoteBranch;
+
+        final String result = GitUtils.removeRemoteFromBranchName(repository, remoteBranch);
+
+        Assert.assertEquals(expectedResult, result);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void ShouldThrowExceptionIfProvidedBranchNameIsAnEmptyString() {
-        final String inputBranchName = "";
+    public void ShouldThrowExceptionIfProvidedRepositoryIsNull() {
+        String inputBranchName = "";
+        Repository nullRepository = null;
 
-        GitUtils.removeRemoteFromBranchName(inputBranchName);
+        GitUtils.removeRemoteFromBranchName(nullRepository, inputBranchName);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void ShouldThrowExceptionIfProvidedBranchNameIsNull() {
         final String inputBranchName = null;
 
-        GitUtils.removeRemoteFromBranchName(inputBranchName);
+        GitUtils.removeRemoteFromBranchName(repository, inputBranchName);
     }
 }

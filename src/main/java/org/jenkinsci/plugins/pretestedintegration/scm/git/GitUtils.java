@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -8,29 +9,32 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
+import java.util.Set;
 
 public class GitUtils {
 
     /**
-     * Removes the first section of the string.
-     * This method is meant to remove the remote name from a remote branch.
+     * Iterates the list of remotes from the provided repository
+     * and removes the first remote from the provided branch name that matches
      *
-     * @param branchName the remote branch
-     * @return If the provided parameter is "origin/ready/feat_1" the method will output "ready/feat_1"
+     * @param repository the repository that will be used to compare the remotes from
+     * @param branchName the branch name that needs remote removed from it
+     * @return If the provided branch name is "origin/ready/feat_1" the method will
+     * match the remote from the repository, remove it and return "ready/feat_1"
      */
-    public static String removeRemoteFromBranchName(String branchName) {
-        if (branchName == null) throw new IllegalArgumentException("String branchName parameter is null");
-        if (branchName.isEmpty()) throw new IllegalArgumentException("String branchName parameter is empty");
+    public static String removeRemoteFromBranchName(Repository repository, String branchName) {
+        if (repository == null) throw new IllegalArgumentException("[Repository repository] parameter is null");
+        if (branchName == null) throw new IllegalArgumentException("[String branchName] parameter is null");
 
-        String[] split = branchName.split("/");
+        Config storedConfig = repository.getConfig();
+        Set<String> remotes = storedConfig.getSubsections("remote");
 
-        String branchNameWithNoRemote = "";
-        for (int i = 1; i < split.length; i++) {
-            branchNameWithNoRemote += split[i] + "/";
+        for (String remote : remotes) {
+            if (branchName.startsWith(remote))
+                branchName = branchName.substring(remote.length()+1, branchName.length());
         }
-        branchNameWithNoRemote = branchNameWithNoRemote.substring(0, branchNameWithNoRemote.length() - 1);
 
-        return branchNameWithNoRemote;
+        return branchName;
     }
 
     /**
