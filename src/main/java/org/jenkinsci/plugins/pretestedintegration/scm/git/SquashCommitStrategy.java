@@ -79,10 +79,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         }
         
         try {
-            
             exitCode = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
-            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "-m", String.format("Integrated %s", gitDataBranch.getName()));
-        
+            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "-C", gitDataBranch.getName());
         } catch (Exception ex) { /*Handled below */ }
         
         if (exitCode != 0) {
