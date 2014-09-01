@@ -50,6 +50,7 @@
                 <version>0.3.1</version>
             </extension>
         </extensions>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -82,6 +83,7 @@
                 </configuration>
             </plugin>
         </plugins>
+
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -164,6 +166,7 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>static</id>
             <activation>
@@ -172,7 +175,6 @@
             <properties>
                 <maven.test.skip>true</maven.test.skip>
             </properties>
-
             <build>
                 <plugins>
                     <plugin>
