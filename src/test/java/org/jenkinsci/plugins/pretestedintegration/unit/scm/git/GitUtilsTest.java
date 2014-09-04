@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestedintegration.scm.git;
+package org.jenkinsci.plugins.pretestedintegration.unit.scm.git;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -8,6 +8,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.GitUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

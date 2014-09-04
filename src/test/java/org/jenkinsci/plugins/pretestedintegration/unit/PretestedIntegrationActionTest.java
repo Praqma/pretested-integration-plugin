@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,6 +16,9 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.Commit;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jvnet.hudson.test.HudsonTestCase;
 import static org.mockito.Mockito.*;
 

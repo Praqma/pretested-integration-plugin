@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
 import hudson.Launcher;
 import hudson.model.BuildListener;
@@ -14,7 +14,10 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import junit.framework.TestCase;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.jvnet.hudson.test.HudsonTestCase;
 import static org.mockito.Mockito.*;
 
@@ -40,7 +43,7 @@ public class AbstractSCMBridgeTest extends HudsonTestCase {
 	
 	public void testShouldGetCorrectDescriptor(){
 		DummySCM scm = new DummySCM(null);
-		assertEquals("DummySCM",scm.getDescriptor().getDisplayName());
+		TestCase.assertEquals("DummySCM", scm.getDescriptor().getDisplayName());
 	}
 	
 	public void testShouldBeCommited() throws Exception {

@@ -1,9 +1,12 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 
+import junit.framework.TestCase;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 public class PretestedIntegrationBuildWrapperTest extends HudsonTestCase {
@@ -17,6 +20,6 @@ public class PretestedIntegrationBuildWrapperTest extends HudsonTestCase {
 		
 		buildWrapper.ensurePublisher(build);
 		
-		assertNotNull(project.getPublishersList().get(PretestedIntegrationPostCheckout.class));
+		TestCase.assertNotNull(project.getPublishersList().get(PretestedIntegrationPostCheckout.class));
 	}
 }

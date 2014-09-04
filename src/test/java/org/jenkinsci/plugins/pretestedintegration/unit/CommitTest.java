@@ -1,5 +1,6 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
+import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 public class CommitTest extends HudsonTestCase {
