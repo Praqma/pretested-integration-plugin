@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import antlr.ANTLRException;
-import com.sun.java.swing.plaf.motif.MotifIconFactory;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Queue;
@@ -26,10 +25,10 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -41,14 +40,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 
 /**
- * Created by andrius on 9/2/14.
+ * Created by andrius on 9/5/14.
  */
-public class SquashCommitStrategyIT {
+public class AccumulatedCommitStrategyIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
@@ -59,14 +57,14 @@ public class SquashCommitStrategyIT {
     private final String AUTHER_NAME = "john Doe";
     private final String AUTHER_EMAIL = "Joh@praqma.net";
 
+    final String FEATURE_BRANCH_NAME = "ready/feature_1";
+
     private Repository repository;
     private Git git;
 
     private String readmeFileContents_fromDevBranch;
 
     public void createValidRepository() throws IOException, GitAPIException {
-        final String FEATURE_BRANCH_NAME = "ready/feature_1";
-
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
 
         repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
@@ -127,8 +125,6 @@ public class SquashCommitStrategyIT {
 
 
     private void createRepositoryWithMergeConflict() throws IOException, GitAPIException {
-        final String FEATURE_BRANCH_NAME = "ready/feature_1";
-
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
 
         repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
@@ -189,10 +185,25 @@ public class SquashCommitStrategyIT {
         readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
     }
 
+    private int countCommits() {
+        int commitCount = 0;
+
+        try {
+            Iterator<RevCommit> iterator = git.log().call().iterator();
+            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
+
+
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+        }
+
+        return commitCount;
+    }
+
     private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
 
-        GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master");
+        GitBridge gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master");
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());
@@ -222,30 +233,13 @@ public class SquashCommitStrategyIT {
         return project;
     }
 
-    private int countCommits() {
-        int commitCount = 0;
-
-        try {
-            Iterator<RevCommit> iterator = git.log().call().iterator();
-            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
-
-
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        return commitCount;
-    }
-
     @Test
-    public void canSquashMergeAFeatureBranch() throws IOException, ANTLRException, InterruptedException {
-        try {
-            createValidRepository();
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
+    public void canMergeAFeatureBranchUsingAccumulatedStrategy() throws IOException, ANTLRException, InterruptedException, GitAPIException {
+        createValidRepository();
 
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        git.checkout().setName(FEATURE_BRANCH_NAME).call();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
+        git.checkout().setName("master").call();
 
         FreeStyleProject project = configurePretestedIntegrationPlugin();
 
@@ -268,20 +262,13 @@ public class SquashCommitStrategyIT {
         String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
         assertEquals(readmeFileContents_fromDevBranch, readmeFileContents);
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
-
-        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = countCommits();
+        assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
     }
 
     @Test
     public void ShouldFailWithAMergeConflictPresent() throws Exception {
-        try {
-            createRepositoryWithMergeConflict();
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        createRepositoryWithMergeConflict();
 
         FreeStyleProject project = configurePretestedIntegrationPlugin();
 
@@ -300,9 +287,5 @@ public class SquashCommitStrategyIT {
 
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
-
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
-
-        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
     }
 }
