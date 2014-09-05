@@ -49,6 +49,25 @@
         which pluign we favor to use in our build pipeline.
         Could omit for example the javadoc plugin in build/plugin section 
         and still use the goal javadoc:javadoc, but we like it explicitly listed 
+    
+    * Maven pom configuration for our build pipeline:
+        * mvn compile test-compile to compile project and tests
+        * mvn test will after compile run unit tests (surefire). Use test phase 
+            for development to check tests run.
+        * mvn cobertura:cobertura will compile and run tests (again), instrument and 
+            report converage. Use that goal for reporting coverage.
+        * mvn verify to run all the above and integration-tests, and report result
+        
+        * mvn javadoc:javadoc to check your documentation and report warnings to console
+        * mvn compile findbugs:findbugs to use findbugs and get xml report
+        * mvn checkstyle:checkstyle to do checkstyle analysis and get xml report
+        * mvn pmd:pmd pmd:cpd to use PMD tool and get xml report for pmd and cpd
+        * mvn javancss:check will also do java code analysis and report to console
+            * use mvn javancss:report to make a report in xml and html
+        * mvn jdepend:generate will do yet another java code analysis and report
+        
+        * mvn site will generate site report, including all the above results.
+        
     -->
             
                     
