@@ -185,14 +185,7 @@ public class SquashCommitStrategyIT {
         readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
     }
 
-    @Test
-    public void canMergeAnIntegrationBranch() throws IOException, ANTLRException, InterruptedException {
-        try {
-            createValidRepository();
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
+    private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
 
         GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master");
@@ -215,13 +208,25 @@ public class SquashCommitStrategyIT {
         project.setScm(gitSCM);
 
         SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
-        scmTrigger.start(project, true);
-
         project.addTrigger(scmTrigger);
 
+        scmTrigger.start(project, true);
         scmTrigger.new Runner().run();
 
         Thread.sleep(1000);
+
+        return project;
+    }
+
+    @Test
+    public void canMergeAnIntegrationBranch() throws IOException, ANTLRException, InterruptedException {
+        try {
+            createValidRepository();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+        }
+
+        FreeStyleProject project = configurePretestedIntegrationPlugin();
 
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -251,35 +256,7 @@ public class SquashCommitStrategyIT {
             e.printStackTrace();
         }
 
-        FreeStyleProject project = jenkinsRule.createFreeStyleProject();
-
-        GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master");
-
-        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
-        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
-
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
-        repoList.add(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null));
-
-        List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
-        gitSCMExtensions.add(new PruneStaleBranch());
-        gitSCMExtensions.add(new CleanCheckout());
-
-        GitSCM gitSCM = new GitSCM(repoList,
-                Collections.singletonList(new BranchSpec("origin/ready/**")),
-                false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, gitSCMExtensions);
-
-        project.setScm(gitSCM);
-
-        SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
-        scmTrigger.start(project, true);
-
-        project.addTrigger(scmTrigger);
-
-        scmTrigger.new Runner().run();
-
-        Thread.sleep(1000);
+        FreeStyleProject project = configurePretestedIntegrationPlugin();
 
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
