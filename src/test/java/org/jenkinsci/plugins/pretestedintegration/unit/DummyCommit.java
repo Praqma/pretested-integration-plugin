@@ -1,6 +1,7 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
 import hudson.Extension;
+import org.jenkinsci.plugins.pretestedintegration.Commit;
 
 @Extension
 public class DummyCommit extends Commit<String> {

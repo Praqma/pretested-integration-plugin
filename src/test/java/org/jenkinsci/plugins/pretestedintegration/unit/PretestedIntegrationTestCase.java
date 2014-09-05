@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
 import java.io.File;
 import java.io.FileWriter;

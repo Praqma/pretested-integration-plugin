@@ -1,5 +1,7 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;

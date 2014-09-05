@@ -1,15 +1,8 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
 import static org.mockito.Mockito.mock;
-import hudson.FilePath;
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.Hudson;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 
 
 public class PretestedIntegrationIT extends

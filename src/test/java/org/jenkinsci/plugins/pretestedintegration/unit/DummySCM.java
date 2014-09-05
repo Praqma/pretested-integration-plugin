@@ -1,14 +1,16 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.unit;
 
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.Commit;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
+import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
-import java.io.IOException;
 
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.model.Descriptor.FormException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
