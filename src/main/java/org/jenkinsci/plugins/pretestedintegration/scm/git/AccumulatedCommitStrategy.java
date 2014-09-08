@@ -35,13 +35,16 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
     
     private static final String B_NAME = "Accumulated commit";
     private static final Logger logger = Logger.getLogger(AccumulatedCommitStrategy.class.getName());
-    
+
     @DataBoundConstructor
     public AccumulatedCommitStrategy() { }
 
     @Override
     public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
         int exitCode = -999;
+
+        GitClient client;
+
         GitBridge gitbridge = (GitBridge)bridge;
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -50,7 +53,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         boolean found = false;
         
         try {
-            GitClient client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();                
+            client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
             for(Branch b : client.getRemoteBranches()) {
                 if(b.getName().equals(gitDataBranch.getName())) {                    
                     found = true;
@@ -80,7 +83,9 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", (String) commit.getId(), gitbridge.getBranch() ) );
         try {
-            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("Integrated %s", gitDataBranch.getName()), (String) commit.getId(), "--no-ff");
+            String commitMessage = GitUtils.getCommitMessageUsingSHA1(client.getRepository(), gitDataBranch.getSHA1());
+
+            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), (String) commit.getId(), "--no-ff");
         } catch (Exception ex) {
             throw new IntegationFailedExeception(ex);
         }
