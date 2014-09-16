@@ -65,6 +65,9 @@ public class SquashCommitStrategyIT {
     private String readmeFileContents_fromDevBranch;
 
     public void createValidRepository() throws IOException, GitAPIException {
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
+
         final String FEATURE_BRANCH_NAME = "ready/feature_1";
 
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
@@ -117,16 +120,16 @@ public class SquashCommitStrategyIT {
         git.checkout().setName("master").call();
 
         readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
-    }
 
-    @After
-    public void tearDown() throws IOException {
         repository.close();
-        FileUtils.deleteDirectory(GIT_PARENT_DIR);
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
     }
-
 
     private void createRepositoryWithMergeConflict() throws IOException, GitAPIException {
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
+
         final String FEATURE_BRANCH_NAME = "ready/feature_1";
 
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
@@ -187,6 +190,10 @@ public class SquashCommitStrategyIT {
         commitCommand.call();
 
         readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
+
+        repository.close();
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
     }
 
     private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {

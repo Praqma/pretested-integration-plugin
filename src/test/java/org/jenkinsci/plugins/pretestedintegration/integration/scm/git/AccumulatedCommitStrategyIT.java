@@ -65,6 +65,9 @@ public class AccumulatedCommitStrategyIT {
     private String readmeFileContents_fromDevBranch;
 
     public void createValidRepository() throws IOException, GitAPIException {
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
+
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
 
         repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
@@ -115,16 +118,16 @@ public class AccumulatedCommitStrategyIT {
         git.checkout().setName("master").call();
 
         readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
-    }
 
-    @After
-    public void tearDown() throws IOException {
         repository.close();
-        FileUtils.deleteDirectory(GIT_PARENT_DIR);
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
     }
-
 
     private void createRepositoryWithMergeConflict() throws IOException, GitAPIException {
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
+
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
 
         repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
@@ -183,6 +186,11 @@ public class AccumulatedCommitStrategyIT {
         commitCommand.call();
 
         readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
+
+        repository.close();
+
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
     }
 
     private int countCommits() {
