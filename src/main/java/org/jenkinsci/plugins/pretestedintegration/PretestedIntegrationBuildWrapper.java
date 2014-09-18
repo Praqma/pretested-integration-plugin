@@ -68,14 +68,19 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     
     //For JENKINS-24754
     private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
+        System.out.println("===DEBUG===");
+        System.out.println("REPO SIZE IS = "+scm.getRepositories().size());
+        System.out.println("===DEBUG===");
+        System.out.println(((GitBridge)scmBridge).getRepoName());
+        System.out.println("===DEBUG===");
+        
         if(scm.getRepositories().size() > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
-            throw new UnsupportedConfigurationException(String.format("You have not defined a repository name in your Pre Tested Integration configuration, but you have multiple scm checkouts listed in your scm config%nCurrently this is not supported"));
+            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
         }        
     }
     
     //For JENKINS-24754
-    private void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException  {
-
+    private void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException  {        
         if( project.getScm() instanceof GitSCM ) {
             validateGitScm((GitSCM)project.getScm());
         } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {

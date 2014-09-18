@@ -14,12 +14,15 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
@@ -35,15 +38,15 @@ public class FreeStyleProjectFactory {
     public static final File GIT_DIR = new File("test-repo/.git");
     
     public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, FreeStyleProjectFactory.STRATEGY_TYPE type) throws IOException, ANTLRException, InterruptedException {
-        return configurePretestedIntegrationPlugin(project, type, Collections.singletonList(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null)));
+        return configurePretestedIntegrationPlugin(project, type, Collections.singletonList(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null)), null);
     }
-    
-    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, FreeStyleProjectFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList) throws IOException, ANTLRException, InterruptedException {
+       
+    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, FreeStyleProjectFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName) throws IOException, ANTLRException, InterruptedException {
         GitBridge gitBridge = null;
         if(type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master");
+            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master");
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName);
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
@@ -53,7 +56,8 @@ public class FreeStyleProjectFactory {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
-        GitSCM gitSCM = new GitSCM(Collections.singletonList(new UserRemoteConfig(GIT_DIR.getAbsolutePath(), null, null, null)),
+        //TODO: We need to remove the origin part from here, but the other tests fail if that is removed.
+        GitSCM gitSCM = new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("origin/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
@@ -68,6 +72,28 @@ public class FreeStyleProjectFactory {
 
         Thread.sleep(1000);
 
+        return project;
+    }
+    
+    //TODO: Create a realistic setup with multi SCM pluing...this seems boilerplatey
+    public FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(FreeStyleProject project, FreeStyleProjectFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList) throws Exception {
+        List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
+        gitSCMExtensions.add(new PruneStaleBranch());
+        gitSCMExtensions.add(new CleanCheckout());
+        
+        SCM gitSCM1 = new GitSCM(repoList,
+                Collections.singletonList(new BranchSpec("origin/ready/**")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, gitSCMExtensions);
+        
+        SCM gitSCM2 = new GitSCM(repoList,
+                Collections.singletonList(new BranchSpec("origin/ready/**")),
+                false, Collections.<SubmoduleConfig>emptyList(),
+                null, null, gitSCMExtensions);
+        
+        MultiSCM scm = new MultiSCM(Arrays.asList(gitSCM1, gitSCM2));
+        
+        
         return project;
     }
 }

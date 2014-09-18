@@ -6,6 +6,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.plugins.git.UserRemoteConfig;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -20,7 +21,9 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
@@ -247,10 +250,34 @@ public class AccumulatedCommitStrategyIT {
         assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
     }
     
-    @Test(expected = UnsupportedConfigurationException.class)
+    @Test
     public void failWhenRepNameIsBlankAndGitHasMoreThanOneRepo() throws Exception {
         createValidRepository();
-        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.ACCUMULATED);
+
+        List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null));
+        
+        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.ACCUMULATED, config, null);
+        
+        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
+
+        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
+
+        do {
+            Thread.sleep(1000);
+        } while (!future.isDone());
+
+        int nextBuildNumber = project.getNextBuildNumber();
+        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+
+        //Show the log for the latest build
+        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
+        System.out.println("=====BUILD-LOG=====");
+        System.out.println(text);
+        System.out.println("=====BUILD-LOG=====");
+                
+        assertTrue(text.contains(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED));
+            
+        assertTrue(build.getResult().isWorseOrEqualTo(Result.FAILURE));
         
     }
             
