@@ -2,7 +2,12 @@
 	<f:block>
 		<f:entry title="Integration branch" field="branch">
 			<f:textbox value="${it.branch}" />
-		</f:entry>           
+		</f:entry>
+
+		<f:entry title="Repository name" field="repoName">
+			<f:textbox value="${it.repoName}" default="origin"/>
+		</f:entry>
+           
                 <j:choose>
                     <j:when test="${instance.integrationStrategy == null}">
                         <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pre-tested integration strategy" varName="integrationStrategy" instance="${descriptor.getDefaultStrategy()}"/>

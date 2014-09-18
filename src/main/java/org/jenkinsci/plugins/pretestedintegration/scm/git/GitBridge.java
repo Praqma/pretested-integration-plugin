@@ -40,12 +40,19 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GitBridge extends AbstractSCMBridge {
 
-    private String revId; 
+    private String revId;
+    private String repoName;
 
     @DataBoundConstructor
+    public GitBridge(IntegrationStrategy integrationStrategy, final String branch, String repoName) {
+        super(integrationStrategy);        
+        this.branch = branch;
+        this.repoName = repoName;
+    }    
+    
     public GitBridge(IntegrationStrategy integrationStrategy, final String branch) {
         super(integrationStrategy);        
-        this.branch = branch;  
+        this.branch = branch;
     }
     
     @Override
@@ -73,6 +80,10 @@ public class GitBridge extends AbstractSCMBridge {
         } catch (ClassCastException e) {
             throw new InterruptedException("Configured scm is not Git");
         }
+    }
+    
+    private String resolveRepoName() {
+        return StringUtils.isBlank(repoName) ? "origin" : repoName;
     }
 
     private ProcStarter buildCommand(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException {
@@ -123,7 +134,8 @@ public class GitBridge extends AbstractSCMBridge {
     public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         listener.getLogger().println(String.format("Checking out integration target branch %s and pulling latest changes", getBranch()));
         try {
-            git(build, launcher, listener, "checkout", getBranch());
+            //We need to explicitly checkout the remote we have configured
+            git(build, launcher, listener, "checkout", resolveRepoName()+"/"+getBranch());
             update(build, launcher, listener);
         } catch (IOException ex) {
             throw new EstablishWorkspaceException(ex);
@@ -133,7 +145,7 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     protected void update(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {		     
-        git(build, launcher, listener, "pull", "origin", branch);
+        git(build, launcher, listener, "pull", resolveRepoName(), branch);
     }
     
     /**
@@ -165,7 +177,7 @@ public class GitBridge extends AbstractSCMBridge {
         int returncode = -99999;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
-            returncode = git(build, launcher, listener, bos, "push", "origin", getBranch());
+            returncode = git(build, launcher, listener, bos, "push", resolveRepoName(), getBranch());
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Failed to commit changes to integration branch", ex);
         }
@@ -204,7 +216,7 @@ public class GitBridge extends AbstractSCMBridge {
         
         if(build.getResult().isBetterOrEqualTo(getRequiredResult())) {
             try {
-                delRemote = git(build, launcher, listener, out, "push", "origin",":"+removeOrigin(gitDataBranch.getName()));
+                delRemote = git(build, launcher, listener, out, "push", resolveRepoName(),":"+removeOrigin(gitDataBranch.getName()));
             } catch (Exception ex) {
                 logger.log(Level.WARNING, "Failure to delete branch", ex);
             }
@@ -257,6 +269,20 @@ public class GitBridge extends AbstractSCMBridge {
             Logger.getLogger(GitBridge.class.getName()).log(Level.SEVERE, null, ex);
         }
         return commit;
+    }
+
+    /**
+     * @return the remoteName
+     */
+    public String getRepoName() {
+        return repoName;
+    }
+
+    /**
+     * @param repoName the remoteName to set
+     */
+    public void setRepoName(String repoName) {
+        this.repoName = repoName;
     }
     
     @Extension
