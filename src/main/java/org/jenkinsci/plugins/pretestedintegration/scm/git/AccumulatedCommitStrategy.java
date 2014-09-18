@@ -49,12 +49,12 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BuildData gitBuildData = build.getAction(BuildData.class);
-        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();        
         boolean found = false;
         
         try {
             client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
-            for(Branch b : client.getRemoteBranches()) {
+            for(Branch b : client.getRemoteBranches()) {                
                 if(b.getName().equals(gitDataBranch.getName())) {                    
                     found = true;
                     break;

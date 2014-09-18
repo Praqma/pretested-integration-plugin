@@ -14,7 +14,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.triggers.SCMTrigger;
-import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -27,8 +26,6 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapp
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -207,23 +204,21 @@ public class AccumulatedCommitStrategyIT {
 
         return commitCount;
     }
-
-    private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {
+    
+    private FreeStyleProject configurePretestedIntegrationPlugin(List<UserRemoteConfig> repos) throws IOException, ANTLRException, InterruptedException {
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
 
         GitBridge gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master");
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());
-
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
-        repoList.add(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null));
-
+        
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
-        GitSCM gitSCM = new GitSCM(repoList,
+        
+        GitSCM gitSCM = new GitSCM(repos,
                 Collections.singletonList(new BranchSpec("origin/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
@@ -241,6 +236,10 @@ public class AccumulatedCommitStrategyIT {
         return project;
     }
 
+    private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {
+        return configurePretestedIntegrationPlugin(Collections.singletonList(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null)));
+    }
+
     @Test
     public void canMergeAFeatureBranchUsingAccumulatedStrategy() throws IOException, ANTLRException, InterruptedException, GitAPIException {
         createValidRepository();
@@ -249,7 +248,7 @@ public class AccumulatedCommitStrategyIT {
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
         git.checkout().setName("master").call();
 
-        FreeStyleProject project = configurePretestedIntegrationPlugin();
+        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), FreeStyleProjectFactory.STRATEGY_TYPE.ACCUMULATED);
 
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -278,7 +277,7 @@ public class AccumulatedCommitStrategyIT {
     public void ShouldFailWithAMergeConflictPresent() throws Exception {
         createRepositoryWithMergeConflict();
 
-        FreeStyleProject project = configurePretestedIntegrationPlugin();
+        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), FreeStyleProjectFactory.STRATEGY_TYPE.ACCUMULATED);
 
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 

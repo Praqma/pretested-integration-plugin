@@ -162,7 +162,7 @@ public class GitBridge extends AbstractSCMBridge {
         Commit<String> next = null;
         try {            
             BuildData gitBuildData = build.getAction(BuildData.class);
-            Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+            Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();            
             next = new Commit<String>(gitDataBranch.getSHA1String());
         } catch (Exception e) {            
             logger.finest("Failed to find next commit");

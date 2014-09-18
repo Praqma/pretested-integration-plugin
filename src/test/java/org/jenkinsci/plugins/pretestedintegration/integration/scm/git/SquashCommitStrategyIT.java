@@ -195,17 +195,18 @@ public class SquashCommitStrategyIT {
         if (GIT_PARENT_DIR.exists())
             FileUtils.deleteDirectory(GIT_PARENT_DIR);
     }
-
+    
     private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {
+        return configurePretestedIntegrationPlugin(Collections.singletonList(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null)));
+    }
+
+    private FreeStyleProject configurePretestedIntegrationPlugin(List<UserRemoteConfig> repoList) throws IOException, ANTLRException, InterruptedException {
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
 
         GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master");
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());
-
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
-        repoList.add(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null));
 
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
         gitSCMExtensions.add(new PruneStaleBranch());
@@ -254,8 +255,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
-        FreeStyleProject project = configurePretestedIntegrationPlugin();
-
+        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), FreeStyleProjectFactory.STRATEGY_TYPE.SQUASH);
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
         QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
@@ -290,7 +290,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
-        FreeStyleProject project = configurePretestedIntegrationPlugin();
+        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), FreeStyleProjectFactory.STRATEGY_TYPE.SQUASH);
 
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
