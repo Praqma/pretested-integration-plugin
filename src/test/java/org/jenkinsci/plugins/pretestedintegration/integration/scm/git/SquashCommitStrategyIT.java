@@ -1,20 +1,11 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import antlr.ANTLRException;
-import com.sun.java.swing.plaf.motif.MotifIconFactory;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
-import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
-import hudson.plugins.git.UserRemoteConfig;
-import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.extensions.impl.CleanCheckout;
-import hudson.plugins.git.extensions.impl.PruneStaleBranch;
-import hudson.triggers.SCMTrigger;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
@@ -24,26 +15,17 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.FreeStyleProjectFactory.STRATEGY_TYPE;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * Created by andrius on 9/2/14.
@@ -195,40 +177,6 @@ public class SquashCommitStrategyIT {
         if (GIT_PARENT_DIR.exists())
             FileUtils.deleteDirectory(GIT_PARENT_DIR);
     }
-    
-    private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {
-        return configurePretestedIntegrationPlugin(Collections.singletonList(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null)));
-    }
-
-    private FreeStyleProject configurePretestedIntegrationPlugin(List<UserRemoteConfig> repoList) throws IOException, ANTLRException, InterruptedException {
-        FreeStyleProject project = jenkinsRule.createFreeStyleProject();
-
-        GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master");
-
-        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
-        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
-
-        List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
-        gitSCMExtensions.add(new PruneStaleBranch());
-        gitSCMExtensions.add(new CleanCheckout());
-
-        GitSCM gitSCM = new GitSCM(repoList,
-                Collections.singletonList(new BranchSpec("origin/ready/**")),
-                false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, gitSCMExtensions);
-
-        project.setScm(gitSCM);
-
-        SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
-        project.addTrigger(scmTrigger);
-
-        scmTrigger.start(project, true);
-        scmTrigger.new Runner().run();
-
-        Thread.sleep(1000);
-
-        return project;
-    }
 
     private int countCommits() {
         int commitCount = 0;
@@ -255,7 +203,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
-        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), FreeStyleProjectFactory.STRATEGY_TYPE.SQUASH);
+        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH);
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
         QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
@@ -290,7 +238,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
-        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), FreeStyleProjectFactory.STRATEGY_TYPE.SQUASH);
+        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH);
 
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -310,6 +258,6 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
 
-        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
+        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
     }
 }
