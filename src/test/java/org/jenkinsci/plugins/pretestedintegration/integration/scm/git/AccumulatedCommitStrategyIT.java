@@ -26,6 +26,7 @@ import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.FreeStyleProjectFactory.STRATEGY_TYPE;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.junit.After;
 
 /**
  * Created by andrius on 9/5/14.

@@ -26,6 +26,8 @@ import java.util.Iterator;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.FreeStyleProjectFactory.STRATEGY_TYPE;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Created by andrius on 9/2/14.

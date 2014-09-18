@@ -53,7 +53,7 @@ public class FreeStyleProjectFactory {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
-        GitSCM gitSCM = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + GIT_DIR.getAbsolutePath(), null, null, null)),
+        GitSCM gitSCM = new GitSCM(Collections.singletonList(new UserRemoteConfig(GIT_DIR.getAbsolutePath(), null, null, null)),
                 Collections.singletonList(new BranchSpec("origin/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
