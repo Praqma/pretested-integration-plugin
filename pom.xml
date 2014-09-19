@@ -74,16 +74,6 @@
     <build>
         <plugins>
             
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-
             <!-- 
             Allows integration tests to clean test environment before build fails 
             use 'mvn verify' to run integration tests to allow 'post-integration-test' phase
@@ -182,11 +172,13 @@
             Requires compile goal in default phase to be executed prior to findbugs
             goal - else findbugs produces no results.
             It is by purpose not included in a phase, to avoid executing the analysis to often
+            Can't use version 3.x as it requires Java runtime 1.7 - we are using
+            1.6 on our build slaves.
             -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>2.0.3</version>
                 <configuration>
                     <xmlOutput>true</xmlOutput>
                 </configuration>
