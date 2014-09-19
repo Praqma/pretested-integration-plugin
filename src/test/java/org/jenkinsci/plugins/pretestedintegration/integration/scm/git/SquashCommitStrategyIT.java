@@ -1,12 +1,9 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import antlr.ANTLRException;
-import com.sun.java.swing.plaf.motif.MotifIconFactory;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Queue;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
@@ -15,6 +12,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.triggers.SCMTrigger;
+import hudson.util.RunList;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
@@ -29,7 +27,6 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostChecko
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -41,7 +38,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 
@@ -69,6 +66,173 @@ public class SquashCommitStrategyIT {
         repository.close();
         if (GIT_PARENT_DIR.exists())
             FileUtils.deleteDirectory(GIT_PARENT_DIR);
+    }
+
+    public void createValidRepositoryWith2FeatureBranches() throws IOException, GitAPIException {
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
+
+        final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
+        final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
+
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+
+        repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build();
+
+        if (!repository.isBare() && repository.getBranch() == null) {
+            repository.create();
+        }
+
+        git = new Git(repository);
+
+        File readme = new File(README_FILE_PATH);
+        if (!readme.exists())
+            FileUtils.writeStringToFile(readme, "sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 1").call();
+
+        FileUtils.writeStringToFile(readme, "changed sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 2").call();
+
+        CreateBranchCommand createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_1_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_1_NAME).call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        CommitCommand commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
+
+        createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_2_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_2_NAME).call();
+
+        String readmeContents = FileUtils.readFileToString(readme);
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 1\n\n" + readmeContents);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 2\n\n" + readmeContents);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 2 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
+
+        readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
+    }
+
+    public void createRepositoryWith2FeatureBranches1Valid1Invalid() throws IOException, GitAPIException {
+        if (GIT_PARENT_DIR.exists())
+            FileUtils.deleteDirectory(GIT_PARENT_DIR);
+
+        final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
+        final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
+
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+
+        repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build();
+
+        if (!repository.isBare() && repository.getBranch() == null) {
+            repository.create();
+        }
+
+        git = new Git(repository);
+
+        File readme = new File(README_FILE_PATH);
+        if (!readme.exists())
+            FileUtils.writeStringToFile(readme, "sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 1").call();
+
+        FileUtils.writeStringToFile(readme, "changed sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 2").call();
+
+        CreateBranchCommand createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_1_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_1_NAME).call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        CommitCommand commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
+
+        createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_2_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_2_NAME).call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 1\n\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 2\n\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 2 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
+
+        readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
     }
 
     public void createValidRepository() throws IOException, GitAPIException {
@@ -242,24 +406,14 @@ public class SquashCommitStrategyIT {
     }
 
     @Test
-    public void canSquashMergeAFeatureBranch() throws IOException, ANTLRException, InterruptedException {
-        try {
-            createValidRepository();
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
+    public void canSquashMergeAFeatureBranch() throws Exception {
+        createValidRepository();
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
         FreeStyleProject project = configurePretestedIntegrationPlugin();
 
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
@@ -279,23 +433,13 @@ public class SquashCommitStrategyIT {
 
     @Test
     public void ShouldFailWithAMergeConflictPresent() throws Exception {
-        try {
-            createRepositoryWithMergeConflict();
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
+        createRepositoryWithMergeConflict();
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
         FreeStyleProject project = configurePretestedIntegrationPlugin();
 
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
@@ -308,5 +452,58 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
 
         TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
+    }
+
+    @Test
+    public void squashCommitStrategy_2FeatureBranchesBothValid_2BuildsAreTriggeredBothBranchesGetIntegrated() throws Exception {
+        createValidRepositoryWith2FeatureBranches();
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = configurePretestedIntegrationPlugin();
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+
+        assertEquals(2, project.getNextBuildNumber() - 1);
+
+        for (FreeStyleBuild build : builds) {
+            Result result = build.getResult();
+
+            assertTrue(result.isCompleteBuild());
+            assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+        }
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 2);
+    }
+
+    @Test
+    public void squashCommitStrategy_2FeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetIntegrated() throws Exception {
+        createRepositoryWith2FeatureBranches1Valid1Invalid();
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = configurePretestedIntegrationPlugin();
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+
+        assertEquals(2, project.getNextBuildNumber() - 1);
+
+        Result result = builds.getFirstBuild().getResult();
+
+        assertTrue(result.isCompleteBuild());
+        assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        FreeStyleBuild lastFailedBuild = project.getLastFailedBuild();
+        assertNotNull(lastFailedBuild);
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
 }
