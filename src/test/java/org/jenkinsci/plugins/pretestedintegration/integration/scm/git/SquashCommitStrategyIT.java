@@ -8,13 +8,10 @@ import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.CommitCommand;
-import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -23,11 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.FreeStyleProjectFactory.STRATEGY_TYPE;
+import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import org.junit.After;
-import org.junit.Before;
 
 /**
  * Created by andrius on 9/2/14.
@@ -44,142 +40,19 @@ public class SquashCommitStrategyIT {
     private final String AUTHER_EMAIL = "Joh@praqma.net";
 
     private Repository repository;
-    private Git git;
 
     private String readmeFileContents_fromDevBranch;
 
     @After
     public void tearDown() throws Exception {
         repository.close();
-        if (GIT_PARENT_DIR.exists())
-            FileUtils.deleteDirectory(GIT_PARENT_DIR);
-    }
-
-    public void createValidRepository() throws IOException, GitAPIException {
-        if (GIT_PARENT_DIR.exists())
-            FileUtils.deleteDirectory(GIT_PARENT_DIR);
-
-        final String FEATURE_BRANCH_NAME = "ready/feature_1";
-
-        FileRepositoryBuilder builder = new FileRepositoryBuilder();
-
-        repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
-                .readEnvironment() // scan environment GIT_* variables
-                .findGitDir() // scan up the file system tree
-                .build();
-
-        if (!repository.isBare() && repository.getBranch() == null) {
-            repository.create();
+        if (repository.getDirectory().getParentFile().exists()) {
+            FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
         }
-
-        git = new Git(repository);
-
-        File readme = new File(README_FILE_PATH);
-        if (!readme.exists())
-            FileUtils.writeStringToFile(readme, "sample text\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage("commit message 1").call();
-
-        FileUtils.writeStringToFile(readme, "changed sample text\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage("commit message 2").call();
-
-        CreateBranchCommand createBranchCommand = git.branchCreate();
-        createBranchCommand.setName(FEATURE_BRANCH_NAME);
-        createBranchCommand.call();
-
-        git.checkout().setName(FEATURE_BRANCH_NAME).call();
-
-        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        CommitCommand commitCommand = git.commit();
-        commitCommand.setMessage("feature 1 commit 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
-        commitCommand.call();
-
-        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        commitCommand = git.commit();
-        commitCommand.setMessage("feature 1 commit 2");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
-        commitCommand.call();
-
-        git.checkout().setName("master").call();
-
-        readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
-    }
-
-    private void createRepositoryWithMergeConflict() throws IOException, GitAPIException {
-        if (GIT_PARENT_DIR.exists())
-            FileUtils.deleteDirectory(GIT_PARENT_DIR);
-
-        final String FEATURE_BRANCH_NAME = "ready/feature_1";
-
-        FileRepositoryBuilder builder = new FileRepositoryBuilder();
-
-        repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
-                .readEnvironment() // scan environment GIT_* variables
-                .findGitDir() // scan up the file system tree
-                .build();
-
-        if (!repository.isBare() && repository.getBranch() == null) {
-            repository.create();
-        }
-
-        git = new Git(repository);
-
-        File readme = new File(README_FILE_PATH);
-        if (!readme.exists())
-            FileUtils.writeStringToFile(readme, "sample text\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage("commit message 1").call();
-
-        FileUtils.writeStringToFile(readme, "changed sample text\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage("commit message 2").call();
-
-        CreateBranchCommand createBranchCommand = git.branchCreate();
-        createBranchCommand.setName(FEATURE_BRANCH_NAME);
-        createBranchCommand.call();
-
-        git.checkout().setName(FEATURE_BRANCH_NAME).call();
-
-        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        CommitCommand commitCommand = git.commit();
-        commitCommand.setMessage("feature 1 commit 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
-        commitCommand.call();
-
-        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        commitCommand = git.commit();
-        commitCommand.setMessage("feature 1 commit 2");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
-        commitCommand.call();
-
-        git.checkout().setName("master").call();
-
-        FileUtils.writeStringToFile(readme, "Merge conflict branch commit 2\n");
-
-        git.add().addFilepattern(readme.getName()).call();
-        commitCommand = git.commit();
-        commitCommand.setMessage("merge conflict message 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
-        commitCommand.call();
-
-        readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
     }
 
     private int countCommits() {
+        Git git = new Git(repository);
         int commitCount = 0;
 
         try {
@@ -195,14 +68,16 @@ public class SquashCommitStrategyIT {
     @Test
     public void canSquashMergeAFeatureBranch() throws IOException, ANTLRException, InterruptedException {
         try {
-            createValidRepository();
+            repository = TestUtilsFactory.createValidRepository("test-repo");            
         } catch (GitAPIException e) {
             e.printStackTrace();
         }
+        
+        String readmeFromDev = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
-        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH);
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH, repository);
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
         QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
@@ -219,8 +94,8 @@ public class SquashCommitStrategyIT {
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
-        String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
-        assertEquals(readmeFileContents_fromDevBranch, readmeFileContents);
+        String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
+        assertEquals(readmeFromDev, readmeFileContents);
 
         final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
 
@@ -230,14 +105,14 @@ public class SquashCommitStrategyIT {
     @Test
     public void ShouldFailWithAMergeConflictPresent() throws Exception {
         try {
-            createRepositoryWithMergeConflict();
+            repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
         } catch (GitAPIException e) {
             e.printStackTrace();
         }
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
-        FreeStyleProject project = FreeStyleProjectFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH);
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH, repository);
 
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 

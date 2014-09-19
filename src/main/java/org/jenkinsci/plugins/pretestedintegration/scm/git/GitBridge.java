@@ -20,10 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.multiplescms.MultiSCM;
 
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
@@ -32,6 +34,7 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
@@ -73,15 +76,28 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     private GitSCM findScm(AbstractBuild<?, ?> build) throws InterruptedException {
-        try {
-            SCM scm = build.getProject().getScm();
+        SCM scm = build.getProject().getScm();
+
+        if(scm instanceof GitSCM) {            
             GitSCM git = (GitSCM) scm;
             return git;
-        } catch (ClassCastException e) {
-            throw new InterruptedException("Configured scm is not Git");
-        }
+        } else if (Jenkins.getInstance().getPlugin("multiple-scms") != null) {            
+            if(scm instanceof MultiSCM) {
+                MultiSCM multi = (MultiSCM)scm;
+                for(SCM s : multi.getConfiguredSCMs()) {
+                    if(s instanceof GitSCM) {
+                        return (GitSCM)s;
+                    }
+                }
+                throw new InterruptedException("No git repository configured in multi scm");
+            } else {
+                throw new InterruptedException("The selected SCM is neither Git nor Multiple SCM");
+            }
+        } else {
+            throw new InterruptedException("You have not selected git as your SCM, and the multiple SCM plugin was not found");
+        }            
     }
-    
+
     private String resolveRepoName() {
         return StringUtils.isBlank(repoName) ? "origin" : repoName;
     }
@@ -92,6 +108,7 @@ public class GitBridge extends AbstractSCMBridge {
         ArgumentListBuilder b = new ArgumentListBuilder();
         b.add(gitExe);
         b.add(cmds);
+        listener.getLogger().println(String.format("%s %s", PretestedIntegrationBuildWrapper.LOG_PREFIX, b.toStringWithQuote() ));
         return launcher.launch().cmds(b).pwd(build.getWorkspace());
     }
 
@@ -107,7 +124,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws InterruptedException
      */
     public int git(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException {
-        ProcStarter git = buildCommand(build, launcher, listener, cmds);                
+        ProcStarter git = buildCommand(build, launcher, listener, cmds);
         int exitCode = git.join();
         return exitCode;
     }
@@ -135,12 +152,14 @@ public class GitBridge extends AbstractSCMBridge {
         listener.getLogger().println(String.format("Checking out integration target branch %s and pulling latest changes", getBranch()));
         try {
             //We need to explicitly checkout the remote we have configured
-            //TODO: Ask Bue about this...do we really need to do this? 
-            git(build, launcher, listener, "checkout", "--track", "-b", getBranch(), resolveRepoName()+"/"+getBranch());            
+            //TODO: Ask Bue about this...do we really need to do this?                        
+            git(build, launcher, listener, "checkout", "-b", getBranch(),"--track", resolveRepoName()+"/"+getBranch());            
             update(build, launcher, listener);
         } catch (IOException ex) {
+            logger.log(Level.SEVERE, "ensureBranch", ex);
             throw new EstablishWorkspaceException(ex);
         } catch (InterruptedException ex) {
+            logger.log(Level.SEVERE, "ensureBranch", ex);
             throw new EstablishWorkspaceException(ex);
         }
     }
@@ -162,8 +181,9 @@ public class GitBridge extends AbstractSCMBridge {
         logger.finest("Git plugin, nextCommit invoked");
         Commit<String> next = null;
         try {            
-            BuildData gitBuildData = build.getAction(BuildData.class);
-            Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();            
+            BuildData gitBuildData = build.getAction(BuildData.class);            
+            Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+            logger.fine( String.format( "Found branch with name %s to work on", gitDataBranch.getName()) );
             next = new Commit<String>(gitDataBranch.getSHA1String());
         } catch (Exception e) {            
             logger.finest("Failed to find next commit");
@@ -196,8 +216,7 @@ public class GitBridge extends AbstractSCMBridge {
         try {
             if(lastIntegraion != null) {
                 returncode = git(build, launcher, listener, bos, "reset", "--hard", (String)lastIntegraion.getId());
-            } 
-        
+            }         
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Failed to roll back", ex);
         }

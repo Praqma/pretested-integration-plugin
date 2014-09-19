@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 
@@ -34,7 +33,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
-    private static final String LOG_PREFIX = "[PREINT] ";
+    public static final String LOG_PREFIX = "[PREINT] ";
     public final AbstractSCMBridge scmBridge;
     private final boolean rollbackEnabled = false;
 
@@ -68,12 +67,6 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     
     //For JENKINS-24754
     private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
-        System.out.println("===DEBUG===");
-        System.out.println("REPO SIZE IS = "+scm.getRepositories().size());
-        System.out.println("===DEBUG===");
-        System.out.println(((GitBridge)scmBridge).getRepoName());
-        System.out.println("===DEBUG===");
-        
         if(scm.getRepositories().size() > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
             throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
         }        
