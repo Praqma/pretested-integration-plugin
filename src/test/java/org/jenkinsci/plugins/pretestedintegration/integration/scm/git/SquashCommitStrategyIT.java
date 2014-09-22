@@ -1,11 +1,9 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
-import antlr.ANTLRException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Queue;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
+import hudson.util.RunList;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -17,10 +15,10 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import org.junit.After;
@@ -29,6 +27,7 @@ import org.junit.After;
  * Created by andrius on 9/2/14.
  */
 public class SquashCommitStrategyIT {
+    
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
@@ -66,7 +65,7 @@ public class SquashCommitStrategyIT {
     }
 
     @Test
-    public void canSquashMergeAFeatureBranch() throws IOException, ANTLRException, InterruptedException {
+    public void canSquashMergeAFeatureBranch() throws Exception {
         try {
             repository = TestUtilsFactory.createValidRepository("test-repo");            
         } catch (GitAPIException e) {
@@ -78,13 +77,7 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH, repository);
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
@@ -109,18 +102,12 @@ public class SquashCommitStrategyIT {
         } catch (GitAPIException e) {
             e.printStackTrace();
         }
-
+        
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH, repository);
 
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
@@ -133,5 +120,59 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
 
         assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
+    }
+
+    @Test
+    public void squashCommitStrategy_2FeatureBranchesBothValid_2BuildsAreTriggeredBothBranchesGetIntegrated() throws Exception {
+        repository = TestUtilsFactory.createValidRepositoryWith2FeatureBranches("test-repo");
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH, repository);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+
+        assertEquals(2, project.getNextBuildNumber() - 1);
+
+        for (FreeStyleBuild build : builds) {
+            System.out.println("===CONSOLE===");
+            System.out.println(FileUtils.readFileToString(build.getLogFile()));
+            System.out.println("===CONSOLE===");            
+            Result result = build.getResult();
+            assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+        }
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 2);
+    }
+
+    @Test
+    public void squashCommitStrategy_2FeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetIntegrated() throws Exception {
+        repository = TestUtilsFactory.createRepositoryWith2FeatureBranches1Valid1Invalid("test-repo");
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.SQUASH, repository);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+
+        assertEquals(2, project.getNextBuildNumber() - 1);
+
+        Result result = builds.getFirstBuild().getResult();
+
+        assertTrue(result.isCompleteBuild());
+        assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        FreeStyleBuild lastFailedBuild = project.getLastFailedBuild();
+        assertNotNull(lastFailedBuild);
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
 }

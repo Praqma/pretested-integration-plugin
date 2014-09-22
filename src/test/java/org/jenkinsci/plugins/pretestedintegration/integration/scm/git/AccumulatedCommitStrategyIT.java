@@ -70,26 +70,20 @@ public class AccumulatedCommitStrategyIT {
     }
 
     @Test
-    public void canMergeAFeatureBranchUsingAccumulatedStrategy() throws IOException, ANTLRException, InterruptedException, GitAPIException {
+    public void canMergeAFeatureBranchUsingAccumulatedStrategy() throws Exception {
         
         repository = TestUtilsFactory.createValidRepository("test-repo");
         Git git = new Git(repository);
         
         String readmeFromIntegration = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
-
+        
         git.checkout().setName(FEATURE_BRANCH_NAME).call();
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
         git.checkout().setName("master").call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
 
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
@@ -112,13 +106,7 @@ public class AccumulatedCommitStrategyIT {
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.ACCUMULATED, repository);
 
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);

@@ -41,18 +41,20 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
  * @author Mads
  */
 public class TestUtilsFactory {
+    
     public enum STRATEGY_TYPE { SQUASH, ACCUMULATED };
+    
     public static final File GIT_DIR = new File("test-repo/.git");    
     public static final File GIT_PARENT_DIR = GIT_DIR.getParentFile().getAbsoluteFile();
-    private static final String README_FILE_PATH = GIT_PARENT_DIR.getPath().concat("/" + "readme");
+    
     private static final String AUTHER_NAME = "john Doe";
     private static final String AUTHER_EMAIL = "Joh@praqma.net";
     
-    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, TestUtilsFactory.STRATEGY_TYPE type, Repository repo) throws IOException, ANTLRException, InterruptedException {
+    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, STRATEGY_TYPE type, Repository repo) throws Exception {
         return configurePretestedIntegrationPlugin(project, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null);
     }
        
-    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, TestUtilsFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName) throws IOException, ANTLRException, InterruptedException {
+    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName) throws IOException, ANTLRException, InterruptedException {
         GitBridge gitBridge = null;
         if(type == STRATEGY_TYPE.SQUASH) {
             gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
@@ -164,7 +166,7 @@ public class TestUtilsFactory {
 
         git.checkout().setName(FEATURE_BRANCH_NAME).call();
 
-        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n");
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n", true);
 
         git.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = git.commit();
@@ -172,7 +174,7 @@ public class TestUtilsFactory {
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
 
-        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n");
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
 
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
@@ -181,8 +183,6 @@ public class TestUtilsFactory {
         commitCommand.call();
 
         git.checkout().setName("master").call();
-
-        readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
         return repository;
     }
     
@@ -252,8 +252,178 @@ public class TestUtilsFactory {
         commitCommand.setMessage("merge conflict message 1");
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
+        return repository;
+    }
+    
+    public static Repository createValidRepositoryWith2FeatureBranches(String repoFolderName) throws IOException, GitAPIException {
+        File repo = new File(repoFolderName+"/.git");
+        Repository repository;
+        Git git;
+        
+        if (repo.getParentFile().exists())
+            FileUtils.deleteDirectory(repo.getParentFile().getAbsoluteFile());
 
-        readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
+        final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
+        final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
+
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+
+        repository = builder.setGitDir(repo.getAbsoluteFile())
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build();
+
+        if (!repository.isBare() && repository.getBranch() == null) {
+            repository.create();
+        }
+
+        git = new Git(repository);
+
+        File readme = new File(repo.getParent()+"/readme");
+        if (!readme.exists())
+            FileUtils.writeStringToFile(readme, "sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 1").call();
+
+        FileUtils.writeStringToFile(readme, "changed sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 2").call();
+
+        CreateBranchCommand createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_1_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_1_NAME).call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        CommitCommand commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
+
+        createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_2_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_2_NAME).call();
+
+        String readmeContents = FileUtils.readFileToString(readme);
+        FileUtils.writeStringToFile(readme, "\n\nFEATURE_2 branch commit 1\n\n" + readmeContents);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 2\n\n" + readmeContents);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 2 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
+        return repository;
+    }
+    
+    public static Repository createRepositoryWith2FeatureBranches1Valid1Invalid(String repoDir) throws IOException, GitAPIException {
+        Repository repository;
+        Git git;
+        File f = new File(repoDir+"/.git");
+        if (f.getParentFile().exists())
+            FileUtils.deleteDirectory(f.getParentFile().getAbsoluteFile());
+
+        final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
+        final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
+
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+
+        repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build();
+
+        if (!repository.isBare() && repository.getBranch() == null) {
+            repository.create();
+        }
+
+        git = new Git(repository);
+
+        File readme = new File(repository.getDirectory().getParent()+"/readme");
+        if (!readme.exists())
+            FileUtils.writeStringToFile(readme, "sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 1").call();
+
+        FileUtils.writeStringToFile(readme, "changed sample text\n");
+
+        git.add().addFilepattern(readme.getName()).call();
+        git.commit().setMessage("commit message 2").call();
+
+        CreateBranchCommand createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_1_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_1_NAME).call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 1\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        CommitCommand commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
+
+        createBranchCommand = git.branchCreate();
+        createBranchCommand.setName(FEATURE_BRANCH_2_NAME);
+        createBranchCommand.call();
+
+        git.checkout().setName(FEATURE_BRANCH_2_NAME).call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 1\n\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 2\n\n", true);
+
+        git.add().addFilepattern(readme.getName()).call();
+        commitCommand = git.commit();
+        commitCommand.setMessage("feature 2 commit 2");
+        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.call();
+
+        git.checkout().setName("master").call();
         return repository;
     }
 }
