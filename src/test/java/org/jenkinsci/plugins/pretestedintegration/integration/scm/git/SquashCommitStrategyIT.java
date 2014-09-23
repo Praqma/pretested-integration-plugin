@@ -481,7 +481,7 @@ public class SquashCommitStrategyIT {
     }
 
     @Test
-    public void squashCommitStrategy_2FeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetIntegrated() throws Exception {
+    public void squashCommitStrategy_2FeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetsIntegrated() throws Exception {
         createRepositoryWith2FeatureBranches1Valid1Invalid();
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
