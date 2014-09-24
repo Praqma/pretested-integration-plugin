@@ -14,11 +14,13 @@ import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
@@ -35,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import static junit.framework.Assert.assertTrue;
@@ -101,7 +104,7 @@ public class UsageScenarios {
         git1.add().addFilepattern(testRepo1Readme.getName()).call();
         git1.commit().setMessage("commit message 1").call();
 
-        FileUtils.writeStringToFile(testRepo1Readme, "changed sample text repo 1\n");
+        FileUtils.writeStringToFile(testRepo1Readme, "changed sample text repo 1\n", true);
 
         git1.add().addFilepattern(testRepo1Readme.getName()).call();
         git1.commit().setMessage("commit message 2").call();
@@ -110,11 +113,15 @@ public class UsageScenarios {
         createBranchCommand.setName("ready/bue-dev");
         createBranchCommand.call();
 
-        FileUtils.writeStringToFile(testRepo1Readme, "some test repo 1 commit 1\n");
+        CheckoutCommand checkout = git1.checkout();
+        checkout.setName("ready/bue-dev");
+        checkout.call();
+
+        FileUtils.writeStringToFile(testRepo1Readme, "some test repo 1 commit 1\n", true);
         git1.add().addFilepattern(testRepo1Readme.getName()).call();
         git1.commit().setMessage("commit message 1 branch: ready/bue-dev").call();
 
-        FileUtils.writeStringToFile(testRepo1Readme, "some test repo 1 commit 2\n");
+        FileUtils.writeStringToFile(testRepo1Readme, "some test repo 1 commit 2\n", true);
         git1.add().addFilepattern(testRepo1Readme.getName()).call();
         git1.commit().setMessage("commit message 2 branch: ready/bue-dev").call();
 
@@ -122,6 +129,9 @@ public class UsageScenarios {
         createBranchCommand.setName("team-frontend/dev");
         createBranchCommand.call();
 
+        checkout = git1.checkout();
+        checkout.setName("master");
+        checkout.call();
 
         File testRepo2Readme = new File(repository2.getDirectory().getParent().concat("/" + "readme2"));
         FileUtils.writeStringToFile(testRepo1Readme, "sample text test repo 2\n");
@@ -138,6 +148,10 @@ public class UsageScenarios {
         createBranchCommand.setName("feature/team-dev");
         createBranchCommand.call();
 
+        checkout = git2.checkout();
+        checkout.setName("feature/team-dev");
+        checkout.call();
+
         FileUtils.writeStringToFile(testRepo2Readme, "some test repo 2 commit 1\n");
         git2.add().addFilepattern(testRepo2Readme.getName()).call();
         git2.commit().setMessage("commit message 1 branch: feature/team-dev").call();
@@ -149,6 +163,10 @@ public class UsageScenarios {
         createBranchCommand = git2.branchCreate();
         createBranchCommand.setName("ready/bue-dev");
         createBranchCommand.call();
+
+        checkout = git2.checkout();
+        checkout.setName("master");
+        checkout.call();
     }
 
     private FreeStyleProject configurePretestedIntegrationPlugin(IntegrationStrategy integrationStrategy, String repositoryUrl) throws IOException, ANTLRException, InterruptedException {
@@ -185,6 +203,20 @@ public class UsageScenarios {
         return project;
     }
 
+    private int countCommits(Repository repository) {
+        Git git = new Git(repository);
+        int commitCount = 0;
+
+        try {
+            Iterator<RevCommit> iterator = git.log().call().iterator();
+            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+        }
+
+        return commitCount;
+    }
+
     @Test
     public void runSquashCommitStrategyOnRepository1() throws Exception {
         createValidRepositories();
@@ -197,8 +229,8 @@ public class UsageScenarios {
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
 
         System.out.println("------------------------------------");
-        String s = FileUtils.readFileToString(build.getLogFile());
-        System.out.println(s);
+        System.out.println(FileUtils.readFileToString(build.getLogFile()));
+        System.out.println("Commit count: " + countCommits(repository1));
         System.out.println("------------------------------------");
 
         Result result = build.getResult();
@@ -218,8 +250,8 @@ public class UsageScenarios {
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
 
         System.out.println("------------------------------------");
-        String s = FileUtils.readFileToString(build.getLogFile());
-        System.out.println(s);
+        System.out.println(FileUtils.readFileToString(build.getLogFile()));
+        System.out.println("Commit count: " + countCommits(repository2));
         System.out.println("------------------------------------");
 
         Result result = build.getResult();
@@ -239,8 +271,8 @@ public class UsageScenarios {
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
 
         System.out.println("------------------------------------");
-        String s = FileUtils.readFileToString(build.getLogFile());
-        System.out.println(s);
+        System.out.println(FileUtils.readFileToString(build.getLogFile()));
+        System.out.println("Commit count: " + countCommits(repository1));
         System.out.println("------------------------------------");
 
         Result result = build.getResult();
@@ -260,8 +292,8 @@ public class UsageScenarios {
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
 
         System.out.println("------------------------------------");
-        String s = FileUtils.readFileToString(build.getLogFile());
-        System.out.println(s);
+        System.out.println(FileUtils.readFileToString(build.getLogFile()));
+        System.out.println("Commit count: " + countCommits(repository2));
         System.out.println("------------------------------------");
 
         Result result = build.getResult();
