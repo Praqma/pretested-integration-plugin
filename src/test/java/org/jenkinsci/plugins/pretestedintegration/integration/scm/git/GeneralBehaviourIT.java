@@ -65,12 +65,8 @@ public class GeneralBehaviourIT {
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
-
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
 
@@ -104,22 +100,59 @@ public class GeneralBehaviourIT {
         gitSCMExtensions.add(new CleanCheckout());
                         
         GitSCM gitSCM = new GitSCM(config,
-        Collections.singletonList(new BranchSpec("ready/**")),
+        Collections.singletonList(new BranchSpec("*/ready/**")),
             false, Collections.<SubmoduleConfig>emptyList(),
             null, null, gitSCMExtensions);
         
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1");
         project.setScm(gitSCM);
-
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+    
+        int nextBuildNumber = project.getNextBuildNumber();
+        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
 
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
+        //Show the log for the latest build
+        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
+        System.out.println("=====BUILD-LOG=====");
+        System.out.println(text);
+        System.out.println("=====BUILD-LOG=====");
+                
+        assertTrue(build.getResult().isWorseOrEqualTo(Result.SUCCESS));
+        repository2.close();
+        if (repository2.getDirectory().getParentFile().exists()) {
+            FileUtils.deleteQuietly(repository2.getDirectory().getParentFile());
+        }
+    }
+    
+    @Test
+    public void remoteNoRepoSpecifiedWithMoreThan1RepoShouldNotBeSuccessful() throws Exception {
+        repository = TestUtilsFactory.createValidRepository("test-repo");
+        Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
+        
+        Git git = new Git(repository);
+        git.checkout().setName("master").call();
 
+        List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), null, null, null));
+        
+        List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
+        gitSCMExtensions.add(new PruneStaleBranch());
+        gitSCMExtensions.add(new CleanCheckout());
+                        
+        GitSCM gitSCM = new GitSCM(config,
+        Collections.singletonList(new BranchSpec("*/ready/**")),
+            false, Collections.<SubmoduleConfig>emptyList(),
+            null, null, gitSCMExtensions);
+        
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null);
+        project.setScm(gitSCM);
+        
+        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
 
