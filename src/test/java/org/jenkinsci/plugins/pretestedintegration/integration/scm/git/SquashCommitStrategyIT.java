@@ -11,6 +11,7 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
 import junit.framework.TestCase;
@@ -359,8 +360,17 @@ public class SquashCommitStrategyIT {
         readmeFileContents_fromDevBranch = FileUtils.readFileToString(new File(README_FILE_PATH));
     }
 
-    private FreeStyleProject configurePretestedIntegrationPlugin() throws IOException, ANTLRException, InterruptedException {
+    private FreeStyleProject configurePretestedIntegrationPlugin() throws Exception {
+        return configurePretestedIntegrationPlugin(false);
+    }
+
+    private FreeStyleProject configurePretestedIntegrationPlugin(boolean runOnSlave) throws Exception {
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
+
+        if (runOnSlave) {
+            DumbSlave onlineSlave = jenkinsRule.createOnlineSlave();
+            project.setAssignedNode(onlineSlave);
+        }
 
         GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master");
 
@@ -406,7 +416,7 @@ public class SquashCommitStrategyIT {
     }
 
     @Test
-    public void canSquashMergeAFeatureBranch() throws Exception {
+    public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         createValidRepository();
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
@@ -432,7 +442,7 @@ public class SquashCommitStrategyIT {
     }
 
     @Test
-    public void ShouldFailWithAMergeConflictPresent() throws Exception {
+    public void oneInvalidFeatureBranch_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
         createRepositoryWithMergeConflict();
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
@@ -455,7 +465,7 @@ public class SquashCommitStrategyIT {
     }
 
     @Test
-    public void squashCommitStrategy_2FeatureBranchesBothValid_2BuildsAreTriggeredBothBranchesGetIntegrated() throws Exception {
+    public void twoFeatureBranchesBothValid_2BuildsAreTriggeredBothBranchesGetIntegratedBuildMarkedAsSUCCESS() throws Exception {
         createValidRepositoryWith2FeatureBranches();
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
@@ -481,12 +491,114 @@ public class SquashCommitStrategyIT {
     }
 
     @Test
-    public void squashCommitStrategy_2FeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetsIntegrated() throws Exception {
+    public void twoFeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
         createRepositoryWith2FeatureBranches1Valid1Invalid();
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
 
         FreeStyleProject project = configurePretestedIntegrationPlugin();
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+
+        assertEquals(2, project.getNextBuildNumber() - 1);
+
+        Result result = builds.getFirstBuild().getResult();
+
+        assertTrue(result.isCompleteBuild());
+        assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        FreeStyleBuild lastFailedBuild = project.getLastFailedBuild();
+        assertNotNull(lastFailedBuild);
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
+    }
+
+    @Test
+    public void oneValidFeatureBranchRunningOnSlave_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
+        createValidRepository();
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = configurePretestedIntegrationPlugin(true);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        int nextBuildNumber = project.getNextBuildNumber();
+        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+
+        Result result = build.getResult();
+
+        assertTrue(result.isCompleteBuild());
+        assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
+        assertEquals(readmeFileContents_fromDevBranch, readmeFileContents);
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
+    }
+
+    @Test
+    public void oneInvalidFeatureBranchRunningOnSlave_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
+        createRepositoryWithMergeConflict();
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = configurePretestedIntegrationPlugin(true);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        int nextBuildNumber = project.getNextBuildNumber();
+        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+
+        Result result = build.getResult();
+
+        assertTrue(result.isCompleteBuild());
+        assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
+    }
+
+    @Test
+    public void twoFeatureBranchesBothValidRunningOnSlave_2BuildsAreTriggeredBothBranchesGetIntegratedBuildMarkedAsSUCCESS() throws Exception {
+        createValidRepositoryWith2FeatureBranches();
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = configurePretestedIntegrationPlugin(true);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+
+        assertEquals(2, project.getNextBuildNumber() - 1);
+
+        for (FreeStyleBuild build : builds) {
+            Result result = build.getResult();
+
+            assertTrue(result.isCompleteBuild());
+            assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+        }
+
+        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+
+        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 2);
+    }
+
+    @Test
+    public void twoFeatureBranches1ValidAnd1InvalidRunningOnSlave_2BuildsAreTriggeredValidBranchGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
+        createRepositoryWith2FeatureBranches1Valid1Invalid();
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+
+        FreeStyleProject project = configurePretestedIntegrationPlugin(true);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
