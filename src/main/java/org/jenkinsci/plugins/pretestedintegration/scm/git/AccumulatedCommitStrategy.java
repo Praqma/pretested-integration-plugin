@@ -12,12 +12,18 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.BuildData;
+import hudson.remoting.VirtualChannel;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
@@ -54,6 +60,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         
         try {
             client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
+            
             for(Branch b : client.getRemoteBranches()) {
                 if(b.getName().equals(gitDataBranch.getName())) {                    
                     found = true;
@@ -83,8 +90,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", (String) commit.getId(), gitbridge.getBranch() ) );
         try {
-            String commitMessage = GitUtils.getCommitMessageUsingSHA1(client.getRepository(), gitDataBranch.getSHA1());
-
+            
+            String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));                                 
             exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), (String) commit.getId(), "--no-ff");
         } catch (Exception ex) {
             throw new IntegationFailedExeception(ex);
