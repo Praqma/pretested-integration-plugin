@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
-import antlr.ANTLRException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
