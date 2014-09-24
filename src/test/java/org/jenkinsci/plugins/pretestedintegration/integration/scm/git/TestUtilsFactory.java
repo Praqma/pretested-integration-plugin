@@ -322,7 +322,7 @@ public class TestUtilsFactory {
         git.checkout().setName(FEATURE_BRANCH_2_NAME).call();
 
         String readmeContents = FileUtils.readFileToString(readme);
-        FileUtils.writeStringToFile(readme, "\n\nFEATURE_2 branch commit 1\n\n" + readmeContents);
+        FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 1\n\n");
 
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();

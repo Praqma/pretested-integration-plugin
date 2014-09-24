@@ -152,8 +152,10 @@ public class GitBridge extends AbstractSCMBridge {
         listener.getLogger().println(String.format("Checking out integration target branch %s and pulling latest changes", getBranch()));
         try {
             //We need to explicitly checkout the remote we have configured
-            //TODO: Ask Bue about this...do we really need to do this?                        
-            git(build, launcher, listener, "checkout", "-b", getBranch(),"--track", resolveRepoName()+"/"+getBranch());            
+            //TODO: Ask Bue about this...do we really need to do this?          
+            //git(build, launcher, listener, "checkout", "-t", resolveRepoName()+"/"+getBranch());
+            //git(build, launcher, listener, "checkout", getBranch());
+            git(build, launcher, listener, "checkout", "-b", getBranch(), resolveRepoName()+"/"+getBranch());            
             update(build, launcher, listener);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "ensureBranch", ex);
@@ -165,7 +167,7 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     protected void update(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {		     
-        git(build, launcher, listener, "pull", resolveRepoName(), branch);
+        git(build, launcher, listener, "pull", resolveRepoName(), getBranch());
     }
     
     /**

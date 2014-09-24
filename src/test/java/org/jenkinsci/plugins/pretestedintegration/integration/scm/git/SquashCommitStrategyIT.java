@@ -44,10 +44,12 @@ public class SquashCommitStrategyIT {
 
     @After
     public void tearDown() throws Exception {
+        /*
         repository.close();
         if (repository.getDirectory().getParentFile().exists()) {
             FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
         }
+        */
     }
 
     private int countCommits() {

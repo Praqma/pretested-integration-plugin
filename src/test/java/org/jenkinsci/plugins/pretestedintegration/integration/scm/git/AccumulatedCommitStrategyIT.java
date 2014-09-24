@@ -1,11 +1,8 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
-import antlr.ANTLRException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Queue;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -16,7 +13,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 
 import static junit.framework.Assert.assertTrue;
@@ -46,10 +42,12 @@ public class AccumulatedCommitStrategyIT {
 
     @After
     public void tearDown() throws Exception {
+        /*
         repository.close();
         if (repository.getDirectory().getParentFile().exists()) {
             FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
         }
+        */
     }
     
 
