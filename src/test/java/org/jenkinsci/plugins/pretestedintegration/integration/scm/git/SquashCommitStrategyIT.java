@@ -43,13 +43,11 @@ public class SquashCommitStrategyIT {
     private String readmeFileContents_fromDevBranch;
 
     @After
-    public void tearDown() throws Exception {
-        /*
+    public void tearDown() throws Exception {        
         repository.close();
         if (repository.getDirectory().getParentFile().exists()) {
             FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
-        }
-        */
+        }        
     }
 
     private int countCommits() {
