@@ -85,15 +85,65 @@ public class GeneralBehaviourIT {
         }
     }
     
+    /**
+     * 1.1
+     * 
+     **/
     @Test
-    public void remoteOrigin1WithMoreThan1RepoShouldBeSuccessful() throws Exception {
+    public void remoteOrigin1WithMoreThan1RepoShouldBeSuccessfulFirstRepo() throws Exception {
         repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
         
         Git git = new Git(repository);
         git.checkout().setName("master").call();
 
-        List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), null, null, null));
+        List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), "origin1", null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), "magic", null, null));
+        
+        List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
+        gitSCMExtensions.add(new PruneStaleBranch());
+        gitSCMExtensions.add(new CleanCheckout());
+                        
+        GitSCM gitSCM = new GitSCM(config,
+        Collections.singletonList(new BranchSpec("*/ready/**")),
+            false, Collections.<SubmoduleConfig>emptyList(),
+            null, null, gitSCMExtensions);
+        
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1");
+        project.setScm(gitSCM);
+        
+        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+    
+        int nextBuildNumber = project.getNextBuildNumber();
+        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+
+        //Show the log for the latest build
+        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
+        System.out.println("=====BUILD-LOG=====");
+        System.out.println(text);
+        System.out.println("=====BUILD-LOG=====");
+                
+        assertTrue(build.getResult().isWorseOrEqualTo(Result.SUCCESS));
+        repository2.close();
+        if (repository2.getDirectory().getParentFile().exists()) {
+            FileUtils.deleteQuietly(repository2.getDirectory().getParentFile());
+        }
+    }
+    
+    /**
+     * 1.2
+     * 
+     **/
+    @Test
+    public void remoteOrigin1WithMoreThan1RepoShouldBeSuccessfulSecondRepo() throws Exception {
+        repository = TestUtilsFactory.createValidRepository("test-repo");
+        Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
+        
+        Git git = new Git(repository);
+        git.checkout().setName("master").call();
+
+        List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), "magic", null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), "orgin1", null, null));
         
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
         gitSCMExtensions.add(new PruneStaleBranch());
