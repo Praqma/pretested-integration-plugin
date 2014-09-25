@@ -38,20 +38,16 @@ public class AccumulatedCommitStrategyIT {
 
     private Repository repository;
     
-    private String readmeFileContents_fromDevBranch;
+    //private String readmeFileContents_fromDevBranch;
 
     @After
-    public void tearDown() throws Exception {
-        /*
+    public void tearDown() throws Exception {        
         repository.close();
         if (repository.getDirectory().getParentFile().exists()) {
             FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
-        }
-        */
+        }       
     }
-    
 
-    
     private int countCommits() {
         Git git = new Git(repository);
         int commitCount = 0;
@@ -68,18 +64,18 @@ public class AccumulatedCommitStrategyIT {
     }
 
     @Test
-    public void canMergeAFeatureBranchUsingAccumulatedStrategy() throws Exception {
+    public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         
         repository = TestUtilsFactory.createValidRepository("test-repo");
         Git git = new Git(repository);
         
         String readmeFromIntegration = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
-        
+
         git.checkout().setName(FEATURE_BRANCH_NAME).call();
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
         git.checkout().setName("master").call();
 
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -99,10 +95,10 @@ public class AccumulatedCommitStrategyIT {
     }
 
     @Test
-    public void shouldFailWithAMergeConflictPresent() throws Exception {
+    public void oneInvalidFeatureBranch_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
         repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
 
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), STRATEGY_TYPE.ACCUMULATED, repository);
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -113,5 +109,53 @@ public class AccumulatedCommitStrategyIT {
 
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
-    }            
+    }
+
+    @Test
+    public void oneValidFeatureBranchRunningOnSlave_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
+        repository = TestUtilsFactory.createValidRepository("test-repo");
+        String fromIntegration = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
+        Git git = new Git(repository);
+
+        git.checkout().setName(FEATURE_BRANCH_NAME).call();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
+        git.checkout().setName("master").call();
+
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        int nextBuildNumber = project.getNextBuildNumber();
+        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+
+        Result result = build.getResult();
+
+        assertTrue(result.isCompleteBuild());
+        assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+        
+        
+
+        String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
+        assertEquals(fromIntegration, readmeFileContents);
+
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = countCommits();
+        assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
+    }
+
+    @Test
+    public void oneInvalidFeatureBranchRunningOnSlave_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
+        repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
+
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        int nextBuildNumber = project.getNextBuildNumber();
+        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+
+        Result result = build.getResult();
+
+        assertTrue(result.isCompleteBuild());
+        assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
+    }
 }

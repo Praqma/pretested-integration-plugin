@@ -15,6 +15,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.scm.SCM;
+import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +36,7 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostChecko
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  *
@@ -50,11 +52,20 @@ public class TestUtilsFactory {
     private static final String AUTHER_NAME = "john Doe";
     private static final String AUTHER_EMAIL = "Joh@praqma.net";
     
-    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, STRATEGY_TYPE type, Repository repo) throws Exception {
-        return configurePretestedIntegrationPlugin(project, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null);
+    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo) throws Exception {
+        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null, true);
+    }
+    
+    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo, boolean runOnSlave) throws Exception {
+        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null, runOnSlave);
     }
        
-    public static FreeStyleProject configurePretestedIntegrationPlugin(FreeStyleProject project, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName) throws IOException, ANTLRException, InterruptedException {
+    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, boolean runOnSlave) throws IOException, ANTLRException, InterruptedException, Exception {
+        FreeStyleProject project = rule.createFreeStyleProject();
+        if (runOnSlave) {
+            DumbSlave onlineSlave = rule.createOnlineSlave();
+            project.setAssignedNode(onlineSlave);
+        }
         GitBridge gitBridge = null;
         if(type == STRATEGY_TYPE.SQUASH) {
             gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
@@ -89,8 +100,8 @@ public class TestUtilsFactory {
     }
     
     //TODO: Create a realistic setup with multi SCM pluing...this seems boilerplatey
-    public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(FreeStyleProject project, TestUtilsFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, Repository repo) throws Exception {
-        
+    public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(JenkinsRule rule, TestUtilsFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, Repository repo) throws Exception {
+        FreeStyleProject project = rule.createFreeStyleProject();
         GitBridge gitBridge = null;
         if(type == STRATEGY_TYPE.SQUASH) {
             gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);

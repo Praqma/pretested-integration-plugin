@@ -61,7 +61,7 @@ public class GeneralBehaviourIT {
 
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), null, null, null));
         
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null);
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null, true);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -108,7 +108,7 @@ public class GeneralBehaviourIT {
             false, Collections.<SubmoduleConfig>emptyList(),
             null, null, gitSCMExtensions);
         
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1");
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1", true);
         project.setScm(gitSCM);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
@@ -154,7 +154,7 @@ public class GeneralBehaviourIT {
             false, Collections.<SubmoduleConfig>emptyList(),
             null, null, gitSCMExtensions);
         
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1");
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1", true);
         project.setScm(gitSCM);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
@@ -196,7 +196,7 @@ public class GeneralBehaviourIT {
             false, Collections.<SubmoduleConfig>emptyList(),
             null, null, gitSCMExtensions);
         
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null);
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null, true);
         project.setScm(gitSCM);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
@@ -227,7 +227,7 @@ public class GeneralBehaviourIT {
         
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" +repository.getDirectory().getAbsolutePath(), null, null, null));
         
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPluginWithMultiSCM(jenkinsRule.createFreeStyleProject(), TestUtilsFactory.STRATEGY_TYPE.SQUASH, config, "origin", repository);
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPluginWithMultiSCM(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, config, "origin", repository);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
