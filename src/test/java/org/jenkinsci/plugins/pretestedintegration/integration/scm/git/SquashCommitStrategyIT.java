@@ -181,8 +181,6 @@ public class SquashCommitStrategyIT {
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
 
         Result result = build.getResult();
-
-        assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
         String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
@@ -207,8 +205,6 @@ public class SquashCommitStrategyIT {
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
 
         Result result = build.getResult();
-
-        assertTrue(result.isCompleteBuild());
         assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
 
         final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
@@ -232,8 +228,6 @@ public class SquashCommitStrategyIT {
 
         for (FreeStyleBuild build : builds) {
             Result result = build.getResult();
-
-            assertTrue(result.isCompleteBuild());
             assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
         }
 

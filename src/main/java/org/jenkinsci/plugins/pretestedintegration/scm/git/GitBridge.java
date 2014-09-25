@@ -155,7 +155,7 @@ public class GitBridge extends AbstractSCMBridge {
             //TODO: Ask Bue about this...do we really need to do this?          
             //git(build, launcher, listener, "checkout", "-t", resolveRepoName()+"/"+getBranch());
             //git(build, launcher, listener, "checkout", getBranch());
-            git(build, launcher, listener, "checkout", "-b", getBranch(), resolveRepoName()+"/"+getBranch());            
+            git(build, launcher, listener, "checkout", "-B", getBranch(), resolveRepoName()+"/"+getBranch());            
             update(build, launcher, listener);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "ensureBranch", ex);
