@@ -5,7 +5,6 @@
  */
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
-import antlr.ANTLRException;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
@@ -17,18 +16,13 @@ import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.scm.SCM;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
@@ -37,6 +31,10 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrat
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  *
@@ -47,11 +45,24 @@ public class TestUtilsFactory {
     public enum STRATEGY_TYPE { SQUASH, ACCUMULATED };
     
     public static final File GIT_DIR = new File("test-repo/.git");    
-    public static final File GIT_PARENT_DIR = GIT_DIR.getParentFile().getAbsoluteFile();
-    
-    private static final String AUTHER_NAME = "john Doe";
-    private static final String AUTHER_EMAIL = "Joh@praqma.net";
-    
+
+    public static final String AUTHER_NAME = "john Doe";
+    public static final String AUTHER_EMAIL = "Joh@praqma.net";
+
+    public static int countCommits(Repository repository) {
+        Git git = new Git(repository);
+        int commitCount = 0;
+
+        try {
+            Iterator<RevCommit> iterator = git.log().call().iterator();
+            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+        }
+
+        return commitCount;
+    }
+
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo) throws Exception {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null, true);
     }
@@ -60,13 +71,15 @@ public class TestUtilsFactory {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null, runOnSlave);
     }
        
-    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, boolean runOnSlave) throws IOException, ANTLRException, InterruptedException, Exception {
+    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, boolean runOnSlave) throws Exception {
         FreeStyleProject project = rule.createFreeStyleProject();
         if (runOnSlave) {
             DumbSlave onlineSlave = rule.createOnlineSlave();
             project.setAssignedNode(onlineSlave);
         }
+
         GitBridge gitBridge = null;
+
         if(type == STRATEGY_TYPE.SQUASH) {
             gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
         } else {
@@ -80,9 +93,8 @@ public class TestUtilsFactory {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
-        //TODO: We need to remove the origin part from here, but the other tests fail if that is removed.
         GitSCM gitSCM = new GitSCM(repoList,
-                Collections.singletonList(new BranchSpec("origin/ready/**")),
+                Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
 
@@ -99,7 +111,7 @@ public class TestUtilsFactory {
         return project;
     }
     
-    //TODO: Create a realistic setup with multi SCM pluing...this seems boilerplatey
+    //TODO: Create a realistic setup with multi SCM pluging...this seems boiler platey
     public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(JenkinsRule rule, TestUtilsFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, Repository repo) throws Exception {
         FreeStyleProject project = rule.createFreeStyleProject();
         GitBridge gitBridge = null;
@@ -139,8 +151,7 @@ public class TestUtilsFactory {
         File repo = new File(repoFolderName+"/"+".git");
         Repository repository;
         Git git;
-        String readmeFileContents_fromDevBranch;
-        
+
         String FEATURE_BRANCH_NAME = "ready/feature_1";
         
         if (repo.getParentFile().getAbsoluteFile().exists())
@@ -201,7 +212,6 @@ public class TestUtilsFactory {
         File repo = new File(repoFolderName+"/"+".git");
         Repository repository;
         Git git;
-        String readmeFileContents_fromDevBranch;
         String FEATURE_BRANCH_NAME = "ready/feature_1";
 
         if (repo.getParentFile().getAbsoluteFile().exists())

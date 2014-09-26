@@ -8,6 +8,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -18,7 +19,6 @@ import java.util.Iterator;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
-import org.junit.After;
 
 /**
  * Created by andrius on 9/5/14.
@@ -27,18 +27,9 @@ public class AccumulatedCommitStrategyIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
-    private final File GIT_DIR = new File("test-repo/.git");
-    private final File GIT_PARENT_DIR = GIT_DIR.getParentFile().getAbsoluteFile();
-    private final String README_FILE_PATH = GIT_PARENT_DIR.getPath().concat("/" + "readme");
-
-    private final String AUTHER_NAME = "john Doe";
-    private final String AUTHER_EMAIL = "Joh@praqma.net";
-
     final String FEATURE_BRANCH_NAME = "ready/feature_1";
 
     private Repository repository;
-    
-    //private String readmeFileContents_fromDevBranch;
 
     @After
     public void tearDown() throws Exception {        
@@ -135,7 +126,7 @@ public class AccumulatedCommitStrategyIT {
         
         
 
-        String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
+        String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
         assertEquals(fromIntegration, readmeFileContents);
 
         final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = countCommits();
