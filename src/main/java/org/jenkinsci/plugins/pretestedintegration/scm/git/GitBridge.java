@@ -151,10 +151,7 @@ public class GitBridge extends AbstractSCMBridge {
     public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         listener.getLogger().println(String.format("Checking out integration target branch %s and pulling latest changes", getBranch()));
         try {
-            //We need to explicitly checkout the remote we have configured
-            //TODO: Ask Bue about this...do we really need to do this?          
-            //git(build, launcher, listener, "checkout", "-t", resolveRepoName()+"/"+getBranch());
-            //git(build, launcher, listener, "checkout", getBranch());
+            //We need to explicitly checkout the remote we have configured            
             git(build, launcher, listener, "checkout", "-B", getBranch(), resolveRepoName()+"/"+getBranch());            
             update(build, launcher, listener);
         } catch (IOException ex) {
@@ -210,6 +207,20 @@ public class GitBridge extends AbstractSCMBridge {
         }
     }
 
+    @Override
+    public boolean isApplicable(AbstractBuild<?, ?> build, BuildListener listener) {
+        BuildData gitBuildData = build.getAction(BuildData.class);
+        
+        //If no build data was contributed
+        if(gitBuildData == null) {
+            return false;
+        }
+        
+        //Check to make sure that we do ONLY integrate to the branches specified.
+        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+        return gitDataBranch.getName().startsWith(getRepoName());
+    }
+    
     @Override
     public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {        
         int returncode = -9999;
@@ -273,8 +284,6 @@ public class GitBridge extends AbstractSCMBridge {
         return s;
     }
     
-    
-
     @Override
     protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
         Commit<?> commit = null;

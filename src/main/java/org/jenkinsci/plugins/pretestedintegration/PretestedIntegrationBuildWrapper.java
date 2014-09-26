@@ -107,48 +107,54 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
-        boolean everythingOk = true;
-        //There can be only one... at a time
-        BuildQueue.getInstance().enqueueAndWait();        
-        PretestedIntegrationAction action;
-        try {
-            validateConfiguration(build.getProject());
-            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
-            
-            //Create the action. Record the state of integration branch
-            action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
-            build.addAction(action);                    
-            action.initialise(launcher, listener);
+        boolean proceedToBuildStep = true;
+
+        if(scmBridge.isApplicable(build, listener)) {
+            BuildQueue.getInstance().enqueueAndWait();        
+            PretestedIntegrationAction action;
             try {
-                ensurePublisher(build);
-            } catch (IOException e) {
-                BuildQueue.getInstance().release();                
-            }  
-        } catch (NothingToDoException ex) {
-            build.setResult(Result.NOT_BUILT);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (IntegationFailedExeception e) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (EstablishWorkspaceException established) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (NextCommitFailureException ex) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (UnsupportedConfigurationException ex) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();            
-            listener.getLogger().println(ex.getMessage());
-            return null;            
+                validateConfiguration(build.getProject());
+                scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
+
+                //Create the action. Record the state of integration branch
+                action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
+                build.addAction(action);                    
+                action.initialise(launcher, listener);
+                try {
+                    ensurePublisher(build);
+                } catch (IOException e) {
+                    BuildQueue.getInstance().release();                
+                }  
+            } catch (NothingToDoException ex) {
+                build.setResult(Result.NOT_BUILT);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (IntegationFailedExeception e) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (EstablishWorkspaceException established) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (NextCommitFailureException ex) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (UnsupportedConfigurationException ex) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();            
+                listener.getLogger().println(ex.getMessage());
+                return null;            
+            }
+        } else {
+            listener.getLogger().println(String.format("%sSkipping the workspace preparation for pre tested integration", LOG_PREFIX));
+            proceedToBuildStep = scmBridge.applySkipBehaviour(build, listener);
+            listener.getLogger().println(String.format("%sProceed to build step = %s", LOG_PREFIX, proceedToBuildStep));
         }
 
         BuildWrapper.Environment environment = new PretestEnvironment();
-        return everythingOk ? environment : null;
+        return proceedToBuildStep ? environment : null;
     }
 
     public void ensurePublisher(AbstractBuild<?, ?> build) throws IOException {
