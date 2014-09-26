@@ -97,6 +97,28 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws NothingToDoException, IntegationFailedExeception {
         integrationStrategy.integrate(build, launcher, listener, this, commit);
     }
+    
+    /**
+     * Method that determines if we should prepare workspace for integration, it
+     * If this returns false, the applySkipBehaviour method is called to determine if we should proceed to the build step.
+     * @param build
+     * @param listener
+     * @return 
+     */
+    public boolean isApplicable(AbstractBuild<?,?> build, BuildListener listener) {
+        return true;
+    }
+    
+    /**
+     * Method that applies all the necessary behaviour when we have determined to skip.
+     * By default we return true, indicating that the pre build step was OK.
+     * @param build
+     * @param listener
+     * @return 
+     */
+    public boolean applySkipBehaviour(AbstractBuild<?,?> build, BuildListener listener) {
+        return true;
+    }
 
     public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException;
     

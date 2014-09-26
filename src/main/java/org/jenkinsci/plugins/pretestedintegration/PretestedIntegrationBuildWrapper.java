@@ -12,13 +12,18 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
+import hudson.plugins.git.GitSCM;
+import hudson.scm.SCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.multiplescms.MultiSCM;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -28,7 +33,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
-    private static final String LOG_PREFIX = "[PREINT] ";
+    public static final String LOG_PREFIX = "[PREINT] ";
     public final AbstractSCMBridge scmBridge;
     private final boolean rollbackEnabled = false;
 
@@ -59,6 +64,36 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         }
         return null;
     }
+    
+    //For JENKINS-24754
+    private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
+        if(scm.getRepositories().size() > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
+            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
+        }        
+    }
+    
+    //For JENKINS-24754
+    private void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException  {        
+        if( project.getScm() instanceof GitSCM ) {
+            validateGitScm((GitSCM)project.getScm());
+        } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
+            MultiSCM multiscm = (MultiSCM)project.getScm();
+            int gitCounter = 0;
+            for(SCM scm : multiscm.getConfiguredSCMs()) {                
+                if(scm instanceof GitSCM) {
+                    GitSCM gitMultiScm = (GitSCM)scm;                    
+                    validateGitScm(gitMultiScm);
+                    gitCounter++;
+                }
+            }
+            
+            if(gitCounter > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
+                throw new UnsupportedConfigurationException("You haave included multiple git repositories in your multi scm configuration, but have not defined a repository name in the pre tested integration configuration");
+            }            
+        } else {
+            throw new UnsupportedConfigurationException("We only support git and mutiple scm plugins");
+        } 
+    }
 
     /**
      * Jenkins hook that fires after the workspace is initialized. Calls the
@@ -72,57 +107,54 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
-        boolean everythingOk = true;
-        //There can be only one... at a time
-        BuildQueue.getInstance().enqueueAndWait();        
-        PretestedIntegrationAction action;
-        try {            
-            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
-            
-            //Create the action. Record the state of integration branch
-            action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
-            build.addAction(action);
-            
-            if(rollbackEnabled) {
-                /**
-                 * If the previous build failed...then we revert to the state of master prior to that particular commit being integrated.
-                 */
-                AbstractBuild<?,?> latestBuildWithPreTest = findLatestBuildWithPreTestedIntegrationAction(build);            
-                if(latestBuildWithPreTest != null ) {                
-                    scmBridge.rollback(latestBuildWithPreTest.getPreviousBuild(), launcher, listener);                
-                }
-            }            
-            
-            action.initialise(launcher, listener);
+        boolean proceedToBuildStep = true;
+
+        if(scmBridge.isApplicable(build, listener)) {
+            BuildQueue.getInstance().enqueueAndWait();        
+            PretestedIntegrationAction action;
             try {
-                ensurePublisher(build);
-            } catch (IOException e) {
-                BuildQueue.getInstance().release();                
-            }  
-        } catch (NothingToDoException ex) {
-            build.setResult(Result.NOT_BUILT);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (IntegationFailedExeception e) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (EstablishWorkspaceException established) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (NextCommitFailureException ex) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (RollbackFailureException ex) {
-            build.setResult(Result.FAILURE); 
-            BuildQueue.getInstance().release();
-            everythingOk = false;        
+                validateConfiguration(build.getProject());
+                scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
+
+                //Create the action. Record the state of integration branch
+                action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
+                build.addAction(action);                    
+                action.initialise(launcher, listener);
+                try {
+                    ensurePublisher(build);
+                } catch (IOException e) {
+                    BuildQueue.getInstance().release();                
+                }  
+            } catch (NothingToDoException ex) {
+                build.setResult(Result.NOT_BUILT);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (IntegationFailedExeception e) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (EstablishWorkspaceException established) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (NextCommitFailureException ex) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();
+                proceedToBuildStep = false;
+            } catch (UnsupportedConfigurationException ex) {
+                build.setResult(Result.FAILURE);
+                BuildQueue.getInstance().release();            
+                listener.getLogger().println(ex.getMessage());
+                return null;            
+            }
+        } else {
+            listener.getLogger().println(String.format("%sSkipping the workspace preparation for pre tested integration", LOG_PREFIX));
+            proceedToBuildStep = scmBridge.applySkipBehaviour(build, listener);
+            listener.getLogger().println(String.format("%sProceed to build step = %s", LOG_PREFIX, proceedToBuildStep));
         }
 
         BuildWrapper.Environment environment = new PretestEnvironment();
-        return everythingOk ? environment : null;
+        return proceedToBuildStep ? environment : null;
     }
 
     public void ensurePublisher(AbstractBuild<?, ?> build) throws IOException {
