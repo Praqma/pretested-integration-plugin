@@ -218,7 +218,7 @@ public class GitBridge extends AbstractSCMBridge {
         
         //Check to make sure that we do ONLY integrate to the branches specified.
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
-        return gitDataBranch.getName().startsWith(getRepoName());
+        return gitDataBranch.getName().startsWith(resolveRepoName());
     }
     
     @Override
