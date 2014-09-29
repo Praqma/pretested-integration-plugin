@@ -24,6 +24,10 @@ public class PretestedIntegrationPostCheckout extends Publisher {
     public PretestedIntegrationPostCheckout() {
     }
 
+    /**
+     * This should ensure that we only run, when the build result can no longer be changes (is final). 
+     * @return 
+     */
     @Override
     public boolean needsToRunAfterFinalized() {
         return true;
