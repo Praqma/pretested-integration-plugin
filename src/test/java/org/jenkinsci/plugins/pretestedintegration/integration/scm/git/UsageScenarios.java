@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrat
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -41,6 +42,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 /**
@@ -222,7 +224,10 @@ public class UsageScenarios {
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
-        assertTrue(TestUtilsFactory.branchExists(repository1, READY_BRANCH));
+        assertFalse(TestUtilsFactory.branchExists(repository1, READY_BRANCH));
+        assertTrue(TestUtilsFactory.branchExists(repository1, TEAM_FRONTEND_BRANCH));
+
+
     }
 
     @Test
@@ -239,6 +244,9 @@ public class UsageScenarios {
         Result result = build.getResult();
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        assertFalse(TestUtilsFactory.branchExists(repository2, READY_BRANCH));
+        assertTrue(TestUtilsFactory.branchExists(repository2, FEATURE_BRANCH));
     }
 
     @Test
@@ -255,6 +263,9 @@ public class UsageScenarios {
         Result result = build.getResult();
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        assertFalse(TestUtilsFactory.branchExists(repository1, READY_BRANCH));
+        assertTrue(TestUtilsFactory.branchExists(repository1, TEAM_FRONTEND_BRANCH));
     }
 
     @Test
@@ -271,5 +282,8 @@ public class UsageScenarios {
         Result result = build.getResult();
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        assertFalse(TestUtilsFactory.branchExists(repository2, READY_BRANCH));
+        assertTrue(TestUtilsFactory.branchExists(repository2, FEATURE_BRANCH));
     }
 }
