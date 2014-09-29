@@ -5,20 +5,17 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
-import java.util.Iterator;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
-import org.junit.After;
 
 /**
  * Created by andrius on 9/5/14.
@@ -27,18 +24,9 @@ public class AccumulatedCommitStrategyIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
-    private final File GIT_DIR = new File("test-repo/.git");
-    private final File GIT_PARENT_DIR = GIT_DIR.getParentFile().getAbsoluteFile();
-    private final String README_FILE_PATH = GIT_PARENT_DIR.getPath().concat("/" + "readme");
-
-    private final String AUTHER_NAME = "john Doe";
-    private final String AUTHER_EMAIL = "Joh@praqma.net";
-
     final String FEATURE_BRANCH_NAME = "ready/feature_1";
 
     private Repository repository;
-    
-    //private String readmeFileContents_fromDevBranch;
 
     @After
     public void tearDown() throws Exception {        
@@ -46,21 +34,6 @@ public class AccumulatedCommitStrategyIT {
         if (repository.getDirectory().getParentFile().exists()) {
             FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
         }       
-    }
-
-    private int countCommits() {
-        Git git = new Git(repository);
-        int commitCount = 0;
-
-        try {
-            Iterator<RevCommit> iterator = git.log().call().iterator();
-            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
-
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        return commitCount;
     }
 
     @Test
@@ -72,7 +45,7 @@ public class AccumulatedCommitStrategyIT {
         String readmeFromIntegration = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
 
         git.checkout().setName(FEATURE_BRANCH_NAME).call();
-        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
         git.checkout().setName("master").call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
@@ -90,7 +63,7 @@ public class AccumulatedCommitStrategyIT {
         String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
         assertEquals(readmeFromIntegration, readmeFileContents);
 
-        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
         assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
     }
 
@@ -118,7 +91,7 @@ public class AccumulatedCommitStrategyIT {
         Git git = new Git(repository);
 
         git.checkout().setName(FEATURE_BRANCH_NAME).call();
-        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
         git.checkout().setName("master").call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
@@ -134,11 +107,10 @@ public class AccumulatedCommitStrategyIT {
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
         
         
-
-        String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
+        String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
         assertEquals(fromIntegration, readmeFileContents);
 
-        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
         assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
     }
 

@@ -6,41 +6,29 @@ import hudson.model.Result;
 import hudson.util.RunList;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
-import java.util.Iterator;
 
-import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import org.junit.After;
+import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
 
 /**
  * Created by andrius on 9/2/14.
  */
 public class SquashCommitStrategyIT {
-    
+
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
-    private final File GIT_DIR = new File("test-repo/.git");
-    private final File GIT_PARENT_DIR = GIT_DIR.getParentFile().getAbsoluteFile();
-    private final String README_FILE_PATH = GIT_PARENT_DIR.getPath().concat("/" + "readme");
-
-    private final String AUTHER_NAME = "john Doe";
-    private final String AUTHER_EMAIL = "Joh@praqma.net";
 
     private Repository repository;
-
-    private String readmeFileContents_fromDevBranch;
 
     @After
     public void tearDown() throws Exception {        
@@ -50,27 +38,13 @@ public class SquashCommitStrategyIT {
         }        
     }
 
-    private int countCommits() {
-        Git git = new Git(repository);
-        int commitCount = 0;
-
-        try {
-            Iterator<RevCommit> iterator = git.log().call().iterator();
-            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        return commitCount;
-    }
-
     @Test
     public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
 
         repository = TestUtilsFactory.createValidRepository("test-repo");            
         String readmeFromDev = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
 
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
         jenkinsRule.waitUntilNoActivityUpTo(60000);
@@ -86,7 +60,7 @@ public class SquashCommitStrategyIT {
         String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
         assertEquals(readmeFromDev, readmeFileContents);
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
@@ -94,7 +68,7 @@ public class SquashCommitStrategyIT {
     @Test
     public void oneInvalidFeatureBranch_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
         repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
 
@@ -108,7 +82,7 @@ public class SquashCommitStrategyIT {
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
     }
@@ -116,7 +90,7 @@ public class SquashCommitStrategyIT {
     @Test
     public void twoFeatureBranchesBothValid_2BuildsAreTriggeredBothBranchesGetIntegratedBuildMarkedAsSUCCESS() throws Exception {
         repository = TestUtilsFactory.createValidRepositoryWith2FeatureBranches("test-repo");
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
 
@@ -127,23 +101,20 @@ public class SquashCommitStrategyIT {
         assertEquals(2, project.getNextBuildNumber() - 1);
 
         for (FreeStyleBuild build : builds) {
-            System.out.println("===CONSOLE===");
-            System.out.println(FileUtils.readFileToString(build.getLogFile()));
-            System.out.println("===CONSOLE===");            
             Result result = build.getResult();
             assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
         }
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 2);
     }
 
     @Test
-    public void twoFeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
+    public void twoFeatureBranches1ValidAnd1Invalid_2BuildsAreTriggeredValidBranchGetsIntegrated() throws Exception {
         repository = TestUtilsFactory.createRepositoryWith2FeatureBranches1Valid1Invalid("test-repo");
 
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
 
@@ -161,7 +132,7 @@ public class SquashCommitStrategyIT {
         FreeStyleBuild lastFailedBuild = project.getLastFailedBuild();
         assertNotNull(lastFailedBuild);
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
@@ -171,7 +142,7 @@ public class SquashCommitStrategyIT {
         repository = TestUtilsFactory.createValidRepository("test-repo");
         String readmeFromDev = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
 
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
 
@@ -183,10 +154,10 @@ public class SquashCommitStrategyIT {
         Result result = build.getResult();
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
-        String readmeFileContents = FileUtils.readFileToString(new File(README_FILE_PATH));
+        String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent()+"/readme"));
         assertEquals(readmeFromDev, readmeFileContents);
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
@@ -195,7 +166,7 @@ public class SquashCommitStrategyIT {
     public void oneInvalidFeatureBranchRunningOnSlave_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
         repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
 
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
 
@@ -207,16 +178,16 @@ public class SquashCommitStrategyIT {
         Result result = build.getResult();
         assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
     }
 
     @Test
     public void twoFeatureBranchesBothValidRunningOnSlave_2BuildsAreTriggeredBothBranchesGetIntegratedBuildMarkedAsSUCCESS() throws Exception {
-        repository = TestUtilsFactory.createValidRepositoryWith2FeatureBranches(AUTHER_NAME);
+        repository = TestUtilsFactory.createValidRepositoryWith2FeatureBranches(TestUtilsFactory.AUTHER_NAME);
 
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
 
@@ -231,7 +202,7 @@ public class SquashCommitStrategyIT {
             assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
         }
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 2);
     }
@@ -240,7 +211,7 @@ public class SquashCommitStrategyIT {
     public void twoFeatureBranches1ValidAnd1InvalidRunningOnSlave_2BuildsAreTriggeredValidBranchGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
         repository = TestUtilsFactory.createRepositoryWith2FeatureBranches1Valid1Invalid("test-repo");
 
-        final int COMMIT_COUNT_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
 
@@ -258,7 +229,7 @@ public class SquashCommitStrategyIT {
         FreeStyleBuild lastFailedBuild = project.getLastFailedBuild();
         assertNotNull(lastFailedBuild);
 
-        final int COMMIT_COUNT_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }

@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import antlr.ANTLRException;
+import com.sun.corba.se.impl.orb.ParserTable;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -51,8 +52,11 @@ public class UsageScenarios {
 
     private Repository repository1;
     private Repository repository2;
-    private Git git1;
-    private Git git2;
+
+    private final String TEAM_FRONTEND_BRANCH = "team-frontend/dev";
+    private final String READY_BRANCH = "ready/bue-dev";
+    private final String FEATURE_BRANCH = "feature/team-dev";
+
 
     @After
     public void tearDown() throws Exception {
@@ -95,8 +99,8 @@ public class UsageScenarios {
             repository2.create();
         }
 
-        git1 = new Git(repository1);
-        git2 = new Git(repository2);
+        Git git1 = new Git(repository1);
+        Git git2 = new Git(repository2);
 
         File testRepo1Readme = new File(repository1.getDirectory().getParent().concat("/" + "readme1"));
         FileUtils.writeStringToFile(testRepo1Readme, "sample text test repo 1\n");
@@ -110,11 +114,11 @@ public class UsageScenarios {
         git1.commit().setMessage("commit message 2").call();
 
         CreateBranchCommand createBranchCommand = git1.branchCreate();
-        createBranchCommand.setName("ready/bue-dev");
+        createBranchCommand.setName(READY_BRANCH);
         createBranchCommand.call();
 
         CheckoutCommand checkout = git1.checkout();
-        checkout.setName("ready/bue-dev");
+        checkout.setName(READY_BRANCH);
         checkout.call();
 
         FileUtils.writeStringToFile(testRepo1Readme, "some test repo 1 commit 1\n", true);
@@ -126,7 +130,7 @@ public class UsageScenarios {
         git1.commit().setMessage("commit message 2 branch: ready/bue-dev").call();
 
         createBranchCommand = git1.branchCreate();
-        createBranchCommand.setName("team-frontend/dev");
+        createBranchCommand.setName(TEAM_FRONTEND_BRANCH);
         createBranchCommand.call();
 
         checkout = git1.checkout();
@@ -145,11 +149,11 @@ public class UsageScenarios {
         git2.commit().setMessage("commit message 2").call();
 
         createBranchCommand = git2.branchCreate();
-        createBranchCommand.setName("feature/team-dev");
+        createBranchCommand.setName(FEATURE_BRANCH);
         createBranchCommand.call();
 
         checkout = git2.checkout();
-        checkout.setName("feature/team-dev");
+        checkout.setName(FEATURE_BRANCH);
         checkout.call();
 
         FileUtils.writeStringToFile(testRepo2Readme, "some test repo 2 commit 1\n");
@@ -161,7 +165,7 @@ public class UsageScenarios {
         git2.commit().setMessage("commit message 2 branch: feature/team-dev").call();
 
         createBranchCommand = git2.branchCreate();
-        createBranchCommand.setName("ready/bue-dev");
+        createBranchCommand.setName(READY_BRANCH);
         createBranchCommand.call();
 
         checkout = git2.checkout();
@@ -203,20 +207,6 @@ public class UsageScenarios {
         return project;
     }
 
-    private int countCommits(Repository repository) {
-        Git git = new Git(repository);
-        int commitCount = 0;
-
-        try {
-            Iterator<RevCommit> iterator = git.log().call().iterator();
-            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        return commitCount;
-    }
-
     @Test
     public void runSquashCommitStrategyOnRepository1() throws Exception {
         createValidRepositories();
@@ -228,14 +218,11 @@ public class UsageScenarios {
 
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
 
-        System.out.println("------------------------------------");
-        System.out.println(FileUtils.readFileToString(build.getLogFile()));
-        System.out.println("Commit count: " + countCommits(repository1));
-        System.out.println("------------------------------------");
-
         Result result = build.getResult();
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
+
+        assertTrue(TestUtilsFactory.branchExists(repository1, READY_BRANCH));
     }
 
     @Test
@@ -248,11 +235,6 @@ public class UsageScenarios {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
-
-        System.out.println("------------------------------------");
-        System.out.println(FileUtils.readFileToString(build.getLogFile()));
-        System.out.println("Commit count: " + countCommits(repository2));
-        System.out.println("------------------------------------");
 
         Result result = build.getResult();
         assertTrue(result.isCompleteBuild());
@@ -270,11 +252,6 @@ public class UsageScenarios {
 
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
 
-        System.out.println("------------------------------------");
-        System.out.println(FileUtils.readFileToString(build.getLogFile()));
-        System.out.println("Commit count: " + countCommits(repository1));
-        System.out.println("------------------------------------");
-
         Result result = build.getResult();
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
@@ -290,11 +267,6 @@ public class UsageScenarios {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
-
-        System.out.println("------------------------------------");
-        System.out.println(FileUtils.readFileToString(build.getLogFile()));
-        System.out.println("Commit count: " + countCommits(repository2));
-        System.out.println("------------------------------------");
 
         Result result = build.getResult();
         assertTrue(result.isCompleteBuild());
