@@ -186,7 +186,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
 
         // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
         BuildData gitBuildData = build.getAction(BuildData.class);
+        
+        // TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything             
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+        
         String devBranchName = gitDataBranch.getName();
         if (devBranchName.contains("master")) {
             listener.getLogger().println(LOG_PREFIX + "Using the master branch for polling and development is not" +

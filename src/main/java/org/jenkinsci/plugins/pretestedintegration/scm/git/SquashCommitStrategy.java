@@ -42,7 +42,11 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         GitBridge gitbridge = (GitBridge)bridge;
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
+        
+        //TODO: How can you add more than 1 action, MultiSCM plugin with two seperate gits?
         BuildData gitBuildData = build.getAction(BuildData.class);
+        
+        //TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything     
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         GitClient client;
 

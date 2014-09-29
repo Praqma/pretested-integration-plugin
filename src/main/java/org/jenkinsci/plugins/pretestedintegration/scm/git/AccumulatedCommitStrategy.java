@@ -55,6 +55,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BuildData gitBuildData = build.getAction(BuildData.class);
+        
+        //TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything     
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();        
         boolean found = false;
         
