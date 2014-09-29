@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import antlr.ANTLRException;
-import com.sun.corba.se.impl.orb.ParserTable;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -13,15 +12,12 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.triggers.SCMTrigger;
-import hudson.util.RunList;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
-import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
@@ -30,7 +26,6 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrat
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -39,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import static junit.framework.Assert.assertFalse;
@@ -47,8 +41,9 @@ import static junit.framework.Assert.assertTrue;
 
 /**
  * Created by andrius on 9/23/14.
+ * Test integration of commit with two branch heads: https://trello.com/c/MFzaEMDz
  */
-public class UsageScenarios {
+public class TwoBranchHeads {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
