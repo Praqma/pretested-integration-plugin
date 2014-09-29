@@ -21,6 +21,7 @@ import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -61,6 +62,22 @@ public class TestUtilsFactory {
         }
 
         return commitCount;
+    }
+
+    public static boolean branchExists(Repository repository, String branch) throws GitAPIException {
+        Git git = new Git(repository);
+
+        List<Ref> call = git.branchList().call();
+
+        ListIterator<Ref> refListIterator = call.listIterator();
+
+        while(refListIterator.hasNext()) {
+            String branchName = refListIterator.next().getName();
+            if (branchName.endsWith(branch))
+                return true;
+        }
+
+        return false;
     }
 
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo) throws Exception {

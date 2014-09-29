@@ -5,16 +5,13 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
-import java.util.Iterator;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
@@ -39,21 +36,6 @@ public class AccumulatedCommitStrategyIT {
         }       
     }
 
-    private int countCommits() {
-        Git git = new Git(repository);
-        int commitCount = 0;
-
-        try {
-            Iterator<RevCommit> iterator = git.log().call().iterator();
-            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
-
-        } catch (GitAPIException e) {
-            e.printStackTrace();
-        }
-
-        return commitCount;
-    }
-
     @Test
     public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         
@@ -63,7 +45,7 @@ public class AccumulatedCommitStrategyIT {
         String readmeFromIntegration = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
 
         git.checkout().setName(FEATURE_BRANCH_NAME).call();
-        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
         git.checkout().setName("master").call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
@@ -81,7 +63,7 @@ public class AccumulatedCommitStrategyIT {
         String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
         assertEquals(readmeFromIntegration, readmeFileContents);
 
-        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
         assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
     }
 
@@ -109,7 +91,7 @@ public class AccumulatedCommitStrategyIT {
         Git git = new Git(repository);
 
         git.checkout().setName(FEATURE_BRANCH_NAME).call();
-        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
         git.checkout().setName("master").call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
@@ -125,11 +107,10 @@ public class AccumulatedCommitStrategyIT {
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
         
         
-
         String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
         assertEquals(fromIntegration, readmeFileContents);
 
-        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = countCommits();
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
         assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
     }
 
