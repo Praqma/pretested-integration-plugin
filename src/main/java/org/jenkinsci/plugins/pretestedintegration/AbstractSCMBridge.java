@@ -18,12 +18,14 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.Describable;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
@@ -204,6 +206,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
             listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
             deleteIntegratedBranch(build, launcher, listener);            
         } 
+        
+    }
+    
+    public void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException {
         
     }
     

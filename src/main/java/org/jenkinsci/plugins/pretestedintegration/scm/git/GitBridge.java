@@ -7,6 +7,7 @@ import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
@@ -39,6 +40,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailur
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GitBridge extends AbstractSCMBridge {
@@ -343,6 +345,37 @@ public class GitBridge extends AbstractSCMBridge {
         }
 
     }
+
+    @Override
+    public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
+        if( project.getScm() instanceof GitSCM ) {
+            validateGitScm((GitSCM)project.getScm());
+        } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
+            MultiSCM multiscm = (MultiSCM)project.getScm();
+            int gitCounter = 0;
+            for(SCM scm : multiscm.getConfiguredSCMs()) {                
+                if(scm instanceof GitSCM) {
+                    GitSCM gitMultiScm = (GitSCM)scm;                    
+                    validateGitScm(gitMultiScm);
+                    gitCounter++;
+                }
+            }
+            
+            if(gitCounter > 1 && StringUtils.isBlank(getRepoName())) {
+                throw new UnsupportedConfigurationException("You haave included multiple git repositories in your multi scm configuration, but have not defined a repository name in the pre tested integration configuration");
+            }            
+        } else {
+            throw new UnsupportedConfigurationException("We only support git and mutiple scm plugins");
+        } 
+    }
+    
+        //For JENKINS-24754
+    private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
+        if(scm.getRepositories().size() > 1 && StringUtils.isBlank(getRepoName())) {
+            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
+        }        
+    }
+    
 
     private FilePath workingDirectory = null;
     final static String LOG_PREFIX = "[PREINT-GIT] ";
