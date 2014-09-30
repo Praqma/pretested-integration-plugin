@@ -11,6 +11,7 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import java.io.IOException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
@@ -59,6 +60,11 @@ public class DummySCM extends AbstractSCMBridge {
     @Override
     public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         
+    }
+
+    @Override
+    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
+        //nop
     }
 	
 	@Extension

@@ -182,32 +182,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @throws IOException A repository could not be reached.
      */
-    public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        Result result = build.getResult();
-        updateBuildDescription(build, launcher, listener);
-
-        // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
-        BuildData gitBuildData = build.getAction(BuildData.class);
-        
-        // TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything             
-        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
-        
-        String devBranchName = gitDataBranch.getName();
-        if (devBranchName.contains("master")) {
-            listener.getLogger().println(LOG_PREFIX + "Using the master branch for polling and development is not" +
-                    " allowed since it will attempt to merge it to other branches and delete it after.");
-            build.setResult(Result.FAILURE);
-        }
-
-        if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
-
-            listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
-            commit(build, launcher, listener);
-            listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
-            deleteIntegratedBranch(build, launcher, listener);            
-        } 
-        
-    }
+    public abstract void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException;
     
     public void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException {
         
