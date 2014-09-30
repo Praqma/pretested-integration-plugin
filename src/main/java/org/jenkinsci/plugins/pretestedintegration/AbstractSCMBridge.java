@@ -24,7 +24,6 @@ import hudson.model.Result;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
@@ -152,10 +151,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
-        //nop
-    }
-
-    public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {
         //nop
     }
     

@@ -11,10 +11,10 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import java.io.IOException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
 
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -44,11 +44,6 @@ public class DummySCM extends AbstractSCMBridge {
 		commited = true;
 	}
 	
-	@Override
-	public void rollback(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {
-		rolledBack = true;
-	}
-	
 	public boolean isCommited() {
 		return commited;
 	}
@@ -65,6 +60,9 @@ public class DummySCM extends AbstractSCMBridge {
     @Override
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
         //nop
+        if(build.getResult().isBetterOrEqualTo(Result.SUCCESS)) {
+            commit(build, launcher, listener);
+        }
     }
 	
 	@Extension

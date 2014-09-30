@@ -32,7 +32,6 @@ import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
@@ -40,7 +39,6 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapp
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -224,25 +222,6 @@ public class GitBridge extends AbstractSCMBridge {
         return gitDataBranch.getName().startsWith(resolveRepoName());
     }
     
-    @Override
-    public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {        
-        int returncode = -9999;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();        
-        Commit<?> lastIntegraion = build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip();
-        try {
-            if(lastIntegraion != null) {
-                returncode = git(build, launcher, listener, bos, "reset", "--hard", (String)lastIntegraion.getId());
-            }         
-        } catch (Exception ex) {
-            logger.log(Level.WARNING, "Failed to roll back", ex);
-        }
-        
-        //If the return code is -9999 that means no previous pre-test action
-        if(returncode != 0 && returncode != -9999) {
-            throw new RollbackFailureException( String.format( "Failed to rollback changes, message was:%n%s", bos.toString()) );
-        }        
-    }
-
     @Override
     public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException {
         BuildData gitBuildData = build.getAction(BuildData.class);
