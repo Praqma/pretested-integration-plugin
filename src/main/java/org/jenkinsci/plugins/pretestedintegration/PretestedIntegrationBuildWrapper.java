@@ -12,18 +12,13 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
-import hudson.plugins.git.GitSCM;
-import hudson.scm.SCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
