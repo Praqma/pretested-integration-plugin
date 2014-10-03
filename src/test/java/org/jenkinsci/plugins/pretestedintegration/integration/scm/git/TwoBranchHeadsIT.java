@@ -43,7 +43,7 @@ import static junit.framework.Assert.assertTrue;
  * Created by andrius on 9/23/14.
  * Test integration of commit with two branch heads: https://trello.com/c/MFzaEMDz
  */
-public class TwoBranchHeads {
+public class TwoBranchHeadsIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
