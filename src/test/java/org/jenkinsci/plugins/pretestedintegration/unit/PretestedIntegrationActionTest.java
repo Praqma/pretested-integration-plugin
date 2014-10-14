@@ -9,6 +9,7 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.model.StreamBuildListener;
 
 import hudson.plugins.git.Branch;
@@ -83,6 +84,8 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		
 		scmInterface.setCommit(new Commit<String>("test"));
 		
+        when(build.getResult()).thenReturn(Result.SUCCESS);
+        
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
 		action.finalise(launcher, listener);
 		
@@ -114,6 +117,8 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		BuildListener listener = new StreamBuildListener(out);
 		DummySCM scmInterface = new DummySCM(null);
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
+        when(build.getResult()).thenReturn(Result.SUCCESS);
+                
 		action.finalise(launcher, listener);
 		verify(project, times(0)).scheduleBuild2(0);
 	}

@@ -7,6 +7,8 @@ import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
@@ -30,7 +32,6 @@ import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
@@ -38,7 +39,7 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapp
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GitBridge extends AbstractSCMBridge {
@@ -222,25 +223,6 @@ public class GitBridge extends AbstractSCMBridge {
     }
     
     @Override
-    public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {        
-        int returncode = -9999;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();        
-        Commit<?> lastIntegraion = build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip();
-        try {
-            if(lastIntegraion != null) {
-                returncode = git(build, launcher, listener, bos, "reset", "--hard", (String)lastIntegraion.getId());
-            }         
-        } catch (Exception ex) {
-            logger.log(Level.WARNING, "Failed to roll back", ex);
-        }
-        
-        //If the return code is -9999 that means no previous pre-test action
-        if(returncode != 0 && returncode != -9999) {
-            throw new RollbackFailureException( String.format( "Failed to rollback changes, message was:%n%s", bos.toString()) );
-        }        
-    }
-
-    @Override
     public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException {
         BuildData gitBuildData = build.getAction(BuildData.class);
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
@@ -343,6 +325,66 @@ public class GitBridge extends AbstractSCMBridge {
         }
 
     }
+
+    @Override
+    public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
+        if( project.getScm() instanceof GitSCM ) {
+            validateGitScm((GitSCM)project.getScm());
+        } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
+            MultiSCM multiscm = (MultiSCM)project.getScm();
+            int gitCounter = 0;
+            for(SCM scm : multiscm.getConfiguredSCMs()) {                
+                if(scm instanceof GitSCM) {
+                    GitSCM gitMultiScm = (GitSCM)scm;                    
+                    validateGitScm(gitMultiScm);
+                    gitCounter++;
+                }
+            }
+            
+            if(gitCounter > 1 && StringUtils.isBlank(getRepoName())) {
+                throw new UnsupportedConfigurationException("You haave included multiple git repositories in your multi scm configuration, but have not defined a repository name in the pre tested integration configuration");
+            }            
+        } else {
+            throw new UnsupportedConfigurationException("We only support git and mutiple scm plugins");
+        } 
+    }
+    
+        //For JENKINS-24754
+    private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
+        if(scm.getRepositories().size() > 1 && StringUtils.isBlank(getRepoName())) {
+            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
+        }        
+    }
+
+    @Override
+    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
+        Result result = build.getResult();
+        updateBuildDescription(build, launcher, listener);
+
+        // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
+        BuildData gitBuildData = build.getAction(BuildData.class);
+        
+        // TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything             
+        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+        
+        String devBranchName = gitDataBranch.getName();
+        if (devBranchName.contains("master")) {
+            listener.getLogger().println(LOG_PREFIX + "Using the master branch for polling and development is not" +
+                    " allowed since it will attempt to merge it to other branches and delete it after.");
+            build.setResult(Result.FAILURE);
+        }
+
+        if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
+
+            listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
+            commit(build, launcher, listener);
+            listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
+            deleteIntegratedBranch(build, launcher, listener);            
+        } 
+    }
+    
+    
+    
 
     private FilePath workingDirectory = null;
     final static String LOG_PREFIX = "[PREINT-GIT] ";

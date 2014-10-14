@@ -12,18 +12,13 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
-import hudson.plugins.git.GitSCM;
-import hudson.scm.SCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -65,36 +60,6 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         return null;
     }
     
-    //For JENKINS-24754
-    private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
-        if(scm.getRepositories().size() > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
-            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
-        }        
-    }
-    
-    //For JENKINS-24754
-    private void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException  {        
-        if( project.getScm() instanceof GitSCM ) {
-            validateGitScm((GitSCM)project.getScm());
-        } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
-            MultiSCM multiscm = (MultiSCM)project.getScm();
-            int gitCounter = 0;
-            for(SCM scm : multiscm.getConfiguredSCMs()) {                
-                if(scm instanceof GitSCM) {
-                    GitSCM gitMultiScm = (GitSCM)scm;                    
-                    validateGitScm(gitMultiScm);
-                    gitCounter++;
-                }
-            }
-            
-            if(gitCounter > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
-                throw new UnsupportedConfigurationException("You haave included multiple git repositories in your multi scm configuration, but have not defined a repository name in the pre tested integration configuration");
-            }            
-        } else {
-            throw new UnsupportedConfigurationException("We only support git and mutiple scm plugins");
-        } 
-    }
-
     /**
      * Jenkins hook that fires after the workspace is initialized. Calls the
      * SCM-specific function according to the chosen SCM.
@@ -113,7 +78,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             BuildQueue.getInstance().enqueueAndWait();        
             PretestedIntegrationAction action;
             try {
-                validateConfiguration(build.getProject());
+                scmBridge.validateConfiguration(build.getProject());
                 scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
 
                 //Create the action. Record the state of integration branch
