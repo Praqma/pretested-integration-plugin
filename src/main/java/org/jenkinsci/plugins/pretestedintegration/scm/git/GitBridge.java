@@ -67,15 +67,7 @@ public class GitBridge extends AbstractSCMBridge {
     public String getRevId() {
         return this.revId;
     }
-
-    public void setWorkingDirectory(FilePath workingDirectory) {
-        this.workingDirectory = workingDirectory;
-    }
-
-    public FilePath getWorkingDirectory() {
-        return this.workingDirectory;
-    }
-
+    
     private GitSCM findScm(AbstractBuild<?, ?> build) throws InterruptedException {
         SCM scm = build.getProject().getScm();
 
