@@ -16,6 +16,7 @@ import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.RollbackFailureException;
@@ -101,25 +102,17 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             }  
         } catch (NothingToDoException ex) {
             build.setResult(Result.NOT_BUILT);
+            listener.getLogger().println(ex.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", ex);
             BuildQueue.getInstance().release();
             everythingOk = false;
-        } catch (IntegationFailedExeception e) {
+        } catch (IntegationFailedExeception | EstablishWorkspaceException | NextCommitFailureException | RollbackFailureException e) {
             build.setResult(Result.FAILURE);
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
             BuildQueue.getInstance().release();
             everythingOk = false;
-        } catch (EstablishWorkspaceException established) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (NextCommitFailureException ex) {
-            build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
-            everythingOk = false;
-        } catch (RollbackFailureException ex) {
-            build.setResult(Result.FAILURE); 
-            BuildQueue.getInstance().release();
-            everythingOk = false;        
-        }
+        } 
 
         BuildWrapper.Environment environment = new PretestEnvironment();
         return everythingOk ? environment : null;
