@@ -12,18 +12,12 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.BuildData;
-import hudson.remoting.VirtualChannel;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
@@ -78,14 +72,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             } catch (Exception ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
+            logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote.");
             throw new NothingToDoException();
-        }
-        
-        String integrationSHA = "Not specified";
-        try {
-            integrationSHA = (String)build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
-        } catch (Exception ex) {
-            
         }
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", (String) commit.getId(), gitbridge.getBranch() ) );
