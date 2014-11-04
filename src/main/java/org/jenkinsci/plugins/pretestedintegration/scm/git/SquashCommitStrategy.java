@@ -37,8 +37,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
     @Override
     public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
-        logger.entering("SquashCommitStrategy", "integrate", new Object[] {
-				build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: 36174744d49c892c3aeed5e2bc933991
+        logger.entering("SquashCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: 36174744d49c892c3aeed5e2bc933991
 		int exitCode = -999;
         int exitCodeCommit = -999;
         GitBridge gitbridge = (GitBridge)bridge;
@@ -60,7 +59,9 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         try {
             client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
 
+            logger.fine("Finding remote branches");
             for(Branch b : client.getRemoteBranches()) {
+                logger.fine(String.format("Found remote branch %s", b.getName()));
                 if(b.getName().equals(gitDataBranch.getName())) {
                     found = true;
                     break;
@@ -69,7 +70,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "GitClient error", ex);
             logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
-			throw new IntegationFailedExeception("Unspecified GitClient error",ex);
+			throw new IntegationFailedExeception("Unspecified GitClient error", ex);
         }
 
         if(!found) {
@@ -78,7 +79,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             } catch (IOException ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
-            logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote branch name");
+            logger.log(Level.WARNING, String.format("Nothing to do. The branch name (%s) contained in the git build data object, did not match a remote branch name", gitDataBranch.getName()));
             logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
 			throw new NothingToDoException();
         }
@@ -90,7 +91,10 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "-C", gitDataBranch.getName());
 
             listener.getLogger().println( String.format( "Commit message:%n%s", commitMessage));
-        } catch (Exception ex) { /*Handled below */ }
+        } catch (Exception ex) { 
+            /*Handled below */ 
+            logger.log(Level.WARNING, "Exception getting commit message", ex);
+        }
 
         if (exitCode != 0) {
             listener.getLogger().println("Failed to merge changes. Error message below");
@@ -130,9 +134,6 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<SquashCommitStrategy> {
-
-        private static final Logger logger = Logger
-				.getLogger(DescriptorImpl.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
 
 		public DescriptorImpl() {
             load();

@@ -40,8 +40,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 
     @Override
     public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
-        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] {
-				build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
+        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
 		int exitCode = -999;
 
         GitClient client;
@@ -56,7 +55,10 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         try {
             client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
             
+            logger.fine("Finding remote branches");
             for(Branch b : client.getRemoteBranches()) {
+                logger.fine(String.format("Found remote branch %s", b.getName()));
+                
                 if(b.getName().equals(gitDataBranch.getName())) {                    
                     found = true;
                     break;
@@ -74,7 +76,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             } catch (Exception ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
-            logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote branch name");
+            logger.log(Level.WARNING, String.format("Nothing to do. The branch name (%s) contained in the git build data object, did not match a remote branch name", gitDataBranch != null ? gitDataBranch.getName() : "null"));
             logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
 			throw new NothingToDoException();
         }
@@ -85,7 +87,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));                                 
             exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), (String) commit.getId(), "--no-ff");
         } catch (Exception ex) {
-            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+            logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+            logger.log(Level.WARNING, "Exception while merging, logging exception",ex);
 			throw new IntegationFailedExeception(ex);
         }
         
@@ -95,7 +98,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             try {
                 build.setDescription(String.format("Merge conflict"));
             }  catch (IOException ex) {
-                logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+                logger.exiting("AccumulatedCommitStrategy", "integrate-setDescription() failed");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
 				throw new IntegationFailedExeception(ex);
             }
             logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
@@ -106,9 +109,6 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
     
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<AccumulatedCommitStrategy> {
-        
-        private static final Logger logger = Logger
-				.getLogger(DescriptorImpl.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
 
 		public DescriptorImpl() {
             load();

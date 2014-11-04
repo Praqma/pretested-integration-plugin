@@ -1,11 +1,8 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
-import antlr.ANTLRException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Queue;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
@@ -15,7 +12,6 @@ import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
-import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -28,7 +24,6 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapp
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;

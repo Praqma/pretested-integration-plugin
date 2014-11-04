@@ -4,9 +4,8 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
 public final class BuildQueue {
-	private final static Logger logger = Logger.getLogger(BuildQueue.class
-			.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
-
+    
+	private final static Logger logger = Logger.getLogger(BuildQueue.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
 	private static BuildQueue instance;
 	
 	Semaphore semaphore;
@@ -56,8 +55,8 @@ public final class BuildQueue {
         * @return boolean indicating if the queue is not occupied 
 	*/	
 	public boolean available() {
-		logger.entering("BuildQueue", "available");// Generated code DONT TOUCH! Bookmark: a5770e885a1c3c79b9996916440b4c7a
-		logger.exiting("BuildQueue", "available");// Generated code DONT TOUCH! Bookmark: e6a234c970072ddcff7aa9ef78134e11
+		logger.entering("BuildQueue", "available");// Generated code DONT TOUCH! Bookmark: a5770e885a1c3c79b9996916440b4c7a		
+        logger.exiting("BuildQueue", "available");
 		return semaphore.availablePermits() > 0;
 	}
 }

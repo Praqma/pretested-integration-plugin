@@ -17,16 +17,10 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrategy> extends Descriptor<IntegrationStrategy> {
 
-    private final static Logger logger = Logger
-			.getLogger(IntegrationStrategyDescriptor.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
-
 	public abstract boolean isApplicable(Class<? extends AbstractSCMBridge> bridge);
     
     @Override
     public IntegrationStrategy newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        logger.exiting("IntegrationStrategyDescriptor", "newInstance");// Generated code DONT TOUCH! Bookmark: 6b434b0bc4a7b4e502f04f88ec57767c
-		logger.entering("IntegrationStrategyDescriptor", "newInstance",
-				new Object[] { req, formData });// Generated code DONT TOUCH! Bookmark: 061afc28f8b9c2331a989a904c3fb6f6
 		return req.bindJSON(IntegrationStrategy.class, formData);
     }
     
