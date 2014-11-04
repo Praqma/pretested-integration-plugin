@@ -37,7 +37,9 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
     @Override
     public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
-        int exitCode = -999;
+        logger.entering("SquashCommitStrategy", "integrate", new Object[] {
+				build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: 36174744d49c892c3aeed5e2bc933991
+		int exitCode = -999;
         int exitCodeCommit = -999;
         GitBridge gitbridge = (GitBridge)bridge;
 
@@ -66,7 +68,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             }
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "GitClient error", ex);
-            throw new IntegationFailedExeception("Unspecified GitClient error",ex);
+            logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
+			throw new IntegationFailedExeception("Unspecified GitClient error",ex);
         }
 
         if(!found) {
@@ -76,7 +79,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
             logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote branch name");
-            throw new NothingToDoException();
+            logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
+			throw new NothingToDoException();
         }
 
         try {
@@ -96,7 +100,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             } catch (IOException ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
-            throw new IntegationFailedExeception();
+            logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
+			throw new IntegationFailedExeception();
         }
 
         if (exitCodeCommit != 0 && exitCodeCommit != -999 ) {
@@ -114,17 +119,22 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             }
 
             if(out.toString().contains("nothing to commit")) {
-                throw new NothingToDoException();
+                logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
+				throw new NothingToDoException();
             }
 
-            throw new IntegationFailedExeception("Could commit merges. Git output: " + out.toString());
+            logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
+			throw new IntegationFailedExeception("Could commit merges. Git output: " + out.toString());
         }
     }
 
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<SquashCommitStrategy> {
 
-        public DescriptorImpl() {
+        private static final Logger logger = Logger
+				.getLogger(DescriptorImpl.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
+
+		public DescriptorImpl() {
             load();
         }
 

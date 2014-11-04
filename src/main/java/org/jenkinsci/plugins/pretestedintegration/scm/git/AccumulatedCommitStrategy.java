@@ -40,7 +40,9 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 
     @Override
     public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
-        int exitCode = -999;
+        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] {
+				build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
+		int exitCode = -999;
 
         GitClient client;
 
@@ -62,7 +64,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             }
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "GitClient error", ex);
-            throw new IntegationFailedExeception("GitClient error, unspecified", ex);
+            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+			throw new IntegationFailedExeception("GitClient error, unspecified", ex);
         }
         
         if(!found) {
@@ -72,7 +75,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
             logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote branch name");
-            throw new NothingToDoException();
+            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+			throw new NothingToDoException();
         }
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", (String) commit.getId(), gitbridge.getBranch() ) );
@@ -81,7 +85,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));                                 
             exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), (String) commit.getId(), "--no-ff");
         } catch (Exception ex) {
-            throw new IntegationFailedExeception(ex);
+            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+			throw new IntegationFailedExeception(ex);
         }
         
         if (exitCode > 0) {
@@ -90,9 +95,11 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             try {
                 build.setDescription(String.format("Merge conflict"));
             }  catch (IOException ex) {
-                throw new IntegationFailedExeception(ex);
+                logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+				throw new IntegationFailedExeception(ex);
             }
-            throw new IntegationFailedExeception();
+            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+			throw new IntegationFailedExeception();
         }
         
     }
@@ -100,7 +107,10 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<AccumulatedCommitStrategy> {
         
-        public DescriptorImpl() {
+        private static final Logger logger = Logger
+				.getLogger(DescriptorImpl.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
+
+		public DescriptorImpl() {
             load();
         }
         

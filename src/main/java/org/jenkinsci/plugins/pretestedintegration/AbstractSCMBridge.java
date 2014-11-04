@@ -38,31 +38,41 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
     
     public String getBranch() {
-        return branch;
+        logger.entering("AbstractSCMBridge", "getBranch");// Generated code DONT TOUCH! Bookmark: 7b6f3ea69850ae74b80bcda629a49db3
+		logger.exiting("AbstractSCMBridge", "getBranch");// Generated code DONT TOUCH! Bookmark: 71ff2f36490cbfa5f2ad2fe00d1631a0
+		return branch;
     }
 
     public Descriptor<AbstractSCMBridge> getDescriptor() {
-        return (SCMBridgeDescriptor<?>) Jenkins.getInstance().getDescriptorOrDie(getClass());
+        logger.entering("AbstractSCMBridge", "getDescriptor");// Generated code DONT TOUCH! Bookmark: cc03fcff17550896b59470a25ded6b78
+		logger.exiting("AbstractSCMBridge", "getDescriptor");// Generated code DONT TOUCH! Bookmark: 823d39ffd9e310ea4e69b554c7e354ab
+		return (SCMBridgeDescriptor<?>) Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
     public static DescriptorExtensionList<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>> all() {
-        return Jenkins.getInstance().<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>>getDescriptorList(AbstractSCMBridge.class);
+        logger.entering("AbstractSCMBridge", "all");// Generated code DONT TOUCH! Bookmark: d91c830b61f7a8131138badf33185ebe
+		logger.exiting("AbstractSCMBridge", "all");// Generated code DONT TOUCH! Bookmark: d07cd31ebc22af01ca094596eedcc30f
+		return Jenkins.getInstance().<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>>getDescriptorList(AbstractSCMBridge.class);
     }
 
     public static List<SCMBridgeDescriptor<?>> getDescriptors() {
-        List<SCMBridgeDescriptor<?>> list = new ArrayList<SCMBridgeDescriptor<?>>();
+        logger.entering("AbstractSCMBridge", "getDescriptors");// Generated code DONT TOUCH! Bookmark: 45b2cc954cebb7ed3230b6be4d57e5ab
+		List<SCMBridgeDescriptor<?>> list = new ArrayList<SCMBridgeDescriptor<?>>();
         for (SCMBridgeDescriptor<?> d : all()) {
             list.add(d);
         }
-        return list;
+        logger.exiting("AbstractSCMBridge", "getDescriptors");// Generated code DONT TOUCH! Bookmark: 7f23d63c082fdf693307fc041a0eb129
+		return list;
     }
     
     public static List<IntegrationStrategyDescriptor<?>> getBehaviours() {
-        List<IntegrationStrategyDescriptor<?>> list = new ArrayList<IntegrationStrategyDescriptor<?>>();
+        logger.entering("AbstractSCMBridge", "getBehaviours");// Generated code DONT TOUCH! Bookmark: 683867f2e0a65e8854a550f17520af17
+		List<IntegrationStrategyDescriptor<?>> list = new ArrayList<IntegrationStrategyDescriptor<?>>();
         for(IntegrationStrategyDescriptor<?> descr : IntegrationStrategy.all()) {
            list.add(descr);
         }        
-        return list;
+        logger.exiting("AbstractSCMBridge", "getBehaviours");// Generated code DONT TOUCH! Bookmark: ab82e2ca5b94ef8089d6c1509b2b6c3d
+		return list;
     }
     
 
@@ -82,7 +92,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      */
     public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws EstablishWorkspaceException, NothingToDoException, IntegationFailedExeception {    
-        mergeChanges(build, launcher, listener, commit);
+        logger.entering("AbstractSCMBridge", "prepareWorkspace", new Object[] {
+				build, listener, launcher, commit });// Generated code DONT TOUCH! Bookmark: 153879db1346111ba452f21bdef681e3
+		mergeChanges(build, launcher, listener, commit);
+		logger.exiting("AbstractSCMBridge", "prepareWorkspace");// Generated code DONT TOUCH! Bookmark: c1434f914c8ce73e41e5ea7b7ea1029a
     }
 
     /**
@@ -95,7 +108,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IntegationFailedExeception 
      */
     protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws NothingToDoException, IntegationFailedExeception {
-        integrationStrategy.integrate(build, launcher, listener, this, commit);
+        logger.entering("AbstractSCMBridge", "mergeChanges", new Object[] {
+				build, listener, launcher, commit });// Generated code DONT TOUCH! Bookmark: 2929a792ffc98c3546ea6e7755f81916
+		integrationStrategy.integrate(build, launcher, listener, this, commit);
+		logger.exiting("AbstractSCMBridge", "mergeChanges");// Generated code DONT TOUCH! Bookmark: a55866afd1caa8a8ab61b77dbbc2f130
     }
 
     public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException;
@@ -108,7 +124,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @return 
      */
     protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
-        return null;
+        logger.exiting("AbstractSCMBridge", "determineIntegrationHead");// Generated code DONT TOUCH! Bookmark: 19478dfa81d1cac69955a0cb6ee4ecdd
+		logger.entering("AbstractSCMBridge", "determineIntegrationHead",
+				new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 94e894e8dad5dfb0e85092e8e93ff296
+		return null;
     }
 
     /**
@@ -124,27 +143,44 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NextCommitFailureException
      */
     public Commit<?> nextCommit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws NextCommitFailureException {
-        return null;
+        logger.exiting("AbstractSCMBridge", "nextCommit");// Generated code DONT TOUCH! Bookmark: f0aa06678500b5cf31af6f72481f9561
+		logger.entering("AbstractSCMBridge", "nextCommit", new Object[] {
+				build, listener, launcher, commit });// Generated code DONT TOUCH! Bookmark: b28ff589e6d8f755b1062bf3d667b16d
+		return null;
     }
 
     public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
+		logger.entering("AbstractSCMBridge", "commit", new Object[] { build,
+				listener, launcher });// Generated code DONT TOUCH! Bookmark: 0858e763f8f80805e3caa7a6a8957226
+		logger.exiting("AbstractSCMBridge", "commit");// Generated code DONT TOUCH! Bookmark: 88b215c6f16b1aa5e6458f4686fef503
         //nop
     }
 
     public void rollback(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws RollbackFailureException {
+		logger.exiting("AbstractSCMBridge", "rollback");// Generated code DONT TOUCH! Bookmark: 236ace3e2717dd4af75d384457212f0c
+		logger.entering("AbstractSCMBridge", "rollback", new Object[] { build,
+				listener, launcher });// Generated code DONT TOUCH! Bookmark: cd4650320ce706cbcf4c7a3d76c3cae8
         //nop
     }
     
     public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException {
+		logger.exiting("AbstractSCMBridge", "deleteIntegratedBranch");// Generated code DONT TOUCH! Bookmark: ec2017cf2a7526cfb7470217ea25413e
+		logger.entering("AbstractSCMBridge", "deleteIntegratedBranch",
+				new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: a499b16a8f9e177b3cb5bb52f9db446b
         //nop
     }
     
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+		logger.exiting("AbstractSCMBridge", "updateBuildDescription");// Generated code DONT TOUCH! Bookmark: 832f1d788154dbccfc795d2762c455ca
+		logger.entering("AbstractSCMBridge", "updateBuildDescription",
+				new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: c0623c03e84a75c85d9db68bb8078a54
         //nop
     }
 
     public Result getRequiredResult() {
-        return Result.SUCCESS;
+        logger.entering("AbstractSCMBridge", "getRequiredResult");// Generated code DONT TOUCH! Bookmark: f015d31908905293b47ac7cd98635eb8
+		logger.exiting("AbstractSCMBridge", "getRequiredResult");// Generated code DONT TOUCH! Bookmark: e5202ad86a308a7620940ca0487810ef
+		return Result.SUCCESS;
     }
 
     /**
@@ -159,7 +195,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IOException A repository could not be reached.
      */
     public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        Result result = build.getResult();
+        logger.entering("AbstractSCMBridge", "handlePostBuild", new Object[] {
+				build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 9411c48462575da7c6477c5a34f7546d
+		Result result = build.getResult();
         updateBuildDescription(build, launcher, listener);
 
         // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
@@ -178,7 +216,8 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
             commit(build, launcher, listener);
             listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
             deleteIntegratedBranch(build, launcher, listener);            
-        } 
+        }
+		logger.exiting("AbstractSCMBridge", "handlePostBuild");// Generated code DONT TOUCH! Bookmark: d9d394d41d1eff3334403d5c957996b8 
         
     }
     

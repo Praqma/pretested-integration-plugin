@@ -44,7 +44,10 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @return 
      */
     private AbstractBuild<?,?> findLatestBuildWithPreTestedIntegrationAction(AbstractBuild<?,?> build) {        
-        AbstractBuild<?,?> start = build.getPreviousBuild();
+        logger.entering("PretestedIntegrationBuildWrapper",
+				"findLatestBuildWithPreTestedIntegrationAction",
+				new Object[] { build });// Generated code DONT TOUCH! Bookmark: e5a6737aaf1716293a86f1dc6a63f4e2
+		AbstractBuild<?,?> start = build.getPreviousBuild();
         for(AbstractBuild<?,?> i = start; i != null; i = i.getNextBuild()) {
             //If the previous build was not pre-test enabled, take next
             if(i.getAction(PretestedIntegrationAction.class) == null) {
@@ -58,7 +61,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
                 return null;
             }
         }
-        return null;
+        logger.exiting("PretestedIntegrationBuildWrapper",
+				"findLatestBuildWithPreTestedIntegrationAction");// Generated code DONT TOUCH! Bookmark: e6eabc19c589cecb05c17fa1995117b1
+		return null;
     }
 
     /**
@@ -72,7 +77,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      */
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
+        logger.entering("PretestedIntegrationBuildWrapper", "setUp",
+				new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 369385d08e04baa778ddf826119fd65e
+		listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
         boolean everythingOk = true;
         //There can be only one... at a time
         BuildQueue.getInstance().enqueueAndWait();        
@@ -135,15 +142,19 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         } 
 
         BuildWrapper.Environment environment = new PretestEnvironment();
-        return everythingOk ? environment : null;
+        logger.exiting("PretestedIntegrationBuildWrapper", "setUp");// Generated code DONT TOUCH! Bookmark: 26d03a511f894da2473586c56955ccca
+		return everythingOk ? environment : null;
     }
 
     public void ensurePublisher(AbstractBuild<?, ?> build) throws IOException {
-        Describable<?> describable = build.getProject().getPublishersList().get(PretestedIntegrationPostCheckout.class);
+        logger.entering("PretestedIntegrationBuildWrapper", "ensurePublisher",
+				new Object[] { build });// Generated code DONT TOUCH! Bookmark: acb06422ca5820e5d1346435817da866
+		Describable<?> describable = build.getProject().getPublishersList().get(PretestedIntegrationPostCheckout.class);
         if (describable == null) {
             logger.info("Adding publisher to project");
             build.getProject().getPublishersList().add(new PretestedIntegrationPostCheckout());
         }
+		logger.exiting("PretestedIntegrationBuildWrapper", "ensurePublisher");// Generated code DONT TOUCH! Bookmark: 3397f1ecf99b5c50d66a7e3b08c793dc
     }
 
     /**
@@ -153,18 +164,25 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      */
     
     public void preCheckout() throws IOException, InterruptedException {
+		logger.exiting("PretestedIntegrationBuildWrapper", "preCheckout");// Generated code DONT TOUCH! Bookmark: 558c4b785b68571bd2de45d1261e2a52
+		logger.entering("PretestedIntegrationBuildWrapper", "preCheckout");// Generated code DONT TOUCH! Bookmark: cd48bfcdc37ee500c8a1449eb752b966
         //nop
     }
 
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) super.getDescriptor();
+        logger.exiting("PretestedIntegrationBuildWrapper", "getDescriptor");// Generated code DONT TOUCH! Bookmark: c05050f6ec75bbdeaa711eded25307bd
+		logger.entering("PretestedIntegrationBuildWrapper", "getDescriptor");// Generated code DONT TOUCH! Bookmark: a04a866281166644880e76e2f6650a77
+		return (DescriptorImpl) super.getDescriptor();
     }
 
     @Extension
     public static class DescriptorImpl extends BuildWrapperDescriptor {
 
-        public DescriptorImpl() {
+        private final static Logger logger = Logger
+				.getLogger(DescriptorImpl.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
+
+		public DescriptorImpl() {
             load();
         }
 
@@ -183,6 +201,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     }
 
     class PretestEnvironment extends BuildWrapper.Environment {
+
+		private final static Logger logger = Logger
+				.getLogger(PretestEnvironment.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
     }
 
     private static final Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());

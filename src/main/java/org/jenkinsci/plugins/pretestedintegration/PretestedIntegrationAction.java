@@ -35,19 +35,27 @@ public class PretestedIntegrationAction implements Action {
 
 
     public String getDisplayName() {
-        return null;
+        logger.entering("PretestedIntegrationAction", "getDisplayName");// Generated code DONT TOUCH! Bookmark: 3fb34e2a852b5aabe47573d3958d0bf0
+		logger.exiting("PretestedIntegrationAction", "getDisplayName");// Generated code DONT TOUCH! Bookmark: 152a7955fe370131e8203e4d8bfc6c24
+		return null;
     }
 
     public String getIconFileName() {
-        return null;
+        logger.exiting("PretestedIntegrationAction", "getIconFileName");// Generated code DONT TOUCH! Bookmark: 7b30fa75160a837a01fcf455fdaa57c8
+		logger.entering("PretestedIntegrationAction", "getIconFileName");// Generated code DONT TOUCH! Bookmark: ca4d6f91bca42ec63e5f7623655ad110
+		return null;
     }
 
     public String getUrlName() {
-        return "pretested-integration";
+        logger.entering("PretestedIntegrationAction", "getUrlName");// Generated code DONT TOUCH! Bookmark: cf7c72a753adf447c5674dbc81b3b1b7
+		logger.exiting("PretestedIntegrationAction", "getUrlName");// Generated code DONT TOUCH! Bookmark: a61b5775071f223c0c2dc704582be204
+		return "pretested-integration";
     }
 
     public Commit<?> getCommit() {
-        return this.commit;
+        logger.exiting("PretestedIntegrationAction", "getCommit");// Generated code DONT TOUCH! Bookmark: 674d4923ce7e049dffd9392fabc70101
+		logger.entering("PretestedIntegrationAction", "getCommit");// Generated code DONT TOUCH! Bookmark: b43ca3a0527679c146edbad0873f0122
+		return this.commit;
     }
 
     /**
@@ -63,13 +71,16 @@ public class PretestedIntegrationAction implements Action {
      * @throws EstablishWorkspaceException    
      */
     public boolean initialise(Launcher launcher, BuildListener listener) throws IntegationFailedExeception, NothingToDoException, EstablishWorkspaceException {
-        boolean result = false;
+        logger.entering("PretestedIntegrationAction", "initialise",
+				new Object[] { listener, launcher });// Generated code DONT TOUCH! Bookmark: 243ef9e5f61005fcf1963a350f7abb77
+		boolean result = false;
         
         if (commit != null) {
             result = true;
             scmBridge.prepareWorkspace(build, launcher, listener, commit);
         }
-        return result;
+        logger.exiting("PretestedIntegrationAction", "initialise");// Generated code DONT TOUCH! Bookmark: 6f58d37470766bd11e40a451648336e5
+		return result;
     }
 
     /**
@@ -84,8 +95,11 @@ public class PretestedIntegrationAction implements Action {
      
      */
     public boolean finalise(Launcher launcher, BuildListener listener) throws IOException {
-        scmBridge.handlePostBuild(build, launcher, listener);
-        return true;
+        logger.entering("PretestedIntegrationAction", "finalise", new Object[] {
+				listener, launcher });// Generated code DONT TOUCH! Bookmark: 23e6352a21c64c077dc4297b12d4daa6
+		scmBridge.handlePostBuild(build, launcher, listener);
+        logger.exiting("PretestedIntegrationAction", "finalise");// Generated code DONT TOUCH! Bookmark: e8f9ed6662703ed637d9ea56f8214d09
+		return true;
     }
 
     private static final Logger logger = Logger.getLogger(PretestedIntegrationAction.class.getName());
@@ -94,13 +108,24 @@ public class PretestedIntegrationAction implements Action {
      * @return the currentIntegrationTip
      */
     public Commit<?> getCurrentIntegrationTip() {
-        return currentIntegrationTip;
+        logger
+				.exiting("PretestedIntegrationAction",
+						"getCurrentIntegrationTip");// Generated code DONT TOUCH! Bookmark: 6cdb1c69a0b483325f5f54412d160b1f
+		logger.entering("PretestedIntegrationAction",
+				"getCurrentIntegrationTip");// Generated code DONT TOUCH! Bookmark: ffd3b899be05f13052473c38f95fa2d7
+		return currentIntegrationTip;
     }
 
     /**
      * @param currentIntegrationTip the currentIntegrationTip to set
      */
     public void setCurrentIntegrationTip(Commit<?> currentIntegrationTip) {
-        this.currentIntegrationTip = currentIntegrationTip;
+        logger.entering("PretestedIntegrationAction",
+				"setCurrentIntegrationTip",
+				new Object[] { currentIntegrationTip });// Generated code DONT TOUCH! Bookmark: 7fe363971caf294085b34a533da2ceed
+		this.currentIntegrationTip = currentIntegrationTip;
+		logger
+				.exiting("PretestedIntegrationAction",
+						"setCurrentIntegrationTip");// Generated code DONT TOUCH! Bookmark: 6bd252060b7896da02bf44455dd4a422
     }
 }

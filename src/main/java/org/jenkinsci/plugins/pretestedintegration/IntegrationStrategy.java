@@ -19,7 +19,10 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public abstract class IntegrationStrategy implements Describable<IntegrationStrategy>, ExtensionPoint {  
-    public abstract void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException;
+    private final static Logger logger = Logger
+			.getLogger(IntegrationStrategy.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
+
+	public abstract void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException;
     
     @DataBoundConstructor
     public IntegrationStrategy() { }
@@ -27,11 +30,15 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
     
     
     public Descriptor<IntegrationStrategy> getDescriptor() {
-        return (IntegrationStrategyDescriptor<?>)Jenkins.getInstance().getDescriptorOrDie(getClass());
+        logger.exiting("IntegrationStrategy", "getDescriptor");// Generated code DONT TOUCH! Bookmark: ecd722247263f21a17188169745720f1
+		logger.entering("IntegrationStrategy", "getDescriptor");// Generated code DONT TOUCH! Bookmark: 24cc4de9955cf69f2428d18f247547c0
+		return (IntegrationStrategyDescriptor<?>)Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
     
     public static DescriptorExtensionList<IntegrationStrategy,IntegrationStrategyDescriptor<IntegrationStrategy>> all() {
-        return Jenkins.getInstance().<IntegrationStrategy,IntegrationStrategyDescriptor<IntegrationStrategy>>getDescriptorList(IntegrationStrategy.class);
+        logger.entering("IntegrationStrategy", "all");// Generated code DONT TOUCH! Bookmark: b760438f7e1423732caaa9ef553c5f93
+		logger.exiting("IntegrationStrategy", "all");// Generated code DONT TOUCH! Bookmark: 4a32ea823412bf7eb75d28dd9edca807
+		return Jenkins.getInstance().<IntegrationStrategy,IntegrationStrategyDescriptor<IntegrationStrategy>>getDescriptorList(IntegrationStrategy.class);
     }
     
 }
