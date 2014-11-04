@@ -106,7 +106,25 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", ex);
             BuildQueue.getInstance().release();
             everythingOk = false;
-        } catch (IntegationFailedExeception | EstablishWorkspaceException | NextCommitFailureException | RollbackFailureException e) {
+        } catch (EstablishWorkspaceException e) {
+            build.setResult(Result.FAILURE);
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
+            BuildQueue.getInstance().release();
+            everythingOk = false;
+        } catch (NextCommitFailureException e) {
+            build.setResult(Result.FAILURE);
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
+            BuildQueue.getInstance().release();
+            everythingOk = false;
+        } catch (RollbackFailureException e) {
+            build.setResult(Result.FAILURE);
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
+            BuildQueue.getInstance().release();
+            everythingOk = false;
+        } catch (IntegationFailedExeception e) {
             build.setResult(Result.FAILURE);
             listener.getLogger().println(e.getMessage());
             logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
