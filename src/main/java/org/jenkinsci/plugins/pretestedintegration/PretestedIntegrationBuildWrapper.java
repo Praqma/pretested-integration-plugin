@@ -44,7 +44,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @return 
      */
     private AbstractBuild<?,?> findLatestBuildWithPreTestedIntegrationAction(AbstractBuild<?,?> build) {        
-        AbstractBuild<?,?> start = build.getPreviousBuild();;
+        AbstractBuild<?,?> start = build.getPreviousBuild();
         for(AbstractBuild<?,?> i = start; i != null; i = i.getNextBuild()) {
             //If the previous build was not pre-test enabled, take next
             if(i.getAction(PretestedIntegrationAction.class) == null) {
