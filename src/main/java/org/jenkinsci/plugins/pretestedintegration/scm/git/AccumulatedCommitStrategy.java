@@ -23,7 +23,6 @@ import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -72,7 +71,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             } catch (Exception ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
-            logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote.");
+            logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote branch name");
             throw new NothingToDoException();
         }
 

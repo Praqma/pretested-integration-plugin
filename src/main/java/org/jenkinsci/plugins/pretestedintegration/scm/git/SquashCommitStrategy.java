@@ -49,7 +49,9 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         String integrationSHA = "Not specified";
         try {
             integrationSHA = (String)build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
-        } catch (Exception ex) {}
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "integrate() error. IntegrationSHA not found", ex);
+        }
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s(%s)", gitDataBranch.getSHA1String(), bridge.getBranch(), integrationSHA) );
         boolean found = false;
@@ -73,6 +75,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             } catch (IOException ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
+            logger.log(Level.WARNING, "Nothing to do. The branch name contained in the git build data object, did not match a remote branch name");
             throw new NothingToDoException();
         }
 
