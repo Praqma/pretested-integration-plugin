@@ -62,6 +62,7 @@ public class GeneralBehaviourIT {
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), null, null, null));
         
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null, true);
+        TestUtilsFactory.triggerProject(project);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -110,6 +111,7 @@ public class GeneralBehaviourIT {
         
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1", true);
         project.setScm(gitSCM);
+        TestUtilsFactory.triggerProject(project);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -156,6 +158,7 @@ public class GeneralBehaviourIT {
         
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, "origin1", true);
         project.setScm(gitSCM);
+        TestUtilsFactory.triggerProject(project);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -198,6 +201,7 @@ public class GeneralBehaviourIT {
         
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null, true);
         project.setScm(gitSCM);
+        TestUtilsFactory.triggerProject(project);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 
@@ -228,6 +232,7 @@ public class GeneralBehaviourIT {
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" +repository.getDirectory().getAbsolutePath(), null, null, null));
         
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPluginWithMultiSCM(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, config, "origin", repository);
+        TestUtilsFactory.triggerProject(project);
         
         assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
 

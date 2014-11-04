@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.util.RunList;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
@@ -47,6 +49,7 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
@@ -71,6 +74,7 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -93,6 +97,7 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -117,6 +122,7 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -145,6 +151,7 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -169,7 +176,8 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
-
+        TestUtilsFactory.triggerProject(project);
+        
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         int nextBuildNumber = project.getNextBuildNumber();
@@ -190,6 +198,7 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -214,6 +223,8 @@ public class SquashCommitStrategyIT {
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
+        
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
