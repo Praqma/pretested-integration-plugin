@@ -98,7 +98,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             try {
                 ensurePublisher(build);
             } catch (IOException e) {
+                listener.getLogger().println(e.getMessage());    
                 BuildQueue.getInstance().release();                
+                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);
             }  
         } catch (NothingToDoException ex) {
             build.setResult(Result.NOT_BUILT);
