@@ -10,6 +10,7 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
 import org.apache.commons.io.FileUtils;
@@ -226,6 +227,7 @@ public class AccumulatedCommitStrategyIT {
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
+        gitSCMExtensions.add(new RelativeTargetDirectory("rel-folder"));
 
         GitSCM gitSCM = new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("origin/ready/**")),

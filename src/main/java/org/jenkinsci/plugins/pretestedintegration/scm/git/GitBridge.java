@@ -9,6 +9,7 @@ import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.util.ArgumentListBuilder;
@@ -94,7 +95,7 @@ public class GitBridge extends AbstractSCMBridge {
         b.add(gitExe);
         b.add(cmds);
         logger.exiting("GitBridge", "buildCommand");// Generated code DONT TOUCH! Bookmark: b2de8fe32eb583d6dac86f020b66bfa4
-		return launcher.launch().cmds(b).pwd(build.getWorkspace());
+		return launcher.launch().pwd(resolveWorkspace(build, listener)).cmds(b);
     }
 
     /**
@@ -274,7 +275,18 @@ public class GitBridge extends AbstractSCMBridge {
 		return s;
     }
     
-    
+    public FilePath resolveWorkspace(AbstractBuild<?,?> build, TaskListener listener) throws InterruptedException, IOException {
+        FilePath ws = build.getWorkspace();
+        GitSCM scm = findScm(build);
+        RelativeTargetDirectory rtd = scm.getExtensions().get(RelativeTargetDirectory.class);
+        
+        
+        if(rtd != null) {
+            ws = rtd.getWorkingDirectory(scm, build.getProject(), ws, build.getEnvironment(listener), listener);
+        }        
+                
+        return ws;        
+    }
 
     @Override
     protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
@@ -282,7 +294,7 @@ public class GitBridge extends AbstractSCMBridge {
 		Commit<?> commit = null;
         try {
             logger.fine(String.format("About to determine integration head for build, for branch %s", getBranch() ) );
-            GitClient client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
+            GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
             for(Branch b : client.getBranches()) {
                 if(b.getName().contains(getBranch())) {
                     logger.fine("Found integration head commit sha: "+b.getSHA1String());

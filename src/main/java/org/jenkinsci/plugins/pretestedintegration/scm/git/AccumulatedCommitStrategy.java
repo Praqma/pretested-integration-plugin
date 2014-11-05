@@ -53,7 +53,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         boolean found = false;
         
         try {
-            client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
+            client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
             
             logger.fine("Finding remote branches");
             for(Branch b : client.getRemoteBranches()) {
