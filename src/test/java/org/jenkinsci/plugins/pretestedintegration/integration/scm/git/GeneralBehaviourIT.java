@@ -17,6 +17,7 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -234,14 +235,8 @@ public class GeneralBehaviourIT {
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPluginWithMultiSCM(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, config, "origin", repository);
         TestUtilsFactory.triggerProject(project);
         
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
-        QueueTaskFuture<Queue.Executable> future = jenkinsRule.jenkins.getQueue().getItems()[0].getFuture();
-
-        do {
-            Thread.sleep(1000);
-        } while (!future.isDone());
-
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
         int nextBuildNumber = project.getNextBuildNumber();
          
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
@@ -251,8 +246,56 @@ public class GeneralBehaviourIT {
         System.out.println("=====BUILD-LOG=====");
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
+        assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));
+    }
+        
+    
+    /**
+     * Test case for JENKINS-25445
+     * @throws Exception 
+     */
+    @Test 
+    public void testCheckOutToSubDirectoryWithSqushShouldSucceed() throws Exception {
+        repository = TestUtilsFactory.createValidRepository("test-repo-sqSubdir");
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, repository, true);        
+        GitSCM scm = (GitSCM)project.getScm();
+        scm.getExtensions().add(new RelativeTargetDirectory("rel-dir"));
+        TestUtilsFactory.triggerProject(project);
+        
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
+        FreeStyleBuild build = project.getBuilds().getFirstBuild();
+
+        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
+        System.out.println("=====BUILD-LOG=====");
+        System.out.println(text);
+        System.out.println("=====BUILD-LOG=====");
         
         assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));
     }
+        
     
+    /**
+     * Test case for JENKINS-25445
+     * @throws Exception 
+     */
+    @Test 
+    public void testCheckOutToSubDirectoryWithAccumulateShouldSucceed() throws Exception {
+        repository = TestUtilsFactory.createValidRepository("test-repo-accSubdir");
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository, true);
+        GitSCM scm = (GitSCM)project.getScm();
+        scm.getExtensions().add(new RelativeTargetDirectory("rel-dir"));
+        TestUtilsFactory.triggerProject(project); 
+        
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
+        FreeStyleBuild build = project.getBuilds().getFirstBuild();
+        
+        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
+        System.out.println("=====BUILD-LOG=====");
+        System.out.println(text);
+        System.out.println("=====BUILD-LOG=====");
+        
+        assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));        
+    }
 }

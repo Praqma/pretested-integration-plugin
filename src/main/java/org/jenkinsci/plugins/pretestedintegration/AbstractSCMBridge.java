@@ -197,30 +197,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public abstract void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException;
     
     public void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException { }
-
-    public void handlePostBuild( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        logger.entering("AbstractSCMBridge", "handlePostBuild", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 9411c48462575da7c6477c5a34f7546d
-		Result result = build.getResult();
-        updateBuildDescription(build, launcher, listener);
-
-        // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
-        BuildData gitBuildData = build.getAction(BuildData.class);
-        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
-        String devBranchName = gitDataBranch.getName();
-        if (devBranchName.contains("master")) {
-            listener.getLogger().println(LOG_PREFIX + "Using the master branch for polling and development is not" +
-                    " allowed since it will attempt to merge it to other branches and delete it after.");
-            build.setResult(Result.FAILURE);
-        }
-
-        if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
-            listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
-            commit(build, launcher, listener);
-            listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
-            deleteIntegratedBranch(build, launcher, listener);            
-        }
-		logger.exiting("AbstractSCMBridge", "handlePostBuild");// Generated code DONT TOUCH! Bookmark: d9d394d41d1eff3334403d5c957996b8        
-    }
     
     private static final Logger logger = Logger.getLogger(AbstractSCMBridge.class.getName());
 

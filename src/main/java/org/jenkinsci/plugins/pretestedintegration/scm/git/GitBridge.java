@@ -275,8 +275,7 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     @Override
-    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {        
         logger.entering("GitBridge", "updateBuildDescription", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: ebe53ccfc6676ea284a7dcb8855514e3
 		BuildData gitBuildData = build.getAction(BuildData.class);
         if(gitBuildData != null) {
@@ -303,14 +302,17 @@ public class GitBridge extends AbstractSCMBridge {
     }
     
     public FilePath resolveWorkspace(AbstractBuild<?,?> build, TaskListener listener) throws InterruptedException, IOException {
+        logger.entering("GitBridge", "resolveWorkspace");
         FilePath ws = build.getWorkspace();
         GitSCM scm = findScm(build);
         RelativeTargetDirectory rtd = scm.getExtensions().get(RelativeTargetDirectory.class);        
         
         if(rtd != null) {
             ws = rtd.getWorkingDirectory(scm, build.getProject(), ws, build.getEnvironment(listener), listener);
-        }        
-                
+        }
+        
+        logger.fine("Resolved workspace to "+ws);
+        logger.exiting("GitBridge", "resolveWorkspace");                
         return ws;        
     }
 
