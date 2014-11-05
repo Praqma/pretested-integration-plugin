@@ -3,9 +3,12 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
+
+
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
