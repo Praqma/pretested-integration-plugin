@@ -16,4 +16,8 @@ public class NothingToDoException extends IOException {
     public NothingToDoException() {
         super("Nothing to do");
     }
+    
+    public NothingToDoException(String message) {
+        super("Nothing to do the reason is: "+message);
+    }
 }

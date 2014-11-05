@@ -7,10 +7,10 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoExceptio
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
-import hudson.model.Describable;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Describable;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -78,57 +78,52 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
         
         boolean proceedToBuildStep = true;
-
-        if(scmBridge.isApplicable(build, listener)) {
-            BuildQueue.getInstance().enqueueAndWait();        
-            PretestedIntegrationAction action;
+        BuildQueue.getInstance().enqueueAndWait();        
+        PretestedIntegrationAction action;
+        try {            
+            scmBridge.validateConfiguration(build.getProject());
+            scmBridge.isApplicable(build, listener);
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
+            //Create the action. Record the state of integration branch
+            action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
+            build.addAction(action);                    
+            action.initialise(launcher, listener);
             try {
-                scmBridge.validateConfiguration(build.getProject());
-                scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
-                //Create the action. Record the state of integration branch
-                action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
-                build.addAction(action);                    
-                action.initialise(launcher, listener);
-                try {
-                    ensurePublisher(build);
-                } catch (IOException e) {
-                    BuildQueue.getInstance().release();                
-                }  
-            } catch (NothingToDoException e) {
-                build.setResult(Result.NOT_BUILT);
-                listener.getLogger().println(e.getMessage());
-                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
+                ensurePublisher(build);
+            } catch (IOException ex) {
+                logger.log(Level.WARNING, LOG_PREFIX+" "+"Failed to add publisher", ex);
                 BuildQueue.getInstance().release();
-                proceedToBuildStep = false;
-            } catch (IntegationFailedExeception e) {
-                build.setResult(Result.FAILURE);
-                BuildQueue.getInstance().release();
-                listener.getLogger().println(e.getMessage());
-                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
-                proceedToBuildStep = false;
-            } catch (EstablishWorkspaceException e) {
-                build.setResult(Result.FAILURE);
-                BuildQueue.getInstance().release();
-                listener.getLogger().println(e.getMessage());
-                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
-                proceedToBuildStep = false;
-            } catch (NextCommitFailureException e) {
-                build.setResult(Result.FAILURE);
-                listener.getLogger().println(e.getMessage());
-                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
-                BuildQueue.getInstance().release();    
-            } catch (UnsupportedConfigurationException e) {
-                build.setResult(Result.FAILURE);
-                listener.getLogger().println(e.getMessage());
-                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
-                listener.getLogger().println(e.getMessage());
-                BuildQueue.getInstance().release();                            
-                proceedToBuildStep = false;          
             }
-        } else {
-            listener.getLogger().println(String.format("%sSkipping the workspace preparation for pre tested integration", LOG_PREFIX));
-            proceedToBuildStep = scmBridge.applySkipBehaviour(build, listener);
-            listener.getLogger().println(String.format("%sProceed to build step = %s", LOG_PREFIX, proceedToBuildStep));
+        } catch (NothingToDoException e) {
+            build.setResult(Result.NOT_BUILT);
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
+            BuildQueue.getInstance().release();
+            proceedToBuildStep = false;
+        } catch (IntegationFailedExeception e) {
+            build.setResult(Result.FAILURE);
+            BuildQueue.getInstance().release();
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
+            proceedToBuildStep = false;
+        } catch (EstablishWorkspaceException e) {
+            build.setResult(Result.FAILURE);
+            BuildQueue.getInstance().release();
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
+            proceedToBuildStep = false;
+        } catch (NextCommitFailureException e) {
+            build.setResult(Result.FAILURE);
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
+            BuildQueue.getInstance().release();    
+        } catch (UnsupportedConfigurationException e) {
+            build.setResult(Result.FAILURE);
+            listener.getLogger().println(e.getMessage());
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
+            listener.getLogger().println(e.getMessage());
+            BuildQueue.getInstance().release();                            
+            proceedToBuildStep = false;          
         }
 
         BuildWrapper.Environment environment = new PretestEnvironment();

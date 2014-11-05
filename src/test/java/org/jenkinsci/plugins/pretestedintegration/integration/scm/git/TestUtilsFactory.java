@@ -63,6 +63,15 @@ public class TestUtilsFactory {
 
         return commitCount;
     }
+    
+    public static void destroyRepo(Repository repository) {
+        if(repository != null) {
+            repository.close();
+            if (repository.getDirectory().getParentFile().exists()) {
+                FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
+            }
+        }
+    }
 
     public static boolean branchExists(Repository repository, String branch) throws GitAPIException {
         Git git = new Git(repository);
@@ -91,11 +100,8 @@ public class TestUtilsFactory {
     public static void triggerProject( FreeStyleProject project  ) throws Exception {        
         SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
         project.addTrigger(scmTrigger);
-
         scmTrigger.start(project, true);
         scmTrigger.new Runner().run();
-
-        Thread.sleep(1000);
     }
        
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, boolean runOnSlave) throws Exception {
@@ -152,11 +158,35 @@ public class TestUtilsFactory {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
 
+        List<SCM> scms = new ArrayList<SCM>();
+        scms.add(gitSCM1);
         
-        MultiSCM scm = new MultiSCM(Arrays.asList(gitSCM1));
+        MultiSCM scm = new MultiSCM(scms);
         project.setScm(scm);
        
         return project;
+    }
+    
+    public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(JenkinsRule rule, TestUtilsFactory.STRATEGY_TYPE type, List<SCM> scms, String repoNamePluginConfig) throws Exception {
+        FreeStyleProject project = rule.createFreeStyleProject();
+        GitBridge gitBridge = null;
+        if(type == STRATEGY_TYPE.SQUASH) {
+            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoNamePluginConfig);
+        } else {
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoNamePluginConfig);
+        }
+        
+        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
+        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
+
+        MultiSCM scm = new MultiSCM(scms);
+        project.setScm(scm);
+       
+        return project;
+    }
+    
+    private static String createCommitMessageForRepo(String repositoryRootFolder, String branch, String message) {
+        return String.format("%s-%s-%s", message, branch, repositoryRootFolder);
     }
     
     public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {        
@@ -187,12 +217,12 @@ public class TestUtilsFactory {
             FileUtils.writeStringToFile(readme, "sample text\n");
 
         git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage("commit message 1").call();
+        git.commit().setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "commit message 1")).call();
 
         FileUtils.writeStringToFile(readme, "changed sample text\n");
 
         git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage("commit message 2").call();
+        git.commit().setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "commit message 2")).call();
 
         CreateBranchCommand createBranchCommand = git.branchCreate();
         createBranchCommand.setName(FEATURE_BRANCH_NAME);
@@ -204,7 +234,8 @@ public class TestUtilsFactory {
 
         git.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = git.commit();
-        commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "feature 1 commit 1"));
+        //commitCommand.setMessage("feature 1 commit 1");
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
 
@@ -212,11 +243,11 @@ public class TestUtilsFactory {
 
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
-        commitCommand.setMessage("feature 1 commit 2");
+        commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "feature 1 commit 2"));
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
 
-        git.checkout().setName("master").call();
+        git.checkout().setName("master").call();        
         return repository;
     }
     

@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public class UnsupportedConfigurationException extends IOException {
     
-    public static final String ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED = String.format("You have not defined a repository name in your Pre Tested Integration configuration, but you have multiple scm checkouts listed in your scm config");
+    public static final String ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED = String.format("You have multiple git repositories defined, but none of them matches your pretested integration repostiory. If using more than 1 repository, remotes must be explicitly named in the Git configuration");
 
     public UnsupportedConfigurationException(String message) {        
         super(message);        

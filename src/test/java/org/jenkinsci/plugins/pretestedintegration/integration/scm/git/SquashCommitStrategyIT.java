@@ -3,8 +3,6 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.util.RunList;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;

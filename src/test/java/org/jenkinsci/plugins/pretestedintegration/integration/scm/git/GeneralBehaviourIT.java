@@ -7,9 +7,7 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Queue;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
@@ -225,31 +223,7 @@ public class GeneralBehaviourIT {
             FileUtils.deleteQuietly(repository2.getDirectory().getParentFile());
         }
     }
-    
-    @Test
-    public void testOperationWithMultiSCM() throws Exception {
-        repository = TestUtilsFactory.createValidRepository("test-repo");
         
-        List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" +repository.getDirectory().getAbsolutePath(), null, null, null));
-        
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPluginWithMultiSCM(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, config, "origin", repository);
-        TestUtilsFactory.triggerProject(project);
-        
-        jenkinsRule.waitUntilNoActivityUpTo(60000);
-        
-        int nextBuildNumber = project.getNextBuildNumber();
-         
-        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
-        
-        //Show the log for the latest build
-        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
-        System.out.println("=====BUILD-LOG=====");
-        System.out.println(text);
-        System.out.println("=====BUILD-LOG=====");
-        assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));
-    }
-        
-    
     /**
      * Test case for JENKINS-25445
      * @throws Exception 

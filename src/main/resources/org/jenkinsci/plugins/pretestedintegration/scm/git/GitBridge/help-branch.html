@@ -6,9 +6,21 @@ and open the template in the editor.
 -->
 <html>
     <body>
-        <div>The target integration branch</div>
-        <p>
-            <span style="font-weight: 700">A merge/push will be performed on the basis of &lt;repoName&gt;/&lt;branchName&gt;.</span>
-        </p>
+        <h3>What to specify</h3>
+        <p>The branch name must match your integration branch name</p>
+        <h3>Merge is performed the following way</h3>
+        <h5>Squash commit</h5>
+        <pre>
+            git checkout -B &lt;Branch name&gt; &lt;Repository name&gt;/&lt;Branch name&gt;
+            git merge --squash &lt;Branch matched by git&gt;
+            git commit -C &lt;Branch matched by git&gt;</pre>
+        <h5>Accumulated commit</h5>
+        <pre>
+            git checkout -B &lt;Branch name&gt; &lt;Repository name&gt;/&lt;Branch name&gt;
+            git merge -m &lt;commitMsg&gt; &lt;Branch matched by git&gt; --no-ff</pre>                   
+        <h3>When changes are pushed to the integration branch?</h3>
+        <p>Changes are only ever pushed when the build results is SUCCESS</p>
+        <pre>
+            git push &lt;Repository name&gt; &lt;Branch name&gt;</pre>            
     </body>
 </html>
