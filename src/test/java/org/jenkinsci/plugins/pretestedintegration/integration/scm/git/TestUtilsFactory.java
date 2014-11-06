@@ -87,6 +87,16 @@ public class TestUtilsFactory {
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo, boolean runOnSlave) throws Exception {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null, runOnSlave);
     }
+    
+    public static void triggerProject( FreeStyleProject project  ) throws Exception {        
+        SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
+        project.addTrigger(scmTrigger);
+
+        scmTrigger.start(project, true);
+        scmTrigger.new Runner().run();
+
+        Thread.sleep(1000);
+    }
        
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, boolean runOnSlave) throws Exception {
         FreeStyleProject project = rule.createFreeStyleProject();
@@ -117,14 +127,6 @@ public class TestUtilsFactory {
 
         project.setScm(gitSCM);
 
-        SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
-        project.addTrigger(scmTrigger);
-
-        scmTrigger.start(project, true);
-        scmTrigger.new Runner().run();
-
-        Thread.sleep(1000);
-
         return project;
     }
     
@@ -153,14 +155,7 @@ public class TestUtilsFactory {
         
         MultiSCM scm = new MultiSCM(Arrays.asList(gitSCM1));
         project.setScm(scm);
-        
-        SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
-        project.addTrigger(scmTrigger);
-
-        scmTrigger.start(project, true);
-        scmTrigger.new Runner().run();
-
-        Thread.sleep(1000);
+       
         return project;
     }
     

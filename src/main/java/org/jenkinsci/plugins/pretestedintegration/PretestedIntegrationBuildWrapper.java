@@ -12,18 +12,14 @@ import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
-import hudson.plugins.git.GitSCM;
-import hudson.scm.SCM;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -48,7 +44,8 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @return 
      */
     private AbstractBuild<?,?> findLatestBuildWithPreTestedIntegrationAction(AbstractBuild<?,?> build) {        
-        AbstractBuild<?,?> start = build.getPreviousBuild();;
+        logger.entering("PretestedIntegrationBuildWrapper", "findLatestBuildWithPreTestedIntegrationAction", new Object[] { build });// Generated code DONT TOUCH! Bookmark: e5a6737aaf1716293a86f1dc6a63f4e2
+		AbstractBuild<?,?> start = build.getPreviousBuild();
         for(AbstractBuild<?,?> i = start; i != null; i = i.getNextBuild()) {
             //If the previous build was not pre-test enabled, take next
             if(i.getAction(PretestedIntegrationAction.class) == null) {
@@ -62,39 +59,10 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
                 return null;
             }
         }
-        return null;
+        logger.exiting("PretestedIntegrationBuildWrapper", "findLatestBuildWithPreTestedIntegrationAction");// Generated code DONT TOUCH! Bookmark: e6eabc19c589cecb05c17fa1995117b1
+		return null;
     }
     
-    //For JENKINS-24754
-    private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
-        if(scm.getRepositories().size() > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
-            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
-        }        
-    }
-    
-    //For JENKINS-24754
-    private void validateConfiguration(AbstractProject<?,?> project) throws UnsupportedConfigurationException  {        
-        if( project.getScm() instanceof GitSCM ) {
-            validateGitScm((GitSCM)project.getScm());
-        } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
-            MultiSCM multiscm = (MultiSCM)project.getScm();
-            int gitCounter = 0;
-            for(SCM scm : multiscm.getConfiguredSCMs()) {                
-                if(scm instanceof GitSCM) {
-                    GitSCM gitMultiScm = (GitSCM)scm;                    
-                    validateGitScm(gitMultiScm);
-                    gitCounter++;
-                }
-            }
-            
-            if(gitCounter > 1 && StringUtils.isBlank(((GitBridge)scmBridge).getRepoName())) {
-                throw new UnsupportedConfigurationException("You haave included multiple git repositories in your multi scm configuration, but have not defined a repository name in the pre tested integration configuration");
-            }            
-        } else {
-            throw new UnsupportedConfigurationException("We only support git and mutiple scm plugins");
-        } 
-    }
-
     /**
      * Jenkins hook that fires after the workspace is initialized. Calls the
      * SCM-specific function according to the chosen SCM.
@@ -106,16 +74,17 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      */
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
+        logger.entering("PretestedIntegrationBuildWrapper", "setUp", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 369385d08e04baa778ddf826119fd65e
         listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
+        
         boolean proceedToBuildStep = true;
 
         if(scmBridge.isApplicable(build, listener)) {
             BuildQueue.getInstance().enqueueAndWait();        
             PretestedIntegrationAction action;
             try {
-                validateConfiguration(build.getProject());
+                scmBridge.validateConfiguration(build.getProject());
                 scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
-
                 //Create the action. Record the state of integration branch
                 action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
                 build.addAction(action);                    
@@ -125,27 +94,36 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
                 } catch (IOException e) {
                     BuildQueue.getInstance().release();                
                 }  
-            } catch (NothingToDoException ex) {
+            } catch (NothingToDoException e) {
                 build.setResult(Result.NOT_BUILT);
+                listener.getLogger().println(e.getMessage());
+                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
                 BuildQueue.getInstance().release();
                 proceedToBuildStep = false;
             } catch (IntegationFailedExeception e) {
                 build.setResult(Result.FAILURE);
                 BuildQueue.getInstance().release();
+                listener.getLogger().println(e.getMessage());
+                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
                 proceedToBuildStep = false;
-            } catch (EstablishWorkspaceException established) {
+            } catch (EstablishWorkspaceException e) {
                 build.setResult(Result.FAILURE);
                 BuildQueue.getInstance().release();
+                listener.getLogger().println(e.getMessage());
+                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
                 proceedToBuildStep = false;
-            } catch (NextCommitFailureException ex) {
+            } catch (NextCommitFailureException e) {
                 build.setResult(Result.FAILURE);
-                BuildQueue.getInstance().release();
-                proceedToBuildStep = false;
-            } catch (UnsupportedConfigurationException ex) {
+                listener.getLogger().println(e.getMessage());
+                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
+                BuildQueue.getInstance().release();    
+            } catch (UnsupportedConfigurationException e) {
                 build.setResult(Result.FAILURE);
-                BuildQueue.getInstance().release();            
-                listener.getLogger().println(ex.getMessage());
-                return null;            
+                listener.getLogger().println(e.getMessage());
+                logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
+                listener.getLogger().println(e.getMessage());
+                BuildQueue.getInstance().release();                            
+                proceedToBuildStep = false;          
             }
         } else {
             listener.getLogger().println(String.format("%sSkipping the workspace preparation for pre tested integration", LOG_PREFIX));
@@ -154,15 +132,18 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         }
 
         BuildWrapper.Environment environment = new PretestEnvironment();
+        logger.exiting("PretestedIntegrationBuildWrapper", "setUp");
         return proceedToBuildStep ? environment : null;
     }
 
     public void ensurePublisher(AbstractBuild<?, ?> build) throws IOException {
-        Describable<?> describable = build.getProject().getPublishersList().get(PretestedIntegrationPostCheckout.class);
+        logger.entering("PretestedIntegrationBuildWrapper", "ensurePublisher", new Object[] { build });// Generated code DONT TOUCH! Bookmark: acb06422ca5820e5d1346435817da866
+		Describable<?> describable = build.getProject().getPublishersList().get(PretestedIntegrationPostCheckout.class);
         if (describable == null) {
             logger.info("Adding publisher to project");
             build.getProject().getPublishersList().add(new PretestedIntegrationPostCheckout());
         }
+		logger.exiting("PretestedIntegrationBuildWrapper", "ensurePublisher");// Generated code DONT TOUCH! Bookmark: 3397f1ecf99b5c50d66a7e3b08c793dc
     }
 
     /**
@@ -172,18 +153,23 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      */
     
     public void preCheckout() throws IOException, InterruptedException {
-        //nop
+        logger.entering("PretestedIntegrationBuildWrapper", "preCheckout");// Generated code DONT TOUCH! Bookmark: cd48bfcdc37ee500c8a1449eb752b966
+		logger.exiting("PretestedIntegrationBuildWrapper", "preCheckout");// Generated code DONT TOUCH! Bookmark: 558c4b785b68571bd2de45d1261e2a52
     }
 
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) super.getDescriptor();
+        logger.entering("PretestedIntegrationBuildWrapper", "getDescriptor");// Generated code DONT TOUCH! Bookmark: a04a866281166644880e76e2f6650a77
+        logger.exiting("PretestedIntegrationBuildWrapper", "getDescriptor");// Generated code DONT TOUCH! Bookmark: c05050f6ec75bbdeaa711eded25307bd		
+		return (DescriptorImpl) super.getDescriptor();
     }
 
     @Extension
     public static class DescriptorImpl extends BuildWrapperDescriptor {
 
-        public DescriptorImpl() {
+        private final static Logger logger = Logger.getLogger(DescriptorImpl.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
+
+		public DescriptorImpl() {
             load();
         }
 
@@ -201,8 +187,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         }
     }
 
-    class PretestEnvironment extends BuildWrapper.Environment {
-    }
+    class PretestEnvironment extends BuildWrapper.Environment { }
 
     private static final Logger logger = Logger.getLogger(PretestedIntegrationBuildWrapper.class.getName());
 }

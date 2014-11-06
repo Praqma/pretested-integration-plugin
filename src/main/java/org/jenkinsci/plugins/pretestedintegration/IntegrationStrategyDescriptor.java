@@ -17,11 +17,11 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrategy> extends Descriptor<IntegrationStrategy> {
 
-    public abstract boolean isApplicable(Class<? extends AbstractSCMBridge> bridge);
+	public abstract boolean isApplicable(Class<? extends AbstractSCMBridge> bridge);
     
     @Override
     public IntegrationStrategy newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        return req.bindJSON(IntegrationStrategy.class, formData);
+		return req.bindJSON(IntegrationStrategy.class, formData);
     }
     
 }

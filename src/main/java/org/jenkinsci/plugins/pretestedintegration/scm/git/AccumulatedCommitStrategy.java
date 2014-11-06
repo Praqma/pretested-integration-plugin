@@ -12,24 +12,17 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.BuildData;
-import hudson.remoting.VirtualChannel;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -47,7 +40,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 
     @Override
     public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
-        int exitCode = -999;
+        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
+		int exitCode = -999;
 
         GitClient client;
 
@@ -61,8 +55,11 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         boolean found = false;
         
         try {
-            client = Git.with(listener, build.getEnvironment(listener)).in(build.getWorkspace()).getClient();
+            client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();            
+            logger.fine("Finding remote branches");
             for(Branch b : client.getRemoteBranches()) {
+                logger.fine(String.format("Found remote branch %s", b.getName()));
+                
                 if(b.getName().equals(gitDataBranch.getName())) {                    
                     found = true;
                     break;
@@ -70,7 +67,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             }
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "GitClient error", ex);
-            throw new IntegationFailedExeception("GitClient error, unspecified", ex);
+            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+			throw new IntegationFailedExeception("GitClient error, unspecified", ex);
         }
         
         if(!found) {
@@ -79,14 +77,9 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             } catch (Exception ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
-            throw new NothingToDoException();
-        }
-        
-        String integrationSHA = "Not specified";
-        try {
-            integrationSHA = (String)build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
-        } catch (Exception ex) {
-            
+            logger.log(Level.WARNING, String.format("Nothing to do. The branch name (%s) contained in the git build data object, did not match a remote branch name", gitDataBranch != null ? gitDataBranch.getName() : "null"));
+            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+			throw new NothingToDoException();
         }
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", (String) commit.getId(), gitbridge.getBranch() ) );
@@ -95,7 +88,9 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));                                 
             exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), (String) commit.getId(), "--no-ff");
         } catch (Exception ex) {
-            throw new IntegationFailedExeception(ex);
+            logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+            logger.log(Level.WARNING, "Exception while merging, logging exception",ex);
+			throw new IntegationFailedExeception(ex);
         }
         
         if (exitCode > 0) {
@@ -104,17 +99,19 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             try {
                 build.setDescription(String.format("Merge conflict"));
             }  catch (IOException ex) {
-                throw new IntegationFailedExeception(ex);
+                logger.exiting("AccumulatedCommitStrategy", "integrate-setDescription() failed");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+				throw new IntegationFailedExeception(ex);
             }
-            throw new IntegationFailedExeception();
+            logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+			throw new IntegationFailedExeception();
         }
         
     }
     
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<AccumulatedCommitStrategy> {
-        
-        public DescriptorImpl() {
+
+		public DescriptorImpl() {
             load();
         }
         

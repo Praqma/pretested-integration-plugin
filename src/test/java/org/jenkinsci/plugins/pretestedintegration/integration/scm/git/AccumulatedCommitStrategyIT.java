@@ -3,9 +3,12 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
+
+
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +52,7 @@ public class AccumulatedCommitStrategyIT {
         git.checkout().setName("master").call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -72,6 +76,7 @@ public class AccumulatedCommitStrategyIT {
         repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -95,6 +100,7 @@ public class AccumulatedCommitStrategyIT {
         git.checkout().setName("master").call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -119,6 +125,7 @@ public class AccumulatedCommitStrategyIT {
         repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 

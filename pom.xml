@@ -9,7 +9,7 @@
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin</url>
     <name>Pretested integration</name>
     <artifactId>pretested-integration</artifactId>
-    <version>2.1.2-SNAPSHOT</version>
+    <version>2.2.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
 
     <developers>
@@ -38,11 +38,13 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <!-- Setting SCM to git. -->
+		<!-- Setting SCM to git. -->
+		<!-- Using Praqma's github repo as developer connection - this mean we must manual push tags and commits to the
+				 Jenkins CI github repo after an release. We do this to ensure no one sneaks code into our repo. -->
     <scm>
-        <connection>scm:git:ssh://github.com/jenkinsci/pretested-integration-plugin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/pretested-integration-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/pretested-integration-plugin</url>
+				<connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
+				<developerConnection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</developerConnection>
+        <url>https://github.com/Praqma/pretested-integration-plugin</url>
     </scm>
 
 
@@ -77,7 +79,6 @@
                     
     <build>
         <plugins>
-            
             <!-- 
             Allows integration tests to clean test environment before build fails 
             use 'mvn verify' to run integration tests to allow 'post-integration-test' phase

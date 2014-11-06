@@ -193,14 +193,6 @@ public class TwoBranchHeadsIT {
 
         project.setScm(gitSCM);
 
-        SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
-        project.addTrigger(scmTrigger);
-
-        scmTrigger.start(project, true);
-        scmTrigger.new Runner().run();
-
-        Thread.sleep(1000);
-
         return project;
     }
 
@@ -210,6 +202,7 @@ public class TwoBranchHeadsIT {
 
         String repo1Url = "file://" + repository1.getDirectory().getAbsolutePath();
         FreeStyleProject project = configurePretestedIntegrationPlugin(new SquashCommitStrategy(), repo1Url);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -238,6 +231,7 @@ public class TwoBranchHeadsIT {
 
         String repo2Url = "file://" + repository2.getDirectory().getAbsolutePath();
         FreeStyleProject project = configurePretestedIntegrationPlugin(new SquashCommitStrategy(), repo2Url);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -264,6 +258,7 @@ public class TwoBranchHeadsIT {
 
         String repo1Url = "file://" + repository1.getDirectory().getAbsolutePath();
         FreeStyleProject project = configurePretestedIntegrationPlugin(new AccumulatedCommitStrategy(), repo1Url);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
@@ -290,6 +285,7 @@ public class TwoBranchHeadsIT {
 
         String repo2Url = "file://" + repository2.getDirectory().getAbsolutePath();
         FreeStyleProject project = configurePretestedIntegrationPlugin(new AccumulatedCommitStrategy(), repo2Url);
+        TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 

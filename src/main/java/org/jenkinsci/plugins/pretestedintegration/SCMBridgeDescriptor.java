@@ -9,9 +9,9 @@ import hudson.model.Descriptor.FormException;
 
 public abstract class SCMBridgeDescriptor<T extends AbstractSCMBridge> extends Descriptor<AbstractSCMBridge> {
 
-    @Override
+	@Override
     public AbstractSCMBridge newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        return super.newInstance(req, formData);
+		return super.newInstance(req, formData);
     }
 
 }
