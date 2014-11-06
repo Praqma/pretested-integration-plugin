@@ -93,3 +93,12 @@ If anything needs to be undone, do it here.
 
 ### Identifying a commit
 For Git and Mercurial, it is possible to uniquely identify a commit by a hash value. It is possible to parameterise "org.jenkinsci.plugins.pretestedintegration.Commit" in order to use a custom class or type which uniquely identifies the commit.
+
+## Inserting logging statements
+Code-injector is used to achieve automatic insertion of logging satements. The project is available internally in Praqma.
+
+To run the operation clone the code-injector project from gitlab and run mvn clean install to add it to the local maven cache.
+Next clone both pretested-integration-plugin and usecase-pretested-integration plugin from the code-injector namespace.
+
+The java class called InsertLoggingStatements contains a path pointing to the pretested-integration-plugin, change that as appropriate.
+Run the Main class and check the results.
