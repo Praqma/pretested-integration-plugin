@@ -108,26 +108,12 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
     
     /**
-     * Method that determines if we should prepare workspace for integration, it
-     * If this returns false, the applySkipBehaviour method is called to determine if we should proceed to the build step.
+     * Method that determines if we should prepare workspace for integration. If not we throw the nothing to do exception
      * @param build
      * @param listener
      * @return 
      */
-    public boolean isApplicable(AbstractBuild<?,?> build, BuildListener listener) {
-        return true;
-    }
-    
-    /**
-     * Method that applies all the necessary behaviour when we have determined to skip.
-     * By default we return true, indicating that the pre build step was OK.
-     * @param build
-     * @param listener
-     * @return 
-     */
-    public boolean applySkipBehaviour(AbstractBuild<?,?> build, BuildListener listener) {
-        return true;
-    }
+    public void isApplicable(AbstractBuild<?,?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException { }
 
     public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException;
     

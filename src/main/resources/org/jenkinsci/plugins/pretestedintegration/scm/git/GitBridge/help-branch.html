@@ -11,16 +11,16 @@ and open the template in the editor.
         <h3>Merge is performed the following way</h3>
         <h5>Squash commit</h5>
         <pre>
-            git checkout -B &lt;integrationBranchName&gt; &lt;repoName&gt;/&lt;integrationBranchName&gt;
-            git merge --squash &lt;devBranchFoundByGit&gt;
-            git commit -C &lt;devBranchFoundByGit&gt;</pre>
+            git checkout -B &lt;Branch name&gt; &lt;Repository name&gt;/&lt;Branch name&gt;
+            git merge --squash &lt;Branch matched by git&gt;
+            git commit -C &lt;Branch matched by git&gt;</pre>
         <h5>Accumulated commit</h5>
         <pre>
-            git checkout -B &lt;integrationBranchName&gt; &lt;repoName&gt;/&lt;integrationBranchName&gt;
-            git merge -m &lt;commitMsg&gt; &lt;devBranchFoundByGit&gt; --no-ff</pre>                   
+            git checkout -B &lt;Branch name&gt; &lt;Repository name&gt;/&lt;Branch name&gt;
+            git merge -m &lt;commitMsg&gt; &lt;Branch matched by git&gt; --no-ff</pre>                   
         <h3>When changes are pushed to the integration branch?</h3>
         <p>Changes are only ever pushed when the build results is SUCCESS</p>
         <pre>
-            git push &lt;repoName&gt; &lt;branchName&gt;</pre>            
+            git push &lt;Repository name&gt; &lt;Branch name&gt;</pre>            
     </body>
 </html>
