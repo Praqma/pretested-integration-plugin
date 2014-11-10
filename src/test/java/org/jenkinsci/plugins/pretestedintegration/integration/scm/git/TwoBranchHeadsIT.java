@@ -26,6 +26,7 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrat
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -197,6 +198,7 @@ public class TwoBranchHeadsIT {
     }
 
     @Test
+    @Ignore
     public void runSquashCommitStrategyOnRepository1() throws Exception {
         createValidRepositories();
 
@@ -226,6 +228,7 @@ public class TwoBranchHeadsIT {
     }
 
     @Test
+    @Ignore
     public void runSquashCommitStrategyOnRepository2() throws Exception {
         createValidRepositories();
 
@@ -253,6 +256,7 @@ public class TwoBranchHeadsIT {
     }
 
     @Test
+    @Ignore
     public void runAccumulatedCommitStrategyOnRepository1() throws Exception {
         createValidRepositories();
 
@@ -280,6 +284,7 @@ public class TwoBranchHeadsIT {
     }
 
     @Test
+    @Ignore
     public void runAccumulatedCommitStrategyOnRepository2() throws Exception {
         createValidRepositories();
 
