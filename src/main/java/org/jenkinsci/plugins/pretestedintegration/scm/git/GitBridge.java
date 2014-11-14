@@ -259,7 +259,7 @@ public class GitBridge extends AbstractSCMBridge {
         
         //Check to make sure that we do ONLY integrate to the branches specified.
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();        
-        if(!gitDataBranch.getName().startsWith(resolveRepoName())) {
+        if(!gitDataBranch.getName().startsWith(resolveRepoName()+"/")) {
             throw new NothingToDoException(String.format("The git repository name %s does not match pretested configuration", gitDataBranch.getName()));
         }
     }

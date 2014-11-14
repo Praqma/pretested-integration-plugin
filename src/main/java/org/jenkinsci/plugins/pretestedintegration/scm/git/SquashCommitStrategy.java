@@ -92,7 +92,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));
 
             exitCode = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
-            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit");
+            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "--no-edit");
 
             listener.getLogger().println( String.format( "Commit message:%n%s", commitMessage));
         } catch (Exception ex) { 
