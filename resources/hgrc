@@ -1,2 +1,0 @@
-[hooks]
-changegroup = python:.hg/hg_change_group_hook.py:run

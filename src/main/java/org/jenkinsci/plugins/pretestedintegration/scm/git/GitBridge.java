@@ -21,7 +21,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -152,6 +156,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @param launcher
      * @param listener
      * @param cmds
+     * @param out
      * @return The exitcode of command
      * @throws IOException
      * @throws InterruptedException
@@ -243,19 +248,14 @@ public class GitBridge extends AbstractSCMBridge {
 
     @Override
     public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {        
-        //Check for more than one git build data object. Only observed with Multiple SCMs plugin, when using more than 1 instance of a git scm.
-        //Defensive check, multiple scm check handled in checkConfig, but it could happen when used with other plugins.
-        //See image docs/pics/More_than_1_gitBuild_data.png      
-        if(build.getActions(BuildData.class).size() > 1) {
-            throw new UnsupportedConfigurationException(String.format("More than one git build data detected, currently not supported.%nPossible cause: Multiple scm configurations, custom buildswrappers (by other plugins)."));
-        }
-        
-        BuildData gitBuildData = build.getAction(BuildData.class);
+        List<BuildData> bdata = build.getActions(BuildData.class);
         
         //If no build data was contributed
-        if(gitBuildData == null) {
+        if(bdata.isEmpty()) {
             throw new NothingToDoException("Not triggered by Git");
         }
+
+        BuildData gitBuildData = build.getAction(BuildData.class);
         
         //Check to make sure that we do ONLY integrate to the branches specified.
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();        
@@ -371,6 +371,7 @@ public class GitBridge extends AbstractSCMBridge {
             load();
         }
         
+        @Override
         public String getDisplayName() {
             return "Git";
         }
@@ -393,32 +394,72 @@ public class GitBridge extends AbstractSCMBridge {
 
     @Override
     public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
-        if( project.getScm() instanceof GitSCM ) {
-            validateGitScm((GitSCM)project.getScm());
-        //we need to ask Jenkins.getInstance().getPlugin() before instnaceof because you would get a class not 
+        if( project.getScm() instanceof GitSCM ) { 
+            boolean res = validateGitScm((GitSCM)project.getScm());
+            if(!res) {
+                throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
+            }
+        //we need to ask Jenkins.getInstance().getPlugin() before instanceof because you would get a class not 
         //not defined on jenkins instances if the vm tried to evalute the instanceof on installations without the 
         //Multiple SCMs plugin.
         } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
             MultiSCM multiscm = (MultiSCM)project.getScm();
- 
+            boolean ok = false;
             for(SCM scm : multiscm.getConfiguredSCMs()) {                
                 if(scm instanceof GitSCM) {
                     GitSCM gitMultiScm = (GitSCM)scm;                    
-                    validateGitScm(gitMultiScm);
+                    ok |= validateGitScm(gitMultiScm);
                 }
             }
+            
+            //If NONE of the configurations are valid
+            if(!ok) {
+                throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
+            }
+            
+            //Compare each remote configured
+            HashMap<String,Integer> mapp = remoteMap(multiscm.getConfiguredSCMs());
+            if(mapp.containsKey(resolveRepoName())) {                
+                if(mapp.get(resolveRepoName()) >= 2) {
+                    throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES);
+                }
+            }
+            
         } else {
             throw new UnsupportedConfigurationException("We only support 'Git' and 'Multiple SCMs' plugins");
         } 
     }
     
+    private HashMap<String,Integer> remoteMap(List<SCM> scms) {
+        HashMap<String,Integer> map = new HashMap<String, Integer>();
+        for(SCM scm : scms) {
+            //List that maintains the SET of branch names chosen. We support individual 
+            //Git configurations with duplicate remote names since they get renamed 
+            //At runtime
+            Set<String> alreadAdded = new HashSet<String>();
+            if(scm instanceof GitSCM) {
+                GitSCM gitMultiScm = (GitSCM)scm;                    
+                for(UserRemoteConfig config : gitMultiScm.getUserRemoteConfigs()) {
+                    String name = StringUtils.isBlank(config.getName()) ? "origin" : config.getName();
+                    if(alreadAdded.add(name)) {
+                        if(map.containsKey(name)) {
+                            map.put(name, map.get(name)+1);
+                        } else {
+                            map.put(name, 1);
+                        }
+                    }
+                }
+            }            
+        }
+        return map;        
+    }
     //For JENKINS-24754
     /**
      * Validate the git configuration. We need to make sure that in situations where
      * @param scm
      * @throws UnsupportedConfigurationException 
      */
-    private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
+    private boolean validateGitScm(GitSCM scm) {
         List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
         //The default git configuration with 1 repository in config. Blank name for remote (defaults to origin) and default value in pretested integration.
         boolean isDefault = configs.size() == 1 && StringUtils.isBlank(configs.get(0).getName()) && resolveRepoName().equals("origin"); 
@@ -429,11 +470,12 @@ public class GitBridge extends AbstractSCMBridge {
                 //If the configured remote matches...Or the case where you have multiple repos selected with default config
                 //This also covers the scenario where origin is explicitly named in the configuration. 
                 if(resolveRepoName().equals(config.getName()) || (resolveRepoName().equals("origin") && StringUtils.isBlank(config.getName()) ) ) {
-                    return;
+                    return true;
                 }
             }                
-            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
-        }        
+            return false;
+        }
+        return true;
     }
 
     @Override
