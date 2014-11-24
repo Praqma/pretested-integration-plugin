@@ -56,11 +56,11 @@ public class JENKINS_24754_IT {
      * Test case 1:
      * 
      * When more than 1 git repository is chosen, and the user has not specified a repository in his pretested configuration, the job 
-     * should fail
+     * should just use the first repo found. (origin)
      * @throws java.lang.Exception
      */
     @Test
-    public void failWithIncorrectConfiguration2RepositoriesWithoutNames() throws Exception {
+    public void succesWithDefaultConfiguration2RepositoriesWithoutNames() throws Exception {
         repository = TestUtilsFactory.createValidRepository("repo1");
         Repository repo2 = TestUtilsFactory.createValidRepository("repo2");
         
@@ -74,15 +74,21 @@ public class JENKINS_24754_IT {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
         TestUtilsFactory.destroyRepo(repo2);               
         
-        FreeStyleBuild build = project.getBuilds().getFirstBuild();
+        Iterator<FreeStyleBuild> biterator = project.getBuilds().iterator();
         
-        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
-        System.out.println("=====BUILD-LOG=====");
-        System.out.println(text);
-        System.out.println("=====BUILD-LOG=====");
-        
-        assertTrue(text.contains(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED));
-        assertTrue(build.getResult().isWorseThan(Result.SUCCESS));
+        while(biterator.hasNext()) {            
+            FreeStyleBuild bitstuff = biterator.next();
+            String text = jenkinsRule.createWebClient().getPage(bitstuff, "console").asText();
+            System.out.println("=====BUILD-LOG=====");
+            System.out.println(text);
+            System.out.println("=====BUILD-LOG=====");
+            if(text.contains("push origin :ready/feature_1")) {
+                assertTrue(bitstuff.getResult().equals(Result.SUCCESS));
+            } else {
+                assertTrue(bitstuff.getResult().equals(Result.NOT_BUILT));
+            }
+            
+        }  
         
     }
 
@@ -155,9 +161,6 @@ public class JENKINS_24754_IT {
             }
             
         }
-        
-        System.out.println("Number of builds "+project.getBuilds().size());
-
              
     }
     

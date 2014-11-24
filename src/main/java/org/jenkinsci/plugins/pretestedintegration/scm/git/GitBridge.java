@@ -400,20 +400,13 @@ public class GitBridge extends AbstractSCMBridge {
         //Multiple SCMs plugin.
         } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
             MultiSCM multiscm = (MultiSCM)project.getScm();
-            //Count the number of git scm's added in your configuration. We only support 1 git repository. Since having multiple
-            //Git repositories creates multiple git build data objects.
-            int gitCounter = 0;
+ 
             for(SCM scm : multiscm.getConfiguredSCMs()) {                
                 if(scm instanceof GitSCM) {
                     GitSCM gitMultiScm = (GitSCM)scm;                    
                     validateGitScm(gitMultiScm);
-                    gitCounter++;
                 }
             }
-            
-            if(gitCounter > 1) {
-                throw new UnsupportedConfigurationException("You have included multiple git scm configurations in your 'Multiple SCMs' configuration. Use one git scm configuration, with multiple repositories");
-            }            
         } else {
             throw new UnsupportedConfigurationException("We only support 'Git' and 'Multiple SCMs' plugins");
         } 
@@ -427,13 +420,15 @@ public class GitBridge extends AbstractSCMBridge {
      */
     private void validateGitScm(GitSCM scm) throws UnsupportedConfigurationException {
         List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
-        //The default git configuration. Blank name for remote (defaults to origin) and default value in pretested integration.
+        //The default git configuration with 1 repository in config. Blank name for remote (defaults to origin) and default value in pretested integration.
         boolean isDefault = configs.size() == 1 && StringUtils.isBlank(configs.get(0).getName()) && resolveRepoName().equals("origin"); 
         
         //If you're not using the standard values.
         if(!isDefault) {               
             for(UserRemoteConfig config : configs) {
-                if(resolveRepoName().equals(config.getName())) {
+                //If the configured remote matches...Or the case where you have multiple repos selected with default config
+                //This also covers the scenario where origin is explicitly named in the configuration. 
+                if(resolveRepoName().equals(config.getName()) || (resolveRepoName().equals("origin") && StringUtils.isBlank(config.getName()) ) ) {
                     return;
                 }
             }                
