@@ -19,6 +19,7 @@ import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
@@ -29,6 +30,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigur
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.JenkinsRule;
 
 /**
@@ -44,9 +46,11 @@ public class GeneralBehaviourIT {
     
     @After
     public void tearDown() throws Exception {
-        repository.close();
-        if (repository.getDirectory().getParentFile().exists()) {
-            FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
+        if(repository != null) {
+            repository.close();
+            if (repository.getDirectory().getParentFile().exists()) {
+                FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
+            }
         }
     }
 
@@ -272,4 +276,43 @@ public class GeneralBehaviourIT {
         
         assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));        
     }
+    
+    /**
+     * Incorrect check of origin (repo) lead to wrongful merge attempt on unwanted remote, which was the auto generated remote origin1 by the git plugin.
+     * @throws Exception 
+     */
+    @Bug(25545)
+    @Test
+    public void testOriginAndEmptyInDualConfig() throws Exception {
+        Repository repository1 = TestUtilsFactory.createValidRepository("test-repo1");
+        Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
+        
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, 
+                TestUtilsFactory.STRATEGY_TYPE.SQUASH, 
+                Arrays.asList(new UserRemoteConfig(repository1.getDirectory().getAbsolutePath(), "origin", null, null),
+                        new UserRemoteConfig(repository2.getDirectory().getAbsolutePath(), null, null, null)), null, true);
+        
+        TestUtilsFactory.triggerProject(project);
+        
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
+        TestUtilsFactory.destroyRepo(repository1);
+        TestUtilsFactory.destroyRepo(repository2);
+        
+        Iterator<FreeStyleBuild> bs = project.getBuilds().iterator();
+        while(bs.hasNext()) {
+            FreeStyleBuild build = bs.next();
+            String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
+            System.out.println("=====BUILD-LOG=====");
+            System.out.println(text);
+            System.out.println("=====BUILD-LOG=====");
+            
+            //TODO: How to implement this in a better way??? Since the build seem to start in random order.
+            if(text.contains("push origin :ready/feature_1")) {
+                assertTrue(build.getResult().equals(Result.SUCCESS));
+            } else {
+                assertTrue(build.getResult().equals(Result.NOT_BUILT));
+            }
+        }
+    }    
 }
