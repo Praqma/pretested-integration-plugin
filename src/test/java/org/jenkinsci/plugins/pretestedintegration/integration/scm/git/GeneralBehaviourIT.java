@@ -5,6 +5,7 @@
  */
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
+import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -314,5 +315,24 @@ public class GeneralBehaviourIT {
                 assertTrue(build.getResult().equals(Result.NOT_BUILT));
             }
         }
-    }    
+    }
+    
+    @Bug(25618)
+    @Test
+    public void validateSquashCommitMessageContents() throws Exception {
+        Repository repository1 = TestUtilsFactory.createValidRepository("test-repo1");
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, repository1);
+        
+        TestUtilsFactory.triggerProject(project);
+        
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
+        AbstractBuild<?,?> build = project.getFirstBuild();
+        //Squashed commit of the following
+        try(BuildResultValidator brv =  new BuildResultValidator(build, repository1).hasResult(Result.SUCCESS)
+                .hasHeadCommitContents("Squashed commit of the following", "feature 1 commit 1-ready/feature_1-test-repo1")) {
+            brv.validate();
+        }
+        
+    }
 }
