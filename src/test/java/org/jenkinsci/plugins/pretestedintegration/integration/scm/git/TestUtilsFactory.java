@@ -36,6 +36,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
 
 /**
  *
@@ -64,12 +65,34 @@ public class TestUtilsFactory {
         return commitCount;
     }
     
-    public static void destroyRepo(Repository repository) {
+    public static void destroyRepo(Repository repository) throws IOException, InterruptedException {
         if(repository != null) {
-            repository.close();
+            repository.close();            
+            System.out.println("Attempting to destroy: "+repository.getDirectory().getParentFile().getAbsolutePath());
             if (repository.getDirectory().getParentFile().exists()) {
-                FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
+                System.out.println("Destroying repo "+repository.getDirectory().getParentFile().getAbsolutePath());            
+                int attempts = 0;
+                /**
+                 * This 'hack' has been implmented because i started experiencing the test-harness/jgit not reliquishing
+                 * control over my repositories. I created a method that tries to delete the created temporary repository every
+                 * 200ms. If it tried 100 times..(20s) and has still not deleted the repository..we fail.                 
+                 */ 
+                
+                while(!FileUtils.deleteQuietly(repository.getDirectory().getParentFile().getAbsoluteFile())) {
+                    attempts++;
+                    Thread.sleep(200);
+                    if(attempts > 100) {
+                        throw new InterruptedException("Failed to delete directory after numerous attempts");
+                    }
+                }
+                   
             }
+        }
+    }
+    
+    public static void destroyRepo(Repository... repos) throws IOException, InterruptedException {
+        for(Repository repository : repos) {
+            TestUtilsFactory.destroyRepo(repository);
         }
     }
 
@@ -98,6 +121,7 @@ public class TestUtilsFactory {
     }
     
     public static void triggerProject( FreeStyleProject project  ) throws Exception {        
+        project.getTriggers().clear();
         SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
         project.addTrigger(scmTrigger);
         scmTrigger.start(project, true);
@@ -189,6 +213,40 @@ public class TestUtilsFactory {
         return String.format("%s-%s-%s", message, branch, repositoryRootFolder);
     }
     
+    public static Repository createRepoWithoutBranches(String repoFolderName) throws IOException, GitAPIException {
+        File repo = new File(repoFolderName+"/"+".git");
+        File workDirForRepo = new File("work"+repoFolderName);
+        
+        Repository repository = new FileRepository(repo);        
+        repository.create(true);
+        
+        Git.cloneRepository().setURI("file:///"+repo.getAbsolutePath()).setDirectory(workDirForRepo)
+                .setBare(false)
+                .setCloneAllBranches(true)                
+                .setNoCheckout(false)
+                .call().close();
+        
+        Git git = Git.open(workDirForRepo);
+        
+        File readme = new File(workDirForRepo,"readme.md");
+        if (!readme.exists())
+            FileUtils.writeStringToFile(readme, "#My first repository");
+        
+        git.add().addFilepattern(".");
+        CommitCommand commit = git.commit();
+        commit.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "Initial commit"));
+        commit.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commit.call();
+        
+        git.push().setPushAll().setRemote("origin").call();
+        
+        git.close();
+        
+        FileUtils.deleteDirectory(workDirForRepo);
+        
+        return repository;
+    }
+    
     public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {        
         File repo = new File(repoFolderName+"/"+".git");
         Repository repository;
@@ -209,7 +267,7 @@ public class TestUtilsFactory {
         if (!repository.isBare() && repository.getBranch() == null) {
             repository.create();
         }
-
+                
         git = new Git(repository);
 
         File readme = new File(repo.getParent()+"/readme");

@@ -72,22 +72,20 @@ public class GeneralBehaviourIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
         
-        int nextBuildNumber = project.getNextBuildNumber();
-        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
-
-        //Show the log for the latest build
-        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
-        System.out.println("=====BUILD-LOG=====");
-        System.out.println(text);
-        System.out.println("=====BUILD-LOG=====");
-                
-        assertTrue(text.contains(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED));
-            
-        assertTrue(build.getResult().isWorseOrEqualTo(Result.FAILURE));
-        repository2.close();
-        if (repository2.getDirectory().getParentFile().exists()) {
-            FileUtils.deleteQuietly(repository2.getDirectory().getParentFile());
+        TestUtilsFactory.destroyRepo(repository2);
+        for(Iterator<FreeStyleBuild> builds = project.getBuilds().iterator(); builds.hasNext();) {
+            AbstractBuild<?,?> b = builds.next();
+            String text = jenkinsRule.createWebClient().getPage(b, "console").asText();
+            System.out.println("=====BUILD-LOG=====");
+            System.out.println(text);
+            System.out.println("=====BUILD-LOG=====");
+            if(text.contains("push origin :ready/feature_1")) {
+                assertTrue(b.getResult().equals(Result.SUCCESS)); 
+            } else {
+                assertTrue(b.getResult().equals(Result.NOT_BUILT));
+            }
         }
+                
     }
     
     /**
@@ -207,26 +205,23 @@ public class GeneralBehaviourIT {
         project.setScm(gitSCM);
         TestUtilsFactory.triggerProject(project);
         
-        assertEquals(1, jenkinsRule.jenkins.getQueue().getItems().length);
-
         jenkinsRule.waitUntilNoActivityUpTo(60000);
-        
-        int nextBuildNumber = project.getNextBuildNumber();
-        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+        TestUtilsFactory.destroyRepo(repository2);
 
         //Show the log for the latest build
-        String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
-        System.out.println("=====BUILD-LOG=====");
-        System.out.println(text);
-        System.out.println("=====BUILD-LOG=====");
-                
-        assertTrue(text.contains(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED));
-            
-        assertTrue(build.getResult().isWorseOrEqualTo(Result.FAILURE));
-        repository2.close();
-        if (repository2.getDirectory().getParentFile().exists()) {
-            FileUtils.deleteQuietly(repository2.getDirectory().getParentFile());
+        for(Iterator<FreeStyleBuild> builds = project.getBuilds().iterator(); builds.hasNext();) {
+            AbstractBuild<?,?> b = builds.next();
+            String text = jenkinsRule.createWebClient().getPage(b, "console").asText();
+            System.out.println("=====BUILD-LOG=====");
+            System.out.println(text);
+            System.out.println("=====BUILD-LOG=====");
+            if(text.contains("push origin :ready/feature_1")) {
+                assertTrue(b.getResult().equals(Result.SUCCESS)); 
+            } else {
+                assertTrue(b.getResult().equals(Result.NOT_BUILT));
+            }
         }
+                
     }
         
     /**
@@ -332,7 +327,7 @@ public class GeneralBehaviourIT {
         try(BuildResultValidator brv =  new BuildResultValidator(build, repository1).hasResult(Result.SUCCESS)
                 .hasHeadCommitContents("Squashed commit of the following", "feature 1 commit 1-ready/feature_1-test-repo1")) {
             brv.validate();
-        }
+        } 
         
     }
 }

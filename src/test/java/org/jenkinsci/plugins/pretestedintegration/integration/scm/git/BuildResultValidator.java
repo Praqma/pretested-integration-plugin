@@ -8,6 +8,7 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import java.util.Iterator;
+import static junit.framework.TestCase.assertTrue;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -23,12 +24,21 @@ public class BuildResultValidator implements AutoCloseable {
     public AbstractBuild<?,?> build;
     public Repository repo;
     public Result result;
+    public String consoleLog;
     public String[] contents;
+    public String[] consolePhrases;
+    public boolean retain = false;
     
     
     public BuildResultValidator(AbstractBuild<?,?> build, Repository repo) {
         this.repo = repo;
         this.build = build;
+    }
+    
+    public BuildResultValidator(AbstractBuild<?,?> build, Repository repo, String consoleLog) {
+        this.repo = repo;
+        this.build = build;
+        this.consoleLog = consoleLog;
     }
     
     public BuildResultValidator hasResult(Result result) {
@@ -41,18 +51,40 @@ public class BuildResultValidator implements AutoCloseable {
         return this;
     }
     
+    public BuildResultValidator buildLogContains(String... consolePhrases) {
+        this.consolePhrases = consolePhrases;
+        return this;
+    }
     
-    public void validate() throws Exception {       
+    public BuildResultValidator retain() {
+        this.retain = true;
+        return this;
+    }
+    
+    
+    public void validate() throws Exception {
+        System.out.println(consoleLog);
+        
+        if(consolePhrases != null) {
+            validateConsoleMessages();
+        }
+        
         if(result != null) {
             validateResult();
         }
         
         if(contents != null) {
             validateHeadCommitMessage();
-        }
+        }       
     }
     
     
+    private void validateConsoleMessages() {
+
+        for(String phrase : consolePhrases) {
+            assertTrue(consoleLog.contains(phrase));
+        }
+    }
     
     private void validateResult() throws ValidationException {
         boolean res = build.getResult().equals(result);
@@ -63,6 +95,7 @@ public class BuildResultValidator implements AutoCloseable {
     
     private boolean validateHeadCommitMessage() throws ValidationException,Exception {        
         Git git = new Git(repo);
+        git.checkout().setName("master").call();
         RevWalk walk = new RevWalk(repo);
         
         Iterable<RevCommit> logs = git.log().call();
@@ -96,7 +129,9 @@ public class BuildResultValidator implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        TestUtilsFactory.destroyRepo(repo);
+        if(!retain) {
+            TestUtilsFactory.destroyRepo(repo);
+        }
     }
     
     public class ValidationException extends Exception {
