@@ -21,6 +21,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
+import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.assertTrue;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
@@ -53,10 +57,15 @@ public class JENKINS_24754_IT {
     }
     
     /**
-     * Test case 1:
+     * Test case 1-1:
      * 
-     * When more than 1 git repository is chosen, and the user has not specified a repository in his pretested configuration, the job 
-     * should just use the first repo found. (origin)
+     * * Two git repositories is configured in the git scm plugin
+     * * repo1 will default be named 'origin' by the git scm plugin
+     * * repo2 will default be named 'origin1' by the git scm plugin
+     * * pretested integration plugin is not configured, so default to:
+     *      * integration branch: master
+     *      * integration repo: origin
+     * * job should be a success the default plugin configuration matches 
      * @throws java.lang.Exception
      */
     @Test
@@ -91,6 +100,125 @@ public class JENKINS_24754_IT {
         }  
         
     }
+    
+    
+    /**
+     * Test case 1-2:
+     * 
+    * * Two git repositories is configured in the git scm plugin
+     * * repo1 will default be named 'origin' by the git scm plugin
+     * * repo2 will default be named 'origin1' by the git scm plugin
+     * * pretested integration plugin is configured, to match the second default git scm repo
+     *      * integration branch: master
+     *      * integration repo: origin1
+     * * job should be a success, as a change there is named repository ('origin1') that matched the pretest config
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void succesWithDefaultConfiguration2RepositoriesWithName() throws Exception {
+        repository = TestUtilsFactory.createValidRepository("repo1");
+        Repository repo2 = TestUtilsFactory.createValidRepository("repo2");
+        
+        List<UserRemoteConfig> userRemoteConfig = new ArrayList<UserRemoteConfig>();
+        userRemoteConfig.add(new UserRemoteConfig("file://"+repository.getDirectory().getAbsolutePath(), null, null, null));
+        userRemoteConfig.add(new UserRemoteConfig("file://"+repo2.getDirectory().getAbsolutePath(), null, null, null));
+                
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, userRemoteConfig, "origin1", true);
+        TestUtilsFactory.triggerProject(project);
+        
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        TestUtilsFactory.destroyRepo(repo2);               
+        
+        Iterator<FreeStyleBuild> biterator = project.getBuilds().iterator();
+        
+        int checkCounter = 0;
+        while(biterator.hasNext()) {            
+            FreeStyleBuild bitstuff = biterator.next();
+            String text = jenkinsRule.createWebClient().getPage(bitstuff, "console").asText();
+            System.out.println("=====BUILD-LOG start =====");
+            System.out.println(text);
+            System.out.println("=====BUILD-LOG end =====");
+            if(text.contains("The git repository name origin/ready/feature_1 does not match pretested configuration")) {
+                System.out.println("Verified first build");
+                assertTrue(bitstuff.getResult().equals(Result.NOT_BUILT));
+                System.out.println("checkCounter++");
+                checkCounter += 1;
+            }
+            else if (text.contains("git push origin1 :ready/feature_1")) {
+                System.out.println("Verified second build");
+                assertTrue(bitstuff.getResult().equals(Result.SUCCESS));
+                System.out.println("checkCounter++");            
+                checkCounter += 1;
+            }
+            
+        }
+        assertEquals("Could not verify both build as expected", checkCounter, 2);
+       
+    }    
+    
+    
+    
+/**
+     * Test case 1-3:
+     * 
+    * * Two git repositories is configured in the git scm plugin
+     * * repo1 will default be named 'origin' by the git scm plugin
+     * * repo2 is explicitly named 'origin1' by the git scm plugin
+     * * pretested integration plugin is configured, to match the second default git scm repo
+     *      * integration branch: master
+     *      * integration repo: origin1
+     * * job should be a success, as a change there is named repository ('origin1') that matched the pretest config
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void succesWithDefaultConfiguration2RepositoriesWithNameMatchDefaultConfig() throws Exception {
+        repository = TestUtilsFactory.createValidRepository("repo1");
+        Repository repo2 = TestUtilsFactory.createValidRepository("repo2");
+        
+        List<UserRemoteConfig> userRemoteConfig = new ArrayList<UserRemoteConfig>();
+        userRemoteConfig.add(new UserRemoteConfig("file://"+repository.getDirectory().getAbsolutePath(), null, null, null));
+        userRemoteConfig.add(new UserRemoteConfig("file://"+repo2.getDirectory().getAbsolutePath(), "origin1", null, null));
+                
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, userRemoteConfig, "origin1", true);
+        TestUtilsFactory.triggerProject(project);
+        
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        TestUtilsFactory.destroyRepo(repo2);               
+        
+        Iterator<FreeStyleBuild> biterator = project.getBuilds().iterator();
+        
+        int checkCounter = 0;
+        while(biterator.hasNext()) {            
+            FreeStyleBuild bitstuff = biterator.next();
+            String text = jenkinsRule.createWebClient().getPage(bitstuff, "console").asText();
+            System.out.println("=====BUILD-LOG start =====");
+            System.out.println(text);
+            System.out.println("=====BUILD-LOG end =====");
+            if(text.contains("The git repository name origin/ready/feature_1 does not match pretested configuration")) {
+                System.out.println("Verified first build");
+                assertTrue(bitstuff.getResult().equals(Result.NOT_BUILT));
+                System.out.println("checkCounter++");
+                checkCounter += 1;
+            }
+            else if (text.contains("git push origin1 :ready/feature_1")) {
+                System.out.println("Verified second build");
+                assertTrue(bitstuff.getResult().equals(Result.SUCCESS));
+                System.out.println("checkCounter++");            
+                checkCounter += 1;
+            }
+            
+        }
+        assertEquals("Could not verify both build as expected", checkCounter, 2);
+       
+    }    
+    
+    
+    
+    
+    
+    
+    
+    
 
     /**
      * When more than 1 git repository is chosen, and the user has specified repository names which do not match what is configured
