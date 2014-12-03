@@ -44,9 +44,9 @@ public class JENKINS_25546_IT {
      * 
      * MultiSCM configuration
      *  - GitSCM 
-     *      - 1 repo: unnamed defaults to origin (default)
+     *      - 1 repo: named origin
      *  - GitSCM
-     *      - 1 repo: unnamed defaults to origin (default)
+     *      - 1 repo: named origin
      * 
      * Workflow
      *  1. Let the build(s) finish.
@@ -66,12 +66,12 @@ public class JENKINS_25546_IT {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
         
-        SCM gitSCM1 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo1.getDirectory(), null, null, null)),
+        SCM gitSCM1 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo1.getDirectory(), "origin", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
         
-        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory(), null, null, null)),
+        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory(), "origin", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
@@ -109,9 +109,9 @@ public class JENKINS_25546_IT {
      * MultiSCM
      *  - GitSCM
      *      - stable
-     *      - origin (default)
+     *      - stable-1
      *  - GitSCM
-     *      - origin (default)
+     *      - non-stable
      * 
      * Workflow
      *  - Create three repositories without matching branches
@@ -135,12 +135,12 @@ public class JENKINS_25546_IT {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
         
-        SCM gitSCM1 = new GitSCM(Arrays.asList(new UserRemoteConfig("file:///" + repo1.getDirectory().getAbsolutePath(), "stable", null, null) ,new UserRemoteConfig("file:///" + repo3.getDirectory().getAbsolutePath(), null, null, null)),
+        SCM gitSCM1 = new GitSCM(Arrays.asList(new UserRemoteConfig("file:///" + repo1.getDirectory().getAbsolutePath(), "stable", null, null) ,new UserRemoteConfig("file:///" + repo3.getDirectory().getAbsolutePath(), "stable-1", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
         
-        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file:///" + repo2.getDirectory().getAbsolutePath(), null, null, null)),
+        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file:///" + repo2.getDirectory().getAbsolutePath(), "non-stable", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
@@ -169,14 +169,15 @@ public class JENKINS_25546_IT {
     }
     
     /**
-     * Branch specifier for all are the same.
+     * Branch specifier for all are the same
+     * .
      * Pretested integration repository name
      *  - stable
      * 
      * MultiSCM
      *  - GitSCM
      *      - stable
-     *      - origin (default)
+     *      - stable-two (default)
      *  - GitSCM
      *      - stable 
      * 
@@ -200,7 +201,7 @@ public class JENKINS_25546_IT {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
         
-        SCM gitSCM1 = new GitSCM(Arrays.asList(new UserRemoteConfig("file://" + repo1.getDirectory(), "stable", null, null) , new UserRemoteConfig("file://" + repo3.getDirectory(), null, null, null)),
+        SCM gitSCM1 = new GitSCM(Arrays.asList(new UserRemoteConfig("file://" + repo1.getDirectory(), "stable", null, null) , new UserRemoteConfig("file://" + repo3.getDirectory(), "stable-two", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
@@ -228,11 +229,9 @@ public class JENKINS_25546_IT {
             validator.buildLogContains(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES)
                     .hasResult(Result.FAILURE).validate();
         }
-        
-        
+         
     }
-    
-        
+       
     /**
      * Branch specifier for all are the same.
      * 
@@ -270,7 +269,7 @@ public class JENKINS_25546_IT {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
         
-        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory().getAbsolutePath(), null, null, null)),
+        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory().getAbsolutePath(), "notmyrepo", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);

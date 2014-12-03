@@ -17,12 +17,13 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public abstract class IntegrationStrategy implements Describable<IntegrationStrategy>, ExtensionPoint {  
-    private final static Logger logger = Logger.getLogger(IntegrationStrategy.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
+    private final static Logger logger = Logger.getLogger(IntegrationStrategy.class.getName());
 
-	public abstract void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException;
+    public abstract void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException;
     
     @DataBoundConstructor
     public IntegrationStrategy() { }

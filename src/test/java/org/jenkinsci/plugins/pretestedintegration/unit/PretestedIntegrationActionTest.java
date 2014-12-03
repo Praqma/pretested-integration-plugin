@@ -16,47 +16,37 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNull;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationAction;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Test;
 import static org.mockito.Mockito.*;
 
-public class PretestedIntegrationActionTest extends HudsonTestCase {
+public class PretestedIntegrationActionTest {
 
+    @Test
 	public void testShouldNotBeShowed() throws Exception {
 		PretestedIntegrationAction action = mockedAction();
 		assertNull(action.getIconFileName());
 		assertNull(action.getDisplayName());
 		assertEquals("pretested-integration", action.getUrlName());
 	}
-        
-        //TODO: Fix this prior to release
-	/*
-	public void testShouldInitialise() throws Exception {
-		FreeStyleBuild build = mock(FreeStyleBuild.class);
-		Launcher launcher = mock(Launcher.class);
-		BuildListener listener = mock(BuildListener.class);
-		DummySCM scmInterface = new DummySCM(null);
-		scmInterface.setCommit(new Commit<String>("test"));
-                when(listener.getLogger()).thenReturn(System.out);                
-		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);		
-		assertTrue(action.initialise(launcher, listener));
-	}
-        */
-	
+    
+    @Test
 	public void testShouldNotInitialise() throws Exception {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		Launcher launcher = mock(Launcher.class);
 		BuildListener listener = mock(BuildListener.class);
-		AbstractSCMBridge scmInterface = new DummySCM(null);
-		
+		AbstractSCMBridge scmInterface = new DummySCM(new DummyIntegrationStrategy());		
 		PretestedIntegrationAction action = new PretestedIntegrationAction(build, launcher, listener, scmInterface);
-		
 		assertFalse(action.initialise(launcher, listener));
 	}
 	
+    @Test
 	public void testShouldInvokeNewBuild() throws Exception {
 		FreeStyleProject project = mock(FreeStyleProject.class);
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
@@ -91,7 +81,8 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		
 		verify(project, times(0)).scheduleBuild2(0);
 	}
-	
+    
+    @Test
 	public void testShouldNotInvokeNewBuild() throws Exception {
 		FreeStyleProject project = mock(FreeStyleProject.class);
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
@@ -122,7 +113,7 @@ public class PretestedIntegrationActionTest extends HudsonTestCase {
 		action.finalise(launcher, listener);
 		verify(project, times(0)).scheduleBuild2(0);
 	}
-	
+    
 	public PretestedIntegrationAction mockedAction() throws IOException {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		Launcher launcher = mock(Launcher.class);

@@ -1,14 +1,24 @@
 package org.jenkinsci.plugins.pretestedintegration.unit;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
 import org.jenkinsci.plugins.pretestedintegration.Commit;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
-public class CommitTest extends HudsonTestCase {
+public class CommitTest {
+    
+    @Rule
+    public JenkinsRule rule = new JenkinsRule();
+    
+    @Test
 	public void testShouldIncludeDummyCommit() {
 		DummyCommit c = Commit.all().get(DummyCommit.class);
 		assertNotNull(c);
 	}
 	
+    @Test
 	public void testShouldHaveCorrectId(){
 		String id = "1234567";
 		Commit<String> c = new DummyCommit(id);

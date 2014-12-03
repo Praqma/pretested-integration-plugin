@@ -20,14 +20,16 @@ import static junit.framework.TestCase.assertTrue;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
 
 /**
- * Created by andrius on 9/2/14.
+ * 
+ * <h3>Set of tests that test that we react correctly to merge conflicts</h3> 
+ * <p>Created by Andrius on 9/2/14.</p>
+ * <p>All tests here are using single repository integration, that is the default Git configuration</p>
+ * <p>The tests are all using the 'Squashed commit' strategy in the Prettested integration plugin configuration</p>
  */
 public class SquashCommitStrategyIT {
 
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
-
-
     private Repository repository;
 
     @After
@@ -40,7 +42,6 @@ public class SquashCommitStrategyIT {
 
     @Test
     public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
-
         repository = TestUtilsFactory.createValidRepository("test-repo");            
         String readmeFromDev = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
 

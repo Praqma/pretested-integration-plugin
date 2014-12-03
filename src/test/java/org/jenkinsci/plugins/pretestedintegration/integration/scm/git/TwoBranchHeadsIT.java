@@ -39,11 +39,16 @@ import java.util.List;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import org.jvnet.hudson.test.Bug;
 
 /**
- * Created by andrius on 9/23/14.
- * Test integration of commit with two branch heads: https://trello.com/c/MFzaEMDz
+ * <h3>Integration test for multiple branch heads on same commit</h3>
+ * <p>Created by aAndrius on 9/23/14.</p>
+ * <p>Test integration of commit with two branch heads: https://trello.com/c/MFzaEMDz</p>
+ * <p>This test's purpose is to test the fact that we do not handle the deletion of multiple branch heads
+ * pointing to the same commit. We only delete the first one to be discoted.</p>
  */
+@Bug(25512)
 public class TwoBranchHeadsIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
@@ -217,8 +222,6 @@ public class TwoBranchHeadsIT {
         System.out.println("=====BUILD-LOG=====");
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
-        
-        assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
         assertFalse(TestUtilsFactory.branchExists(repository1, READY_BRANCH_1));
@@ -247,8 +250,6 @@ public class TwoBranchHeadsIT {
         System.out.println("=====BUILD-LOG=====");
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
-        
-        assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
         assertFalse(TestUtilsFactory.branchExists(repository2, READY_BRANCH_1));
@@ -275,8 +276,7 @@ public class TwoBranchHeadsIT {
         System.out.println("=====BUILD-LOG=====");
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
-        
-        assertTrue(result.isCompleteBuild());
+ 
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
         assertFalse(TestUtilsFactory.branchExists(repository1, READY_BRANCH_1));

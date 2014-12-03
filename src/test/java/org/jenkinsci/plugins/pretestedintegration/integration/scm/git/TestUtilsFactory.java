@@ -90,6 +90,11 @@ public class TestUtilsFactory {
         }
     }
     
+    /**
+     * <h3>Destroys a repository</h3> 
+     * <p>That is close it programatically with JGit and deleting the working directory</p>
+     * @param repos List of repositories to close and delete.
+     */ 
     public static void destroyRepo(Repository... repos) throws IOException, InterruptedException {
         for(Repository repository : repos) {
             TestUtilsFactory.destroyRepo(repository);
@@ -177,8 +182,8 @@ public class TestUtilsFactory {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
         
-        SCM gitSCM1 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)),
-                Collections.singletonList(new BranchSpec("origin/ready/**")),
+        SCM gitSCM1 = new GitSCM(repoList,
+                Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
 

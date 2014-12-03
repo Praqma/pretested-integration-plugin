@@ -31,36 +31,13 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
     public static final String LOG_PREFIX = "[PREINT] ";
     public final AbstractSCMBridge scmBridge;
+    
+    @Deprecated
     private final boolean rollbackEnabled = false;
 
     @DataBoundConstructor
     public PretestedIntegrationBuildWrapper(final AbstractSCMBridge scmBridge) {
         this.scmBridge = scmBridge;
-    }
-    
-    /**
-     * Goes through the list of builds..finds the latest build which was a pre-test integration.
-     * @param build
-     * @return 
-     */
-    private AbstractBuild<?,?> findLatestBuildWithPreTestedIntegrationAction(AbstractBuild<?,?> build) {        
-        logger.entering("PretestedIntegrationBuildWrapper", "findLatestBuildWithPreTestedIntegrationAction", new Object[] { build });// Generated code DONT TOUCH! Bookmark: e5a6737aaf1716293a86f1dc6a63f4e2
-		AbstractBuild<?,?> start = build.getPreviousBuild();
-        for(AbstractBuild<?,?> i = start; i != null; i = i.getNextBuild()) {
-            //If the previous build was not pre-test enabled, take next
-            if(i.getAction(PretestedIntegrationAction.class) == null) {
-                continue;
-            }
-            
-            //if the build is pre-test. Then we only return non-null in case the build was failed.
-            if(i.getResult().isWorseThan(scmBridge.getRequiredResult())) {
-                return i;
-            } else {
-                return null;
-            }
-        }
-        logger.exiting("PretestedIntegrationBuildWrapper", "findLatestBuildWithPreTestedIntegrationAction");// Generated code DONT TOUCH! Bookmark: e6eabc19c589cecb05c17fa1995117b1
-		return null;
     }
     
     /**
@@ -80,10 +57,20 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         boolean proceedToBuildStep = true;
         BuildQueue.getInstance().enqueueAndWait();        
         PretestedIntegrationAction action;
-        try {            
+        try {        
+            // Check job configuration - there are typically requirements
+            // on how job is configured before we can allow integration.
             scmBridge.validateConfiguration(build.getProject());
+            // isApplicable basically checks the changeset we git from SCM
+            // can be used to configure a workspace.
+            // This is where we check for contraints on what to integrate,
+            // if there is anything to integrate, if there is ambiguiuty in
+            // what to integrate.
             scmBridge.isApplicable(build, listener);
+            
+            //Updates workspace to the integration branch
             scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
+            
             //Create the action. Record the state of integration branch
             action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            
             build.addAction(action);                    
@@ -154,20 +141,17 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
     @Override
     public DescriptorImpl getDescriptor() {
-        logger.entering("PretestedIntegrationBuildWrapper", "getDescriptor");// Generated code DONT TOUCH! Bookmark: a04a866281166644880e76e2f6650a77
-        logger.exiting("PretestedIntegrationBuildWrapper", "getDescriptor");// Generated code DONT TOUCH! Bookmark: c05050f6ec75bbdeaa711eded25307bd		
 		return (DescriptorImpl) super.getDescriptor();
     }
 
     @Extension
     public static class DescriptorImpl extends BuildWrapperDescriptor {
-
-        private final static Logger logger = Logger.getLogger(DescriptorImpl.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
-
+        
 		public DescriptorImpl() {
             load();
         }
 
+        @Override
         public String getDisplayName() {
             return "Use pretested integration";
         }

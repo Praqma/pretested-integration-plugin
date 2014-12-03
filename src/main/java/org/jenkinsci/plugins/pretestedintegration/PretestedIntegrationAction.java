@@ -11,15 +11,18 @@ import hudson.Launcher;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 public class PretestedIntegrationAction implements Action {
 
     AbstractBuild<?, ?> build;    
     AbstractSCMBridge scmBridge;
     Commit<?> last;
-    Commit<?> commit;
+    
     private Commit<?> currentIntegrationTip;
-
+    @Deprecated
+    Commit<?> commit;
+    
     public PretestedIntegrationAction(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge scmBridge) throws NextCommitFailureException {
         this.build = build;
         this.scmBridge = scmBridge;
@@ -29,24 +32,21 @@ public class PretestedIntegrationAction implements Action {
         } catch (NullPointerException e) {
             last = null;
         }
-        this.commit = scmBridge.nextCommit(build, launcher, listener, last);
+        //this.commit = scmBridge.nextCommit(build, launcher, listener, last);
     }
     
+    @Override
     public String getDisplayName() {
-        logger.entering("PretestedIntegrationAction", "getDisplayName");// Generated code DONT TOUCH! Bookmark: 3fb34e2a852b5aabe47573d3958d0bf0
-		logger.exiting("PretestedIntegrationAction", "getDisplayName");// Generated code DONT TOUCH! Bookmark: 152a7955fe370131e8203e4d8bfc6c24
 		return null;
     }
 
-    public String getIconFileName() {
-        logger.entering("PretestedIntegrationAction", "getIconFileName");// Generated code DONT TOUCH! Bookmark: ca4d6f91bca42ec63e5f7623655ad110
-        logger.exiting("PretestedIntegrationAction", "getIconFileName");// Generated code DONT TOUCH! Bookmark: 7b30fa75160a837a01fcf455fdaa57c8		
+    @Override
+    public String getIconFileName() {		
 		return null;
     }
 
+    @Override
     public String getUrlName() {
-        logger.entering("PretestedIntegrationAction", "getUrlName");// Generated code DONT TOUCH! Bookmark: cf7c72a753adf447c5674dbc81b3b1b7
-		logger.exiting("PretestedIntegrationAction", "getUrlName");// Generated code DONT TOUCH! Bookmark: a61b5775071f223c0c2dc704582be204
 		return "pretested-integration";
     }
 
@@ -68,14 +68,12 @@ public class PretestedIntegrationAction implements Action {
      * @throws NothingToDoException
      * @throws EstablishWorkspaceException    
      */
-    public boolean initialise(Launcher launcher, BuildListener listener) throws IntegationFailedExeception, NothingToDoException, EstablishWorkspaceException {
+    public boolean initialise(Launcher launcher, BuildListener listener) throws IntegationFailedExeception, NothingToDoException, EstablishWorkspaceException, UnsupportedConfigurationException {
         logger.entering("PretestedIntegrationAction", "initialise", new Object[] { listener, launcher });// Generated code DONT TOUCH! Bookmark: 243ef9e5f61005fcf1963a350f7abb77
 		boolean result = false;
+
+        scmBridge.prepareWorkspace(build, launcher, listener);
         
-        if (commit != null) {
-            result = true;
-            scmBridge.prepareWorkspace(build, launcher, listener, commit);
-        }
         logger.exiting("PretestedIntegrationAction", "initialise");// Generated code DONT TOUCH! Bookmark: 6f58d37470766bd11e40a451648336e5
 		return result;
     }

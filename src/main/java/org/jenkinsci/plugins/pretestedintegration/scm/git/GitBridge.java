@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -8,19 +9,23 @@ import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Cause;
 import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
+import hudson.triggers.SCMTrigger.SCMTriggerCause;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,7 +106,11 @@ public class GitBridge extends AbstractSCMBridge {
             throw new InterruptedException("You have not selected git as your SCM, and the multiple SCM plugin was not found");
         }            
     }
-
+    
+    /**
+     * Pretested repository configuration field 'Repository name'.
+     * @return 
+     */
     private String resolveRepoName() {
         return StringUtils.isBlank(repoName) ? "origin" : repoName;
     }
@@ -201,33 +210,7 @@ public class GitBridge extends AbstractSCMBridge {
         }
     }
     
-    /**
-     * 1. Convert the stuff in the commit to Map<String,String>
-     * 2. Check the current working branch if there are any more commits in that
-     * branch 3. Check the next branch round-robin
-     *
-     * @return 
-     * @throws NextCommitFailureException
-     */
-    @Override
-    public Commit<String> nextCommit( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws NextCommitFailureException {
-        logger.entering("GitBridge", "nextCommit", new Object[] { build, listener, launcher, commit });// Generated code DONT TOUCH! Bookmark: 5f5045d7fcbafdea51208e1a4863fe34
-		logger.finest("Git plugin, nextCommit invoked");
-        Commit<String> next = null;
-        try {            
-            BuildData gitBuildData = build.getAction(BuildData.class);            
-            Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
-            logger.fine( String.format( "Found branch with name %s to work on", gitDataBranch.getName()) );
-            next = new Commit<String>(gitDataBranch.getSHA1String());
-        } catch (Exception e) {            
-            logger.finest("Failed to find next commit");
-            logger.exiting("GitBridge", "nextCommit");// Generated code DONT TOUCH! Bookmark: 5db7b4d59db361b0d1c37e3cbd1ab0be
-			throw new NextCommitFailureException(e);
-        }
-        logger.finest("Git plugin, nextCommit returning");
-        logger.exiting("GitBridge", "nextCommit");// Generated code DONT TOUCH! Bookmark: 5db7b4d59db361b0d1c37e3cbd1ab0be
-		return next;
-    }
+ 
 
     @Override
     public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
@@ -245,30 +228,87 @@ public class GitBridge extends AbstractSCMBridge {
 			throw new CommitChangesFailureException( String.format( "Failed to commit integrated changes, message was:%n%s", bos.toString()) );
         }
     }
+    
+    /**
+     * Checks a list of git build data for relevant build data and extracts
+     * the relevant single build data to integrate.
+     * <ul>
+     * <li>Checks extract only build data belonging to the integration repository</li>
+     * <li>Check ensures that identical git build data are narrowed down to different sets 
+     *      as MultScm and the Git plugin may sometimes contribute with several identical sets</li>
+     * <li>Checks ensure that only one relevant set is supplied, or else we fail in case om ambiguity. </li>
+     * </ul>
+     * TODO: Currently there is no check for branch complies with branch specifier, or that commits (if not given branches) are heads. See JENKINS-25542, JENKINS-25512, JENKINS-24909
+     * @param data - git build data
+     * @return 
+     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException if none of the git build data matches chosen integration repository
+     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException if there is ambiguity about which git build data set to chose to integrate
+     */
+    public BuildData checkAndDetermineRelevantBuildData(List<BuildData> data) throws NothingToDoException, UnsupportedConfigurationException {
+        if(data.isEmpty()) {
+            throw new NothingToDoException("No Git SCM change found.");
+        }     
+        
+        Set<BuildData> relevantBuildData = new HashSet<>();
+        
+        // Using this HashSet only to detech duplicates
+        Set<String> revs = new HashSet<>();
+        
+        // An example on several BuilData - visualized can be found in 'docs/More_than_1_gitBuild_data.png'
+        for(BuildData bdata : data) {
+            // Assume no trailing slash in configuration - we won't match then.
+            if(bdata.lastBuild.revision.getBranches().iterator().next().getName().startsWith(resolveRepoName()+"/")) {
+                // No we now the git build data contain a branch that matches the integration repository name.
+                // Eg. Branch 'origin/ready/feature_1' matches 'origin' configured as integration repository
+                
+                // Check we have not earlier seen this changeset before,
+                // if SHA is the same, it will not be added to the HashSet.
+                // We have to use strings, as 'revision' is different objects.
+                boolean added = revs.add(bdata.lastBuild.revision.getSha1String());
+                if(!added) {
+                    //Noting that revision %s has duplicate entry in  (INFO)
+                    logger.log(Level.INFO, String.format("checkAndDetermineRelevantBuildData - Nothing that revision %s has duplicate BuildaData entry, using first found", bdata.lastBuild.revision.getSha1String()));
+                } else {
+                    relevantBuildData.add(bdata); //bdata is an object, so unique and always able to added
+                }
+            }
+        }
+        // If no build data added, there is none relevant - so nothing to do.
+        // Just building a nice log message here.
+        if(relevantBuildData.isEmpty()) {
+            StringBuilder builder = new StringBuilder();
+            for(BuildData d : data) {
+                builder.append(String.format(d.lastBuild.revision.getSha1String()+"%n"));
+                for(Branch b : d.lastBuild.revision.getBranches()) {
+                    builder.append(String.format(b.getName()+"%n"));
+                }
+            }
+            throw new NothingToDoException(String.format("No revision matches configuration in 'Integration repository'%n%s", builder.toString()));
+        } else if(relevantBuildData.size() > 1) {
+            StringBuilder builder = new StringBuilder();
+            for(BuildData d : data) {
+                builder.append(String.format(d.lastBuild.revision.getSha1String()+"%n"));
+                for(Branch b : d.lastBuild.revision.getBranches()) {
+                    builder.append(String.format(b.getName()+"%n"));
+                }
+            }
+            logger.log(Level.SEVERE, String.format("checkAndDetermineRelevantBuildData - Found ambiguius build data (git changes) where both repositori names are the same, but there are more than one change to integrate. Found the following:'%n%s", builder.toString()));
+             throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUIUITY_IN_BUILD_DATA);
+        } else {
+            return relevantBuildData.iterator().next();
+        }                                    
+    }
 
     @Override
     public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {        
         List<BuildData> bdata = build.getActions(BuildData.class);
-        
-        //If no build data was contributed
-        if(bdata.isEmpty()) {
-            throw new NothingToDoException("SCM change is not from Git");
-        }
-
-        //Get the build data...TODO: what about multiple-scm's. We need to select the correct one (The one that started the build) 
-        BuildData gitBuildData = build.getAction(BuildData.class);
-        
-        //Check to make sure that we do ONLY integrate to the branches specified.
-        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();        
-        if(!gitDataBranch.getName().startsWith(resolveRepoName()+"/")) {
-            throw new NothingToDoException(String.format("The git repository name %s does not match pretested configuration", gitDataBranch.getName()));
-        }
+        BuildData data = checkAndDetermineRelevantBuildData(bdata);
     }
     
     @Override
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException {
-        logger.entering("GitBridge", "deleteIntegratedBranch", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 111eed322ec80cb71cbb9dbb4ec42bac
-		BuildData gitBuildData = build.getAction(BuildData.class);
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException, NothingToDoException, UnsupportedConfigurationException {
+        logger.entering("GitBridge", "deleteIntegratedBranch", new Object[] { build, listener, launcher });
+		BuildData gitBuildData = checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
         
         //At this point in time the lastBuild is also the latests. So thats what we use
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
@@ -283,16 +323,16 @@ public class GitBridge extends AbstractSCMBridge {
             }
             
             if(delRemote != 0) {
-                logger.exiting("GitBridge", "deleteIntegratedBranch");// Generated code DONT TOUCH! Bookmark: 6769b00709eba81c7847b15d665987ca
+                logger.exiting("GitBridge", "deleteIntegratedBranch");
 				throw new DeleteIntegratedBranchException(String.format( "Failed to delete the remote branch %s with the following error:%n%s", gitDataBranch.getName(), out.toString()) );
             } 
         }
     }
 
     @Override
-    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {        
-        logger.entering("GitBridge", "updateBuildDescription", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: ebe53ccfc6676ea284a7dcb8855514e3
-		BuildData gitBuildData = build.getAction(BuildData.class);
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {        
+        logger.entering("GitBridge", "updateBuildDescription", new Object[] { build, listener, launcher }); 
+		BuildData gitBuildData = checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
         if(gitBuildData != null) {
             Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();         
             String text = "";
@@ -397,64 +437,19 @@ public class GitBridge extends AbstractSCMBridge {
 
     @Override
     public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
-        if( project.getScm() instanceof GitSCM ) { 
-            boolean res = validateGitScm((GitSCM)project.getScm());
-            if(!res) {
-                throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
-            }
-        //we need to ask Jenkins.getInstance().getPlugin() before instanceof because you would get a class not 
-        //not defined on jenkins instances if the vm tried to evalute the instanceof on installations without the 
-        //Multiple SCMs plugin.
-        } else if(Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
-            MultiSCM multiscm = (MultiSCM)project.getScm();
-            boolean ok = false;
-            for(SCM scm : multiscm.getConfiguredSCMs()) {                
-                if(scm instanceof GitSCM) {
-                    GitSCM gitMultiScm = (GitSCM)scm;                    
-                    ok |= validateGitScm(gitMultiScm);
-                }
-            }
-            
-            //If NONE of the configurations are valid
-            if(!ok) {
-                throw new UnsupportedConfigurationException(UnsupportedConfigurationException.ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED);
-            }
-            
-            //Compare each remote configured
-            HashMap<String,Integer> mapp = remoteMap(multiscm.getConfiguredSCMs());
-            if(mapp.containsKey(resolveRepoName())) {                
-                if(mapp.get(resolveRepoName()) >= 2) {
-                    throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES);
-                }
-            }
-            
+        
+        /**
+         * We don't need to verify if we're using git scm, since we will never create ambiguity in remote names 
+         * because the plugin renames them if they clash.
+         */
+        if(project.getScm() instanceof GitSCM) {
+            return;
+        } else if (Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM ) {
+            MultiSCM multiscm = (MultiSCM)project.getScm();            
+            validateMultiScm(multiscm.getConfiguredSCMs());                  
         } else {
             throw new UnsupportedConfigurationException("We only support 'Git' and 'Multiple SCMs' plugins");
         } 
-    }
-    
-    private HashMap<String,Integer> remoteMap(List<SCM> scms) {
-        HashMap<String,Integer> map = new HashMap<String, Integer>();
-        for(SCM scm : scms) {
-            //List that maintains the SET of branch names chosen. We support individual 
-            //Git configurations with duplicate remote names since they get renamed 
-            //At runtime
-            Set<String> alreadAdded = new HashSet<String>();
-            if(scm instanceof GitSCM) {
-                GitSCM gitMultiScm = (GitSCM)scm;                    
-                for(UserRemoteConfig config : gitMultiScm.getUserRemoteConfigs()) {
-                    String name = StringUtils.isBlank(config.getName()) ? "origin" : config.getName();
-                    if(alreadAdded.add(name)) {
-                        if(map.containsKey(name)) {
-                            map.put(name, map.get(name)+1);
-                        } else {
-                            map.put(name, 1);
-                        }
-                    }
-                }
-            }            
-        }
-        return map;        
     }
     //For JENKINS-24754
     /**
@@ -462,22 +457,25 @@ public class GitBridge extends AbstractSCMBridge {
      * @param scm
      * @throws UnsupportedConfigurationException 
      */
-    private boolean validateGitScm(GitSCM scm) {
-        List<UserRemoteConfig> configs = scm.getUserRemoteConfigs();
-        //The default git configuration with 1 repository in config. Blank name for remote (defaults to origin) and default value in pretested integration.
-        boolean isDefault = configs.size() == 1 && StringUtils.isBlank(configs.get(0).getName()) && resolveRepoName().equals("origin"); 
+    private boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
+        Set<String> remoteNames = new HashSet<>();
         
-        //If you're not using the standard values.
-        if(!isDefault) {               
-            for(UserRemoteConfig config : configs) {
-                //If the configured remote matches...Or the case where you have multiple repos selected with default config
-                //This also covers the scenario where origin is explicitly named in the configuration. 
-                if(resolveRepoName().equals(config.getName()) || (resolveRepoName().equals("origin") && StringUtils.isBlank(config.getName()) ) ) {
-                    return true;
+        for(SCM scm : scms) {
+            if(scm instanceof GitSCM) {        
+                List<UserRemoteConfig> configs = ((GitSCM)scm).getUserRemoteConfigs();
+
+                for(UserRemoteConfig config : configs) {
+                    if(StringUtils.isBlank(config.getName())) {
+                        throw new UnsupportedConfigurationException(UnsupportedConfigurationException.MULTISCM_REQUIRE_EXPLICIT_NAMING);
+                    }
+                    
+                    if(!remoteNames.add(config.getName())) {
+                        throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES);
+                    }
                 }
-            }                
-            return false;
+            }
         }
+        
         return true;
     }
 
@@ -487,11 +485,12 @@ public class GitBridge extends AbstractSCMBridge {
         updateBuildDescription(build, launcher, listener);
 
         // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
-        BuildData gitBuildData = build.getAction(BuildData.class);
+        BuildData gitBuildData = checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
         
         // TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything             
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         
+        // TODO: This master branch check should be moved to job configuration check method.
         String devBranchName = gitDataBranch.getName();
         if (devBranchName.contains("master")) {
             listener.getLogger().println(LOG_PREFIX + "Using the master branch for polling and development is not" +
@@ -500,7 +499,6 @@ public class GitBridge extends AbstractSCMBridge {
         }
 
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
-
             listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
             commit(build, launcher, listener);
             listener.getLogger().println(LOG_PREFIX + "Deleting development branch");

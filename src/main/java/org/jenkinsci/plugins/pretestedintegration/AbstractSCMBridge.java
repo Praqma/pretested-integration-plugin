@@ -86,9 +86,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws EstablishWorkspaceException
      * @throws NothingToDoException
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws EstablishWorkspaceException, NothingToDoException, IntegationFailedExeception {    
-        logger.entering("AbstractSCMBridge", "prepareWorkspace", new Object[] { build, listener, launcher, commit });// Generated code DONT TOUCH! Bookmark: 153879db1346111ba452f21bdef681e3
-		mergeChanges(build, launcher, listener, commit);
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishWorkspaceException, NothingToDoException, IntegationFailedExeception, UnsupportedConfigurationException {    
+        logger.entering("AbstractSCMBridge", "prepareWorkspace", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 153879db1346111ba452f21bdef681e3
+		mergeChanges(build, launcher, listener);
 		logger.exiting("AbstractSCMBridge", "prepareWorkspace");// Generated code DONT TOUCH! Bookmark: c1434f914c8ce73e41e5ea7b7ea1029a
     }
 
@@ -101,9 +101,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws IntegationFailedExeception 
      */
-    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, Commit<?> commit) throws NothingToDoException, IntegationFailedExeception {
-        logger.entering("AbstractSCMBridge", "mergeChanges", new Object[] { build, listener, launcher, commit });// Generated code DONT TOUCH! Bookmark: 2929a792ffc98c3546ea6e7755f81916
-		integrationStrategy.integrate(build, launcher, listener, this, commit);
+    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegationFailedExeception, UnsupportedConfigurationException {
+        logger.entering("AbstractSCMBridge", "mergeChanges", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 2929a792ffc98c3546ea6e7755f81916
+		integrationStrategy.integrate(build, launcher, listener, this);
 		logger.exiting("AbstractSCMBridge", "mergeChanges");// Generated code DONT TOUCH! Bookmark: a55866afd1caa8a8ab61b77dbbc2f130
     }
     
@@ -153,12 +153,12 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
 		logger.exiting("AbstractSCMBridge", "commit");// Generated code DONT TOUCH! Bookmark: 88b215c6f16b1aa5e6458f4686fef503        
     }
 
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException, NothingToDoException, UnsupportedConfigurationException {
         logger.entering("AbstractSCMBridge", "deleteIntegratedBranch", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: a499b16a8f9e177b3cb5bb52f9db446b
 		logger.exiting("AbstractSCMBridge", "deleteIntegratedBranch");// Generated code DONT TOUCH! Bookmark: ec2017cf2a7526cfb7470217ea25413e
     }
     
-    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
         logger.entering("AbstractSCMBridge", "updateBuildDescription", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: c0623c03e84a75c85d9db68bb8078a54
 		logger.exiting("AbstractSCMBridge", "updateBuildDescription");// Generated code DONT TOUCH! Bookmark: 832f1d788154dbccfc795d2762c455ca		
     }

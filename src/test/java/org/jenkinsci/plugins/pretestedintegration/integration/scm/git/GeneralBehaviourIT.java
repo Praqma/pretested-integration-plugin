@@ -24,11 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
@@ -42,22 +39,34 @@ public class GeneralBehaviourIT {
     
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
-    
-    private Repository repository;
-    
-    @After
-    public void tearDown() throws Exception {
-        if(repository != null) {
-            repository.close();
-            if (repository.getDirectory().getParentFile().exists()) {
-                FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
-            }
-        }
-    }
 
+    /**
+     * Git Plugin
+     * 
+     * Test that we operate using a default configuration, with two repositories
+     * in a single Git Plugin configuration.
+     * 
+     * Pretested integration:
+     *  - 'Integration branch' : master (default)
+     *  - 'Repository name' : origin (default) 
+     *  - 'Strategy' : Accumulated commit
+     * 
+     * GitSCM:
+     *  - 'Name' : (empty)
+     *  - 'Name' : (empty)
+     * 
+     * Workflow
+     *  - Create two repositories each containing a 'ready' branch.
+     *  - The build is triggered.
+     * 
+     * Results
+     *  - Two builds. One NOT_BUILT and one SUCCESS.
+     * 
+     * @throws Exception 
+     */
     @Test
-    public void failWhenRepNameIsBlankAndGitHasMoreThanOneRepo() throws Exception {
-        repository = TestUtilsFactory.createValidRepository("test-repo");
+    public void defaultGitConfigurationTwoRemotes1_NOT_BUILT_1_SUCCESS() throws Exception {
+        Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
         
         Git git = new Git(repository);
@@ -72,7 +81,7 @@ public class GeneralBehaviourIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
         
-        TestUtilsFactory.destroyRepo(repository2);
+        TestUtilsFactory.destroyRepo(repository2,repository);
         for(Iterator<FreeStyleBuild> builds = project.getBuilds().iterator(); builds.hasNext();) {
             AbstractBuild<?,?> b = builds.next();
             String text = jenkinsRule.createWebClient().getPage(b, "console").asText();
@@ -89,12 +98,32 @@ public class GeneralBehaviourIT {
     }
     
     /**
-     * 1.1
+     * Git Plugin
      * 
-     **/
+     * Test that we operate using a default configuration, with two repositories
+     * in a single Git Plugin configuration.
+     * 
+     * Pretested integration:
+     *  - 'Integration branch' : master (default)
+     *  - 'Repository name' : origin1
+     *  - 'Strategy' : Accumulated commit
+     * 
+     * GitSCM:
+     *  - 'Name' : origin1
+     *  - 'Name' : magic
+     * 
+     * Workflow
+     *  - Create two repositories each containing a 'ready' branch.
+     *  - The build is triggered.
+     * 
+     * Results
+     *  - One Build. That should be successful.
+     * 
+     * @throws Exception 
+     */
     @Test
     public void remoteOrigin1WithMoreThan1RepoShouldBeSuccessfulFirstRepo() throws Exception {
-        repository = TestUtilsFactory.createValidRepository("test-repo");
+        Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
         
         Git git = new Git(repository);
@@ -129,19 +158,37 @@ public class GeneralBehaviourIT {
         System.out.println("=====BUILD-LOG=====");
                 
         assertTrue(build.getResult().isWorseOrEqualTo(Result.SUCCESS));
-        repository2.close();
-        if (repository2.getDirectory().getParentFile().exists()) {
-            FileUtils.deleteQuietly(repository2.getDirectory().getParentFile());
-        }
+        TestUtilsFactory.destroyRepo(repository2, repository);
     }
     
     /**
-     * 1.2
+     * Git Plugin
      * 
-     **/
+     * Test that we operate using a default configuration, with two repositories
+     * in a single Git Plugin configuration.
+     * 
+     * Pretested integration:
+     *  - 'Integration branch' : master (default)
+     *  - 'Repository name' : origin1
+     *  - 'Strategy' : Accumulated commit
+     * 
+     * GitSCM:
+     *  - 'Name' : magic
+     *  - 'Name' : origin1
+     * 
+     * Workflow
+     *  - Create two repositories each containing a 'ready' branch.
+     *  - The build is triggered.
+     * 
+     * Results
+     *  - One Build. That should be successful. We merge feature_1 from origin1 into
+     *    master.
+     * 
+     * @throws Exception 
+     */
     @Test
     public void remoteOrigin1WithMoreThan1RepoShouldBeSuccessfulSecondRepo() throws Exception {
-        repository = TestUtilsFactory.createValidRepository("test-repo");
+        Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
         
         Git git = new Git(repository);
@@ -166,6 +213,8 @@ public class GeneralBehaviourIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
     
+        TestUtilsFactory.destroyRepo(repository, repository2);
+        
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
 
@@ -175,16 +224,40 @@ public class GeneralBehaviourIT {
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
                 
-        assertTrue(build.getResult().isWorseOrEqualTo(Result.SUCCESS));
-        repository2.close();
-        if (repository2.getDirectory().getParentFile().exists()) {
-            FileUtils.deleteQuietly(repository2.getDirectory().getParentFile());
-        }
+        assertTrue(build.getResult().isWorseOrEqualTo(Result.SUCCESS));        
     }
     
+    /**
+     * 
+     * TODO: isn't this a copy of {@link #defaultGitConfigurationTwoRemotes1_NOT_BUILT_1_SUCCESS()}
+     * 
+     * Git Plugin
+     * 
+     * Test that we operate using a default configuration, with two repositories
+     * in a single Git Plugin configuration.
+     * 
+     * Pretested integration:
+     *  - 'Integration branch' : master (default)
+     *  - 'Repository name' : origin1
+     *  - 'Strategy' : Accumulated commit
+     * 
+     * GitSCM:
+     *  - 'Name' : (default)
+     *  - 'Name' : (default)
+     * 
+     * Workflow
+     *  - Create two repositories each containing a 'ready' branch.
+     *  - The build is triggered.
+     * 
+     * Results
+     *  - One Build. That should be successful. We merge feature_1 from origin1 into
+     *    master.
+     * 
+     * @throws Exception 
+     */    
     @Test
     public void remoteNoRepoSpecifiedWithMoreThan1RepoShouldNotBeSuccessful() throws Exception {
-        repository = TestUtilsFactory.createValidRepository("test-repo");
+        Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
         
         Git git = new Git(repository);
@@ -206,7 +279,7 @@ public class GeneralBehaviourIT {
         TestUtilsFactory.triggerProject(project);
         
         jenkinsRule.waitUntilNoActivityUpTo(60000);
-        TestUtilsFactory.destroyRepo(repository2);
+        TestUtilsFactory.destroyRepo(repository2, repository);
 
         //Show the log for the latest build
         for(Iterator<FreeStyleBuild> builds = project.getBuilds().iterator(); builds.hasNext();) {
@@ -225,18 +298,23 @@ public class GeneralBehaviourIT {
     }
         
     /**
-     * Test case for JENKINS-25445
+     * Basically we need to verify that the plugin works when you checkout 
+     * to a subdirectory. Using squashed strategy.
+     * 
      * @throws Exception 
      */
+    @Bug(25445)
     @Test 
     public void testCheckOutToSubDirectoryWithSqushShouldSucceed() throws Exception {
-        repository = TestUtilsFactory.createValidRepository("test-repo-sqSubdir");
+        Repository repository = TestUtilsFactory.createValidRepository("test-repo-sqSubdir");
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, repository, true);        
         GitSCM scm = (GitSCM)project.getScm();
         scm.getExtensions().add(new RelativeTargetDirectory("rel-dir"));
         TestUtilsFactory.triggerProject(project);
         
         jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        TestUtilsFactory.destroyRepo(repository);
         
         FreeStyleBuild build = project.getBuilds().getFirstBuild();
 
@@ -250,18 +328,24 @@ public class GeneralBehaviourIT {
         
     
     /**
-     * Test case for JENKINS-25445
+
+     * Basically we need to verify that the plugin works when you checkout 
+     * to a subdirectory. Using accumulated strategy.
+     * 
      * @throws Exception 
      */
+    @Bug(25445)
     @Test 
     public void testCheckOutToSubDirectoryWithAccumulateShouldSucceed() throws Exception {
-        repository = TestUtilsFactory.createValidRepository("test-repo-accSubdir");
+        Repository repository = TestUtilsFactory.createValidRepository("test-repo-accSubdir");
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository, true);
         GitSCM scm = (GitSCM)project.getScm();
         scm.getExtensions().add(new RelativeTargetDirectory("rel-dir"));
         TestUtilsFactory.triggerProject(project); 
         
         jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
+        TestUtilsFactory.destroyRepo(repository);
         
         FreeStyleBuild build = project.getBuilds().getFirstBuild();
         
@@ -292,8 +376,7 @@ public class GeneralBehaviourIT {
         
         jenkinsRule.waitUntilNoActivityUpTo(60000);
         
-        TestUtilsFactory.destroyRepo(repository1);
-        TestUtilsFactory.destroyRepo(repository2);
+        TestUtilsFactory.destroyRepo(repository1, repository2);
         
         Iterator<FreeStyleBuild> bs = project.getBuilds().iterator();
         while(bs.hasNext()) {
@@ -302,8 +385,7 @@ public class GeneralBehaviourIT {
             System.out.println("=====BUILD-LOG=====");
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
-            
-            //TODO: How to implement this in a better way??? Since the build seem to start in random order.
+
             if(text.contains("push origin :ready/feature_1")) {
                 assertTrue(build.getResult().equals(Result.SUCCESS));
             } else {

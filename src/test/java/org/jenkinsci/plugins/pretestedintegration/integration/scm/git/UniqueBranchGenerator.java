@@ -6,7 +6,6 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
@@ -17,7 +16,8 @@ import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.Tes
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.AUTHER_NAME;
 
 /**
- *
+ * <h3>General purpose class that helps using JGit</h3>
+ * <p>Create a unique branch with unique content on master branch when {@link #build()} is called</p> 
  * @author Mads
  */
 public class UniqueBranchGenerator {
@@ -37,9 +37,9 @@ public class UniqueBranchGenerator {
     }
     
     /**
-     * Requires a bare repository. We clone to a random workspace 
-     * @return
+     * Requires a bare repository. We clone to a random workspace      
      * @throws Exception 
+     * @return The generator currently being worked on
      */
     public UniqueBranchGenerator build() throws Exception {
         

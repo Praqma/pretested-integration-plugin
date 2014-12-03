@@ -7,6 +7,7 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.Extension;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -23,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 /**
  *
  * @author Mads
@@ -36,18 +38,18 @@ public class SquashCommitStrategy extends IntegrationStrategy {
     public SquashCommitStrategy() { }
 
     @Override
-    public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
-        logger.entering("SquashCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: 36174744d49c892c3aeed5e2bc933991
+    public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {
+        logger.entering("SquashCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher });// Generated code DONT TOUCH! Bookmark: 36174744d49c892c3aeed5e2bc933991
 		int exitCode = -999;
         int exitCodeCommit = -999;
         GitBridge gitbridge = (GitBridge)bridge;
+        
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         
         //TODO: How can you add more than 1 action, MultiSCM plugin with two seperate gits?
-        BuildData gitBuildData = build.getAction(BuildData.class);
+        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
         
-        //TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything     
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         GitClient client;
 
@@ -66,7 +68,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             logger.fine("Finding remote branches");
             for(Branch b : client.getRemoteBranches()) {
                 logger.fine(String.format("Found remote branch %s", b.getName()));
-                if(b.getName().equals(gitDataBranch.getName())) {
+                if(b.getSHA1String().equals(gitDataBranch.getSHA1String())) {
                     found = true;
                     break;
                 }

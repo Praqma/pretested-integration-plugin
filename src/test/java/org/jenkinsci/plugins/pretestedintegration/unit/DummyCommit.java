@@ -13,7 +13,6 @@ public class DummyCommit extends Commit<String> {
 	
 	public DummyCommit(String commitId) {
 		super(commitId);
-		// TODO Auto-generated constructor stub
 	}
 
 }

@@ -7,6 +7,7 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.Extension;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -24,6 +25,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExe
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -39,8 +41,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
     public AccumulatedCommitStrategy() { }
 
     @Override
-    public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge, Commit<?> commit) throws IntegationFailedExeception, NothingToDoException {
-        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher, commit });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
+    public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {
+        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
 		int exitCode = -999;
 
         GitClient client;
@@ -48,7 +50,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         GitBridge gitbridge = (GitBridge)bridge;
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        BuildData gitBuildData = build.getAction(BuildData.class);
+        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
+        String commit = gitBuildData.lastBuild.revision.getSha1String();
         
         //TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything     
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();        
@@ -58,9 +61,8 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();            
             logger.fine("Finding remote branches");
             for(Branch b : client.getRemoteBranches()) {
-                logger.fine(String.format("Found remote branch %s", b.getName()));
-                
-                if(b.getName().equals(gitDataBranch.getName())) {                    
+                logger.fine(String.format("Found remote branch %s", b.getName()));                
+                if(b.getSHA1String().equals(gitDataBranch.getSHA1String())) {                    
                     found = true;
                     break;
                 }
@@ -82,11 +84,11 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 			throw new NothingToDoException(String.format("The branch name (%s) used by git, did not match a remote branch name. You might already have integrated the branch", gitDataBranch != null ? gitDataBranch.getName() : "null"));
         }
 
-        listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", (String) commit.getId(), gitbridge.getBranch() ) );
+        listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch() ) );
         try {
             
             String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));                                 
-            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), (String) commit.getId(), "--no-ff");
+            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), commit, "--no-ff");
         } catch (Exception ex) {
             logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
             logger.log(Level.WARNING, "Exception while merging, logging exception",ex);

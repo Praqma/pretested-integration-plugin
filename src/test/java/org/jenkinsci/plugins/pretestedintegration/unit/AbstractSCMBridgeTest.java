@@ -15,14 +15,22 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
 import junit.framework.TestCase;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import static org.mockito.Mockito.*;
 
-public class AbstractSCMBridgeTest extends HudsonTestCase {
-
+public class AbstractSCMBridgeTest {
+    
+    @Rule
+    public JenkinsRule rule = new JenkinsRule();
+    
+    @Test
 	public void testShouldIncludeDummySCMExtension() throws Exception {
 		boolean includedInInterfaceDescriptors = false;
 		boolean includedInDescriptors = false;
@@ -40,12 +48,14 @@ public class AbstractSCMBridgeTest extends HudsonTestCase {
 		}
 		assertTrue(includedInDescriptors);
 	}
-	
+    
+	@Test
 	public void testShouldGetCorrectDescriptor(){
 		DummySCM scm = new DummySCM(null);
 		TestCase.assertEquals("DummySCM", scm.getDescriptor().getDisplayName());
 	}
-	
+    
+	@Test
 	public void testShouldBeCommited() throws Exception {
 		DummySCM scm = new DummySCM(null);
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
