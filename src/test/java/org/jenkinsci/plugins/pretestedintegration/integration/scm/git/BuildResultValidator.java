@@ -16,6 +16,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
 /**
+ * Abstraction for validating a Jenkins build result. It also automagically 
+ * cleans up any resources used. (Specifically repositories).
  *
  * @author Mads
  */

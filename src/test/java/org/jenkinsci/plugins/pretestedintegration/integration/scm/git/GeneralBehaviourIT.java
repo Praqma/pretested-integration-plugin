@@ -312,6 +312,11 @@ public class GeneralBehaviourIT {
         }
     }
     
+    /**
+     * We want to test that the squash commit merge message we crease is the standard message. So we assert and check that the tip of our 
+     * repository has a commit that follows the patter of the default Squash merge commit message.
+     * @throws Exception 
+     */
     @Bug(25618)
     @Test
     public void validateSquashCommitMessageContents() throws Exception {

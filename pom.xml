@@ -48,8 +48,8 @@
 		<!-- Using Praqma's github repo as developer connection - this mean we must manual push tags and commits to the
 				 Jenkins CI github repo after an release. We do this to ensure no one sneaks code into our repo. -->
     <scm>
-				<connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
-				<developerConnection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</developerConnection>
+        <connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
+        <developerConnection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</developerConnection>
         <url>https://github.com/Praqma/pretested-integration-plugin</url>
     </scm>
 
@@ -131,7 +131,10 @@
             
             
             <!--
-            Use java 1.7. We need this for our testing environment
+                Use java 1.7. We need this for our testing environment. Java 6 was EOL last year
+                and i was starting to get some wierd errors with FindBugs plugin. Plugins also require
+                Java 7 with the version of Jenkins we're using so i decided to move to Java 7 which also soon
+                is EOL.                  
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
