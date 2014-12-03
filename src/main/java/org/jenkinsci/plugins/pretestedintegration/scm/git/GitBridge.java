@@ -252,9 +252,10 @@ public class GitBridge extends AbstractSCMBridge {
         
         //If no build data was contributed
         if(bdata.isEmpty()) {
-            throw new NothingToDoException("Not triggered by Git");
+            throw new NothingToDoException("SCM change is not from Git");
         }
 
+        //Get the build data...TODO: what about multiple-scm's. We need to select the correct one (The one that started the build) 
         BuildData gitBuildData = build.getAction(BuildData.class);
         
         //Check to make sure that we do ONLY integrate to the branches specified.
@@ -268,6 +269,8 @@ public class GitBridge extends AbstractSCMBridge {
     public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException {
         logger.entering("GitBridge", "deleteIntegratedBranch", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 111eed322ec80cb71cbb9dbb4ec42bac
 		BuildData gitBuildData = build.getAction(BuildData.class);
+        
+        //At this point in time the lastBuild is also the latests. So thats what we use
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int delRemote = -99999;
