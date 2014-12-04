@@ -4,7 +4,10 @@ In this readme file you find _developer oriented documentation_, about contribut
 
 _User oriented documentation_ is on the [Jenkins community wiki plugin page](https://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin).
 
-The [_roadmap_](https://trello.com/b/tOQL6crl/pretested-integration-plugin) is a  public Trello board.
+The [_roadmap_](https://trello.com/b/tOQL6crl/pretested-integration-plugin) is a  public Trello board. Whil a simple bug, or very simple feature request just can be reported directly on the [Jenkins community issue tracker]( https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27pretested-integration-plugin%27) you should use the _roadmap_ for discussing new ideas, complicated features and the future of the plugin.
+
+Current development efforts are also maintained Kanban-style on the Trello board.
+
 
 The plugin is maintained in the scope of [Joint Open Source Roadmap Alliance (JOSRA)](http://www.josra.org/) by [Praqma](http://www.praqma.net). We happily accept pull request - see section about contributing below.
 
@@ -66,6 +69,9 @@ Concepts:
 * **Ready** branches are specified by configuring the SCM plugin (not the prestested integration plugin) to pic up changes on those specific branches. For the Git plugin, it is the `Branch Specifier`.
 * The **integration branch** is the target branch for integration. This is where changes from the ready-branches comes in.
 
+Merge strategies:
+
+**Accumulated** and **Squashed**. These are explained, together with more background information, and a discussion on the different merge strategies in [JOSRA](http://www.josra.org) as a blog post: " [Pretested Integration Plugin](http://www.josra.org/blog/2014/06/23/Pretested%2Bintegration%2Bplugin.html)".
 
 ## Architecture
 
@@ -97,6 +103,10 @@ Publish changes on success:
 ## Design decisions
 
 _We currently miss documentation on a lot of the design decisions - they should go into this document._
+
+## Only one integration repository is supported
+
+* **Integration only support one repository**: Doing pretested integration on several repositories as the same time would not make sense conceptually. There should also be a 1:1 relation between a Jenkins job and a repository as a best practice. Further it would not be possible to make pretested integration as an atomic non interuptable operation on several repositories. For example if they both integrate successfully, but publishing result fails on the second one. What should then happen with the first one?
 
 ## Logging
 
