@@ -107,12 +107,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <!-- 
-                    Fail build if there are local modifications.
-                    Add -Dmaven.buildNumber.doCheck=false to skip in your local
-                    builds
-                    -->
-                    <doCheck>true</doCheck>
                     <!-- Git SHA of 5 should be more than enough for uniqueness in combo with version number -->
                     <shortRevisionLength>5</shortRevisionLength>
                 </configuration>
