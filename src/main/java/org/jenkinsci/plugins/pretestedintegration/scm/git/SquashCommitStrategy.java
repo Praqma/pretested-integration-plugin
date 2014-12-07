@@ -68,7 +68,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             logger.fine("Finding remote branches");
             for(Branch b : client.getRemoteBranches()) {
                 logger.fine(String.format("Found remote branch %s", b.getName()));
-                if(b.getSHA1String().equals(gitDataBranch.getSHA1String())) {
+                if(b.getName().equals(gitDataBranch.getName())) {
                     found = true;
                     break;
                 }
