@@ -249,10 +249,10 @@ public class GitBridge extends AbstractSCMBridge {
             throw new NothingToDoException("No Git SCM change found.");
         }     
         
-        Set<BuildData> relevantBuildData = new HashSet<>();
+        Set<BuildData> relevantBuildData = new HashSet<BuildData>();
         
         // Using this HashSet only to detech duplicates
-        Set<String> revs = new HashSet<>();
+        Set<String> revs = new HashSet<String>();
         
         // An example on several BuilData - visualized can be found in 'docs/More_than_1_gitBuild_data.png'
         for(BuildData bdata : data) {
@@ -458,7 +458,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws UnsupportedConfigurationException 
      */
     private boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
-        Set<String> remoteNames = new HashSet<>();
+        Set<String> remoteNames = new HashSet<String>();
         
         for(SCM scm : scms) {
             if(scm instanceof GitSCM) {        

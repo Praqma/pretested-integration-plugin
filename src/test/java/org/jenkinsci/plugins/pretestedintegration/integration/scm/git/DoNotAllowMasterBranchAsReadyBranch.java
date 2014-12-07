@@ -54,7 +54,7 @@ public class DoNotAllowMasterBranchAsReadyBranch {
         
         Repository repo = TestUtilsFactory.createRepoWithoutBranches("master");
 
-        List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
+        List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
         
