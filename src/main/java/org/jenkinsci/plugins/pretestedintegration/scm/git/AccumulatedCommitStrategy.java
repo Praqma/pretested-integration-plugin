@@ -79,9 +79,10 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             } catch (Exception ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
-            logger.log(Level.WARNING, String.format("Nothing to do. The branch name (%s) contained in the git build data object, did not match a remote branch name", gitDataBranch != null ? gitDataBranch.getName() : "null"));
+            String msg = GitMessages.NoRelevantSCMchange(gitDataBranch != null ? gitDataBranch.getName() : "null");
+            logger.log(Level.WARNING, msg);
             logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
-			throw new NothingToDoException(String.format("The branch name (%s) used by git, did not match a remote branch name. You might already have integrated the branch", gitDataBranch != null ? gitDataBranch.getName() : "null"));
+			throw new NothingToDoException(msg);
         }
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch() ) );

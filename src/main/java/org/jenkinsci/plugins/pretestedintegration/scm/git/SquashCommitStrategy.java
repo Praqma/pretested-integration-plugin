@@ -85,9 +85,10 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             } catch (IOException ex) {
                 logger.log(Level.FINE, "Failed to update description", ex);
             }
-            logger.log(Level.WARNING, String.format("Nothing to do. The branch name (%s) contained in the git build data object, did not match a remote branch name", gitDataBranch.getName()));
+            String msg = GitMessages.NoRelevantSCMchange(gitDataBranch != null ? gitDataBranch.getName() : "null");
+            logger.log(Level.WARNING, msg);
             logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
-			throw new NothingToDoException(String.format("The branch name (%s) contained in the git build data object, did not match a remote branch name", gitDataBranch.getName()));
+			throw new NothingToDoException(msg);
         }
 
         try {

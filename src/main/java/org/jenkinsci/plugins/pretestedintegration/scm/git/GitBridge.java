@@ -84,27 +84,75 @@ public class GitBridge extends AbstractSCMBridge {
 		return this.revId;
     }
     
-    private GitSCM findScm(AbstractBuild<?, ?> build) throws InterruptedException {
-        SCM scm = build.getProject().getScm();
+    /*
+    Will return git SCM, but only for relevant build data.
+    Relevant build data is those matching Integration repository settings.
+    The git SCM might no be the one matching newest build data, but it is always
+    the git scm that match changes to be integrated (which can be old data!)
+    */
+    private GitSCM findScm(AbstractBuild<?, ?> build) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
+        logger.entering("GitBridge", "findScm");
+        // get all build data - there can be several scm changes if using MultiScm plugin
+        List<BuildData> bdata = build.getActions(BuildData.class);
+        // This method extract the relevant one, leaving us with only one relevant build data object
+        // we need this below when selecting which repository to work with.
+        // There must be a match between the relevant build data branch and the found scm
+        // which must have the branch. This is needed due to MultiScm support
+        // where there are several scm at the time.
+        BuildData bd = checkAndDetermineRelevantBuildData(bdata);
 
-        if(scm instanceof GitSCM) {            
+        SCM scm = build.getProject().getScm();
+        logger.fine(String.format("Iterating over SCM configuration to find correct one - checking if either GitSCM or MultiSCM"));
+        if(scm instanceof GitSCM) {
             GitSCM git = (GitSCM) scm;
+            logger.fine(String.format("Found GitSCM"));
             return git;
         } else if (Jenkins.getInstance().getPlugin("multiple-scms") != null) {            
             if(scm instanceof MultiSCM) {
+                logger.fine(String.format("Detected MultSCM so need to find first Git SCM parts."));
                 MultiSCM multi = (MultiSCM)scm;
                 for(SCM s : multi.getConfiguredSCMs()) {
                     if(s instanceof GitSCM) {
-                        return (GitSCM)s;
+                        logger.fine(String.format("Detected MultSCM Git SCM - checking if it matches our relevant build data."));
+                        GitSCM gitscm = (GitSCM)s;
+                        // Need to check this found git scm have the branch that correspond
+                        // to our relevant build data, because if not this is not the correct
+                        // git scm we have found.
+                        // We are looking at the branches on relevantBuildData, which typically only have one
+                        // but might some times have more.
+                        // ASSUMPTION: There will be no more then one git scm that have matches the branch in our relevant
+                        // build data, as the origin names is part of the branch name and we require all MultiScm git configuration
+                        // to be explicitly named and different. Thus returning the first match should be fine.
+
+                        logger.fine(String.format("Our relevant build data have %s branches", bd.lastBuild.revision.getBranches().size()));
+                        // This string builder is just for logging
+                        StringBuilder gitScmBranchList = new StringBuilder();
+                        for(Branch b : gitscm.getBuildData(build).lastBuild.revision.getBranches()) {
+                            gitScmBranchList.append(String.format(b.getName()+"%n"));
+                        }
+
+                        for (Branch b : bd.lastBuild.revision.getBranches()) { // more then one if several branch heads on same commit
+                            logger.fine(String.format("Checking if our relevant build data branch %s relates to this SCM which have branches: %s", b.getName(), gitScmBranchList.toString()));
+                            if(gitscm.getBuildData(build).lastBuild.revision.containsBranchName(b.getName()))
+                            {
+                                logger.fine(String.format("Current git scm relates to relevant build data branch - so SCM found"));
+                                return gitscm;
+                            } else {
+                                logger.fine(String.format("No match for current git scm and branch in relevant build data."));
+                            }
+                        }
+                        }
                     }
-                }
-                throw new InterruptedException("No git repository configured in multi scm");
+                logger.exiting("GitBridge", "findScm - throwing InterruptedException: No git repository configured in multi scm or no git repository contain the branch from our git build data.");
+                throw new InterruptedException("No git repository configured in multi scm or no git repository contain the branch from our git build data.");
             } else {
+                logger.exiting("GitBridge", "findScm - throwing InterruptedException: The selected SCM is neither Git nor Multiple SCM");
                 throw new InterruptedException("The selected SCM is neither Git nor Multiple SCM");
             }
         } else {
+            logger.exiting("GitBridge", "findScm - throwing InterruptedException: You have not selected git as your SCM, and the multiple SCM plugin was not found");
             throw new InterruptedException("You have not selected git as your SCM, and the multiple SCM plugin was not found");
-        }            
+        }
     }
     
     /**
@@ -230,8 +278,8 @@ public class GitBridge extends AbstractSCMBridge {
     }
     
     /**
-     * Checks a list of git build data for relevant build data and extracts
-     * the relevant single build data to integrate.
+     * Checks a list of git build data for current build and extracts
+     * the relevant build data related to the Integration repository configuration.
      * <ul>
      * <li>Checks extract only build data belonging to the integration repository</li>
      * <li>Check ensures that identical git build data are narrowed down to different sets 
