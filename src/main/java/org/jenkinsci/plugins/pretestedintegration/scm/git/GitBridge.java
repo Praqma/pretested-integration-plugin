@@ -481,7 +481,6 @@ public class GitBridge extends AbstractSCMBridge {
 
     @Override
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        Result result = build.getResult();
         updateBuildDescription(build, launcher, listener);
 
         // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
@@ -498,6 +497,7 @@ public class GitBridge extends AbstractSCMBridge {
             build.setResult(Result.FAILURE);
         }
 
+        Result result = build.getResult();
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
             listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
             commit(build, launcher, listener);
