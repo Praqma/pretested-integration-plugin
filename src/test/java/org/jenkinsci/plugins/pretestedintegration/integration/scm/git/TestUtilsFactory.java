@@ -65,20 +65,27 @@ public class TestUtilsFactory {
         return commitCount;
     }
     
+    /**
+     * Delete repository from file system
+     * To let file handles be released first, it tries several times until max
+     * 20 seconds.
+     * @param repository
+     * @throws IOException
+     * @throws InterruptedException 
+     */
     public static void destroyRepo(Repository repository) throws IOException, InterruptedException {
         if(repository != null) {
             repository.close();            
-            System.out.println("Attempting to destroy: "+repository.getDirectory().getParentFile().getAbsolutePath());
-            if (repository.getDirectory().getParentFile().exists()) {
-                System.out.println("Destroying repo "+repository.getDirectory().getParentFile().getAbsolutePath());            
+            File repositoryPath = repository.getDirectory().getAbsoluteFile();
+            System.out.println("Attempting to destroy: " + repositoryPath.toString());
+             if (repository.getDirectory().exists()) {
+                System.out.println("Destroying repo " + repositoryPath.toString());            
                 int attempts = 0;
                 /**
-                 * This 'hack' has been implmented because i started experiencing the test-harness/jgit not reliquishing
-                 * control over my repositories. I created a method that tries to delete the created temporary repository every
-                 * 200ms. If it tried 100 times..(20s) and has still not deleted the repository..we fail.                 
+                 * This 'hack' has been implemented because the test-harness/JGit not always releasing
+                 * the repositories (on Windows). Tries to delete until success or time-out (after 20 seconds.
                  */ 
-                
-                while(!FileUtils.deleteQuietly(repository.getDirectory().getParentFile().getAbsoluteFile())) {
+                while(!FileUtils.deleteQuietly(repositoryPath)) {
                     attempts++;
                     Thread.sleep(200);
                     if(attempts > 100) {
@@ -218,9 +225,31 @@ public class TestUtilsFactory {
         return String.format("%s-%s-%s", message, branch, repositoryRootFolder);
     }
     
+    /**
+     * Creates a bare git repository with initial commit and a 'readme.md' file
+     * containing one line. Author and email is set on commit.
+     * @param repoFolderName
+     * @return
+     * @throws IOException
+     * @throws GitAPIException 
+     */
     public static Repository createRepoWithoutBranches(String repoFolderName) throws IOException, GitAPIException {
-        File repo = new File(repoFolderName+"/"+".git");
-        File workDirForRepo = new File("work"+repoFolderName);
+        //'git init --bare test.git' :
+        //Initialized empty Git repository in /home/bue/gitlab-repos/pretested-integration-plugin/test.git/
+        //'ls -al test.git/' :
+        //total 40
+        //drwxrwxr-x  7 doe usr 4096 dec 11 00:23 .
+        //drwxrwxr-x 12 doe usr 4096 dec 11 00:23 ..
+        //drwxrwxr-x  2 doe usr 4096 dec 11 00:23 branches
+        //-rw-rw-r--  1 doe usr   66 dec 11 00:23 config
+        //-rw-rw-r--  1 doe usr   73 dec 11 00:23 description
+        //-rw-rw-r--  1 doe usr   23 dec 11 00:23 HEAD
+        //drwxrwxr-x  2 doe usr 4096 dec 11 00:23 hooks
+        //drwxrwxr-x  2 doe usr 4096 dec 11 00:23 info
+        //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 objects
+        //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 refs
+        File repo = new File(repoFolderName+".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(repoFolderName);
         
         Repository repository = new FileRepository(repo);        
         repository.create(true);
