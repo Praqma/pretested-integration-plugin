@@ -7,8 +7,10 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
+import java.io.File;
 import java.util.Iterator;
 import static junit.framework.TestCase.assertTrue;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -95,17 +97,27 @@ public class BuildResultValidator implements AutoCloseable {
         }
     }
     
-    private boolean validateHeadCommitMessage() throws ValidationException,Exception {        
-        Git git = new Git(repo);
+    private boolean validateHeadCommitMessage() throws ValidationException, Exception {        
+
+        File workDirForRepo = new File("work-" + repo.getDirectory().getPath().replace(".git",""));
+        Git.cloneRepository().setURI("file:///"+repo.getDirectory().getAbsolutePath()).setDirectory(workDirForRepo)
+                .setBare(false)
+                .setCloneAllBranches(true)                
+                .setNoCheckout(false)
+                .call().close();
+        
+        Git git = Git.open(workDirForRepo);
+
         git.checkout().setName("master").call();
         RevWalk walk = new RevWalk(repo);
-        
+
         Iterable<RevCommit> logs = git.log().call();
         Iterator<RevCommit> i = logs.iterator();
         
         ObjectId head = repo.resolve("HEAD");
         
-        
+        Boolean validated = false;
+        String errorMessage = "No head commit found";
         RevCommit commit = null;
         while(i.hasNext()) {
             commit = walk.parseCommit(i.next());
@@ -119,14 +131,27 @@ public class BuildResultValidator implements AutoCloseable {
                 }
                 
                 if(!(matched && match)) {
-                   throw new ValidationException("The head commit did not match any of the strings specified");
+                    validated = false;
+                    errorMessage = "The head commit did not match any of the strings specified";
+                    break;
+                   //throw new ValidationException("The head commit did not match any of the strings specified");
                 } else {
-                    return true;
+                    //return true;
+                    validated = true;
+                                        
                 }
                    
             } 
         }
-        throw new ValidationException("No head commit found");
+        //throw new ValidationException("No head commit found");
+        git.close();
+        FileUtils.deleteDirectory(workDirForRepo);
+        if (!validated) {
+            throw new ValidationException(errorMessage);
+        }
+        else {
+            return validated;
+        }
     }
 
     @Override
