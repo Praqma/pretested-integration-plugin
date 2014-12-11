@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.GitMessages;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -336,8 +337,9 @@ public class MultipleScm_threeRepos_IT {
                 integratedRepo3 = true;
 
             } else if (build.getResult().equals(Result.NOT_BUILT)) {
+                String msg = GitMessages.NoRelevantSCMchange("repo3/ready/repo3_feature_1");
                 assertTrue("Error message related to detecting the wrong git scm was not found.",
-                        console.contains("contained in the git build data object, did not match a remote branch name"));
+                        console.contains(msg));
                 notBuildOnOtherRepoChanges = true;
             } else {
                 // all other build results
