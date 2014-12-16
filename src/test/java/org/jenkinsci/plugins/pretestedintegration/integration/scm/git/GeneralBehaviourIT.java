@@ -69,9 +69,6 @@ public class GeneralBehaviourIT {
         Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
         
-        Git git = new Git(repository);
-        git.checkout().setName("master").call();
-
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), null, null, null));
         
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null, true);
@@ -125,9 +122,6 @@ public class GeneralBehaviourIT {
     public void remoteOrigin1WithMoreThan1RepoShouldBeSuccessfulFirstRepo() throws Exception {
         Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
-        
-        Git git = new Git(repository);
-        git.checkout().setName("master").call();
 
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), "origin1", null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), "magic", null, null));
         
@@ -190,9 +184,6 @@ public class GeneralBehaviourIT {
     public void remoteOrigin1WithMoreThan1RepoShouldBeSuccessfulSecondRepo() throws Exception {
         Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
-        
-        Git git = new Git(repository);
-        git.checkout().setName("master").call();
 
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), "magic", null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), "orgin1", null, null));
         
@@ -260,9 +251,6 @@ public class GeneralBehaviourIT {
         Repository repository = TestUtilsFactory.createValidRepository("test-repo");
         Repository repository2 = TestUtilsFactory.createValidRepository("test-repo2");
         
-        Git git = new Git(repository);
-        git.checkout().setName("master").call();
-
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), null, null, null));
         
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();

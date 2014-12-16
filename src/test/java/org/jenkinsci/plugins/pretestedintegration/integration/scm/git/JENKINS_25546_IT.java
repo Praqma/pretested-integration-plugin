@@ -66,12 +66,12 @@ public class JENKINS_25546_IT {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
         
-        SCM gitSCM1 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo1.getDirectory(), "origin", null, null)),
+        SCM gitSCM1 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo1.getDirectory().getAbsolutePath(), "origin", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
         
-        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory(), "origin", null, null)),
+        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory().getAbsolutePath(), "origin", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
@@ -201,12 +201,12 @@ public class JENKINS_25546_IT {
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
         
-        SCM gitSCM1 = new GitSCM(Arrays.asList(new UserRemoteConfig("file://" + repo1.getDirectory(), "stable", null, null) , new UserRemoteConfig("file://" + repo3.getDirectory(), "stable-two", null, null)),
+        SCM gitSCM1 = new GitSCM(Arrays.asList(new UserRemoteConfig("file://" + repo1.getDirectory().getAbsolutePath(), "stable", null, null) , new UserRemoteConfig("file://" + repo3.getDirectory().getAbsolutePath(), "stable-two", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
         
-        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory(), "stable", null, null)),
+        SCM gitSCM2 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo2.getDirectory().getAbsolutePath(), "stable", null, null)),
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);

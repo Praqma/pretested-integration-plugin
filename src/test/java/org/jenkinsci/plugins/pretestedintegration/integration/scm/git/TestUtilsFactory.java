@@ -24,7 +24,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
@@ -65,6 +64,38 @@ public class TestUtilsFactory {
         return commitCount;
     }
     
+    public static int countCommits(File workDir) throws IOException {
+        Git git = Git.open(workDir);
+        int commitCount = 0;
+
+        try {
+            Iterator<RevCommit> iterator = git.log().call().iterator();
+            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+        } finally {
+            git.close();
+        }
+
+        
+        return commitCount;
+    }
+    
+    public static int countCommits(Git git) throws IOException {        
+        int commitCount = 0;
+
+        try {
+            Iterator<RevCommit> iterator = git.log().call().iterator();
+            for ( ; iterator.hasNext() ; ++commitCount ) iterator.next();
+        } catch (GitAPIException e) {
+            e.printStackTrace();
+            git.close();
+        } 
+        
+        return commitCount;
+    }
+    
+    
     /**
      * Delete repository from file system
      * To let file handles be released first, it tries several times until max
@@ -77,8 +108,9 @@ public class TestUtilsFactory {
         if(repository != null) {
             repository.close();            
             File repositoryPath = repository.getDirectory().getAbsoluteFile();
-            System.out.println("Attempting to destroy: " + repositoryPath.toString());
-             if (repository.getDirectory().exists()) {
+            File repositoryWorkDir = new File(repository.getDirectory().getAbsolutePath().replace(".git", ""));
+            System.out.println("Attempting to destroy git repository: " + repositoryPath.toString());
+            if (repository.getDirectory().exists()) {
                 System.out.println("Destroying repo " + repositoryPath.toString());            
                 int attempts = 0;
                 /**
@@ -87,12 +119,25 @@ public class TestUtilsFactory {
                  */ 
                 while(!FileUtils.deleteQuietly(repositoryPath)) {
                     attempts++;
-                    Thread.sleep(200);
+                    Thread.sleep(300);
                     if(attempts > 100) {
                         throw new InterruptedException("Failed to delete directory after numerous attempts");
                     }
                 }
                    
+            }
+            
+            System.out.println("Attempting to destroy git repository workdir: " + repositoryWorkDir.toString());
+            if(repositoryWorkDir.exists()) {
+                System.out.println("Destroying repository workdir: " + repositoryWorkDir.toString());
+                int attempts = 0;  
+                while(!FileUtils.deleteQuietly(repositoryWorkDir)) {
+                    attempts++;
+                    Thread.sleep(300);
+                    if(attempts > 100) {
+                        throw new InterruptedException(String.format("Failed to delete working directory for repository %s after 30 seconds", repositoryPath.toString()));
+                    }
+                }
             }
         }
     }
@@ -125,11 +170,11 @@ public class TestUtilsFactory {
     }
 
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo) throws Exception {
-        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null, true);
+        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, true);
     }
     
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo, boolean runOnSlave) throws Exception {
-        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory(), null, null, null)), null, runOnSlave);
+        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, runOnSlave);
     }
     
     public static void triggerProject( FreeStyleProject project  ) throws Exception {        
@@ -281,40 +326,34 @@ public class TestUtilsFactory {
         return repository;
     }
     
-    public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {        
-        File repo = new File(repoFolderName+"/"+".git");
-        Repository repository;
-        Git git;
+    public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {                
+        File repo = new File(repoFolderName+".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(repoFolderName);        
+        Repository repository = new FileRepository(repo);        
+        repository.create(true);
 
+        Git.cloneRepository().setURI("file:///"+repo.getAbsolutePath()).setDirectory(workDirForRepo)
+        .setBare(false)
+        .setCloneAllBranches(true)                
+        .setNoCheckout(false)
+        .call().close();
+        
+        Git git = Git.open(workDirForRepo);
+        
         String FEATURE_BRANCH_NAME = "ready/feature_1";
         
-        if (repo.getParentFile().getAbsoluteFile().exists())
-            FileUtils.deleteDirectory(repo.getParentFile().getAbsoluteFile());
 
-        FileRepositoryBuilder builder = new FileRepositoryBuilder();
-
-        repository = builder.setGitDir(repo.getAbsoluteFile())
-                .readEnvironment() // scan environment GIT_* variables
-                .findGitDir() // scan up the file system tree
-                .build();
-
-        if (!repository.isBare() && repository.getBranch() == null) {
-            repository.create();
-        }
-                
-        git = new Git(repository);
-
-        File readme = new File(repo.getParent()+"/readme");
+        File readme = new File(workDirForRepo+"/readme");
         if (!readme.exists())
             FileUtils.writeStringToFile(readme, "sample text\n");
 
         git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "commit message 1")).call();
+        git.commit().setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, git.getRepository().getBranch(), "commit message 1")).call();
 
         FileUtils.writeStringToFile(readme, "changed sample text\n");
 
         git.add().addFilepattern(readme.getName()).call();
-        git.commit().setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "commit message 2")).call();
+        git.commit().setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, git.getRepository().getBranch(), "commit message 2")).call();
 
         CreateBranchCommand createBranchCommand = git.branchCreate();
         createBranchCommand.setName(FEATURE_BRANCH_NAME);
@@ -326,8 +365,7 @@ public class TestUtilsFactory {
 
         git.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = git.commit();
-        commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "feature 1 commit 1"));
-        //commitCommand.setMessage("feature 1 commit 1");
+        commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, git.getRepository().getBranch(), "feature 1 commit 1"));
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
 
@@ -335,37 +373,35 @@ public class TestUtilsFactory {
 
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
-        commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "feature 1 commit 2"));
+        commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, git.getRepository().getBranch(), "feature 1 commit 2"));
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
+        
+        git.push().setPushAll().call();
 
-        git.checkout().setName("master").call();        
+        git.checkout().setName("master").call();
+        
+        FileUtils.deleteDirectory(workDirForRepo);        
         return repository;
     }
     
     public static Repository createRepositoryWithMergeConflict(String repoFolderName) throws IOException, GitAPIException {
-        File repo = new File(repoFolderName+"/"+".git");
-        Repository repository;
-        Git git;
         String FEATURE_BRANCH_NAME = "ready/feature_1";
+        
+        File repo = new File(repoFolderName+".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(repoFolderName);        
+        Repository repository = new FileRepository(repo);        
+        repository.create(true);
 
-        if (repo.getParentFile().getAbsoluteFile().exists())
-            FileUtils.deleteDirectory(repo.getParentFile().getAbsoluteFile());
+        Git.cloneRepository().setURI("file:///"+repo.getAbsolutePath()).setDirectory(workDirForRepo)
+        .setBare(false)
+        .setCloneAllBranches(true)                
+        .setNoCheckout(false)
+        .call().close();
+        
+        Git git = Git.open(workDirForRepo);
 
-        FileRepositoryBuilder builder = new FileRepositoryBuilder();
-
-        repository = builder.setGitDir(repo.getAbsoluteFile())
-                .readEnvironment() // scan environment GIT_* variables
-                .findGitDir() // scan up the file system tree
-                .build();
-
-        if (!repository.isBare() && repository.getBranch() == null) {
-            repository.create();
-        }
-
-        git = new Git(repository);
-
-        File readme = new File(repo.getParent()+"/readme");
+        File readme = new File(workDirForRepo+"/readme");
         if (!readme.exists())
             FileUtils.writeStringToFile(readme, "sample text\n");
 
@@ -408,34 +444,32 @@ public class TestUtilsFactory {
         commitCommand.setMessage("merge conflict message 1");
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
+        
+        git.push().setPushAll().call();
+        
+        FileUtils.deleteDirectory(workDirForRepo);
+        
         return repository;
     }
-    
-    public static Repository createValidRepositoryWith2FeatureBranches(String repoFolderName) throws IOException, GitAPIException {
-        File repo = new File(repoFolderName+"/.git");
-        Repository repository;
-        Git git;
-        
-        if (repo.getParentFile().exists())
-            FileUtils.deleteDirectory(repo.getParentFile().getAbsoluteFile());
 
+    public static Repository createValidRepositoryWith2FeatureBranches(String repoFolderName) throws IOException, GitAPIException {
         final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
         final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
 
-        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        File repo = new File(repoFolderName+".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(repoFolderName);        
+        Repository repository = new FileRepository(repo);        
+        repository.create(true);
 
-        repository = builder.setGitDir(repo.getAbsoluteFile())
-                .readEnvironment() // scan environment GIT_* variables
-                .findGitDir() // scan up the file system tree
-                .build();
+        Git.cloneRepository().setURI("file:///"+repo.getAbsolutePath()).setDirectory(workDirForRepo)
+        .setBare(false)
+        .setCloneAllBranches(true)                
+        .setNoCheckout(false)
+        .call().close();
+        
+        Git git = Git.open(workDirForRepo);
 
-        if (!repository.isBare() && repository.getBranch() == null) {
-            repository.create();
-        }
-
-        git = new Git(repository);
-
-        File readme = new File(repo.getParent()+"/readme");
+        File readme = new File(workDirForRepo,"readme");
         if (!readme.exists())
             FileUtils.writeStringToFile(readme, "sample text\n");
 
@@ -449,7 +483,8 @@ public class TestUtilsFactory {
 
         CreateBranchCommand createBranchCommand = git.branchCreate();
         createBranchCommand.setName(FEATURE_BRANCH_1_NAME);
-        createBranchCommand.call();
+        Ref ref = createBranchCommand.call();
+        
 
         git.checkout().setName(FEATURE_BRANCH_1_NAME).call();
 
@@ -459,7 +494,6 @@ public class TestUtilsFactory {
         CommitCommand commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 1");
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
-        commitCommand.call();
 
         FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
 
@@ -494,34 +528,33 @@ public class TestUtilsFactory {
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
 
+        git.push().setPushAll().call();        
         git.checkout().setName("master").call();
+        
+        FileUtils.deleteDirectory(workDirForRepo);
+        
         return repository;
     }
     
     public static Repository createRepositoryWith2FeatureBranches1Valid1Invalid(String repoDir) throws IOException, GitAPIException {
-        Repository repository;
-        Git git;
-        File f = new File(repoDir+"/.git");
-        if (f.getParentFile().exists())
-            FileUtils.deleteDirectory(f.getParentFile().getAbsoluteFile());
-
         final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
         final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
+        
+        File repo = new File(repoDir+".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(repoDir);
+        
+        Repository repository = new FileRepository(repo);        
+        repository.create(true);
 
-        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        Git.cloneRepository().setURI("file:///"+repo.getAbsolutePath()).setDirectory(workDirForRepo)
+        .setBare(false)
+        .setCloneAllBranches(true)                
+        .setNoCheckout(false)
+        .call().close();
+        
+        Git git = Git.open(workDirForRepo);
 
-        repository = builder.setGitDir(GIT_DIR.getAbsoluteFile())
-                .readEnvironment() // scan environment GIT_* variables
-                .findGitDir() // scan up the file system tree
-                .build();
-
-        if (!repository.isBare() && repository.getBranch() == null) {
-            repository.create();
-        }
-
-        git = new Git(repository);
-
-        File readme = new File(repository.getDirectory().getParent()+"/readme");
+        File readme = new File(workDirForRepo+"/readme");
         if (!readme.exists())
             FileUtils.writeStringToFile(readme, "sample text\n");
 
@@ -578,8 +611,13 @@ public class TestUtilsFactory {
         commitCommand.setMessage("feature 2 commit 2");
         commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
         commitCommand.call();
+                
+        git.push().setPushAll().call();
 
         git.checkout().setName("master").call();
+        
+        FileUtils.deleteDirectory(workDirForRepo);
+        
         return repository;
     }
 }

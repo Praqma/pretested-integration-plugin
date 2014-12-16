@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.util.RunList;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -18,7 +19,11 @@ import java.io.File;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
+import org.eclipse.jgit.api.CreateBranchCommand;
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.lib.Ref;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
+import org.junit.Ignore;
 
 /**
  * <h3>Set of tests that test that we react correctly to merge conflicts</h3> 
@@ -31,16 +36,12 @@ public class AccumulatedCommitStrategyIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
-    final String FEATURE_BRANCH_NAME = "ready/feature_1";
-
+    final String FEATURE_BRANCH_NAME = "ready/feature_1";                                        
     private Repository repository;
 
     @After
     public void tearDown() throws Exception {        
-        repository.close();
-        if (repository.getDirectory().getParentFile().exists()) {
-            FileUtils.deleteQuietly(repository.getDirectory().getParentFile());
-        }       
+        TestUtilsFactory.destroyRepo(repository);        
     }
 
     /**
@@ -69,32 +70,48 @@ public class AccumulatedCommitStrategyIT {
     @Test
     public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {        
         repository = TestUtilsFactory.createValidRepository("test-repo");
-        Git git = new Git(repository);
         
-        String readmeFromIntegration = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
-
-        git.checkout().setName(FEATURE_BRANCH_NAME).call();
-        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
-        git.checkout().setName("master").call();
-
+        File workDir = new File("test-repo");
+        
+        Git.cloneRepository().setURI("file:///"+repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
+        .setBare(false)
+        .setCloneAllBranches(true) 
+        .setNoCheckout(false)
+        .call().close();
+        
+        Git git = Git.open(workDir);
+        
+        System.out.println("Opening git repository in: "+workDir.getAbsolutePath());
+        
+        String readmeFromIntegration = FileUtils.readFileToString(new File("test-repo/readme"));
+                
+        git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(SetupUpstreamMode.TRACK).setCreateBranch(true).call();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
+        git.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call();        
+        
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
         TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
-        int nextBuildNumber = project.getNextBuildNumber();
-        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+        
+        for(FreeStyleBuild b : builds) {
+             String console = jenkinsRule.createWebClient().getPage(b, "console").asText();
+             System.out.println(console);
+        }
 
-        Result result = build.getResult();
-
-        assertTrue(result.isCompleteBuild());
-        assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
-
-        String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
+        String readmeFileContents = FileUtils.readFileToString(new File("test-repo/readme"));
         assertEquals(readmeFromIntegration, readmeFileContents);
-
-        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
-        assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
+        
+        git.pull().call();
+               
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(git);
+        
+        git.close();
+        
+        //We assert that 2 commits from branch gets merged + 1 combined merge commit since we do --no-ff
+        assertEquals(COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 3, COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION);
     }
     
     /**
@@ -133,9 +150,7 @@ public class AccumulatedCommitStrategyIT {
         int nextBuildNumber = project.getNextBuildNumber();
         FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
 
-        Result result = build.getResult();
-
-        assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
+        jenkinsRule.assertBuildStatus(Result.FAILURE, build);
     }
 
     /**
@@ -146,7 +161,7 @@ public class AccumulatedCommitStrategyIT {
      *  - 'Repository name' : origin (default) 
      *  - 'Strategy' : Squash Commit
      * 
-     * GitSCM:
+     * GitSCM:  
      *  - 'Name' : (empty)
      * 
      * Workflow
@@ -162,12 +177,22 @@ public class AccumulatedCommitStrategyIT {
     @Test
     public void oneValidFeatureBranchRunningOnSlave_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         repository = TestUtilsFactory.createValidRepository("test-repo");
-        String fromIntegration = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
-        Git git = new Git(repository);
+        
+        File workDir = new File("test-repo");
+        
+        Git.cloneRepository().setURI("file:///"+repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
+        .setBare(false)        
+        .setCloneAllBranches(true)                
+        .setNoCheckout(false)
+        .call().close();
+        
+        Git git = Git.open(workDir);
+       
+        String fromIntegration = FileUtils.readFileToString(new File(workDir,"/readme"));
 
-        git.checkout().setName(FEATURE_BRANCH_NAME).call();
-        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(repository);
-        git.checkout().setName("master").call();
+        git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(SetupUpstreamMode.TRACK).setCreateBranch(true).call();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
+        git.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call();
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.ACCUMULATED, repository);
         TestUtilsFactory.triggerProject(project);
@@ -180,11 +205,16 @@ public class AccumulatedCommitStrategyIT {
         Result result = build.getResult();
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
-        String readmeFileContents = FileUtils.readFileToString(new File(repository.getDirectory().getParent() +"/readme"));
+        String readmeFileContents = FileUtils.readFileToString(new File("test-repo/readme"));
         assertEquals(fromIntegration, readmeFileContents);
 
-        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
-        assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 1);
+        git.pull().call();
+        
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(git);
+        
+        git.close();
+        
+        assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 3);
     }
 
     /**
@@ -217,12 +247,9 @@ public class AccumulatedCommitStrategyIT {
         TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
+        
+        FreeStyleBuild b = project.getFirstBuild();
+        jenkinsRule.assertBuildStatus(Result.FAILURE, b);
 
-        int nextBuildNumber = project.getNextBuildNumber();
-        FreeStyleBuild build = project.getBuildByNumber(nextBuildNumber - 1);
-
-        Result result = build.getResult();
-
-        assertTrue(result.isWorseOrEqualTo(Result.FAILURE));
     }
 }

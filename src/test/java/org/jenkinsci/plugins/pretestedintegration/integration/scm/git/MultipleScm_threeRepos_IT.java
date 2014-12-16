@@ -331,9 +331,9 @@ public class MultipleScm_threeRepos_IT {
                 assertTrue("Revision found on branch head does not match revision being integrated", m1.group(3).equals(m2.group(3)));
 
                 assertTrue("Could not find message in console about ready branch in repo beeing integrated",
-                        console.contains("git merge --squash repo3/ready/repo3_feature_1"));
+                        console.contains("merge --squash repo3/ready/repo3_feature_1"));
                 assertTrue("Integration of ready branch in repo started, but could not match push command in console.",
-                        console.contains("git push repo3 :ready/repo3_feature_1"));
+                        console.contains("push repo3 :ready/repo3_feature_1"));
                 integratedRepo3 = true;
 
             } else if (build.getResult().equals(Result.NOT_BUILT)) {
@@ -497,9 +497,9 @@ public class MultipleScm_threeRepos_IT {
                 assertTrue("Revision found on branch head does not match revision being integrated", m1.group(3).equals(m2.group(3)));
 
                 assertTrue("Could not find message in console about ready branch in repo beeing integrated",
-                        console.contains("git merge --squash repo3/ready/repo3_feature_1"));
+                        console.contains("merge --squash repo3/ready/repo3_feature_1"));
                 assertTrue("",
-                        console.contains("git push repo3 :ready/repo3_feature_1"));
+                        console.contains("push repo3 :ready/repo3_feature_1"));
                 integratedRepo3 = true;
             } else if (build.getResult().equals(Result.FAILURE)) {
                 // Failure is okay, if it is the git plugin causing it.
