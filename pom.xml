@@ -10,7 +10,7 @@
 
   <name>Pretest Commit Plugin (DEPRECATED - use Pretested Integration Plugin)</name>
   <artifactId>pretest-commit</artifactId>
-  <version>0.5-SNAPSHOT</version>
+  <version>0.5</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
@@ -26,7 +26,8 @@
 <connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
 <developerConnection>scm:git:ssh://git@github.com/Praqma/pretested-integration-plugin.git</developerConnection>
 <url>https://github.com/Praqma/pretested-integration-plugin</url>
-</scm>
+  <tag>pretest-commit-0.5</tag>
+  </scm>
   <!--
   <scm>
     <connection>scm:git:git://github.com/pcds2013-team-delta/pretest-commit-plugin.git</connection>
