@@ -22,11 +22,11 @@
   </repositories>
 
   <!-- setting CSM to git -->
-  <scm>
-  	<connection>scm:git:ssh://github.com/jenkinsci/pretested-integration-plugin.git</connection>
-  	<developerConnection>scm:git:ssh://git@github.com/jenkinsci/pretested-integration-plugin.git</developerConnection>
-  	<url>https://github.com/jenkinsci/pretested-integration-plugin</url>
-  </scm>
+<scm>
+<connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
+<developerConnection>scm:git:ssh://git@github.com/Praqma/pretested-integration-plugin.git</developerConnection>
+<url>https://github.com/Praqma/pretested-integration-plugin</url>
+</scm>
   <!--
   <scm>
     <connection>scm:git:git://github.com/pcds2013-team-delta/pretest-commit-plugin.git</connection>
