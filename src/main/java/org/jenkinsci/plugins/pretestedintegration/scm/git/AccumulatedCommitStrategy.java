@@ -87,9 +87,10 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch() ) );
         try {
+            String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1()));  
             
-            String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));                                 
-            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commitMessage, gitDataBranch.getName()), commit, "--no-ff");
+            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commits, gitDataBranch.getName()), commit, "--no-ff");
+            
         } catch (Exception ex) {
             logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
             logger.log(Level.WARNING, "Exception while merging, logging exception",ex);
