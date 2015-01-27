@@ -252,4 +252,79 @@ public class AccumulatedCommitStrategyIT {
         jenkinsRule.assertBuildStatus(Result.FAILURE, b);
 
     }
+    
+    /**
+     * Git Plugin
+     * 
+     * Test that show that a ready/feature_1 branch get integrated into master
+     * 
+     * Pretested integration:
+     *  - 'Integration branch' : master (default)
+     *  - 'Repository name' : origin (default) 
+     *  - 'Strategy' : Squash Commit
+     * 
+     * GitSCM:
+     *  - 'Name' : (empty)
+     * 
+     * Workflow
+     *  - Create a repository containing a 'ready' branch.
+     *  - The build is triggered. 
+     * 
+     * Results
+     *  - We expect that the plugin triggers, and that the commits on ready branch
+     *    is merged into our integration branch master and build result becomes SUCCESS.
+     * 
+     * @throws Exception 
+     */
+    @Test
+    public void oneValidFeatureBranchWithMultipleCommits_MergeCommitContainsAllMessagesFromTheFeatureBranch() throws Exception {        
+        repository = TestUtilsFactory.createValidRepository("test-repo");
+        
+        File workDir = new File("test-repo");
+        
+        Git.cloneRepository().setURI("file:///"+repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
+        .setBare(false)
+        .setCloneAllBranches(true) 
+        .setNoCheckout(false)
+        .call().close();
+        
+        Git git = Git.open(workDir);
+        
+        System.out.println("Opening git repository in: "+workDir.getAbsolutePath());
+        
+        String readmeFromIntegration = FileUtils.readFileToString(new File("test-repo/readme"));
+                
+        git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(SetupUpstreamMode.TRACK).setCreateBranch(true).call();
+        final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
+        git.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call();        
+        
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
+        TestUtilsFactory.triggerProject(project);
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        RunList<FreeStyleBuild> builds = project.getBuilds();
+        
+        for(FreeStyleBuild b : builds) {
+             String console = jenkinsRule.createWebClient().getPage(b, "console").asText();
+             System.out.println(console);
+        }
+
+        String readmeFileContents = FileUtils.readFileToString(new File("test-repo/readme"));
+        assertEquals(readmeFromIntegration, readmeFileContents);
+        
+        git.pull().call();
+               
+        final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(git);
+        
+        
+        git.close();
+        
+        try (BuildResultValidator buildResultValidator = new BuildResultValidator(builds.getLastBuild(), repository)) {
+            buildResultValidator.hasHeadCommitContents("contents","horse", "donkey").validate();
+        }
+        
+        //We assert that 2 commits from branch gets merged + 1 combined merge commit since we do --no-ff
+        assertEquals(COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 3, COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION);
+    }
 }
