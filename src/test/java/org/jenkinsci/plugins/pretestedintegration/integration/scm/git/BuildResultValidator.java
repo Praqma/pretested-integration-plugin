@@ -132,7 +132,7 @@ public class BuildResultValidator implements AutoCloseable {
                 
                 if(!(matched && match)) {
                     validated = false;
-                    errorMessage = "The head commit did not match any of the strings specified";
+                    errorMessage = String.format("The head commit did not match any of the strings specified%ncontents:%n%s", commit.getFullMessage());
                     break;
                    //throw new ValidationException("The head commit did not match any of the strings specified");
                 } else {
