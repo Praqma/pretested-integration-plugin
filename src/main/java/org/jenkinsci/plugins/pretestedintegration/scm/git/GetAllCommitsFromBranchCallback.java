@@ -8,7 +8,9 @@ package org.jenkinsci.plugins.pretestedintegration.scm.git;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
@@ -33,8 +35,13 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         
         RevCommit commit = walk.parseCommit(id);
 
+        Ref head = repo.getRef(Constants.HEAD);
+        
         walk.markStart(commit);
         for (RevCommit rev : walk) {
+            if (rev.getId().equals(head.getObjectId()))
+                break;
+        
             sb.append(rev.getName());
             sb.append("\n");
             sb.append(rev.getFullMessage());
