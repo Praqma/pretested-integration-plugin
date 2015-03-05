@@ -87,9 +87,13 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 
         listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch() ) );
         try {
-            String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1()));  
-            
-            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n[%s]", commits, gitDataBranch.getName()), commit, "--no-ff");
+            // FIXME I don't like this call back design, where we collect data for commit message based on a series of commits
+            // which aren't really ensure to match what the 'git merge' command ends up merging.
+            // The method that get all commits from a branch walk the git tree using JGit, so it is complete independent from the following
+            // merge operation. Worst case is that the merge commit message is based on other commits than the actual merge commit consist of.
+            String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1(), gitbridge.getBranch()));  
+            String headerLine = String.format("Accumulated commit of the following from branch '%s':\n", gitDataBranch.getName());
+            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n%s", headerLine, commits), commit, "--no-ff");
             
         } catch (Exception ex) {
             logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7

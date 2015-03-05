@@ -16,14 +16,19 @@ import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.scm.SCM;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
@@ -31,11 +36,6 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrat
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
 
 /**
  *
@@ -93,6 +93,28 @@ public class TestUtilsFactory {
         } 
         
         return commitCount;
+    }
+    
+    // Count commits on the branch with name branch.
+    // Jgit example code modified from here: 
+    // https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/api/WalkRev.java
+    public static int countCommitsOnBranch(Git git, String branch) throws IOException {
+
+        Ref head = git.getRepository().getRef(branch);
+        RevWalk walk = new RevWalk(git.getRepository());
+        RevCommit commit = walk.parseCommit(head.getObjectId());
+        //System.out.println("Start-Commit: " + commit);
+        //System.out.println("Walking all commits starting at HEAD");
+        walk.markStart(commit);
+        int count = 0;
+        for (RevCommit rev : walk) {
+            //System.out.println("Commit: " + rev);
+            count++;
+        }
+        //System.out.println(count);
+        walk.dispose();
+        git.getRepository().close();
+        return count;
     }
     
     
