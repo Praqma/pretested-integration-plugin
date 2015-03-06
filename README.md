@@ -108,6 +108,12 @@ _We currently miss documentation on a lot of the design decisions - they should 
 
 * **Integration only support one repository**: Doing pretested integration on several repositories as the same time would not make sense conceptually. There should also be a 1:1 relation between a Jenkins job and a repository as a best practice. Further it would not be possible to make pretested integration as an atomic non interuptable operation on several repositories. For example if they both integrate successfully, but publishing result fails on the second one. What should then happen with the first one?
 
+## Integration tests
+
+Things you want to know...
+
+* if running the integration tests on Windows, 'git.exe' must be in path.
+
 ## Logging
 
 Our strategy for logging in the plugin is to:
