@@ -7,7 +7,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.Extension;
-import hudson.Functions;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -20,7 +19,6 @@ import java.util.logging.Logger;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.Commit;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
@@ -91,13 +89,13 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             // which aren't really ensure to match what the 'git merge' command ends up merging.
             // The method that get all commits from a branch walk the git tree using JGit, so it is complete independent from the following
             // merge operation. Worst case is that the merge commit message is based on other commits than the actual merge commit consist of.
-            String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1(), gitbridge.getBranch()));  
-            String headerLine = String.format("Accumulated commit of the following from branch '%s':\n", gitDataBranch.getName());
-            exitCode = gitbridge.git(build, launcher, listener, out, "merge","-m", String.format("%s\n%s", headerLine, commits), commit, "--no-ff");
+            String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1(), gitbridge.getBranch()));
+            String headerLine = String.format("Accumulated commit of the following from branch '%s':%n", gitDataBranch.getName());
+            exitCode = gitbridge.git(build, launcher, listener, out, "merge", "-m", String.format("%s%n%s", headerLine, commits), commit, "--no-ff");
             
         } catch (Exception ex) {
-            logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
-            logger.log(Level.WARNING, "Exception while merging, logging exception",ex);
+            logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure"); // Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
+            logger.log(Level.WARNING, "Exception while merging, logging exception", ex);
 			throw new IntegationFailedExeception(ex);
         }
         

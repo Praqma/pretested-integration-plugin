@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Pattern;
-import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -52,14 +50,6 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         // iterating over the commits that will be integrated
         for (RevCommit rev : walk) {
 
-                
-            // Using spaces in git commit message formatting, to avoid inconsistent
-            // results based on tab with, and to mimic normal recommendations
-            // on writing commit message (indented bullet lists with space)
-            // following (same) examples: 
-            // http://chris.beams.io/posts/git-commit/
-            // http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
-            // 4 spaces are used, as this is how the squashed commit message looks like
             sb.append(String.format("commit %s",rev.getName()));
             sb.append(String.format("%n"));
             // In the commit message overview, the author is right one to give credit (author wrote the code)
@@ -68,15 +58,22 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             
             Integer secondsSinceUnixEpoch = rev.getCommitTime();
             SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd hh:mm:ss yyyy ZZZZ"); //yyyy-MM-dd'T'hh:mm:ssZZZZ");
-            Date commitTime = new Date(secondsSinceUnixEpoch * 1000L);
+            Date commitTime = new Date(secondsSinceUnixEpoch * 1000L); // seconds to milis
             String asString = formatter.format(commitTime);
             sb.append(String.format("Date:   %s", asString ));
             sb.append(String.format("%n"));
             sb.append(String.format("%n"));
 
             String newlinechar = System.getProperty("line.separator");
-            String indentation = String.format("%" + 4 + "s", "");
-            
+            // Using spaces in git commit message formatting, to avoid inconsistent
+            // results based on tab with, and to mimic normal recommendations
+            // on writing commit message (indented bullet lists with space)
+            // following (same) examples:
+            // http://chris.beams.io/posts/git-commit/
+            // http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+            // 4 spaces are used, as this is how the squashed commit message looks like
+            Integer numberOfSpaces = 4;
+            String indentation = String.format("%" + numberOfSpaces + "s", "");
             String fullMessage = rev.getFullMessage();
             Pattern myregexp = Pattern.compile(newlinechar, Pattern.MULTILINE);
             
