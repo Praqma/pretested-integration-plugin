@@ -181,7 +181,7 @@ public class AccumulatedCommitMessageIT {
 
         // commits on branch master
         File readme = new File(workingRepoPath,"readme");
-        FileUtils.writeStringToFile(readme, "First line in readme file\n", true);
+        FileUtils.writeStringToFile(readme, String.format("First line in readme file%n"), true);
         gitrepo.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = gitrepo.commit();
         commitCommand.setMessage("Readme file created on branch master");
@@ -189,7 +189,7 @@ public class AccumulatedCommitMessageIT {
         // make the commit
         commitCommand.call();
         
-        FileUtils.writeStringToFile(readme, "Second line in readme file\n", true);
+        FileUtils.writeStringToFile(readme, String.format("Second line in readme file%n"), true);
         gitrepo.add().addFilepattern(readme.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage("Updated readme file on branch master");
@@ -203,7 +203,7 @@ public class AccumulatedCommitMessageIT {
         createBranchCommand.call();
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME).call();
 
-        FileUtils.writeStringToFile(readme, String.format("Third line in readme file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(readme, String.format("Third line in readme file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(readme.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Updated readme file on branch %s", FEATURE_BRANCH_NAME));
@@ -214,10 +214,10 @@ public class AccumulatedCommitMessageIT {
         System.out.println("featureCommit1SHA: " + featureCommit1SHA);
         
 
-        FileUtils.writeStringToFile(readme, String.format("Fourth line in readme file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(readme, String.format("Fourth line in readme file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(readme.getName()).call();
         commitCommand = gitrepo.commit();
-        String multiLineCommitMessage = String.format("%n%n- my first change is about this\n- my next change is a refactor.");
+        String multiLineCommitMessage = String.format("%n%n- my first change is about this%n- my next change is a refactor.");
         commitCommand.setMessage(String.format("Updated readme file again on branch %s%s", FEATURE_BRANCH_NAME, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -392,7 +392,7 @@ public class AccumulatedCommitMessageIT {
 
         // commits on branch master
         File infofile = new File(workingRepoPath,"info");
-        FileUtils.writeStringToFile(infofile, "First line in info file\n", true);
+        FileUtils.writeStringToFile(infofile, String.format("First line in info file%n"), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         CommitCommand commitCommand = gitrepo.commit();
         commitCommand.setMessage("info file created on branch master");
@@ -400,7 +400,7 @@ public class AccumulatedCommitMessageIT {
         // make the commit
         commitCommand.call();
      
-        FileUtils.writeStringToFile(infofile, "Second line in info file\n", true);
+        FileUtils.writeStringToFile(infofile, String.format("Second line in info file%n"), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage("Updated info file on branch master");
@@ -415,7 +415,7 @@ public class AccumulatedCommitMessageIT {
         createBranchCommand.call();
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME).call();
 
-        FileUtils.writeStringToFile(infofile, String.format("Third line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("Third line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Updated info file on branch %s", FEATURE_BRANCH_NAME));
@@ -425,10 +425,10 @@ public class AccumulatedCommitMessageIT {
         String featureCommit1SHA = revCommit.getId().getName();
         System.out.println("featureCommit1SHA: " + featureCommit1SHA);
 
-        FileUtils.writeStringToFile(infofile, String.format("Fourth line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("Fourth line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
-        String multiLineCommitMessage = String.format("%n%n- my first change is about this\n- my next change is a refactor.");
+        String multiLineCommitMessage = String.format("%n%n- my first change is about this%n- my next change is a refactor.");
         commitCommand.setMessage(String.format("Updated info file again on branch %s%s", FEATURE_BRANCH_NAME, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -439,7 +439,7 @@ public class AccumulatedCommitMessageIT {
         // commit on master again, new file to avoid merge conflict
         File infofile2 = new File(workingRepoPath,"info2");
         gitrepo.checkout().setName("master").call();
-        FileUtils.writeStringToFile(infofile2, "Added line to info2 file\n", true);
+        FileUtils.writeStringToFile(infofile2, String.format("Added line to info2 file%n"), true);
         gitrepo.add().addFilepattern(infofile2.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage("Added an info2 file on branch master");
@@ -733,7 +733,7 @@ public class AccumulatedCommitMessageIT {
 
         // commits on branch master
         File infofile = new File(workingRepoPath,"info");
-        FileUtils.writeStringToFile(infofile, "1. line in info file\n", true);
+        FileUtils.writeStringToFile(infofile, String.format("1. line in info file%n"), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         CommitCommand commitCommand = gitrepo.commit();
         commitCommand.setMessage("info file created on branch master");
@@ -747,7 +747,7 @@ public class AccumulatedCommitMessageIT {
         createBranchCommand.call();
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME).call();
 
-        FileUtils.writeStringToFile(infofile, String.format("2. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("2. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Updated info file on branch %s", FEATURE_BRANCH_NAME));
@@ -757,10 +757,10 @@ public class AccumulatedCommitMessageIT {
         String featureCommit1SHA = revCommit.getId().getName();
         System.out.println("featureCommit1SHA: " + featureCommit1SHA);
 
-        FileUtils.writeStringToFile(infofile, String.format("3. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("3. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
-        String multiLineCommitMessage = String.format("%n%n- my first change is about this\n- my next change is a refactor.");
+        String multiLineCommitMessage = String.format("%n%n- my first change is about this%n- my next change is a refactor.");
         commitCommand.setMessage(String.format("Updated info file again on branch %s%s", FEATURE_BRANCH_NAME, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -771,7 +771,7 @@ public class AccumulatedCommitMessageIT {
         // commit on master again, new file to avoid merge conflict
         File infofile2 = new File(workingRepoPath,"info2");
         gitrepo.checkout().setName("master").call();
-        FileUtils.writeStringToFile(infofile2, "Added line to info2 file\n", true);
+        FileUtils.writeStringToFile(infofile2, String.format("Added line to info2 file%n"), true);
         gitrepo.add().addFilepattern(infofile2.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage("Added an info2 file on branch master");
@@ -781,10 +781,10 @@ public class AccumulatedCommitMessageIT {
 
         
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME).call();
-        FileUtils.writeStringToFile(infofile, String.format("4. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("4. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
-        multiLineCommitMessage = String.format("%n%n- major refactoring of tests\n- boring adding new lines");
+        multiLineCommitMessage = String.format("%n%n- major refactoring of tests%n- boring adding new lines");
         commitCommand.setMessage(String.format("4. time updating info file on branch %s", FEATURE_BRANCH_NAME, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -799,7 +799,7 @@ public class AccumulatedCommitMessageIT {
         
         
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME).call();
-        FileUtils.writeStringToFile(infofile, String.format("5. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("5. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Updated info file 5. time on branch %s", FEATURE_BRANCH_NAME));
@@ -1031,7 +1031,7 @@ public class AccumulatedCommitMessageIT {
 
         // commits on branch master
         File readmefile = new File(workingRepoPath,"readme");
-        FileUtils.writeStringToFile(readmefile, "1. line in readme file\n", true);
+        FileUtils.writeStringToFile(readmefile, String.format("1. line in readme file%n"), true);
         gitrepo.add().addFilepattern(readmefile.getName()).call();
         CommitCommand commitCommand = gitrepo.commit();
         commitCommand.setMessage("Commit no. 1 in time, branch master)");
@@ -1046,7 +1046,7 @@ public class AccumulatedCommitMessageIT {
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME).call();
 
         File infofile = new File(workingRepoPath,"info");
-        FileUtils.writeStringToFile(infofile, String.format("2. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("2. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Commit no. 2 in time, branch %s", FEATURE_BRANCH_NAME));
@@ -1056,10 +1056,10 @@ public class AccumulatedCommitMessageIT {
         String feature42Commit1SHA = revCommit.getId().getName();
         System.out.println("feature42Commit1SHA: " + feature42Commit1SHA);
 
-        FileUtils.writeStringToFile(infofile, String.format("3. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("3. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
-        String multiLineCommitMessage = String.format("%n%n- my first change is about this\n- my next change is a refactor.");
+        String multiLineCommitMessage = String.format("%n%n- my first change is about this%n- my next change is a refactor.");
         commitCommand.setMessage(String.format("Commit no. 3 in time, branch %s%s", FEATURE_BRANCH_NAME, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -1069,7 +1069,7 @@ public class AccumulatedCommitMessageIT {
         
         // commit on master again, new file to avoid merge conflict
         gitrepo.checkout().setName("master").call();
-        FileUtils.writeStringToFile(readmefile, "Added line to readme file\n", true);
+        FileUtils.writeStringToFile(readmefile, String.format("Added line to readme file%n"), true);
         gitrepo.add().addFilepattern(readmefile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage("Commit no. 4 in time, branch master");
@@ -1085,10 +1085,10 @@ public class AccumulatedCommitMessageIT {
         createBranchCommand.call();
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME2).call();
         File txtfile = new File(workingRepoPath,"txt");
-        FileUtils.writeStringToFile(txtfile, String.format("1. line in txt file, done on branch %s\n", FEATURE_BRANCH_NAME2), true);
+        FileUtils.writeStringToFile(txtfile, String.format("1. line in txt file, done on branch %s%n", FEATURE_BRANCH_NAME2), true);
         gitrepo.add().addFilepattern(txtfile.getName()).call();
         commitCommand = gitrepo.commit();
-        multiLineCommitMessage = String.format("%n%n- major refactoring of tests\n- boring adding new lines");
+        multiLineCommitMessage = String.format("%n%n- major refactoring of tests%n- boring adding new lines");
         commitCommand.setMessage(String.format("Commit no. 5 in time, branch %s", FEATURE_BRANCH_NAME2, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -1096,7 +1096,7 @@ public class AccumulatedCommitMessageIT {
         String feature1337Commit1SHA = revCommit.getId().getName();
         System.out.println("feature1337Commit1SHA: " + feature1337Commit1SHA);
         
-        FileUtils.writeStringToFile(txtfile, String.format("2. line in txt file, done on branch %s\n", FEATURE_BRANCH_NAME2), true);
+        FileUtils.writeStringToFile(txtfile, String.format("2. line in txt file, done on branch %s%n", FEATURE_BRANCH_NAME2), true);
         gitrepo.add().addFilepattern(txtfile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Commit no. 6 in time, branch %s", FEATURE_BRANCH_NAME2));
@@ -1112,7 +1112,7 @@ public class AccumulatedCommitMessageIT {
         mc.setFastForward(MergeCommand.FastForwardMode.FF);
         mc.call();
         
-        FileUtils.writeStringToFile(infofile, String.format("4. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("4. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Commit no. 8 in time, branch %s", FEATURE_BRANCH_NAME));
@@ -1323,7 +1323,7 @@ public class AccumulatedCommitMessageIT {
 
         // commits on branch master
         File readmefile = new File(workingRepoPath,"readme");
-        FileUtils.writeStringToFile(readmefile, "1. line in readme file\n", true);
+        FileUtils.writeStringToFile(readmefile, String.format("1. line in readme file%n"), true);
         gitrepo.add().addFilepattern(readmefile.getName()).call();
         CommitCommand commitCommand = gitrepo.commit();
         commitCommand.setMessage("Commit no. 1 in time, branch master)");
@@ -1338,7 +1338,7 @@ public class AccumulatedCommitMessageIT {
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME).call();
 
         File infofile = new File(workingRepoPath,"info");
-        FileUtils.writeStringToFile(infofile, String.format("2. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("2. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Commit no. 2 in time, branch %s", FEATURE_BRANCH_NAME));
@@ -1348,10 +1348,10 @@ public class AccumulatedCommitMessageIT {
         String mergeableFeatureCommit1SHA = revCommit.getId().getName();
         System.out.println("mergeableFeatureCommit1SHA: " + mergeableFeatureCommit1SHA);
 
-        FileUtils.writeStringToFile(infofile, String.format("3. line in info file, done on branch %s\n", FEATURE_BRANCH_NAME), true);
+        FileUtils.writeStringToFile(infofile, String.format("3. line in info file, done on branch %s%n", FEATURE_BRANCH_NAME), true);
         gitrepo.add().addFilepattern(infofile.getName()).call();
         commitCommand = gitrepo.commit();
-        String multiLineCommitMessage = String.format("%n%n- my first change is about this\n- my next change is a refactor.");
+        String multiLineCommitMessage = String.format("%n%n- my first change is about this%n- my next change is a refactor.");
         commitCommand.setMessage(String.format("Commit no. 3 in time, branch %s%s", FEATURE_BRANCH_NAME, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -1367,10 +1367,10 @@ public class AccumulatedCommitMessageIT {
         createBranchCommand.call();
         gitrepo.checkout().setName(FEATURE_BRANCH_NAME2).call();
         File txtfile = new File(workingRepoPath,"txt");
-        FileUtils.writeStringToFile(txtfile, String.format("1. line in txt file, done on branch %s\n", FEATURE_BRANCH_NAME2), true);
+        FileUtils.writeStringToFile(txtfile, String.format("1. line in txt file, done on branch %s%n", FEATURE_BRANCH_NAME2), true);
         gitrepo.add().addFilepattern(txtfile.getName()).call();
         commitCommand = gitrepo.commit();
-        multiLineCommitMessage = String.format("%n%n- major refactoring of tests\n- boring adding new lines");
+        multiLineCommitMessage = String.format("%n%n- major refactoring of tests%n- boring adding new lines");
         commitCommand.setMessage(String.format("Commit no. 4 in time, branch %s", FEATURE_BRANCH_NAME2, multiLineCommitMessage));
         commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         // make the commit
@@ -1378,7 +1378,7 @@ public class AccumulatedCommitMessageIT {
         String disconnectedFeatureCommit1SHA = revCommit.getId().getName();
         System.out.println("disconnectedFeatureCommit1SHA: " + disconnectedFeatureCommit1SHA);
         
-        FileUtils.writeStringToFile(txtfile, String.format("2. line in txt file, done on branch %s\n", FEATURE_BRANCH_NAME2), true);
+        FileUtils.writeStringToFile(txtfile, String.format("2. line in txt file, done on branch %s%n", FEATURE_BRANCH_NAME2), true);
         gitrepo.add().addFilepattern(txtfile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage(String.format("Commit no. 5 in time, branch %s", FEATURE_BRANCH_NAME2));
@@ -1390,7 +1390,7 @@ public class AccumulatedCommitMessageIT {
         
         // commit on master again, new file to avoid merge conflict
         gitrepo.checkout().setName("master").call();
-        FileUtils.writeStringToFile(readmefile, "Added line to readme file\n", true);
+        FileUtils.writeStringToFile(readmefile, String.format("Added line to readme file%n"), true);
         gitrepo.add().addFilepattern(readmefile.getName()).call();
         commitCommand = gitrepo.commit();
         commitCommand.setMessage("Commit no. 6 in time, branch master");
