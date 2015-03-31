@@ -16,9 +16,16 @@ import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.scm.SCM;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -119,6 +126,41 @@ public class TestUtilsFactory {
     
     
     /**
+     * Delete directory, trying to handle locked files by retrying delete a number
+     * of {@code attempts} waiting {@code sleepms} between each attempt.
+     * Trouble deleting directories are a typical Windows problem, related to 
+     * creating a lot of temporary folders and files during functional tests.
+     * @param directoryToDelete Full path to directory
+     * @param sleepms ms to sleep between each attempt
+     * @param attempts number of attempt to try to delete the directory
+     * @throws IOException
+     * @throws InterruptedException 
+     */
+    public static void destroyDirectory(File directoryToDelete, Integer sleepms, Integer attempts) throws IOException, InterruptedException {
+        File dir = new File(directoryToDelete.getAbsoluteFile().getAbsolutePath());
+        System.out.println("Deleting directory " + dir.toString());            
+                while(!FileUtils.deleteQuietly(dir)) {
+                    attempts--;
+                    Thread.sleep(sleepms);
+                    if(attempts <= 0) {
+                        throw new InterruptedException(String.format("Locked files? Failed to delete directory '%s' for %s seconds (%s tries)", dir.toString(), (sleepms*attempts)/1000, attempts));
+                    }
+                }
+    }
+     /**
+     * Delete directory, trying to handle locked files by retrying for 30 secs.
+     * Trouble deleting directories are a typical Windows problem, related to 
+     * creating a lot of temporary folders and files during functional tests.
+     * @param directoryToDelete Full path to directory
+     * @throws IOException
+     * @throws InterruptedException 
+     */
+    public static void destroyDirectory(File directoryToDelete) throws IOException, InterruptedException {
+        TestUtilsFactory.destroyDirectory(directoryToDelete, 300, 100);
+    }
+    
+    
+    /**
      * Delete repository from file system
      * To let file handles be released first, it tries several times until max
      * 20 seconds.
@@ -134,32 +176,17 @@ public class TestUtilsFactory {
             System.out.println("Attempting to destroy git repository: " + repositoryPath.toString());
             if (repository.getDirectory().exists()) {
                 System.out.println("Destroying repo " + repositoryPath.toString());            
-                int attempts = 0;
                 /**
                  * This 'hack' has been implemented because the test-harness/JGit not always releasing
                  * the repositories (on Windows). Tries to delete until success or time-out (after 20 seconds.
                  */ 
-                while(!FileUtils.deleteQuietly(repositoryPath)) {
-                    attempts++;
-                    Thread.sleep(300);
-                    if(attempts > 100) {
-                        throw new InterruptedException("Failed to delete directory after numerous attempts");
-                    }
-                }
-                   
+                TestUtilsFactory.destroyDirectory(repositoryPath);
             }
             
             System.out.println("Attempting to destroy git repository workdir: " + repositoryWorkDir.toString());
             if(repositoryWorkDir.exists()) {
                 System.out.println("Destroying repository workdir: " + repositoryWorkDir.toString());
-                int attempts = 0;  
-                while(!FileUtils.deleteQuietly(repositoryWorkDir)) {
-                    attempts++;
-                    Thread.sleep(300);
-                    if(attempts > 100) {
-                        throw new InterruptedException(String.format("Failed to delete working directory for repository %s after 30 seconds", repositoryPath.toString()));
-                    }
-                }
+                TestUtilsFactory.destroyDirectory(repositoryWorkDir, 300, 100);
             }
         }
     }
@@ -642,4 +669,101 @@ public class TestUtilsFactory {
         
         return repository;
     }
+    
+    /**
+     * Check if {@code stringToCheck} is equal to one of the lines in @{code file}
+     * Useful for verifying lines are merged in files when testing integrations.
+     * @param file File name
+     * @param stringToCheck String, representing a complete line in the file.
+     * @return true if line is found, false if not found or exception thrown
+     * @throws IOException 
+     */
+    public static boolean checkForLineInFile(File file, String stringToCheck) throws IOException {
+        boolean result = false;
+        try {
+            BufferedReader inputReader = new BufferedReader(new FileReader(file));
+            System.out.println("look for!:'" + stringToCheck + "'");
+            String nextLine;
+            while ((nextLine = inputReader.readLine()) != null) {
+                System.out.println("next line:'" + nextLine + "'");
+                if (nextLine.equals(stringToCheck)) {
+                    result = true;
+                    break;
+                }
+            }
+
+            return result;
+        } catch (FileNotFoundException e1) {
+            return false;
+        } catch (IOException ep) {
+            return false;
+        }
+    }
+    
+    
+    /**
+     * Helper function to unzip our git repositories we have created for tests.
+     * @param destinationFolder Fully qualified path
+     * @param zipFile Fully qualified filename
+     */
+    public static void unzipFunction(String destinationFolder, String zipFile) {
+        File directory = new File(destinationFolder);
+
+        // if the output directory doesn't exist, create it
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // buffer for read and write data to file
+        byte[] buffer = new byte[2048];
+
+        try {
+            FileInputStream fInput = new FileInputStream(zipFile);
+            ZipInputStream zipInput = new ZipInputStream(fInput);
+
+            ZipEntry entry = zipInput.getNextEntry();
+            Boolean print = true;
+            while (entry != null) {
+                String entryName = entry.getName();
+                File file = new File(destinationFolder + File.separator + entryName);
+
+                // only print first entry, the zip-file itself
+                if (print) {
+                    System.out.println("Unzip file " + entryName + " to " + file.getAbsolutePath());
+                    print = false;
+                }
+
+                // create the directories of the zip directory
+                if (entry.isDirectory()) {
+                    File newDir = new File(file.getAbsolutePath());
+                    if (!newDir.exists()) {
+                        boolean success = newDir.mkdirs();
+                        if (success == false) {
+                            System.out.println("Problem creating Folder");
+                        }
+                    }
+                } else {
+                    FileOutputStream fOutput = new FileOutputStream(file);
+                    int count = 0;
+                    while ((count = zipInput.read(buffer)) > 0) {
+                        // write 'count' bytes to the file output stream
+                        fOutput.write(buffer, 0, count);
+                    }
+                    fOutput.close();
+                }
+                // close ZipEntry and take the next one
+                zipInput.closeEntry();
+                entry = zipInput.getNextEntry();
+            }
+
+            // close the last ZipEntry
+            zipInput.closeEntry();
+
+            zipInput.close();
+            fInput.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+	     
 }

@@ -39,6 +39,7 @@ public class SquashCommitStrategyIT {
     @Before
     public void setUp() throws Exception {
         repositories = new ArrayList<>();
+        SquashCommitStrategyIT.class.getResource("myfile.zip");
     }
 
     @After

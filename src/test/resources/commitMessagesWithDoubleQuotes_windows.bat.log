@@ -1,0 +1,147 @@
+
+C:\Users\bue\Documents>SET NAME=commitMessagesWithDoubleQuotes_windows 
+
+C:\Users\bue\Documents>SET REPO_NAME=commitMessagesWithDoubleQuotes_windows 
+
+C:\Users\bue\Documents>SET WORK_DIR=C:\Users\bue\Documents\ 
+
+C:\Users\bue\Documents>REM pre-process 
+
+C:\Users\bue\Documents>mkdir commitMessagesWithDoubleQuotes_windows.git 
+
+C:\Users\bue\Documents>cd commitMessagesWithDoubleQuotes_windows.git 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows.git>git init --bare 
+Initialized empty Git repository in C:/Users/bue/Documents/commitMessagesWithDoubleQuotes_windows.git/
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows.git>cd C:\Users\bue\Documents\ 
+
+C:\Users\bue\Documents>git clone commitMessagesWithDoubleQuotes_windows.git 
+
+C:\Users\bue\Documents>cd commitMessagesWithDoubleQuotes_windows 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git config user.name "Praqma Support" 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git config user.email "support@praqma.net" 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>touch README.md 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>echo "# README of repository $REPO_NAME"  1>>README.md 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>echo ""  1>>README.md 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>echo "This is a test repository for functional tests."  1>>README.md 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git add README.md 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git commit -m "Initial commit - added README" 
+[master (root-commit) afb2402] Initial commit - added README
+ 1 file changed, 3 insertions(+)
+ create mode 100644 README.md
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git push origin master 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>REM custom parts 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>SET BN=JENKINS-27662_doublequotes 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git checkout -b dev/JENKINS-27662_doublequotes 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>touch testCommit.log 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>echo "# Test commit log"  1>>testCommit.log 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>echo ""  1>>testCommit.log 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>echo "Used for adding lines to commit something during tests.\n"  1>>testCommit.log 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git add testCommit.log 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git commit -m "Added test commit log file" 
+[dev/JENKINS-27662_doublequotes 76cf8f9] Added test commit log file
+ 1 file changed, 3 insertions(+)
+ create mode 100644 testCommit.log
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>REM Problematic commit message with double quotes 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>echo "Added a new line to this file, to commit something. Commit message will have double quotes"  1>>testCommit.log 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git add testCommit.log 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git commit -m "This is a commit message with double quotes (commit made on Windows), eg. \"test quotes\"." 
+[dev/JENKINS-27662_doublequotes fa90cb2] This is a commit message with double quotes (commit made on Windows), eg. "test quotes".
+ 1 file changed, 1 insertion(+)
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git push origin dev/JENKINS-27662_doublequotes 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>REM also push to ready branch, so integration can start during the test 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git push origin dev/JENKINS-27662_doublequotes:ready/JENKINS-27662_doublequotes 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>git remote -v show 
+origin	C:/Users/bue/Documents/commitMessagesWithDoubleQuotes_windows.git (fetch)
+origin	C:/Users/bue/Documents/commitMessagesWithDoubleQuotes_windows.git (push)
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>REM Post process 
+
+C:\Users\bue\Documents\commitMessagesWithDoubleQuotes_windows>cd C:\Users\bue\Documents\ 
+
+C:\Users\bue\Documents>7z a -r commitMessagesWithDoubleQuotes_windows.zip commitMessagesWithDoubleQuotes_windows.git 
+
+7-Zip [64] 9.20  Copyright (c) 1999-2010 Igor Pavlov  2010-11-18
+Scanning
+
+
+My Music\:  WARNING: Access is denied.
+
+My Pictures\:  WARNING: Access is denied.
+
+My Videos\:  WARNING: Access is denied.
+
+
+
+Creating archive commitMessagesWithDoubleQuotes_windows.zip
+
+Compressing  commitMessagesWithDoubleQuotes_windows.git\config
+Compressing  commitMessagesWithDoubleQuotes_windows.git\description
+Compressing  commitMessagesWithDoubleQuotes_windows.git\HEAD
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\applypatch-msg.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\commit-msg.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\post-update.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\pre-applypatch.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\pre-commit.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\pre-push.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\pre-rebase.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\prepare-commit-msg.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\hooks\update.sample
+Compressing  commitMessagesWithDoubleQuotes_windows.git\info\exclude
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\3f\873898c0f82eff63c356af3d7f56cf95353616
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\76\cf8f90df56260e84b324002603010505e2ab2d
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\a8\4af0971fe5a50fd1e4318506034a26ab194a7b
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\af\b2402fbf5510657cce38fac7666a011adab6eb
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\cc\109fd69b6adea1a45de9edf7468afe4386ea5c
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\d2\6ef54dba0b6a660c33905779067a4f7386822b
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\d9\4c578a93fee5a6f8e82c4327d272c5dafa8b4f
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\e9\5a3bf95905610a462738846cbe00d5e3b68f08
+Compressing  commitMessagesWithDoubleQuotes_windows.git\objects\fa\90cb266c4f737a09ad4a3308ec4fb5b898b9d6
+Compressing  commitMessagesWithDoubleQuotes_windows.git\refs\heads\dev\JENKINS-27662_doublequotes
+Compressing  commitMessagesWithDoubleQuotes_windows.git\refs\heads\master
+Compressing  commitMessagesWithDoubleQuotes_windows.git\refs\heads\ready\JENKINS-27662_doublequotes
+
+
+WARNINGS for files:
+
+My Music\ : Access is denied.
+
+My Pictures\ : Access is denied.
+
+My Videos\ : Access is denied.
+
+----------------
+WARNING: Cannot find 3 files
+
+C:\Users\bue\Documents>rmdir /S /Q commitMessagesWithDoubleQuotes_windows.git 
+
+C:\Users\bue\Documents>del /Q commitMessagesWithDoubleQuotes_windows 
+
+C:\Users\bue\Documents>rmdir /S /Q commitMessagesWithDoubleQuotes_windows 

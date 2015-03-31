@@ -11,7 +11,7 @@ Current development efforts are also maintained Kanban-style on the Trello board
 
 The plugin is maintained in the scope of [Joint Open Source Roadmap Alliance (JOSRA)](http://www.josra.org/) by [Praqma](http://www.praqma.net). We happily accept pull request - see section about contributing below.
 
-## Introduction
+# Introduction
 The Jenkins Pretested Integration Plugin offers a branchy approach to pretested integration (also known as pretested commits), which upholds the invariant; that for a specific branch, known as the _integration branch_, all commits have been verified.
 
 The plugin delivers an API that makes it possible to easily provide pretested integration functionality for arbitrary SCM tools which is capable of using branches or a similar technology.
@@ -21,15 +21,15 @@ The plugin is currently shipped with support for only Git.
 The plugin is designed to automate the **[CoDE:U Git Flow](http://www.praqma.com/resources/papers/git-flow)**, but is not bound to a specific SCM work flow.
 
 
-## References
+# References
 
-### Plugin repositories
+## Plugin repositories
 
 * [Jenkins CI on Github](https://github.com/jenkinsci/pretested-integration-plugin) (used as final archive for released version)
 * [Praqma's on github](https://github.com/Praqma/pretested-integration-plugin)  (used to release from and accept pull requests)
 
 
-### Automated builds
+## Automated builds
 
 * **Praqma's build server** (used for daily development builds)
  * [Pretested integration plugin build view](http://code.praqma.net/ci/view/Open%20Source/view/Pretested%20Integration%20Plugin/)
@@ -39,13 +39,13 @@ The plugin is designed to automate the **[CoDE:U Git Flow](http://www.praqma.com
 
 
 
-### Roadmap
+## Roadmap
 Roadmap for future development maintained here:
 
-* [Pretested integration plugin public Trello board](https://trello.com/b/tOQL6crl/pretested-integration-plugin)
+* [Pretested Integration Plugin public Trello board](https://trello.com/b/tOQL6crl/pretested-integration-plugin)
 
 
-### Wiki and issue tracker
+## Wiki and issue tracker
 The user oriented documentation is found on the Jenkins community plugin wiki page:
 
 * [Pretested Integration Plugin wiki page](https://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin)
@@ -55,7 +55,7 @@ Issues are tracked in the Jenkins JIRA issue tracker:
 * [Pretested Integration Plugin - open issues filter]( https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27pretested-integration-plugin%27)
 
 
-## The Pretested Integration Plugin workflows
+# The Pretested Integration Plugin workflows
 
 The Jenkins community have an [article about designing pretested commits](https://wiki.jenkins-ci.org/display/JENKINS/Designing+pre-tested+commit). The original work on this plugin was inspired from the [personal branch version of the branchy approach](https://wiki.jenkins-ci.org/display/JENKINS/Designing+pre-tested+commit#Designingpre-testedcommit-%22BranchySCM%22approach).
 
@@ -73,9 +73,9 @@ Merge strategies:
 
 **Accumulated** and **Squashed**. These are explained, together with more background information, and a discussion on the different merge strategies in [JOSRA](http://www.josra.org) as a blog post: " [Pretested Integration Plugin](http://www.josra.org/blog/2014/06/23/Pretested%2Bintegration%2Bplugin.html)".
 
-## Architecture
+# Architecture
 
-### Plugin phases
+## Plugin phases
 
 The plugin footprint during the build executions have the following phases:
 
@@ -85,7 +85,7 @@ The plugin footprint during the build executions have the following phases:
 Before the build phase, a commit is checked out of the _ready_ branch and merged into the _integration branch_ in order to test compatibility. If the build is successfull the integrated changed are published.
 
 
-### Build results
+## Build results
 
 This plugin can downgrade a build result to:
 
@@ -100,19 +100,27 @@ Publish changes on success:
 
 * `SUCCESS`: If build result successful until the publish changes phase, the integration changes will be published.
 
-## Design decisions
+# Design decisions
 
 _We currently miss documentation on a lot of the design decisions - they should go into this document._
 
-## Only one integration repository is supported
+# Only one integration repository is supported
 
 * **Integration only support one repository**: Doing pretested integration on several repositories as the same time would not make sense conceptually. There should also be a 1:1 relation between a Jenkins job and a repository as a best practice. Further it would not be possible to make pretested integration as an atomic non interuptable operation on several repositories. For example if they both integrate successfully, but publishing result fails on the second one. What should then happen with the first one?
 
-## Integration tests
+# Integration tests
 
 Things you want to know...
 
 * if running the integration tests on Windows, 'git.exe' must be in path.
+
+## Static git repositories
+
+We have been using JGit to create test repositories programatically for the functional tests, which means every test created their own repository and for each test run. This approach works fine, but verifying commits in details can be hard as SHAs, timestamps etc. changes pr. test run. Therefore we have taken an _static git repository_ approach, where we create the reposiories (by script or hand) once, and persist them in the repository as a test resource.
+
+In `src/test/resources/` there is a static git repository collection that can be re-used in tests, or you can create new ones. For details see the file [src/test/resources/howtoTestUsingStaticGitRepos.md](file://src/test/resources/howtoTestUsingStaticGitRepos.md)
+
+**There is a roadmap decision, that every new test should be using static git repositories as preferred setup for working with git repositories during functional tests**.
 
 ## Logging
 
@@ -154,7 +162,7 @@ Run the `Main` class and check the results.
 ### Contributing
 
 We happily accept pull request on [Praqma's Github repository](https://github.com/Praqma/pretested-integration-plugin)  
-This is used to release from, and accepting pull request.
+This is used to release from, and accepting pull request. **Do not make pull request on [Jenkins CI on Github](https://github.com/jenkinsci/pretested-integration-plugin)** - it is only used as final archive for released versions.
 
 * We don't accept changes, that doesn't reference a Jira issue.
 * Every code change must be tested, so there should be either new tests contributed or tests that are changed to new workflows.

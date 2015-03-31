@@ -1,0 +1,21 @@
+# Repository view and commits
+
+Git version:
+git version 1.9.1
+
+After initial commit on master:
+-------------------------------
+* [31m116912c[m -[33m (HEAD, master)[m Initial commit - added README [32m(0 seconds ago) [1;34m<Praqma Support>[m
+
+After the two commit on dev branch:
+-----------------------------------
+* [31m57807c9[m -[33m (HEAD, origin/dev/JENKINS-27662_doublequotes, dev/JENKINS-27662_doublequotes)[m This is a commit message with double quotes, eg. "test quotes". [32m(0 seconds ago) [1;34m<Praqma Support>[m
+* [31m4ca68de[m -[33m[m Added test commit log file [32m(0 seconds ago) [1;34m<Praqma Support>[m
+* [31m116912c[m -[33m (origin/master, master)[m Initial commit - added README [32m(0 seconds ago) [1;34m<Praqma Support>[m
+
+Final repository, view dev branch after push to ready-branch:
+------------------------------------------------------------------------------
+* [31m57807c9[m -[33m (HEAD, origin/ready/JENKINS-27662_doublequotes, origin/dev/JENKINS-27662_doublequotes, dev/JENKINS-27662_doublequotes)[m This is a commit message with double quotes, eg. "test quotes". [32m(0 seconds ago) [1;34m<Praqma Support>[m
+* [31m4ca68de[m -[33m[m Added test commit log file [32m(0 seconds ago) [1;34m<Praqma Support>[m
+* [31m116912c[m -[33m (origin/master, master)[m Initial commit - added README [32m(0 seconds ago) [1;34m<Praqma Support>[m
+

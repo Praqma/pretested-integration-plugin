@@ -1,0 +1,66 @@
+mkdir: created directory ‘commitMessagesWithDoubleQuotes_linux.git’
+Initialized empty Git repository in /home/bue/gitlab-repos/github/pretested-integration-plugin/src/test/resources/commitMessagesWithDoubleQuotes_linux.git/
+[master (root-commit) 2f2c873] Initial commit - added README
+ 1 file changed, 3 insertions(+)
+ create mode 100644 README.md
+[dev/JENKINS-27662_doublequotes ca7160d] Added test commit log file
+ 1 file changed, 3 insertions(+)
+ create mode 100644 testCommit.log
+[dev/JENKINS-27662_doublequotes 13523b0] This is a commit message with double quotes, eg. "test quotes".
+ 1 file changed, 1 insertion(+)
+mkdir: created directory ‘commitMessagesWithDoubleQuotes_linux.git’
+Initialized empty Git repository in /home/bue/gitlab-repos/github/pretested-integration-plugin/src/test/resources/commitMessagesWithDoubleQuotes_linux.git/
+[master (root-commit) 116912c] Initial commit - added README
+ 1 file changed, 3 insertions(+)
+ create mode 100644 README.md
+[dev/JENKINS-27662_doublequotes 4ca68de] Added test commit log file
+ 1 file changed, 3 insertions(+)
+ create mode 100644 testCommit.log
+[dev/JENKINS-27662_doublequotes 57807c9] This is a commit message with double quotes, eg. "test quotes".
+ 1 file changed, 1 insertion(+)
+  adding: commitMessagesWithDoubleQuotes_linux.git/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/branches/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/config (deflated 11%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/info/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/info/exclude (deflated 28%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/HEAD (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/60/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/60/8dde79ba00fba3e54ffdad6bc7d6022080fce4 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/ce/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/ce/057c3522f9730756425c4b967eee724dea2d50 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/pack/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/11/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/11/6912cf24208b02c33e3cff8b8287eb9014499c (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/a9/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/a9/2bdebb90d01823a028ed83f889df7938f0a202 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/info/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/df/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/df/bb4a6c8d8640e8c119f5929abc6fa371a98c83 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/4c/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/4c/a68de437d106b6600bef36d6887c8527275652 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/57/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/57/807c99bea0fa0f929bd32973ff9651f7c0fb04 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/92/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/92/38465f075bf23d9b3a2d3891f06a10084e3754 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/b8/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/objects/b8/6137600f45e0173bdce39e7954005295118ab1 (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/description (deflated 14%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/applypatch-msg.sample (deflated 41%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/pre-rebase.sample (deflated 59%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/pre-applypatch.sample (deflated 36%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/update.sample (deflated 68%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/pre-push.sample (deflated 50%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/prepare-commit-msg.sample (deflated 46%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/pre-commit.sample (deflated 43%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/commit-msg.sample (deflated 44%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/hooks/post-update.sample (deflated 27%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/tags/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/heads/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/heads/ready/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/heads/ready/JENKINS-27662_doublequotes (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/heads/dev/ (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/heads/dev/JENKINS-27662_doublequotes (stored 0%)
+  adding: commitMessagesWithDoubleQuotes_linux.git/refs/heads/master (stored 0%)

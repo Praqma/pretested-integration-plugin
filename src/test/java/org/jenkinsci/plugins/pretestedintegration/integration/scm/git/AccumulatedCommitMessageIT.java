@@ -3,11 +3,7 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.util.RunList;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import static junit.framework.TestCase.assertEquals;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
@@ -293,10 +289,10 @@ public class AccumulatedCommitMessageIT {
         }
         
         // validate file contents also
-        assertEquals(true, checkForLine(readme, "First line in readme file"));
-        assertEquals(true, checkForLine(readme, "Second line in readme file"));
-        assertEquals(true, checkForLine(readme, String.format("Third line in readme file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(readme, String.format("Fourth line in readme file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, "First line in readme file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, "Second line in readme file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, String.format("Third line in readme file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, String.format("Fourth line in readme file, done on branch %s", FEATURE_BRANCH_NAME)));
     }
     
     
@@ -515,10 +511,10 @@ public class AccumulatedCommitMessageIT {
         }
         
         // validate file contents also
-        assertEquals(true, checkForLine(infofile, "First line in info file"));
-        assertEquals(true, checkForLine(infofile, "Second line in info file"));
-        assertEquals(true, checkForLine(infofile, String.format("Third line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(infofile, String.format("Fourth line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, "First line in info file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, "Second line in info file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("Third line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("Fourth line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
     }
     
     /*
@@ -887,11 +883,11 @@ public class AccumulatedCommitMessageIT {
         
         
         // validate file contents also
-        assertEquals(true, checkForLine(infofile, "1. line in info file"));
-        assertEquals(true, checkForLine(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(infofile, String.format("4. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(infofile, String.format("5. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, "1. line in info file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("4. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("5. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
     }
 
 
@@ -1203,11 +1199,11 @@ public class AccumulatedCommitMessageIT {
         }
         
         // validate file contents also
-        assertEquals(true, checkForLine(readmefile, "1. line in readme file"));
-        assertEquals(true, checkForLine(readmefile, "Added line to readme file"));
-        assertEquals(true, checkForLine(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(infofile, String.format("4. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readmefile, "1. line in readme file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readmefile, "Added line to readme file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("4. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
     }
     
     
@@ -1472,34 +1468,11 @@ public class AccumulatedCommitMessageIT {
             ).retain().validate();
         }
         
-        assertEquals(true, checkForLine(readmefile, "1. line in readme file"));
-        assertEquals(true, checkForLine(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
-        assertEquals(true, checkForLine(readmefile, "Added line to readme file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readmefile, "1. line in readme file"));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        assertEquals(true, TestUtilsFactory.checkForLineInFile(readmefile, "Added line to readme file"));
         
-    }
-    
-    public boolean checkForLine(File file, String stringToCheck) throws IOException {
-        boolean result = false;
-        try {
-            BufferedReader inputReader = new BufferedReader(new FileReader(file));
-                System.out.println("look for!:'" + stringToCheck + "'");
-                String nextLine;
-                while ((nextLine = inputReader.readLine()) != null) {
-                    System.out.println("next line:'" + nextLine + "'");
-                    if (nextLine.equals(stringToCheck)) {
-                        result = true;
-                        break;
-                    }
-                }
-
-
-        return result;
-        } catch (FileNotFoundException e1) {
-            return false;
-        } catch (IOException ep) {
-            return false;
-        }
     }
         
 }
