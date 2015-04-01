@@ -138,12 +138,13 @@ public class TestUtilsFactory {
      */
     public static void destroyDirectory(File directoryToDelete, Integer sleepms, Integer attempts) throws IOException, InterruptedException {
         File dir = new File(directoryToDelete.getAbsoluteFile().getAbsolutePath());
+        int count = attempts;
         System.out.println("Deleting directory " + dir.toString());            
                 while(!FileUtils.deleteQuietly(dir)) {
-                    attempts--;
+                    count--;
                     Thread.sleep(sleepms);
-                    if(attempts <= 0) {
-                        throw new InterruptedException(String.format("Locked files? Failed to delete directory '%s' for %s seconds (%s tries)", dir.toString(), (sleepms*attempts)/1000, attempts));
+                    if(count <= 0) {
+                        throw new InterruptedException(String.format("Locked files? Failed to delete directory '%s' for %d seconds (%d tries)", dir.toString(), (sleepms*attempts)/1000, attempts));
                     }
                 }
     }
