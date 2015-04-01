@@ -52,8 +52,6 @@ public class TestUtilsFactory {
     
     public enum STRATEGY_TYPE { SQUASH, ACCUMULATED };
     
-    public static final File GIT_DIR = new File("test-repo/.git");    
-
     public static final String AUTHER_NAME = "john Doe";
     public static final String AUTHER_EMAIL = "Joh@praqma.net";
 
@@ -67,7 +65,6 @@ public class TestUtilsFactory {
         } catch (GitAPIException e) {
             e.printStackTrace();
         }
-
         return commitCount;
     }
     
@@ -97,8 +94,8 @@ public class TestUtilsFactory {
         } catch (GitAPIException e) {
             e.printStackTrace();
             git.close();
-        } 
-        
+        }
+
         return commitCount;
     }
     
@@ -146,6 +143,7 @@ public class TestUtilsFactory {
                     if(count <= 0) {
                         throw new InterruptedException(String.format("Locked files? Failed to delete directory '%s' for %d seconds (%d tries)", dir.toString(), (sleepms*attempts)/1000, attempts));
                     }
+                    System.out.println(String.format("Trying again to deleting directory (try #%s): '%s' ", count, dir.toString()));
                 }
     }
      /**
@@ -157,7 +155,7 @@ public class TestUtilsFactory {
      * @throws InterruptedException 
      */
     public static void destroyDirectory(File directoryToDelete) throws IOException, InterruptedException {
-        TestUtilsFactory.destroyDirectory(directoryToDelete, 300, 100);
+        TestUtilsFactory.destroyDirectory(directoryToDelete, 300, 50);
     }
     
     
@@ -187,7 +185,24 @@ public class TestUtilsFactory {
             System.out.println("Attempting to destroy git repository workdir: " + repositoryWorkDir.toString());
             if(repositoryWorkDir.exists()) {
                 System.out.println("Destroying repository workdir: " + repositoryWorkDir.toString());
-                TestUtilsFactory.destroyDirectory(repositoryWorkDir, 300, 100);
+                Git gitrepo = Git.open(repositoryWorkDir);
+                gitrepo.close();
+                TestUtilsFactory.destroyDirectory(repositoryWorkDir);
+            }
+        }
+    }
+    public static void destroyRepo(Git repository) throws IOException, InterruptedException {
+        if(repository != null) {
+            repository.close();            
+            File repositoryPath = repository.getRepository().getDirectory().getAbsoluteFile();
+            System.out.println("Attempting to destroy git repository: " + repositoryPath.toString());
+            if (repositoryPath.exists()) {
+                System.out.println("Destroying repo " + repositoryPath.toString());            
+                /**
+                 * This 'hack' has been implemented because the test-harness/JGit not always releasing
+                 * the repositories (on Windows). Tries to delete until success or time-out (after 20 seconds.
+                 */ 
+                TestUtilsFactory.destroyDirectory(repositoryPath);
             }
         }
     }
@@ -196,6 +211,8 @@ public class TestUtilsFactory {
      * <h3>Destroys a repository</h3> 
      * <p>That is close it programatically with JGit and deleting the working directory</p>
      * @param repos List of repositories to close and delete.
+     * @throws java.io.IOException
+     * @throws java.lang.InterruptedException
      */ 
     public static void destroyRepo(Repository... repos) throws IOException, InterruptedException {
         for(Repository repository : repos) {
@@ -215,7 +232,7 @@ public class TestUtilsFactory {
             if (branchName.endsWith(branch))
                 return true;
         }
-
+        
         return false;
     }
 
@@ -497,7 +514,7 @@ public class TestUtilsFactory {
         
         git.push().setPushAll().call();
         
-        FileUtils.deleteDirectory(workDirForRepo);
+            FileUtils.deleteDirectory(workDirForRepo);
         
         return repository;
     }
@@ -681,8 +698,9 @@ public class TestUtilsFactory {
      */
     public static boolean checkForLineInFile(File file, String stringToCheck) throws IOException {
         boolean result = false;
-        try {
-            BufferedReader inputReader = new BufferedReader(new FileReader(file));
+        // The resource declared in the try-with-resources statement is a BufferedReader.
+        try (BufferedReader inputReader = new BufferedReader(new FileReader(file))) 
+        {
             System.out.println("look for!:'" + stringToCheck + "'");
             String nextLine;
             while ((nextLine = inputReader.readLine()) != null) {
@@ -692,6 +710,7 @@ public class TestUtilsFactory {
                     break;
                 }
             }
+            inputReader.close();
 
             return result;
         } catch (FileNotFoundException e1) {
@@ -719,49 +738,47 @@ public class TestUtilsFactory {
         byte[] buffer = new byte[2048];
 
         try {
-            FileInputStream fInput = new FileInputStream(zipFile);
-            ZipInputStream zipInput = new ZipInputStream(fInput);
-
-            ZipEntry entry = zipInput.getNextEntry();
-            Boolean print = true;
-            while (entry != null) {
-                String entryName = entry.getName();
-                File file = new File(destinationFolder + File.separator + entryName);
-
-                // only print first entry, the zip-file itself
-                if (print) {
-                    System.out.println("Unzip file " + entryName + " to " + file.getAbsolutePath());
-                    print = false;
-                }
-
-                // create the directories of the zip directory
-                if (entry.isDirectory()) {
-                    File newDir = new File(file.getAbsolutePath());
-                    if (!newDir.exists()) {
-                        boolean success = newDir.mkdirs();
-                        if (success == false) {
-                            System.out.println("Problem creating Folder");
+            try (FileInputStream fInput = new FileInputStream(zipFile); ZipInputStream zipInput = new ZipInputStream(fInput)) {
+                
+                ZipEntry entry = zipInput.getNextEntry();
+                Boolean print = true;
+                while (entry != null) {
+                    String entryName = entry.getName();
+                    File file = new File(destinationFolder + File.separator + entryName);
+                    
+                    // only print first entry, the zip-file itself
+                    if (print) {
+                        System.out.println("Unzip file " + entryName + " to " + file.getAbsolutePath());
+                        print = false;
+                    }
+                    
+                    // create the directories of the zip directory
+                    if (entry.isDirectory()) {
+                        File newDir = new File(file.getAbsolutePath());
+                        if (!newDir.exists()) {
+                            boolean success = newDir.mkdirs();
+                            if (success == false) {
+                                System.out.println("Problem creating Folder");
+                            }
+                        }
+                    } else {
+                        try (FileOutputStream fOutput = new FileOutputStream(file)) {
+                            int count = 0;
+                            while ((count = zipInput.read(buffer)) > 0) {
+                                // write 'count' bytes to the file output stream
+                                fOutput.write(buffer, 0, count);
+                            }
                         }
                     }
-                } else {
-                    FileOutputStream fOutput = new FileOutputStream(file);
-                    int count = 0;
-                    while ((count = zipInput.read(buffer)) > 0) {
-                        // write 'count' bytes to the file output stream
-                        fOutput.write(buffer, 0, count);
-                    }
-                    fOutput.close();
+                    // close ZipEntry and take the next one
+                    zipInput.closeEntry();
+                    entry = zipInput.getNextEntry();
                 }
-                // close ZipEntry and take the next one
+                
+                // close the last ZipEntry
                 zipInput.closeEntry();
-                entry = zipInput.getNextEntry();
+
             }
-
-            // close the last ZipEntry
-            zipInput.closeEntry();
-
-            zipInput.close();
-            fInput.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

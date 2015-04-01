@@ -46,7 +46,7 @@ public class SquashCommitStrategyIT {
     public void tearDown() throws Exception {        
         for(Repository repo : repositories) {
             TestUtilsFactory.destroyRepo(repo);
-        }        
+        }
     }
 
     @Test

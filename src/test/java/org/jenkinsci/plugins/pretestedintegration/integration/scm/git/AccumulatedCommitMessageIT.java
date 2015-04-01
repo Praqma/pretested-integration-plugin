@@ -104,12 +104,13 @@ public class AccumulatedCommitMessageIT {
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
     private Repository bareRepository;
+
     public static final String AUTHOR_NAME = "john Doe";
     public static final String AUTHOR_EMAIL = "Joh@praqma.net";
 
     @After
-    public void tearDown() throws Exception {        
-        TestUtilsFactory.destroyRepo(bareRepository);        
+    public void tearDown() throws Exception {
+        TestUtilsFactory.destroyRepo(bareRepository);
     }
 
     
@@ -287,12 +288,14 @@ public class AccumulatedCommitMessageIT {
                     String.format("commit %s", featureCommit2SHA)
             ).retain().validate();
         }
+        bareRepository.close();
         
         // validate file contents also
         assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, "First line in readme file"));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, "Second line in readme file"));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, String.format("Third line in readme file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(readme, String.format("Fourth line in readme file, done on branch %s", FEATURE_BRANCH_NAME)));
+        gitrepo.close();
     }
     
     
@@ -509,12 +512,14 @@ public class AccumulatedCommitMessageIT {
                     String.format("commit %s", featureCommit2SHA)
             ).retain().validate();
         }
+        bareRepository.close();
         
         // validate file contents also
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, "First line in info file"));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, "Second line in info file"));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("Third line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("Fourth line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        gitrepo.close();
     }
     
     /*
@@ -831,7 +836,6 @@ public class AccumulatedCommitMessageIT {
         gitrepo.checkout().setName("master").call();
         gitrepo.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call(); 
         gitrepo.pull().call();
-        gitrepo.close();
         
 
     /*
@@ -853,10 +857,10 @@ public class AccumulatedCommitMessageIT {
         ----------------------------------------------------------------------------
         */
         int commitsOnMasterAfterIntegration = TestUtilsFactory.countCommitsOnBranch(gitrepo, "master");
+        gitrepo.close();
         // All commits end on master after integration
         assertEquals(8, commitsOnMasterAfterIntegration);
-        
-        
+       
         
         // using our little build result validator, see which string the head
         // commit on master contains. Head commit will in this case be the
@@ -880,7 +884,7 @@ public class AccumulatedCommitMessageIT {
                     String.format("commit %s", featureCommit4SHA)
             ).retain().validate();
         }
-        
+        bareRepository.close();
         
         // validate file contents also
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, "1. line in info file"));
@@ -888,6 +892,7 @@ public class AccumulatedCommitMessageIT {
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("4. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("5. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        gitrepo.close();
     }
 
 
@@ -1145,7 +1150,6 @@ public class AccumulatedCommitMessageIT {
         gitrepo.checkout().setName("master").call();
         gitrepo.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call(); 
         gitrepo.pull().call();
-        gitrepo.close();
         
     /*
         AFTER the accumulated merge, the tree looks like this:
@@ -1167,9 +1171,10 @@ public class AccumulatedCommitMessageIT {
         ----------------------------------------------------------------------------
         */
         int commitsOnMasterAfterIntegration = TestUtilsFactory.countCommitsOnBranch(gitrepo, "master");
+        gitrepo.close();
         // All commits end on master after integration
         assertEquals(9, commitsOnMasterAfterIntegration);
-        
+
         
         
         // using our little build result validator, see which string the head
@@ -1197,6 +1202,7 @@ public class AccumulatedCommitMessageIT {
                     String.format("commit %s", feature1337Commit2SHA)
             ).retain().validate();
         }
+        bareRepository.close();
         
         // validate file contents also
         assertEquals(true, TestUtilsFactory.checkForLineInFile(readmefile, "1. line in readme file"));
@@ -1204,6 +1210,7 @@ public class AccumulatedCommitMessageIT {
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("4. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
+        gitrepo.close();
     }
     
     
@@ -1293,12 +1300,12 @@ public class AccumulatedCommitMessageIT {
     // Purpose, test our treewalk doesn't end up on other branches
     // that won't be merged in...
     @Test
-    public void commitMessageShouldOnCollectFromConnectedBranches() throws Exception {
+    public void commitMessageShouldOnlyCollectFromConnectedBranches() throws Exception {
 
         /**********************************************************************
          * Prepare repository to use for testing
          **********************************************************************/
-        String REPO_FOLDER_NAME = "commitMessageShouldOnCollectFromConnectedBranches";
+        String REPO_FOLDER_NAME = "commitMessageShouldOnlyCollectFromConnectedBranches";
         String FEATURE_BRANCH_NAME = "ready/mergeableFeature";
         String FEATURE_BRANCH_NAME2 = "dev/disconnectedFeature";
 
@@ -1423,7 +1430,6 @@ public class AccumulatedCommitMessageIT {
         gitrepo.checkout().setName("master").call();
         gitrepo.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call(); 
         gitrepo.pull().call();
-        gitrepo.close();
         
         
     /*
@@ -1443,9 +1449,9 @@ public class AccumulatedCommitMessageIT {
         */
 
         int commitsOnMasterAfterIntegration = TestUtilsFactory.countCommitsOnBranch(gitrepo, "master");
+        gitrepo.close();
         // All commits ends on master after integration
         assertEquals(5, commitsOnMasterAfterIntegration);
-        
   
         
         // using our little build result validator, see which string the head
@@ -1467,12 +1473,13 @@ public class AccumulatedCommitMessageIT {
                     String.format("commit %s", mergeableFeatureCommit2SHA)
             ).retain().validate();
         }
+        bareRepository.close();
         
         assertEquals(true, TestUtilsFactory.checkForLineInFile(readmefile, "1. line in readme file"));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("2. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(infofile, String.format("3. line in info file, done on branch %s", FEATURE_BRANCH_NAME)));
         assertEquals(true, TestUtilsFactory.checkForLineInFile(readmefile, "Added line to readme file"));
-        
+        gitrepo.close();
     }
         
 }

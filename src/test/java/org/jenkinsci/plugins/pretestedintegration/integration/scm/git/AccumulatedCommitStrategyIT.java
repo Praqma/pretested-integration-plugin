@@ -40,8 +40,8 @@ public class AccumulatedCommitStrategyIT {
     private Repository repository;
 
     @After
-    public void tearDown() throws Exception {        
-        TestUtilsFactory.destroyRepo(repository);        
+    public void tearDown() throws Exception {
+        TestUtilsFactory.destroyRepo(repository);
     }
 
     /**
