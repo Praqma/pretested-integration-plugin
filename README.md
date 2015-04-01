@@ -124,13 +124,29 @@ In `src/test/resources/` there is a static git repository collection that can be
 
 ## Logging
 
-Our strategy for logging in the plugin is to:
+Our strategy for logging in the plugin is to log:
 
-* **Exceptions**: The automated added logging lines logs for almost all exceptions entering and existing exception handling. That is okay, but I need more information than that - human well described situation report pr. exception. Why did we end there? How ? What do we suspect is wrong. Log those informations, as well as stacktrace message and so fort. Also log if we re-throw the exception.
-* **State transitions or decisions**: please log situation where we change state or make decisions. Examples can be that we can't find the branch, it does not fulfil requirements, there is no new commit and so forth. Typically this is placed where we might print something to console for the user, I want that in the log as well.
-* **Every user message or output to Jenkins console**: User messages and console output should be logged as well - it will be way easier to follow those large logs, if the same messages we see in Jenkins job console is there as well.
+* **Exceptions**: The automated added logging lines logs for almost all exceptions entering and existing exception handling. That is okay, but we need more information than that - human well described situation report pr. exception. Why did we end there? What do we suspect is wrong? Log those informations, as well as stacktrace message and so fort. Also log if we re-throw the exception. Exception must be **`Level.SEVERE`** or worse.
+* **State transitions or decisions**: Log situations where we change state or make decisions. Examples can be that we can't find the branch, it does not fulfil requirements, there is no new commit etc.  Typically this is placed where we might print something to console for the user, we want that in the log as well. Use log level **`Level.FINE`** or lower.
+* **Every user message or output to Jenkins console**: User messages and console output should be logged as well - it will be way easier to follow those large logs, if the same messages we see in Jenkins job console is in the log as well.
+* Log level **Level.WARNING** is typically used for recovered errors.
+* Log **"Doing step..."** and *"Done step ..."* so the most important steps, that can fail write to log or console **before** and **after** the step.
 
-_This is not yet achieved fully in the plugin_
+Every console or user message must be prefixed with `[PREINT]`, by defining `LOG_PREFIX = "[PREINT] ";` and using it `listener.getLogger().println( String.format(LOG_PREFIX + "Preparing to merge cha ...`.
+
+Use `[PREINT]` only in user messages and console output, as the java loggers know which class that logs already so it will be redundant information.
+
+Example - printing to job console:
+
+        listener.getLogger().println(LOG_PREFIX + "Failed to commit merged changes.");
+        listener.getLogger().println(String.format(LOG_PREFIX + "Git command failed with exit code '%d' and error message:", exitCodeCommit));
+        listener.getLogger().println(LOG_PREFIX + out.toString());
+
+Example - just logging to java logger:
+
+        logger.fine(String.format("Found remote branch %s", b.getName()));
+
+_This is not yet achieved fully in the plugin_ - but on our roadmap
 
 #### Automated inserted logging statements
 Praqma have a little java tools called Code-injector that can be used to automatically insert logging statements in java code.

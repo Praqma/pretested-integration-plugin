@@ -31,7 +31,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     protected String branch;
     public final IntegrationStrategy integrationStrategy;
     
-    final static String LOG_PREFIX = "[PREINT-SCM] ";
+    final static String LOG_PREFIX = "[PREINT] ";
 
     @DataBoundConstructor
     public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {

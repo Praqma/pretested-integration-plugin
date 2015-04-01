@@ -34,6 +34,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
     
     private static final String B_NAME = "Accumulated commit";
     private static final Logger logger = Logger.getLogger(AccumulatedCommitStrategy.class.getName());
+    private static final String LOG_PREFIX = "[PREINT] ";
 
     @DataBoundConstructor
     public AccumulatedCommitStrategy() { }
@@ -56,10 +57,11 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         boolean found = false;
         
         try {
+            logger.fine("Resolving and getting git client from workspace:");
             client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();            
-            logger.fine("Finding remote branches");
+            logger.fine("Finding remote branches:");
             for(Branch b : client.getRemoteBranches()) {
-                logger.fine(String.format("Found remote branch %s", b.getName()));                
+                logger.fine(String.format("Found remote branch %s", b.getName()));
                 if(b.getName().equals(gitDataBranch.getName())) {                   
                     found = true;
                     break;
@@ -72,10 +74,13 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         }
         
         if(!found) {
+            logger.fine("Found no remote branches.");
             try {
+                logger.fine("Setting build description 'Nothing to do':");
                 build.setDescription(String.format("Noting to do"));
-            } catch (Exception ex) {
-                logger.log(Level.FINE, "Failed to update description", ex);
+                logger.fine("Done setting build description.");
+            } catch (IOException ex) {
+                logger.log(Level.FINE, "Failed to update build description", ex);
             }
             String msg = GitMessages.NoRelevantSCMchange(gitDataBranch != null ? gitDataBranch.getName() : "null");
             logger.log(Level.WARNING, msg);
@@ -83,7 +88,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
 			throw new NothingToDoException(msg);
         }
 
-        listener.getLogger().println( String.format( "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch() ) );
+        listener.getLogger().println( String.format(LOG_PREFIX + "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch() ) );
         try {
             // FIXME I don't like this call back design, where we collect data for commit message based on a series of commits
             // which aren't really ensure to match what the 'git merge' command ends up merging.
@@ -94,19 +99,27 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             exitCode = gitbridge.git(build, launcher, listener, out, "merge", "-m", String.format("%s%n%s", headerLine, commits), commit, "--no-ff");
             
         } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Exception while merging, logging exception", ex);
             logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure"); // Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
-            logger.log(Level.WARNING, "Exception while merging, logging exception", ex);
 			throw new IntegationFailedExeception(ex);
         }
         
         if (exitCode > 0) {
-            listener.getLogger().println("Failed to merge changes.");
-            listener.getLogger().println(out.toString());
+            logger.log(Level.SEVERE, "Failed to merge changes.");
+            logger.log(Level.SEVERE, String.format("Git command failed with exit code '%d' and error message:", exitCode));
+            logger.log(Level.SEVERE, out.toString());
+            listener.getLogger().println(LOG_PREFIX + "Failed to merge changes.");
+            listener.getLogger().println(String.format(LOG_PREFIX + "Git command failed with exit code '%d' and error message:", exitCode));
+            listener.getLogger().println(LOG_PREFIX + out.toString());
             try {
+                logger.fine("Setting build description 'Merge conflict':");
                 build.setDescription(String.format("Merge conflict"));
+                logger.fine("Done setting build description.");
             }  catch (IOException ex) {
+                logger.log(Level.SEVERE, "Failed to update build description", ex);
                 logger.exiting("AccumulatedCommitStrategy", "integrate-setDescription() failed");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
-				throw new IntegationFailedExeception(ex);
+                // It is not fatal to fail setting build description on the job
+                // throw new IntegationFailedExeception(ex);
             }
             logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
 			throw new IntegationFailedExeception();
