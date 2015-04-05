@@ -48,7 +48,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         
-        //TODO: How can you add more than 1 action, MultiSCM plugin with two seperate gits?
+        //TODO: How can you add more than 1 action, MultiSCM plugin with two 
+        // seperate gits?
         BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
         
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
@@ -57,22 +58,22 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         String integrationSHA = "Not specified";
         try {
             logger.fine("Getting current integration SHA");
-            integrationSHA = (String)build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
+            integrationSHA = (String) build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
             logger.fine("Found integration SHA");
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Integrate() error, integration SHA not found", ex);
         }
 
-        listener.getLogger().println( String.format(LOG_PREFIX + "Preparing to merge changes in commit %s to integration branch %s(%s)", gitDataBranch.getSHA1String(), bridge.getBranch(), integrationSHA) );
+        listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s to integration branch %s(%s)", gitDataBranch.getSHA1String(), bridge.getBranch(), integrationSHA));
         boolean found = false;
         try {
             logger.fine("Resolving and getting git client from workspace:");
             client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
 
             logger.fine("Finding remote branches:");
-            for(Branch b : client.getRemoteBranches()) {
+            for (Branch b : client.getRemoteBranches()) {
                 logger.fine(String.format("Found remote branch %s", b.getName()));
-                if(b.getName().equals(gitDataBranch.getName())) {
+                if (b.getName().equals(gitDataBranch.getName())) {
                     found = true;
                     break;
                 }
@@ -80,10 +81,10 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "GitClient error", ex);
             logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
-			throw new IntegationFailedExeception("Unspecified GitClient error", ex);
+            throw new IntegationFailedExeception("Unspecified GitClient error", ex);
         }
 
-        if(!found) {
+        if (!found) {
             logger.fine("Found no remote branches.");
             try {
                 logger.fine("Setting build description 'Nothing to do':");
@@ -95,10 +96,10 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             String msg = GitMessages.NoRelevantSCMchange(gitDataBranch != null ? gitDataBranch.getName() : "null");
             logger.log(Level.WARNING, msg);
             logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
-			throw new NothingToDoException(msg);
+            throw new NothingToDoException(msg);
         }
 
-        listener.getLogger().println( String.format(LOG_PREFIX + "Preparing to merge changes from branch %s", gitbridge.getBranch() ) );
+        listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes from branch %s", gitbridge.getBranch()));
         try {
             logger.fine("Collecting and gathering commit message for debug out put after commit:");
             String commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));
@@ -111,9 +112,9 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "--no-edit");
             logger.fine("Commit of squashed merge done.");
 
-            listener.getLogger().println( String.format(LOG_PREFIX + "Commit message:%n%s", commitMessage));
-        } catch (Exception ex) { 
-            /*Handled below */ 
+            listener.getLogger().println(String.format(LOG_PREFIX + "Commit message:%n%s", commitMessage));
+        } catch (Exception ex) {
+            /*Handled below */
             logger.log(Level.SEVERE, "Exception while merging, logging exception", ex);
         }
 
@@ -124,7 +125,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             listener.getLogger().println(LOG_PREFIX + "Failed to merge changes.");
             listener.getLogger().println(String.format(LOG_PREFIX + "Git command failed with exit code '%d' and error message:", exitCode));
             listener.getLogger().println(LOG_PREFIX + out.toString());
-            
+
             try {
                 logger.fine("Setting build description 'Merge conflict':");
                 build.setDescription(String.format("Merge conflict"));
@@ -136,7 +137,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
                 // throw new IntegationFailedExeception(ex);
             }
             logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
-			throw new IntegationFailedExeception();
+            throw new IntegationFailedExeception();
         }
 
         if (exitCodeCommit != 0 && exitCodeCommit != -999 ) {
@@ -148,7 +149,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             listener.getLogger().println(LOG_PREFIX + out.toString());
 
             try {
-                if(out.toString().contains("nothing to commit")) {
+                if (out.toString().contains("nothing to commit")) {
                     logger.fine("Git says nothing to commit.");
                     logger.fine("Setting build description 'Nothing to do':");
                     build.setDescription(String.format("Nothing to do"));
@@ -166,13 +167,13 @@ public class SquashCommitStrategy extends IntegrationStrategy {
                 //throw new IntegationFailedExeception(ex);
             }
 
-            if(out.toString().contains("nothing to commit")) {
+            if (out.toString().contains("nothing to commit")) {
                 logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
-				throw new NothingToDoException();
+                throw new NothingToDoException();
             }
 
             logger.exiting("SquashCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: c9b422ba65a6a142f9cc7f27faeea6e9
-			throw new IntegationFailedExeception("Could not commit merges. Git output: " + out.toString());
+            throw new IntegationFailedExeception("Could not commit merges. Git output: " + out.toString());
         }
     }
 

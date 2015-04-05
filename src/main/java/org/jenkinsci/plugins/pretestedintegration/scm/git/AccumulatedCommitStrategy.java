@@ -52,17 +52,19 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
         String commit = gitBuildData.lastBuild.revision.getSha1String();
         
-        //TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything     
-        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();        
+        //TODO: Implement robustness, in which situations does this one contain 
+        // multiple revisons, when two branches point to the same commit? 
+        // (JENKINS-24909). Check branch spec before doing anything     
+        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         boolean found = false;
-        
+
         try {
             logger.fine("Resolving and getting git client from workspace:");
-            client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();            
+            client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
             logger.fine("Finding remote branches:");
-            for(Branch b : client.getRemoteBranches()) {
+            for (Branch b : client.getRemoteBranches()) {
                 logger.fine(String.format("Found remote branch %s", b.getName()));
-                if(b.getName().equals(gitDataBranch.getName())) {                   
+                if (b.getName().equals(gitDataBranch.getName())) {
                     found = true;
                     break;
                 }
@@ -70,10 +72,10 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "GitClient error", ex);
             logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
-			throw new IntegationFailedExeception("GitClient error, unspecified", ex);
+            throw new IntegationFailedExeception("GitClient error, unspecified", ex);
         }
-        
-        if(!found) {
+
+        if (!found) {
             logger.fine("Found no remote branches.");
             try {
                 logger.fine("Setting build description 'Nothing to do':");
@@ -85,19 +87,23 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             String msg = GitMessages.NoRelevantSCMchange(gitDataBranch != null ? gitDataBranch.getName() : "null");
             logger.log(Level.WARNING, msg);
             logger.exiting("AccumulatedCommitStrategy", "integrate");// Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
-			throw new NothingToDoException(msg);
+            throw new NothingToDoException(msg);
         }
 
-        listener.getLogger().println( String.format(LOG_PREFIX + "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch() ) );
+        listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s to integration branch %s", commit, gitbridge.getBranch()));
         try {
-            // FIXME I don't like this call back design, where we collect data for commit message based on a series of commits
-            // which aren't really ensure to match what the 'git merge' command ends up merging.
-            // The method that get all commits from a branch walk the git tree using JGit, so it is complete independent from the following
-            // merge operation. Worst case is that the merge commit message is based on other commits than the actual merge commit consist of.
+            // FIXME I don't like this call back design, where we collect data 
+            // for commit message based on a series of commits which aren't 
+            // really ensure to match what the 'git merge' command ends up 
+            // merging.
+            // The method that get all commits from a branch walk the git tree 
+            // using JGit, so it is complete independent from the following
+            // merge operation. Worst case is that the merge commit message is
+            // based on other commits than the actual merge commit consist of.
             String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1(), gitbridge.getBranch()));
             String headerLine = String.format("Accumulated commit of the following from branch '%s':%n", gitDataBranch.getName());
             exitCode = gitbridge.git(build, launcher, listener, out, "merge", "-m", String.format("%s%n%s", headerLine, commits), commit, "--no-ff");
-            
+
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Exception while merging, logging exception", ex);
             logger.exiting("AccumulatedCommitStrategy ", "integrate-mergeFailure"); // Generated code DONT TOUCH! Bookmark: 26b6ce59c6edbad7afa29f96febc6fd7
