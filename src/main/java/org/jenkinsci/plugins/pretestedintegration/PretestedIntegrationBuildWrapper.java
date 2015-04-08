@@ -52,9 +52,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
         logger.entering("PretestedIntegrationBuildWrapper", "setUp", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 369385d08e04baa778ddf826119fd65e
-        listener.getLogger().println(Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion());
+        listener.getLogger().println( String.format("%sPreparing environment using Pretested Integration Plugin %s ", LOG_PREFIX, Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion()));
         
-        boolean proceedToBuildStep = true;
+        boolean proceedToBuildStep = true;        
         BuildQueue.getInstance().enqueueAndWait();        
         PretestedIntegrationAction action;
         try {        
@@ -80,22 +80,19 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             } catch (IOException ex) {
                 logger.log(Level.WARNING, LOG_PREFIX+" "+"Failed to add publisher", ex);
                 BuildQueue.getInstance().release();
-            }
+            } 
         } catch (NothingToDoException e) {
             build.setResult(Result.NOT_BUILT);
             listener.getLogger().println(e.getMessage());
-            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
-            BuildQueue.getInstance().release();
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);                        
             proceedToBuildStep = false;
         } catch (IntegationFailedExeception e) {
             build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
             listener.getLogger().println(e.getMessage());
             logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
             proceedToBuildStep = false;
         } catch (EstablishWorkspaceException e) {
             build.setResult(Result.FAILURE);
-            BuildQueue.getInstance().release();
             listener.getLogger().println(e.getMessage());
             logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);            
             proceedToBuildStep = false;
@@ -103,16 +100,23 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             build.setResult(Result.FAILURE);
             listener.getLogger().println(e.getMessage());
             logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
-            BuildQueue.getInstance().release();    
         } catch (UnsupportedConfigurationException e) {
             build.setResult(Result.FAILURE);
             listener.getLogger().println(e.getMessage());
             logger.log(Level.SEVERE, LOG_PREFIX + "- setUp()", e);        
-            listener.getLogger().println(e.getMessage());
-            BuildQueue.getInstance().release();                            
+            listener.getLogger().println(e.getMessage());                          
             proceedToBuildStep = false;          
+        } catch (Exception ex) {
+            build.setResult(Result.FAILURE);
+            listener.getLogger().println(String.format("%sUnexpected error. Check log for details", LOG_PREFIX));
+            logger.log(Level.SEVERE, LOG_PREFIX + "- setUp() - Unexpected error", ex);
+            proceedToBuildStep = false;
+        } finally {
+            //Always release the lock at the end
+            BuildQueue.getInstance().release();
         }
-
+        
+    
         BuildWrapper.Environment environment = new PretestEnvironment();
         logger.exiting("PretestedIntegrationBuildWrapper", "setUp");
         return proceedToBuildStep ? environment : null;
