@@ -10,14 +10,14 @@ require 'open-uri'
    
 
 doc = <<DOCOPT
-Check there is a changelog entry on URL (Confluence mark-up source page) that matches the current project version in the pom (if removing snapshot).
+Check there is a changelog entry on URL that matches the current project version in the pom (if removing snapshot).
 
 pom.xml
 ...
 <version>2.2.3-SNAPSHOT</version>
 ...
 
-then there must be a changelog entry on URL (could be https://wiki.jenkins-ci.org/pages/viewpagesrc.action?pageId=67568254):
+    then there must be a changelog entry on URL (could be https://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin):
 
 ...
 h5. Version 2.2.3
@@ -29,6 +29,8 @@ Usage:
   #{__FILE__} URL
   #{__FILE__} -h
 
+example:
+    ./check_for_changelog.rb https://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin
 
 Arguments:
   URL            URL to look for changelog entry "h5. Version %VERSION", where %VERSION matches version in pom xml
@@ -69,17 +71,34 @@ if __FILE__ == $0
     			end
 		end
 
+        
+
+
+        # https://blog.engineyard.com/2010/getting-started-with-nokogiri
 		page = Nokogiri::HTML(open(params["URL"]))
-		lines = page.to_html
-		lines.each_line do |line|
-			if  mymatch = line.match(".*(h5\.\sVersion\s#{ version }).*") then
-				# matchdata returned:
-				#pp mymatch[1] # matches the grouping around the version number
-				result = true
-				pp "Matched changelog entry: #{ mymatch[1] }"
-				break
-    			end
-		end
+        # Find all "a" tags with a parent tag whose name is "h5"
+        # as we know h3 is the version number headers in the changelog
+        # <h5><a name="PretestedIntegrationPlugin-Version2.2.3"></a>Version 2.2.3</h5>
+        
+        page.xpath('//h5/a').each do |node|
+            # nodes look like this:
+            #   #(Element:0x10970bc {
+            #       name = "a",
+            #       attributes = [
+            #           #(Attr:0x1096d4c {
+            #               name = "name",
+            #               value = "PretestedIntegrationPlugin-Version2.2.3"
+            #           })]
+            #   })
+
+            # node["name"] will look like: PretestedIntegrationPlugin-Version2.2.3
+            if mymatch = /PretestedIntegrationPlugin-Version([\d|\.]+.*)/.match(node["name"]) then
+                if mymatch[1] == version then
+                    pp "Found match with version and changelog entry on web page - great job!"
+                    result = true
+                end
+            end
+        end
 
 		if not result then
 			abort("Could find any changelog entry on the url - please create a changelog")
