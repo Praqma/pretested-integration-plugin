@@ -18,14 +18,12 @@ import hudson.model.Descriptor;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 public abstract class IntegrationStrategy implements Describable<IntegrationStrategy>, ExtensionPoint {  
     private final static Logger logger = Logger.getLogger(IntegrationStrategy.class.getName());
 
     public abstract void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException;
     
-    @DataBoundConstructor
     public IntegrationStrategy() { }
 
     public Descriptor<IntegrationStrategy> getDescriptor() {

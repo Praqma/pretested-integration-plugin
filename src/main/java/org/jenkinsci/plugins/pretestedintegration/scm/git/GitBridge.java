@@ -92,7 +92,7 @@ public class GitBridge extends AbstractSCMBridge {
     The git SCM might no be the one matching newest build data, but it is always
     the git scm that match changes to be integrated (which can be old data!)
     */
-    private GitSCM findScm(AbstractBuild<?, ?> build) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
+    public GitSCM findScm(AbstractBuild<?, ?> build) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
         logger.entering("GitBridge", "findScm");
         // get all build data - there can be several scm changes if using MultiScm plugin
         List<BuildData> bdata = build.getActions(BuildData.class);

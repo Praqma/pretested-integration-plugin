@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.Rule;
 import org.junit.Test;

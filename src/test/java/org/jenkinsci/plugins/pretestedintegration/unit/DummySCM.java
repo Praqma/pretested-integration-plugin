@@ -15,6 +15,7 @@ import hudson.model.Result;
 import java.io.IOException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -24,9 +25,10 @@ public class DummySCM extends AbstractSCMBridge {
 	private boolean rolledBack = false;
 	private Commit<?> commit = null;
 
-        public DummySCM(IntegrationStrategy behaves) {
-            super(behaves);
-        }
+    @DataBoundConstructor
+    public DummySCM(IntegrationStrategy behaves) {
+        super(behaves);
+    }
 	
 	public void setCommit(Commit<?> commit){
 		this.commit = commit;

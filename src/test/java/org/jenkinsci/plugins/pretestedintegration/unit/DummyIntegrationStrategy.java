@@ -13,12 +13,17 @@ import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  *
  * @author Mads
  */
 public class DummyIntegrationStrategy extends IntegrationStrategy{
+
+    @DataBoundConstructor
+    public DummyIntegrationStrategy() {
+    }
 
     @Override
     public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {

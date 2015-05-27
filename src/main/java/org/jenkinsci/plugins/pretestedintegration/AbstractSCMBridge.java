@@ -1,7 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
@@ -10,7 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import org.kohsuke.stapler.DataBoundConstructor;
 import jenkins.model.Jenkins;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
@@ -32,8 +29,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public final IntegrationStrategy integrationStrategy;
     
     final static String LOG_PREFIX = "[PREINT] ";
-
-    @DataBoundConstructor
+    
     public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {
         this.integrationStrategy = integrationStrategy;
     }

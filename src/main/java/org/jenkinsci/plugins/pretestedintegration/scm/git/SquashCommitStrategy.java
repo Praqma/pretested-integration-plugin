@@ -21,6 +21,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
@@ -71,7 +72,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         boolean found = false;
         try {
             logger.fine("Resolving and getting git client from workspace:");
-            client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
+            client = gitbridge.findScm(build).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
 
             logger.fine("Finding remote branches:");
             for (Branch b : client.getRemoteBranches()) {
@@ -118,7 +119,16 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
             logger.info("Starting squash merge - without commit:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting squash merge - without commit:"));
-            exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
+            listener.getLogger().println( String.format("%smerge --squash %s",LOG_PREFIX, gitDataBranch.getName()) );            
+            client.merge().setSquash(true).setRevisionToMerge(gitDataBranch.getSHA1()).execute();
+            /*
+            TODO: We do not have an exit code for the merge anymore. We get exceptions
+            */
+            //exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
+            
+            
+            
+            exitCodeMerge = 0;
             logger.info("Squash merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Squash merge done"));
         } catch (Exception ex) {
@@ -130,7 +140,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             // user easily investigate.
             logger.log(Level.SEVERE, "Exception while merging. Logging exception", ex);
             listener.getLogger().println(LOG_PREFIX + String.format("Exception while merging. Logging exception msg: %s", ex.getMessage()));
-            logger.exiting("SquashCommitStrategy", "integrate-mergeFailure");
+            logger.exiting("SquashCommitStrategy", "integrate-mergeFailure");            
 			throw new IntegationFailedExeception(ex);
         }
         // NOTICE: The catch-throw exception above means we have handles all 
