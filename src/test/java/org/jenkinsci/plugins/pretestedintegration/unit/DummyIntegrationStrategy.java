@@ -8,8 +8,13 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExe
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class DummyIntegrationStrategy extends IntegrationStrategy {
+
+    @DataBoundConstructor
+    public DummyIntegrationStrategy() {
+    }
 
     @Override
     public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {

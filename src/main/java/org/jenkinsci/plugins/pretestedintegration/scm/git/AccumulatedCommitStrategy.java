@@ -10,8 +10,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jenkinsci.plugins.gitclient.Git;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
@@ -54,7 +55,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             logger.fine("Resolving and getting git client from workspace:");
-            client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
+            client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
             logger.fine("Finding remote branches:");
             for (Branch b : client.getRemoteBranches()) {
                 logger.fine(String.format("Found remote branch %s", b.getName()));
@@ -112,8 +113,14 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             logger.info("Starting accumulated merge (no-ff) - without commit:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting accumulated merge (no-ff) - without commit:"));
             String commitMsg = String.format("%s%n%s", headerLine, commits);
-            String modifiedCommitMsg = commitMsg.replaceAll("\"", "'");
-            exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "--no-ff", "--no-commit", "-m", modifiedCommitMsg, commit);
+            String modifiedCommitMsg = commitMsg.replaceAll("\"","'");
+            client.merge()
+                    .setMessage(modifiedCommitMsg)
+                    .setCommit(false)
+                    .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.NO_FF)
+                    .setRevisionToMerge(gitBuildData.lastBuild.revision.getSha1())
+                    .execute();
+            exitCodeMerge = 0;
             logger.info("Accumulated merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Accumulated merge done"));
         } catch (Exception ex) {
@@ -157,7 +164,12 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         try {
             logger.info("Starting to commit accumulated merge changes:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting to commit accumulated merge changes:"));
-            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "--no-edit", "--author=" + commitAuthor);
+            String message = client.getWorkTree().child(".git/MERGE_MSG").readToString();
+            PersonIdent author = getPersonIdent(commitAuthor);
+            client.setAuthor(author);
+            client.commit(message);
+            exitCodeCommit = 0;
+            //exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "--no-edit", "--author=" + commitAuthor);
             logger.info("Commit of accumulated merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Commit of accumulated merge done"));
         } catch (Exception ex) {

@@ -7,10 +7,6 @@ import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.util.BuildData;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -18,6 +14,11 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.*;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -55,7 +56,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             logger.fine("Resolving and getting git client from workspace:");
-            client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
+            client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
 
             logger.fine("Finding remote branches:");
             for (Branch b : client.getRemoteBranches()) {
@@ -102,7 +103,16 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
             logger.info("Starting squash merge - without commit:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting squash merge - without commit:"));
-            exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
+            listener.getLogger().println( String.format("%smerge --squash %s",LOG_PREFIX, gitDataBranch.getName()) );            
+            client.merge().setSquash(true).setRevisionToMerge(gitDataBranch.getSHA1()).execute();
+            /*
+            TODO: We do not have an exit code for the merge anymore. We get exceptions
+            */
+            //exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "--squash", gitDataBranch.getName());
+            
+            
+            
+            exitCodeMerge = 0;
             logger.info("Squash merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Squash merge done"));
         } catch (Exception ex) {
@@ -147,7 +157,12 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         try {
             logger.info("Starting to commit squash merge changes:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting to commit squash merge changes:"));
-            exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "--no-edit", "--author=" + commitAuthor);
+            PersonIdent author = getPersonIdent(commitAuthor);
+            String message = client.getWorkTree().child(".git/SQUASH_MSG").readToString();
+            client.setAuthor(author);
+            client.commit(message);
+            exitCodeCommit = 0;
+            //exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "--no-edit", "--author=" + commitAuthor);
             logger.info("Commit of squashed merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Commit of squashed merge done"));
 
@@ -240,10 +255,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             String expandedBranch = bridge.getExpandedBranch(build.getEnvironment(listener));
 
             //Rebase the commit, then checkout master for a fast-forward merge.
-            int rebaseCode = bridge.git(build, launcher, listener, "rebase", expandedBranch, commitId.getName());
-            if (rebaseCode != 0) {
-                throw new IntegationFailedExeception("Rebase failed with exit code " + rebaseCode);
-            }
+            client.checkout().ref(commitId.getName()).execute();
+            client.rebase().setUpstream(expandedBranch).execute();
             ObjectId rebasedCommit = client.revParse("HEAD");
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Rebase successful. Attempting fast-forward merge."));
             client.checkout().ref(expandedBranch).execute();

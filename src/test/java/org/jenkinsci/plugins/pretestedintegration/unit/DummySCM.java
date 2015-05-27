@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceE
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -23,6 +24,7 @@ public class DummySCM extends AbstractSCMBridge {
     private boolean rolledBack = false;
     private Commit<?> commit = null;
 
+    @DataBoundConstructor
     public DummySCM(IntegrationStrategy behaves) {
         super(behaves);
     }

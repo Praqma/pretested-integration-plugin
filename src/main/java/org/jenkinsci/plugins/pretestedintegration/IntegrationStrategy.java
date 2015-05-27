@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 public abstract class IntegrationStrategy implements Describable<IntegrationStrategy>, ExtensionPoint {
@@ -31,5 +32,16 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
         logger.exiting("IntegrationStrategy", "all");// Generated code DONT TOUCH! Bookmark: 4a32ea823412bf7eb75d28dd9edca807
         return Jenkins.getInstance().<IntegrationStrategy, IntegrationStrategyDescriptor<IntegrationStrategy>>getDescriptorList(IntegrationStrategy.class);
     }
-
+    
+    protected PersonIdent getPersonIdent(String commitAuthor) {
+        //john Doe <Joh@praqma.net> 1442321765 +0200
+        int endOfName = commitAuthor.indexOf("<");
+        String authorName = commitAuthor.substring(0, endOfName-1);
+        int endOfMail = commitAuthor.indexOf(">");
+        String authorMail = commitAuthor.substring(endOfName + 1, endOfMail);
+        int endOfTime = commitAuthor.indexOf(" ", endOfMail+2);
+        long time = Long.parseLong(commitAuthor.substring(endOfMail + 2, endOfTime));
+        int zone = Integer.parseInt(commitAuthor.substring(commitAuthor.indexOf(" ", commitAuthor.indexOf(">")+2)+1));
+        return new PersonIdent(authorName, authorMail, time, zone);
+    }
 }

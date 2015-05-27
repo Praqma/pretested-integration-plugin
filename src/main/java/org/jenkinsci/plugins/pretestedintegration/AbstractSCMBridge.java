@@ -22,7 +22,6 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExe
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 

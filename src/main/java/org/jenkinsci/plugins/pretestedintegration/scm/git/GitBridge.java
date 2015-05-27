@@ -30,6 +30,7 @@ import java.util.Set;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
@@ -79,7 +80,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws UnsupportedConfigurationException
      * When multiple, ambiguous relevant BuildDatas are found.
      */
-    private GitSCM findScm(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
+    public GitSCM findScm(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
         LOGGER.entering("GitBridge", "findScm");
         BuildData buildData = findRelevantBuildData(build, listener);
 
@@ -190,9 +191,10 @@ public class GitBridge extends AbstractSCMBridge {
         LOGGER.entering("GitBridge", "ensureBranch", new Object[]{build, branch, listener, launcher});// Generated code DONT TOUCH! Bookmark: eb203ba8b33b4c38087310c398984c1a
         try {
             EnvVars environment = build.getEnvironment(listener);
-            listener.getLogger().println(String.format(LOGGER_PREFIX + "Checking out integration branch %s:", getExpandedBranch(environment)));
-            //We need to explicitly checkout the remote we have configured            
-            git(build, launcher, listener, "checkout", "-B", getExpandedBranch(environment), getExpandedRepository(environment) + "/" + getExpandedBranch(environment));
+            String expandedBranch = getExpandedBranch(environment);
+            listener.getLogger().println(String.format(LOGGER_PREFIX + "Checking out integration branch %s:", expandedBranch));
+            GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
+            client.checkout().branch(branch).ref(getExpandedRepository(environment) + "/" + expandedBranch).deleteBranchIfExist(true).execute();
             update(build, launcher, listener);
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "ensureBranch", ex);
@@ -203,10 +205,16 @@ public class GitBridge extends AbstractSCMBridge {
     protected void update(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         try {
             EnvVars environment = build.getEnvironment(listener);
+            String expandedRepo = getExpandedRepository(environment);
+            String expandedBranch = getExpandedBranch(environment);
+            GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
+            client.fetch(expandedRepo, new RefSpec("refs/heads/" + expandedBranch));
+            client.merge().setRevisionToMerge(client.revParse(expandedRepo + "/" + expandedBranch)).execute();
+        } catch (InterruptedException ex) {
+            LOGGER.exiting("GitBridge", "ensureBranch - InterruptedException");// Generated code DONT TOUCH! Bookmark: 775c55327ca90d7a3b1889cb1547bc4c
+            throw new EstablishWorkspaceException(ex);
+        } catch (IOException ex) {
             LOGGER.exiting("GitBridge", "ensureBranch - IOException");// Generated code DONT TOUCH! Bookmark: 775c55327ca90d7a3b1889cb1547bc4c
-            git(build, launcher, listener, "pull", getExpandedRepository(environment), getExpandedBranch(environment));
-        } catch (InterruptedException | IOException ex) {
-            LOGGER.exiting("GitBridge", "ensureBranch - EstablishWorkspaceException");
             throw new EstablishWorkspaceException(ex);
         }
     }
@@ -218,12 +226,13 @@ public class GitBridge extends AbstractSCMBridge {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
             EnvVars environment = build.getEnvironment(listener);
+            GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
             LOGGER.log(Level.INFO, "Pushing changes to integration branch:");
             listener.getLogger().println(LOGGER_PREFIX + "Pushing changes to integration branch:");
-            returncode = git(build, launcher, listener, output, "push", getExpandedRepository(environment), getExpandedBranch(environment));
+            client.push(getExpandedRepository(environment), "refs/heads/" + getExpandedBranch(environment));
             LOGGER.log(Level.INFO, "Done pushing changes");
             listener.getLogger().println(LOGGER_PREFIX + "Done pushing changes");
-        } catch (IOException | InterruptedException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
             listener.getLogger().println(LOGGER_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
         }
@@ -347,26 +356,20 @@ public class GitBridge extends AbstractSCMBridge {
 
         //At this point in time the lastBuild is also the latests. So thats what we use
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int delRemote = unlikelyExitCode;
 
         if (build.getResult().isBetterOrEqualTo(getRequiredResult())) {
             try {
                 LOGGER.log(Level.INFO, "Deleting development branch:");
+                String expandedRepo = getExpandedRepository(build.getEnvironment(listener));
                 listener.getLogger().println(LOGGER_PREFIX + "Deleting development branch:");
-                delRemote = git(build, launcher, listener, out, "push", getExpandedRepository(build.getEnvironment(listener)), ":" + removeRepository(gitDataBranch.getName()));
+                GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
+                client.push(expandedRepo, ":" + removeRepository(gitDataBranch.getName()));
+                listener.getLogger().println("push " + expandedRepo + " :" + removeRepository(gitDataBranch.getName()));
                 LOGGER.log(Level.INFO, "Done deleting development branch");
                 listener.getLogger().println(LOGGER_PREFIX + "Done deleting development branch");
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "Failed to delete development branch. Exception:", ex);
-                listener.getLogger().println(LOGGER_PREFIX + "Failed to delete development branch. Exception:" + ex.getMessage());
-            }
-
-            if (delRemote != 0) {
-                listener.getLogger().println(LOGGER_PREFIX + String.format("Failed to delete development branch. Git command exit code %d, message was:%n%s", delRemote, out.toString()));
-                LOGGER.log(Level.SEVERE, String.format("Failed to delete development branch. Git command exit code %d, message was:%n%s", delRemote, out.toString()));
-                LOGGER.exiting("GitBridge", "deleteIntegratedBranch");
-                throw new DeleteIntegratedBranchException(String.format("Failed to delete development branch %s with the following error:%n%s", gitDataBranch.getName(), out.toString()));
+                listener.getLogger().println(LOGGER_PREFIX + String.format("Failed to delete development branch. Exception:", ex));
             }
         }
     }
@@ -389,7 +392,6 @@ public class GitBridge extends AbstractSCMBridge {
                 LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */ }
         }
         LOGGER.exiting("GitBridge", "updateBuildDescription");// Generated code DONT TOUCH! Bookmark: 4b67859f8914c1ec862b51d3a63b0c88
-
     }
 
     /**
