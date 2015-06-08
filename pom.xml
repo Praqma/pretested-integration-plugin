@@ -7,7 +7,7 @@
     </parent>
 
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin</url>
-    <name>Pretested integration</name>
+    <name>Pretested Integration Plugin</name>
     <artifactId>pretested-integration</artifactId>
     <!--
     Using the buildnumber-maven-plugin and the maven-hpi-plugin configuration below
