@@ -1,0 +1,47 @@
+# Repository view and commits
+
+Git version:
+git version 1.9.1
+
+Linux:
+Linux orange-one 3.13.0-49-generic #83-Ubuntu SMP Fri Apr 10 20:11:33 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+LSB Version:	core-2.0-amd64:core-2.0-noarch:core-3.0-amd64:core-3.0-noarch:core-3.1-amd64:core-3.1-noarch:core-3.2-amd64:core-3.2-noarch:core-4.0-amd64:core-4.0-noarch:core-4.1-amd64:core-4.1-noarch:security-4.0-amd64:security-4.0-noarch:security-4.1-amd64:security-4.1-noarch
+
+After initial commit on master:
+-------------------------------
+--- git log graph: ---
+* [31md7743e8[m -[33m (HEAD, master)[m Initial commit - added README [32m(0 seconds ago) [1;34m<Praqma Support>[m
+
+--- git log one-liner: ---
+ * 139036a (Author: Praqma Support <support@praqma.net>) (Committer: Praqma Support <support@praqma.net>): Initial commit - added README
+
+After the two commits on the branch:
+-----------------------------------
+git log one-liner:
+2264699 (Author: Praqma Support Author Two <support@praqma.net>) (Committer Praqma Support Author Two <support@praqma.net>): Added test commit log file - second commit by 'Praqma Support Author Two'
+fe02308 (Author: Praqma Support Author One <support@praqma.net>) (Committer Praqma Support Author One <support@praqma.net>): Added test commit log file - first commit by 'Praqma Support Author One'
+139036a (Author: Praqma Support <support@praqma.net>) (Committer Praqma Support <support@praqma.net>): Initial commit - added README--- git log graph: ---
+* [31ma1b88be[m -[33m (HEAD, twoCommitsBranch)[m Added test commit log file - second commit by 'Praqma Support Author Two' [32m(0 seconds ago) [1;34m<Praqma Support Author Two>[m
+* [31m0174ae0[m -[33m[m Added test commit log file - first commit by 'Praqma Support Author One' [32m(0 seconds ago) [1;34m<Praqma Support Author One>[m
+* [31md7743e8[m -[33m (origin/master, master)[m Initial commit - added README [32m(0 seconds ago) [1;34m<Praqma Support>[m
+
+--- git log one-liner: ---
+ * 2264699 (Author: Praqma Support Author Two <support@praqma.net>) (Committer: Praqma Support Author Two <support@praqma.net>): Added test commit log file - second commit by 'Praqma Support Author Two'
+ * fe02308 (Author: Praqma Support Author One <support@praqma.net>) (Committer: Praqma Support Author One <support@praqma.net>): Added test commit log file - first commit by 'Praqma Support Author One'
+ * 139036a (Author: Praqma Support <support@praqma.net>) (Committer: Praqma Support <support@praqma.net>): Initial commit - added README
+
+Final repository, view after push to ready-branch:
+-----------------------------------
+git log one-liner:
+2264699 (Author: Praqma Support Author Two <support@praqma.net>) (Committer Praqma Support Author Two <support@praqma.net>): Added test commit log file - second commit by 'Praqma Support Author Two'
+fe02308 (Author: Praqma Support Author One <support@praqma.net>) (Committer Praqma Support Author One <support@praqma.net>): Added test commit log file - first commit by 'Praqma Support Author One'
+139036a (Author: Praqma Support <support@praqma.net>) (Committer Praqma Support <support@praqma.net>): Initial commit - added README--- git log graph: ---
+* [31ma1b88be[m -[33m (HEAD, origin/ready/twoCommitsBranch, twoCommitsBranch)[m Added test commit log file - second commit by 'Praqma Support Author Two' [32m(0 seconds ago) [1;34m<Praqma Support Author Two>[m
+* [31m0174ae0[m -[33m[m Added test commit log file - first commit by 'Praqma Support Author One' [32m(0 seconds ago) [1;34m<Praqma Support Author One>[m
+* [31md7743e8[m -[33m (origin/master, master)[m Initial commit - added README [32m(0 seconds ago) [1;34m<Praqma Support>[m
+
+--- git log one-liner: ---
+ * 2264699 (Author: Praqma Support Author Two <support@praqma.net>) (Committer: Praqma Support Author Two <support@praqma.net>): Added test commit log file - second commit by 'Praqma Support Author Two'
+ * fe02308 (Author: Praqma Support Author One <support@praqma.net>) (Committer: Praqma Support Author One <support@praqma.net>): Added test commit log file - first commit by 'Praqma Support Author One'
+ * 139036a (Author: Praqma Support <support@praqma.net>) (Committer: Praqma Support <support@praqma.net>): Initial commit - added README
+

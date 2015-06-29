@@ -50,6 +50,8 @@ public class StaticGitRepositoryTestBase {
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedLinux",           "commitMessagesWithDoubleQuotes_linux");
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSquashedWindows",            "commitMessagesWithDoubleQuotes_windows");
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedWindows",         "commitMessagesWithDoubleQuotes_windows");
+        testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitSquashStrategy",         "useAuthorOfLastCommit");
+        testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitAccumulatedStrategy",         "useAuthorOfLastCommit");
     }
     
     public File tempFolder;
@@ -97,7 +99,7 @@ public class StaticGitRepositoryTestBase {
         
         // get resources from test resources, default package, where the zip-files with static git repos reside
         URI zipFileURI = TestUtilsFactory.class.getClassLoader().getResource(gitRepoName + ".zip").toURI();
-        System.out.println(String.format("Using static repository from zip file:    %s", zipFileURI));
+        System.out.println(String.format("* Using static repository from zip file:    %s", zipFileURI));
         
         // By convention, the way we pack our repository they are unpacked as this:
         String gitRepo = temporaryFolder + "/" + gitRepoName; // working clone, crated below

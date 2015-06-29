@@ -2,16 +2,16 @@ package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Result;
-import hudson.tasks.Publisher;
 import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import static org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge.LOG_PREFIX;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -51,7 +51,7 @@ public class PretestedIntegrationPostCheckout extends Publisher {
         if (action == null)
             return true;
 
-        listener.getLogger().println("Performing pre-verified post build steps");
+        listener.getLogger().println(LOG_PREFIX + "Performing pre-verified post build steps");
         Boolean result = false;
 
         try {

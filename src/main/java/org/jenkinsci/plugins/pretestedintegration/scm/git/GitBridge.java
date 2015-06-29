@@ -230,7 +230,7 @@ public class GitBridge extends AbstractSCMBridge {
     @Override
     public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         logger.entering("GitBridge", "ensureBranch", new Object[] { build, branch, listener, launcher });// Generated code DONT TOUCH! Bookmark: eb203ba8b33b4c38087310c398984c1a
-		listener.getLogger().println(String.format("Checking out integration target branch %s and pulling latest changes", getBranch()));
+		listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getBranch()));
         try {
             //We need to explicitly checkout the remote we have configured            
             //git(build, launcher, listener, "checkout", getBranch(), resolveRepoName()+"/"+getBranch());            
@@ -264,16 +264,23 @@ public class GitBridge extends AbstractSCMBridge {
     public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
         logger.entering("GitBridge", "commit", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 323bfa8523aa7ffbc35f4833c31252a3
 		int returncode = -99999;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
-            returncode = git(build, launcher, listener, bos, "push", resolveRepoName(), getBranch());
+            logger.log(Level.INFO, "Pushing changes to integration branch:");
+            listener.getLogger().println(LOG_PREFIX + "Pushing changes to integration branch:");
+            returncode = git(build, launcher, listener, output, "push", resolveRepoName(), getBranch());
+            logger.log(Level.INFO, "Done pushing changes");
+            listener.getLogger().println(LOG_PREFIX + "Done pushing changes");
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Failed to commit changes to integration branch", ex);
+            logger.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
+            listener.getLogger().println(LOG_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
         }
         
         if(returncode != 0) {
+            logger.log(Level.SEVERE, String.format("Failed to push changes to integration branch. Git command exit code %d, message was:%n%s", returncode, output.toString()));
             logger.exiting("GitBridge", "commit");// Generated code DONT TOUCH! Bookmark: ecae92e6b0686c962ca0233a399fd28f
-			throw new CommitChangesFailureException( String.format( "Failed to commit integrated changes, message was:%n%s", bos.toString()) );
+			listener.getLogger().println(LOG_PREFIX + String.format("Failed to push changes to integration branch. Git command exit code %d, message was:%n%s", returncode, output.toString()));
+            throw new CommitChangesFailureException( String.format( "Failed to push changes to integration branch, message was:%n%s", output.toString()) );
         }
     }
     
@@ -365,14 +372,21 @@ public class GitBridge extends AbstractSCMBridge {
         
         if(build.getResult().isBetterOrEqualTo(getRequiredResult())) {
             try {
+                logger.log(Level.INFO, "Deleting development branch:");
+                listener.getLogger().println(LOG_PREFIX + "Deleting development branch:");
                 delRemote = git(build, launcher, listener, out, "push", resolveRepoName(),":"+removeOrigin(gitDataBranch.getName()));
+                logger.log(Level.INFO, "Done deleting development branch");
+                listener.getLogger().println(LOG_PREFIX + "Done deleting development branch");
             } catch (Exception ex) {
-                logger.log(Level.WARNING, "Failure to delete branch", ex);
+                logger.log(Level.SEVERE, "Failed to delete development branch. Exception:", ex);
+                listener.getLogger().println(LOG_PREFIX + String.format("Failed to delete development branch. Exception:", ex));
             }
             
             if(delRemote != 0) {
+                listener.getLogger().println(LOG_PREFIX + String.format("Failed to delete development branch. Git command exit code %d, message was:%n%s", delRemote, out.toString()));
+                logger.log(Level.SEVERE, String.format("Failed to delete development branch. Git command exit code %d, message was:%n%s", delRemote, out.toString()));
                 logger.exiting("GitBridge", "deleteIntegratedBranch");
-				throw new DeleteIntegratedBranchException(String.format( "Failed to delete the remote branch %s with the following error:%n%s", gitDataBranch.getName(), out.toString()) );
+				throw new DeleteIntegratedBranchException(String.format("Failed to delete development branch %s with the following error:%n%s", gitDataBranch.getName(), out.toString()) );
             } 
         }
     }
@@ -529,6 +543,7 @@ public class GitBridge extends AbstractSCMBridge {
 
     @Override
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
+        logger.entering("GitBridge", "handlePostBuild", new Object[] { build, listener, launcher });
         updateBuildDescription(build, launcher, listener);
 
         // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
@@ -538,26 +553,33 @@ public class GitBridge extends AbstractSCMBridge {
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         
         // TODO: This master branch check should be moved to job configuration check method.
+        // It should also not only check on "master" but the "integration" branch chosen in the configuration
         String devBranchName = gitDataBranch.getName();
         if (devBranchName.contains("master")) {
-            listener.getLogger().println(LOG_PREFIX + "Using the master branch for polling and development is not" +
-                    " allowed since it will attempt to merge it to other branches and delete it after.");
+            String msg = "Using the master branch for polling and development is not" +
+                    " allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
+            logger.log(Level.SEVERE, msg);
+            listener.getLogger().println(LOG_PREFIX + msg);
             build.setResult(Result.FAILURE);
         }
 
         Result result = build.getResult();
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
-            listener.getLogger().println(LOG_PREFIX + "Commiting changes");                
+            // logging done in commit method
             commit(build, launcher, listener);
-            listener.getLogger().println(LOG_PREFIX + "Deleting development branch");
-            deleteIntegratedBranch(build, launcher, listener);            
-        } 
+            deleteIntegratedBranch(build, launcher, listener);
+
+        } else {
+            logger.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
+            listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
+        }
+        logger.exiting("GitBridge", "handlePostBuild", new Object[] { build, listener, launcher });
     }
     
     
     
 
     private FilePath workingDirectory = null;
-    final static String LOG_PREFIX = "[PREINT-GIT] ";
+    final static String LOG_PREFIX = "[PREINT] ";
     private static final Logger logger = Logger.getLogger(GitBridge.class.getName());
 }

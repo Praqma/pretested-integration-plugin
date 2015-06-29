@@ -141,7 +141,8 @@ public class MultipleScm_threeRepos_IT {
             RunList<FreeStyleBuild> builds = project.getBuilds();
             for (FreeStyleBuild build : builds) {
                 if (build.getNumber() == expectedBuildNumber) {
-                    if (build.getResult() != null) {
+                    // build.getResult() can return intermediary result if in progress
+                    if ((build.getResult() != null) && (build.isBuilding() !=  true)) {
                         return build;
                     }
                     break; //Wait until build finished
@@ -320,7 +321,8 @@ public class MultipleScm_threeRepos_IT {
                 // Create a Pattern object
                 Pattern p1 = Pattern.compile(pattern1);
                 //Preparing to merge changes in commit 0ae5858942afa97b86770da779f91c80b39694e4 to integration branch master
-                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (to integration branch master)(.*)";
+                // [PREINT] Preparing to merge changes in commit a1b88be91358cf4cb184c645cfdb0920a765d872 on development branch origin/ready/twoCommitsBranch to integration branch master
+                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (on development branch repo3/ready/repo3_feature_1) (to integration branch master)(.*)";
                 // Create a Pattern object
                 Pattern p2 = Pattern.compile(pattern2);
 
@@ -469,6 +471,7 @@ public class MultipleScm_threeRepos_IT {
         Integer counter = 1; // current number of finished builds is 1.
         while (!verified && (counter < 3)) { // expect only 2 jobs in this loop
             counter++;
+            System.out.println(String.format("Verification of builds loop: %d: ", counter));
 
             String buildname = String.format("build%s", counter);
             triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
@@ -485,8 +488,8 @@ public class MultipleScm_threeRepos_IT {
                 String pattern1 = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo3/ready/repo3_feature_1\\)) (.*)";
                 // Create a Pattern object
                 Pattern p1 = Pattern.compile(pattern1);
-                //Preparing to merge changes in commit 0ae5858942afa97b86770da779f91c80b39694e4 to integration branch master
-                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (to integration branch master)(.*)";
+                // [PREINT] Preparing to merge changes in commit a1b88be91358cf4cb184c645cfdb0920a765d872 on development branch origin/ready/twoCommitsBranch to integration branch master
+                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (on development branch repo3/ready/repo3_feature_1) (to integration branch master)(.*)";
                 // Create a Pattern object
                 Pattern p2 = Pattern.compile(pattern2);
 
@@ -498,12 +501,14 @@ public class MultipleScm_threeRepos_IT {
 
                 assertTrue("Could not find message in console about ready branch in repo beeing integrated",
                         console.contains("merge --squash repo3/ready/repo3_feature_1"));
-                assertTrue("",
+                assertTrue("Integration of ready branch in repo started, but could not match push command in console.",
                         console.contains("push repo3 :ready/repo3_feature_1"));
+                System.out.println("Verified successful build");
                 integratedRepo3 = true;
             } else if (build.getResult().equals(Result.FAILURE)) {
                 // Failure is okay, if it is the git plugin causing it.
                 assertTrue("Failed build only allowed if it is the git plugin.", console.contains("ERROR: Couldn't find any revision to build. Verify the repository and branch configuration for this job."));
+                System.out.println("Verified failed build");
                 failedOnOtherRepoChanges = true;
             } else if (build.getResult().equals(Result.NOT_BUILT)) { 
                 // If we now also see this message, we have the situation and problem
@@ -521,6 +526,7 @@ public class MultipleScm_threeRepos_IT {
             }
             verified = integratedRepo3 && failedOnOtherRepoChanges;
         }
+        System.out.println("Verified both expected builds");
         assertTrue("Seems like not all jobs on test was covered in the test", verified); // safety check if loop logic wrong
     }
 }
