@@ -240,6 +240,11 @@ public class TestUtilsFactory {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, true);
     }
     
+    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo, boolean runOnSlave, String integrationBranch) throws Exception {
+        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, runOnSlave, integrationBranch);
+    }
+    
+    
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo, boolean runOnSlave) throws Exception {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, runOnSlave);
     }
@@ -251,8 +256,13 @@ public class TestUtilsFactory {
         scmTrigger.start(project, true);
         scmTrigger.new Runner().run();
     }
-       
+
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, boolean runOnSlave) throws Exception {
+        return configurePretestedIntegrationPlugin(rule, type, repoList, repoName, runOnSlave, "master");
+
+    }
+    
+    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, boolean runOnSlave, String integrationBranch) throws Exception {
         FreeStyleProject project = rule.createFreeStyleProject();
         if (runOnSlave) {
             DumbSlave onlineSlave = rule.createOnlineSlave();
@@ -262,9 +272,9 @@ public class TestUtilsFactory {
         GitBridge gitBridge = null;
 
         if(type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranch, repoName);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranch, repoName);
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
@@ -714,8 +724,10 @@ public class TestUtilsFactory {
 
             return result;
         } catch (FileNotFoundException e1) {
+            System.out.println(String.format("TestUtilsFactory.checkForLineInFile throwed an exception: %s", e1.toString()));
             return false;
         } catch (IOException ep) {
+            System.out.println(String.format("TestUtilsFactory.checkForLineInFile throwed an exception: %s", ep.toString()));
             return false;
         }
     }

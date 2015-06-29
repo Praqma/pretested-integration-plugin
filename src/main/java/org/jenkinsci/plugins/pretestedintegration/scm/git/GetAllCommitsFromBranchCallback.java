@@ -10,6 +10,7 @@ import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -23,6 +24,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCallback<String> {
     public final ObjectId id;
     public final String branch;
+     private static final Logger logger = Logger.getLogger(GetAllCommitsFromBranchCallback.class.getName());
+     private static final String LOG_PREFIX = "[PREINT] ";
     
     public GetAllCommitsFromBranchCallback(TaskListener listener, final ObjectId id, final String branch ) {
         super(listener);
@@ -31,7 +34,8 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
     }
 
     @Override
-    public String invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {        
+    public String invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+        logger.entering("GetAllCommitsFromBranchCallback", "invoke", new Object[]{channel, repo});
         StringBuilder sb = new StringBuilder();
         RevWalk walk = new RevWalk(repo);
         
@@ -41,9 +45,10 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         // walk tree starting from the integration commit
         walk.markStart(commit);
        
+        logger.info(String.format(LOG_PREFIX + "Collecting commit message until reaching branch %s", branch));
         // limit the tree walk to keep away from master commits
         // Reference for this idea is: https://wiki.eclipse.org/JGit/User_Guide#Restrict_the_walked_revision_graph
-        ObjectId to = repo.resolve("master");
+        ObjectId to = repo.resolve(branch);
         walk.markUninteresting(walk.parseCommit(to));
 
         // build the complete commit message, to look like squash commit msg
@@ -57,7 +62,10 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             sb.append(String.format("%n"));
             
             Integer secondsSinceUnixEpoch = rev.getCommitTime();
-            SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd hh:mm:ss yyyy ZZZZ"); //yyyy-MM-dd'T'hh:mm:ssZZZZ");
+            // Note that the git log shows different date formats, depending on configuration.
+            // The choices in the git commit message below matches the squashed commit message
+            // that git generates on a Ubuntu Linux 14.04 with default git installation.
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM d kk:mm:ss yyyy ZZZZ");
             Date commitTime = new Date(secondsSinceUnixEpoch * 1000L); // seconds to milis
             String asString = formatter.format(commitTime);
             sb.append(String.format("Date:   %s", asString ));
@@ -86,6 +94,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         
         walk.dispose();
         
+        logger.exiting("GetAllCommitsFromBranchCallback", "invoke", new Object[]{channel, repo});
         return sb.toString();
     }    
 }

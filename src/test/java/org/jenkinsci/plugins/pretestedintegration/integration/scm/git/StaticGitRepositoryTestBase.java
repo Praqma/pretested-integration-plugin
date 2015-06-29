@@ -51,7 +51,9 @@ public class StaticGitRepositoryTestBase {
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSquashedWindows",            "commitMessagesWithDoubleQuotes_windows");
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedWindows",         "commitMessagesWithDoubleQuotes_windows");
         testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitSquashStrategy",         "useAuthorOfLastCommit");
-        testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitAccumulatedStrategy",         "useAuthorOfLastCommit");
+        testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitAccumulatedStrategy",    "useAuthorOfLastCommit");
+        testMethodName_vs_staticGitRepoName.put(    "customIntegrationBranchSquashStrategy",         "customIntegrationBranch");
+        testMethodName_vs_staticGitRepoName.put(    "customIntegrationBranchAccumulatedStrategy",    "customIntegrationBranch");
     }
     
     public File tempFolder;
@@ -121,7 +123,7 @@ public class StaticGitRepositoryTestBase {
                 .setCloneAllBranches(true)
                 .setNoCheckout(false)
                 .call().close();
-        // Open it to add stuff below
+        // Open it
         gitrepo = Git.open(workingRepoPath);
     }
 
@@ -132,6 +134,8 @@ public class StaticGitRepositoryTestBase {
      */
     @After
     public void tearDown() throws Exception {
+        gitrepo.close();
+        bareRepository.close();
         // Repos reside inside temporary folder pr. test, clean up
         TestUtilsFactory.destroyDirectory(tempFolder);
     }

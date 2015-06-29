@@ -1,0 +1,203 @@
+###############################################################################
+# Repository creation log and tools version for this test repository
+###############################################################################
+
+Git version:
+git version 1.9.1
+
+Linux:
+Linux orange-one 3.13.0-49-generic #83-Ubuntu SMP Fri Apr 10 20:11:33 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+LSB Version:	core-2.0-amd64:core-2.0-noarch:core-3.0-amd64:core-3.0-noarch:core-3.1-amd64:core-3.1-noarch:core-3.2-amd64:core-3.2-noarch:core-4.0-amd64:core-4.0-noarch:core-4.1-amd64:core-4.1-noarch:security-4.0-amd64:security-4.0-noarch:security-4.1-amd64:security-4.1-noarch
+
+
+###############################################################################
+# Creating basis repository
+###############################################################################
+After basis repository and push of master branch to origin:
+--------------------------------------------------------------------------------
+--- git log graph: ---
+* [1;34m2086dc9[m - [1;36mWed, 3 Jun 2015 14:03:41 +0200[m [1;32m(1 second ago)[m[1;33m (HEAD, origin/master, master)[m
+|  [37mSecond commit on on master branch - updated README[m [2;37m- Praqma Support[m
+* [1;34m8ae8f12[m - [1;36mWed, 3 Jun 2015 14:03:40 +0200[m [1;32m(2 seconds ago)[m[1;33m[m
+   [37mInitial commit on master branch - added README[m [2;37m- Praqma Support[m
+
+--- git log: ---
+commit 2086dc9f6d23931f3b8176de640bd6e15f5afc08
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:41 2015 +0200
+
+    Second commit on on master branch - updated README
+
+commit 8ae8f122666d7340ef2923c3a49150f86f3dcfd0
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:40 2015 +0200
+
+    Initial commit on master branch - added README
+
+
+
+
+###############################################################################
+# Now creating a branch, that will serve as our custom integration branch...
+###############################################################################
+After custom integration branch and push to origin:
+--------------------------------------------------------------------------------
+--- git log graph: ---
+* [1;34mc1b3225[m - [1;36mWed, 3 Jun 2015 14:03:42 +0200[m [1;32m(2 seconds ago)[m[1;33m (HEAD, origin/customIntegrationBranch, customIntegrationBranch)[m
+|  [37mUpdated readme file on new custom integration branch[m [2;37m- Praqma Support[m
+* [1;34m2086dc9[m - [1;36mWed, 3 Jun 2015 14:03:41 +0200[m [1;32m(3 seconds ago)[m[1;33m (origin/master, master)[m
+|  [37mSecond commit on on master branch - updated README[m [2;37m- Praqma Support[m
+* [1;34m8ae8f12[m - [1;36mWed, 3 Jun 2015 14:03:40 +0200[m [1;32m(4 seconds ago)[m[1;33m[m
+   [37mInitial commit on master branch - added README[m [2;37m- Praqma Support[m
+
+--- git log: ---
+commit c1b32254ce62190bd7650b7d44e9aec4983d5c0a
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:42 2015 +0200
+
+    Updated readme file on new custom integration branch
+
+commit 2086dc9f6d23931f3b8176de640bd6e15f5afc08
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:41 2015 +0200
+
+    Second commit on on master branch - updated README
+
+commit 8ae8f122666d7340ef2923c3a49150f86f3dcfd0
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:40 2015 +0200
+
+    Initial commit on master branch - added README
+
+
+
+
+###############################################################################
+# Adding a commit on master, after we started to use custom integration branch 
+#  to test with a more complex git graph
+###############################################################################
+After last push to origin of master branch:
+--------------------------------------------------------------------------------
+--- git log graph: ---
+* [1;34m31bc93a[m - [1;36mWed, 3 Jun 2015 14:03:44 +0200[m [1;32m(1 second ago)[m[1;33m (HEAD, origin/master, master)[m
+|  [37mLast line in readme, added from last commit on master. We integrate to another branch from here on.[m [2;37m- Praqma Support[m
+| * [1;34mc1b3225[m - [1;36mWed, 3 Jun 2015 14:03:42 +0200[m [1;32m(3 seconds ago)[m[1;33m (origin/customIntegrationBranch, customIntegrationBranch)[m
+|/   [37mUpdated readme file on new custom integration branch[m [2;37m- Praqma Support[m
+* [1;34m2086dc9[m - [1;36mWed, 3 Jun 2015 14:03:41 +0200[m [1;32m(4 seconds ago)[m[1;33m[m
+|  [37mSecond commit on on master branch - updated README[m [2;37m- Praqma Support[m
+* [1;34m8ae8f12[m - [1;36mWed, 3 Jun 2015 14:03:40 +0200[m [1;32m(5 seconds ago)[m[1;33m[m
+   [37mInitial commit on master branch - added README[m [2;37m- Praqma Support[m
+
+--- git log: ---
+commit 31bc93a3e3e5b9539b9ce02786d773bbedd66ec9
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:44 2015 +0200
+
+    Last line in readme, added from last commit on master. We integrate to another branch from here on.
+
+commit 2086dc9f6d23931f3b8176de640bd6e15f5afc08
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:41 2015 +0200
+
+    Second commit on on master branch - updated README
+
+commit 8ae8f122666d7340ef2923c3a49150f86f3dcfd0
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:40 2015 +0200
+
+    Initial commit on master branch - added README
+
+
+
+
+###############################################################################
+# Starting on development branch which will be pushed to ready and 
+#  integrated by the Jenkins job later
+# Doing two commits, based on the custom integration branch as starting point
+###############################################################################
+After push of the two commits on the development branch:
+--------------------------------------------------------------------------------
+--- git log graph: ---
+* [1;34mc1449e0[m - [1;36mWed, 3 Jun 2015 14:03:46 +0200[m [1;32m(1 second ago)[m[1;33m (HEAD, origin/ready/myDevelopmentBranch, myDevelopmentBranch)[m
+|  [37mAdded a second line from myDevelopmentBranch in test commit log file.[m [2;37m- Praqma Support[m
+* [1;34m70353ce[m - [1;36mWed, 3 Jun 2015 14:03:45 +0200[m [1;32m(2 seconds ago)[m[1;33m[m
+|  [37mAdded line from myDevelopmentBranch in test commit log file.[m [2;37m- Praqma Support[m
+* [1;34mc1b3225[m - [1;36mWed, 3 Jun 2015 14:03:42 +0200[m [1;32m(5 seconds ago)[m[1;33m (origin/customIntegrationBranch, customIntegrationBranch)[m
+|  [37mUpdated readme file on new custom integration branch[m [2;37m- Praqma Support[m
+| * [1;34m31bc93a[m - [1;36mWed, 3 Jun 2015 14:03:44 +0200[m [1;32m(3 seconds ago)[m[1;33m (origin/master, master)[m
+|/   [37mLast line in readme, added from last commit on master. We integrate to another branch from here on.[m [2;37m- Praqma Support[m
+* [1;34m2086dc9[m - [1;36mWed, 3 Jun 2015 14:03:41 +0200[m [1;32m(6 seconds ago)[m[1;33m[m
+|  [37mSecond commit on on master branch - updated README[m [2;37m- Praqma Support[m
+* [1;34m8ae8f12[m - [1;36mWed, 3 Jun 2015 14:03:40 +0200[m [1;32m(7 seconds ago)[m[1;33m[m
+   [37mInitial commit on master branch - added README[m [2;37m- Praqma Support[m
+
+--- git log: ---
+commit c1449e075f528974c63eef81109d0632eaada0c7
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:46 2015 +0200
+
+    Added a second line from myDevelopmentBranch in test commit log file.
+
+commit 70353ce6771866f29c38b4460b3f74f9024f8ce2
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:45 2015 +0200
+
+    Added line from myDevelopmentBranch in test commit log file.
+
+commit c1b32254ce62190bd7650b7d44e9aec4983d5c0a
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:42 2015 +0200
+
+    Updated readme file on new custom integration branch
+
+commit 2086dc9f6d23931f3b8176de640bd6e15f5afc08
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:41 2015 +0200
+
+    Second commit on on master branch - updated README
+
+commit 8ae8f122666d7340ef2923c3a49150f86f3dcfd0
+Author: Praqma Support <support@praqma.net>
+Date:   Wed Jun 3 14:03:40 2015 +0200
+
+    Initial commit on master branch - added README
+
+
+
+
+###############################################################################
+# Printing some final views of the repository
+###############################################################################
+
+
+View of repository from integration branch:
+--------------------------------------------------------------------------------
+--- git log graph: ---
+* [1;34mc1449e0[m - [1;36mWed, 3 Jun 2015 14:03:46 +0200[m [1;32m(1 second ago)[m[1;33m (origin/ready/myDevelopmentBranch, myDevelopmentBranch)[m
+|  [37mAdded a second line from myDevelopmentBranch in test commit log file.[m [2;37m- Praqma Support[m
+* [1;34m70353ce[m - [1;36mWed, 3 Jun 2015 14:03:45 +0200[m [1;32m(2 seconds ago)[m[1;33m[m
+|  [37mAdded line from myDevelopmentBranch in test commit log file.[m [2;37m- Praqma Support[m
+* [1;34mc1b3225[m - [1;36mWed, 3 Jun 2015 14:03:42 +0200[m [1;32m(5 seconds ago)[m[1;33m (HEAD, origin/customIntegrationBranch, customIntegrationBranch)[m
+|  [37mUpdated readme file on new custom integration branch[m [2;37m- Praqma Support[m
+| * [1;34m31bc93a[m - [1;36mWed, 3 Jun 2015 14:03:44 +0200[m [1;32m(3 seconds ago)[m[1;33m (origin/master, master)[m
+|/   [37mLast line in readme, added from last commit on master. We integrate to another branch from here on.[m [2;37m- Praqma Support[m
+* [1;34m2086dc9[m - [1;36mWed, 3 Jun 2015 14:03:41 +0200[m [1;32m(6 seconds ago)[m[1;33m[m
+|  [37mSecond commit on on master branch - updated README[m [2;37m- Praqma Support[m
+* [1;34m8ae8f12[m - [1;36mWed, 3 Jun 2015 14:03:40 +0200[m [1;32m(7 seconds ago)[m[1;33m[m
+   [37mInitial commit on master branch - added README[m [2;37m- Praqma Support[m
+
+View of repository from development branch:
+--------------------------------------------------------------------------------
+--- git log graph: ---
+* [1;34mc1449e0[m - [1;36mWed, 3 Jun 2015 14:03:46 +0200[m [1;32m(1 second ago)[m[1;33m (HEAD, origin/ready/myDevelopmentBranch, myDevelopmentBranch)[m
+|  [37mAdded a second line from myDevelopmentBranch in test commit log file.[m [2;37m- Praqma Support[m
+* [1;34m70353ce[m - [1;36mWed, 3 Jun 2015 14:03:45 +0200[m [1;32m(2 seconds ago)[m[1;33m[m
+|  [37mAdded line from myDevelopmentBranch in test commit log file.[m [2;37m- Praqma Support[m
+* [1;34mc1b3225[m - [1;36mWed, 3 Jun 2015 14:03:42 +0200[m [1;32m(5 seconds ago)[m[1;33m (origin/customIntegrationBranch, customIntegrationBranch)[m
+|  [37mUpdated readme file on new custom integration branch[m [2;37m- Praqma Support[m
+| * [1;34m31bc93a[m - [1;36mWed, 3 Jun 2015 14:03:44 +0200[m [1;32m(3 seconds ago)[m[1;33m (origin/master, master)[m
+|/   [37mLast line in readme, added from last commit on master. We integrate to another branch from here on.[m [2;37m- Praqma Support[m
+* [1;34m2086dc9[m - [1;36mWed, 3 Jun 2015 14:03:41 +0200[m [1;32m(6 seconds ago)[m[1;33m[m
+|  [37mSecond commit on on master branch - updated README[m [2;37m- Praqma Support[m
+* [1;34m8ae8f12[m - [1;36mWed, 3 Jun 2015 14:03:40 +0200[m [1;32m(7 seconds ago)[m[1;33m[m
+   [37mInitial commit on master branch - added README[m [2;37m- Praqma Support[m
