@@ -34,6 +34,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
     private static final String B_NAME = "Squashed commit";
     private static final Logger logger = Logger.getLogger(SquashCommitStrategy.class.getName());
     private static final String LOG_PREFIX = "[PREINT] ";
+    private static final int unLikelyExitCode = -999; // An very unlikely exit code, that we use as default
+
 
     @DataBoundConstructor
     public SquashCommitStrategy() { }
@@ -41,8 +43,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
     @Override
     public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {
         logger.entering("SquashCommitStrategy", "integrate", new Object[]{build, listener, bridge, launcher});// Generated code DONT TOUCH! Bookmark: 36174744d49c892c3aeed5e2bc933991
-        int exitCodeMerge = -999;
-        int exitCodeCommit = -999;
+        int exitCodeMerge = unLikelyExitCode;
+        int exitCodeCommit = unLikelyExitCode;
         GitBridge gitbridge = (GitBridge) bridge;
 
 
@@ -160,8 +162,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         listener.getLogger().println(String.format(LOG_PREFIX + "Merge was successful"));
 
 
-        try 
-        {
+        try {
             logger.info("Starting to commit squash merge changes:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting to commit squash merge changes:"));
             exitCodeCommit = gitbridge.git(build, launcher, listener, out, "commit", "--no-edit", "--author=" + commitAuthor);

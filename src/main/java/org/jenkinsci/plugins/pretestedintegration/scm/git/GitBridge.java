@@ -58,6 +58,8 @@ public class GitBridge extends AbstractSCMBridge {
 
     private String revId;
     private String repoName;
+    private static final int unLikelyExitCode = -999; // An very unlikely exit code, that we use as default
+
 
     @DataBoundConstructor
     public GitBridge(IntegrationStrategy integrationStrategy, final String branch, String repoName) {
@@ -368,7 +370,7 @@ public class GitBridge extends AbstractSCMBridge {
         //At this point in time the lastBuild is also the latests. So thats what we use
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int delRemote = -99999;
+        int delRemote = unLikelyExitCode;
         
         if(build.getResult().isBetterOrEqualTo(getRequiredResult())) {
             try {
