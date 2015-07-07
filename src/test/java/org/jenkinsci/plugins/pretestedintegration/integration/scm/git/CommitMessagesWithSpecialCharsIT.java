@@ -25,7 +25,7 @@ import org.junit.Test;
  *
  * @author bue
  */
-public class CommitMessagesWithSpecialChars extends StaticGitRepositoryTestBase {
+public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBase {
 
     /**
      * Tests commit message with double quotes in commit message can be

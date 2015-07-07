@@ -47,7 +47,7 @@ import org.xml.sax.SAXException;
  * ago) <Praqma Support>
  *
  */
-public class CustomIntegrationBranch extends StaticGitRepositoryTestBase {
+public class CustomIntegrationBranchIT extends StaticGitRepositoryTestBase {
 
     
     /**

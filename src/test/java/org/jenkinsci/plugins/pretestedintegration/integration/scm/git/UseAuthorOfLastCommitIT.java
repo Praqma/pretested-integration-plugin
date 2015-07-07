@@ -29,7 +29,7 @@ import org.junit.Test;
  * ago) <Praqma Support>
  *
  */
-public class UseAuthorOfLastCommit extends StaticGitRepositoryTestBase {
+public class UseAuthorOfLastCommitIT extends StaticGitRepositoryTestBase {
 
     /**
      * Tests that we use the author of the last commit when integrating - using

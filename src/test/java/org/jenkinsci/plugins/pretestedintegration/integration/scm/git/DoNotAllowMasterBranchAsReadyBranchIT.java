@@ -45,7 +45,7 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
  * We do not allow this configuration, even though it could be valid, just to
  * protect most people from doing wrong configuration.
  */
-public class DoNotAllowMasterBranchAsReadyBranch {
+public class DoNotAllowMasterBranchAsReadyBranchIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
