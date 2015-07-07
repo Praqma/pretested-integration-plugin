@@ -1,0 +1,259 @@
+# Repository view and commits
+
+From manually running the script on a Windows Jenkins slave.
+
+* It used CygWin's git, not the ordinary git bash
+* No info available about git, nor Windows version
+
+## Commits and branches:
+
+
+Commits and branches:
+
+		* a094a8a - (5 weeks ago) This is a commit message with double quotes (commit made on Windows), and =, eg. "test quotes". - Praqma Support (origin/ready/JENKINS-27662_doublequotes, origin/dev/JENKINS-27662_doub
+		* e410fa5 - (5 weeks ago) Added test commit log file - Praqma Support
+		* e2588af - (5 weeks ago) Initial commit - added README - Praqma Support (HEAD, origin/master, origin/HEAD, master)
+
+
+Git logs - `git log --all`: 
+
+		commit a094a8a6e8157b386b651d61997de25cd95af5eb
+		Author: Praqma Support <support@praqma.net>
+		Date:   Wed Jun 3 09:14:28 2015 +0200
+		
+		    This is a commit message with double quotes (commit made on Windows), and =, eg. "test quotes".
+		
+		commit e410fa50672b32acbf967ea7d9528bbf3d5d1b89
+		Author: Praqma Support <support@praqma.net>
+		Date:   Wed Jun 3 09:14:28 2015 +0200
+		
+		    Added test commit log file
+		
+		commit e2588afea349befbeec70dc25b6b2b5e1538143f
+		Author: Praqma Support <support@praqma.net>
+		Date:   Wed Jun 3 09:14:09 2015 +0200
+		
+		    Initial commit - added README
+
+
+## Copied console log output:
+
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows.bat
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>SET NAME=commit
+MessagesWithDoubleQuotesSingleQuotesMade_windows
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>SET REPO_NAME=c
+ommitMessagesWithDoubleQuotesSingleQuotesMade_windows
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>SET WORK_DIR=c:
+\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>REM pre-process
+
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>mkdir commitMes
+sagesWithDoubleQuotesSingleQuotesMade_windows.git
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>cd commitMessag
+esWithDoubleQuotesSingleQuotesMade_windows.git
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows.git>git init --bare
+Initialized empty Git repository in /cygdrive/c/jenkins-slave2-32-builder/workspace/test_dobble_quotes/commitMessagesWit
+hDoubleQuotesSingleQuotesMade/commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git/
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows.git>cd c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesW
+ithDoubleQuotesSingleQuotesMade\
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>git clone commi
+tMessagesWithDoubleQuotesSingleQuotesMade_windows.git
+Cloning into 'commitMessagesWithDoubleQuotesSingleQuotesMade_windows'...
+warning: You appear to have cloned an empty repository.
+done.
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>cd commitMessag
+esWithDoubleQuotesSingleQuotesMade_windows
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git config user.name "Praqma Support"
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git config user.email "support@praqma.net"
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>touch README.md
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>echo "# README of repository $REPO_NAME"  1>>README.md
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>echo ""  1>>README.md
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>echo "This is a test repository for functional tests."  1>>README.md
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git add README.md
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git commit -m "Initial commit - added README"
+[master (root-commit) e2588af] Initial commit - added README
+ 1 file changed, 3 insertions(+)
+ create mode 100644 README.md
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git push origin master
+Counting objects: 3, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (3/3), 304 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+To /cygdrive/c/jenkins-slave2-32-builder/workspace/test_dobble_quotes/commitMessagesWithDoubleQuotesSingleQuotesMade/com
+mitMessagesWithDoubleQuotesSingleQuotesMade_windows.git
+ * [new branch]      master -> master
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>REM custom parts
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>SET BN=JENKINS-27662_doublequotes
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git checkout -b dev/JENKINS-27662_doublequotes
+Switched to a new branch 'dev/JENKINS-27662_doublequotes'
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>touch testCommit.log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>echo "# Test commit log"  1>>testCommit.log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>echo ""  1>>testCommit.log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>echo "Used for adding lines to commit something during tests.\n"  1>>testCommit.
+log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git add testCommit.log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git commit -m "Added test commit log file"
+[dev/JENKINS-27662_doublequotes e410fa5] Added test commit log file
+ 1 file changed, 3 insertions(+)
+ create mode 100644 testCommit.log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>REM Problematic commit message with double quotes
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>echo "Added a new line to this file, to commit something. Commit message will ha
+ve double quotes"  1>>testCommit.log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git add testCommit.log
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git commit -m 'This is a commit message with double quotes (commit made on Windo
+ws), and =, eg. "test quotes".'
+[dev/JENKINS-27662_doublequotes a094a8a] This is a commit message with double quotes (commit made on Windows), and =, eg
+. "test quotes".
+ 1 file changed, 1 insertion(+)
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git push origin dev/JENKINS-27662_doublequotes
+Counting objects: 6, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (6/6), 725 bytes | 0 bytes/s, done.
+Total 6 (delta 1), reused 0 (delta 0)
+To /cygdrive/c/jenkins-slave2-32-builder/workspace/test_dobble_quotes/commitMessagesWithDoubleQuotesSingleQuotesMade/com
+mitMessagesWithDoubleQuotesSingleQuotesMade_windows.git
+ * [new branch]      dev/JENKINS-27662_doublequotes -> dev/JENKINS-27662_doublequotes
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>REM also push to ready branch, so integration can start during the test
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git push origin dev/JENKINS-27662_doublequotes:ready/JENKINS-27662_doublequotes
+
+Total 0 (delta 0), reused 0 (delta 0)
+To /cygdrive/c/jenkins-slave2-32-builder/workspace/test_dobble_quotes/commitMessagesWithDoubleQuotesSingleQuotesMade/com
+mitMessagesWithDoubleQuotesSingleQuotesMade_windows.git
+ * [new branch]      dev/JENKINS-27662_doublequotes -> ready/JENKINS-27662_doublequotes
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>git remote -v show
+origin  /cygdrive/c/jenkins-slave2-32-builder/workspace/test_dobble_quotes/commitMessagesWithDoubleQuotesSingleQuotesMad
+e/commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git (fetch)
+origin  /cygdrive/c/jenkins-slave2-32-builder/workspace/test_dobble_quotes/commitMessagesWithDoubleQuotesSingleQuotesMad
+e/commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git (push)
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>REM Post process
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade\commitMessagesW
+ithDoubleQuotesSingleQuotesMade_windows>cd c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithD
+oubleQuotesSingleQuotesMade\
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>7z a -r commitM
+essagesWithDoubleQuotesSingleQuotesMade_windows.zip commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git
+
+7-Zip 9.20  Copyright (c) 1999-2010 Igor Pavlov  2010-11-18
+Scanning
+
+Creating archive commitMessagesWithDoubleQuotesSingleQuotesMade_windows.zip
+
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\config
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\description
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\HEAD
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\applypatch-msg.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\commit-msg.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\post-update.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\pre-applypatch.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\pre-commit.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\pre-push.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\pre-rebase.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\prepare-commit-msg.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\hooks\update.sample
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\info\exclude
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\2c\76fc47c180cec412fc4c7c9d1afbedd323f91
+1
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\31\d6e768ddf67881155c06f333950b57cb0e413
+d
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\57\dea2f46feaad99499af38aa18d521024713f7
+f
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\70\4b05a54671fec36257367c98ba33913459bdb
+d
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\70\5120c7a69cc4d2c867809b4d75b8d217bdef3
+4
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\a0\94a8a6e8157b386b651d61997de25cd95af5e
+b
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\a1\ffad7c988ad936f4929e4ed89fcc3fd198e6f
+1
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\e2\588afea349befbeec70dc25b6b2b5e1538143
+f
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\objects\e4\10fa50672b32acbf967ea7d9528bbf3d5d1b8
+9
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\refs\heads\dev\JENKINS-27662_doublequotes
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\refs\heads\master
+Compressing  commitMessagesWithDoubleQuotesSingleQuotesMade_windows.git\refs\heads\ready\JENKINS-27662_doublequotes
+
+
+Everything is Ok
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>rmdir /S /Q com
+mitMessagesWithDoubleQuotesSingleQuotesMade_windows.git
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>del /Q commitMe
+ssagesWithDoubleQuotesSingleQuotesMade_windows
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>rmdir /S /Q com
+mitMessagesWithDoubleQuotesSingleQuotesMade_windows
+
+c:\jenkins-slave2-32-builder\workspace\test_dobble_quotes\commitMessagesWithDoubleQuotesSingleQuotesMade>

@@ -51,40 +51,6 @@ public class CustomIntegrationBranch extends StaticGitRepositoryTestBase {
 
     
     /**
-     * Pretty prints console output from build log
-     *
-     * @param build
-     * @param buildname - descriptive build name included in the output
-     * @return boolean - true matched console like text, else false
-     * @throws IOException
-     * @throws SAXException
-     */
-    private boolean printAndReturnConsoleOfBuild(FreeStyleBuild build, String buildname) throws IOException, SAXException {
-        // this outputs loft of HTML garbage... so pretty printing after:
-        String console = jenkinsRule.createWebClient().getPage(build, "console").asXml();
-        System.out.println("************************************************************************");
-        System.out.println("* Relevant part of Jenkins build console (captured with regexp)");
-        System.out.println(String.format("* Build %s CONSOLE:", buildname));
-        
-        // the pattern we want to search for
-        Pattern p = Pattern.compile("<link rel=\"stylesheet\" type=\"text/css\" href=\"/jenkins/descriptor/hudson.console.ExpandableDetailsNote/style.css\"/>"
-                + ".*<pre>(.*)</pre>.*</td>.*</tr>.*</tbody>.*</table>", Pattern.DOTALL);
-        Matcher m = p.matcher(console);
-        // if we find a match, get the group
-        if (m.find()) {
-            // get the matching group
-            String capturedText = m.group(1);
-
-            // print the group
-            System.out.format("'%s'\n", capturedText);
-            return true;
-        } else {
-            System.out.format("Didn't match any relevant part of the console");
-            return false;
-        }
-    }
-    
-    /**
      * Tests that we use the author of the last commit when integrating - using
      * the Squash strategy
      *
@@ -110,7 +76,7 @@ public class CustomIntegrationBranch extends StaticGitRepositoryTestBase {
 
         RunList<FreeStyleBuild> builds = project.getBuilds();
         for (FreeStyleBuild b : builds) {
-            assertTrue("Could not match console output for pretty printing", printAndReturnConsoleOfBuild(b, String.format("%s", b.getNumber())));
+            assertTrue("Could not match console output for pretty printing", TestUtilsFactory.printAndReturnConsoleOfBuild(b, String.format("%s", b.getNumber()), jenkinsRule));
             Result result = b.getResult();
             assertNotNull("Build result was null.", result);
             assertTrue("Build was not a success - that is expected in this test", result.isBetterOrEqualTo(Result.SUCCESS));
@@ -183,10 +149,10 @@ public class CustomIntegrationBranch extends StaticGitRepositoryTestBase {
         assertTrue("The last commit on integration branch was not an accumulated commit. Didn't find the text 'Squashed commit'", commitFullMessage.contains("Squashed commit"));
         assertTrue("The squashed commit message, doesn't contain the SHA from the git log from the first of the included commits", commitFullMessage.contains("commit c1449e075f528974c63eef81109d0632eaada0c7"));
         assertTrue("The squashed commit message, didn't contain expected date string from the git log from the first of the included commits", commitFullMessage.contains("Wed Jun 3 14:03:46 2015 +0200"));
-        assertTrue("4", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
+        assertTrue("The squashed commit message, didn't contain part of the original commit messages.", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
         assertTrue("The squashed commit message, doesn't contain the SHA from the git log from the second of the included commits", commitFullMessage.contains("commit 70353ce6771866f29c38b4460b3f74f9024f8ce2"));
         assertTrue("The squashed commit message, didn't contain expected date string from the git log from the seond of the included commits", commitFullMessage.contains("Wed Jun 3 14:03:46 2015 +0200"));
-        assertTrue("7", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
+        assertTrue("The squashed commit message, didn't contain part of the original commit messages.", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
 
         // Verify that the collection and gathering of accumulated commit message doesn't collect much information
         // like commits from other branches:
@@ -223,7 +189,7 @@ public class CustomIntegrationBranch extends StaticGitRepositoryTestBase {
 
         RunList<FreeStyleBuild> builds = project.getBuilds();
         for (FreeStyleBuild b : builds) {
-            assertTrue("Could not match console output for pretty printing", printAndReturnConsoleOfBuild(b, String.format("%s", b.getNumber())));
+            assertTrue("Could not match console output for pretty printing", TestUtilsFactory.printAndReturnConsoleOfBuild(b, String.format("%s", b.getNumber()), jenkinsRule));
             Result result = b.getResult();
             assertNotNull("Build result was null.", result);
             assertTrue("Build was not a success - that is expected in this test", result.isBetterOrEqualTo(Result.SUCCESS));
@@ -299,10 +265,10 @@ public class CustomIntegrationBranch extends StaticGitRepositoryTestBase {
         assertTrue("The last commit on integration branch was not an accumulated commit. Didn't find the text 'Accumulated commit'", commitFullMessage.contains("Accumulated commit"));
         assertTrue("The accumulated commit message, doesn't contain the SHA from the git log from the first of the included commits", commitFullMessage.contains("commit c1449e075f528974c63eef81109d0632eaada0c7"));
         assertTrue("The accumulated commit message, didn't contain expected date string from the git log from the first of the included commits", commitFullMessage.contains("Wed Jun 3 14:03:46 2015 +0200"));
-        assertTrue("4", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
+        assertTrue("The squashed commit message, didn't contain part of the original commit messages.", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
         assertTrue("The accumulated commit message, doesn't contain the SHA from the git log from the second of the included commits", commitFullMessage.contains("commit 70353ce6771866f29c38b4460b3f74f9024f8ce2"));
         assertTrue("The accumulated commit message, didn't contain expected date string from the git log from the seond of the included commits", commitFullMessage.contains("Wed Jun 3 14:03:46 2015 +0200"));
-        assertTrue("7", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
+        assertTrue("The squashed commit message, didn't contain part of the original commit messages.", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
 
         // Verify that the collection and gathering of accumulated commit message doesn't collect much information
         // like commits from other branches:

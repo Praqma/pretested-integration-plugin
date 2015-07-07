@@ -122,7 +122,9 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             // Merge and commit must be splitted in two steps, to allow setting author which only is supported on commit command, not merge.
             logger.info("Starting accumulated merge (no-ff) - without commit:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting accumulated merge (no-ff) - without commit:"));
-            exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "-m", String.format("%s%n%s", headerLine, commits), commit, "--no-ff", "--no-commit");
+            String commitMsg = String.format("%s%n%s", headerLine, commits);
+            String modifiedCommitMsg = commitMsg.replaceAll("\"","'");
+            exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "--no-ff", "--no-commit", "-m", modifiedCommitMsg, commit);
             logger.info("Accumulated merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Accumulated merge done"));
         } catch (Exception ex) {

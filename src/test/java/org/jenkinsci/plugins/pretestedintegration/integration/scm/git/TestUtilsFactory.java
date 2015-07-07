@@ -5,6 +5,7 @@
  */
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
@@ -24,6 +25,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.io.FileUtils;
@@ -43,6 +46,7 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrat
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -793,6 +797,40 @@ public class TestUtilsFactory {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Pretty prints console output from build log
+     *
+     * @param build
+     * @param buildname - descriptive build name included in the output
+     * @return boolean - true matched console like text, else false
+     * @throws IOException
+     * @throws SAXException
+     */
+    public static boolean printAndReturnConsoleOfBuild(FreeStyleBuild build, String buildname, JenkinsRule jenkinsRule) throws IOException, SAXException {
+        // this outputs loft of HTML garbage... so pretty printing after:
+        String console = jenkinsRule.createWebClient().getPage(build, "console").asXml();
+        System.out.println("************************************************************************");
+        System.out.println("* Relevant part of Jenkins build console (captured with regexp)");
+        System.out.println(String.format("* Build %s CONSOLE:", buildname));
+
+        // the pattern we want to search for
+        Pattern p = Pattern.compile("<link rel=\"stylesheet\" type=\"text/css\" href=\"/jenkins/descriptor/hudson.console.ExpandableDetailsNote/style.css\"/>"
+                + ".*<pre>(.*)</pre>.*</td>.*</tr>.*</tbody>.*</table>", Pattern.DOTALL);
+        Matcher m = p.matcher(console);
+        // if we find a match, get the group
+        if (m.find()) {
+            // get the matching group
+            String capturedText = m.group(1);
+
+            // print the group
+            System.out.format("'%s'\n", capturedText);
+            return true;
+        } else {
+            System.out.format("Didn't match any relevant part of the console");
+            return false;
         }
     }
 	     

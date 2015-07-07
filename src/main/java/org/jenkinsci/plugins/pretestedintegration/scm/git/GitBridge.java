@@ -186,7 +186,7 @@ public class GitBridge extends AbstractSCMBridge {
         b.add(cmds);
         listener.getLogger().println(String.format("%s %s", PretestedIntegrationBuildWrapper.LOG_PREFIX, b.toStringWithQuote() ));
         logger.exiting("GitBridge", "buildCommand");// Generated code DONT TOUCH! Bookmark: b2de8fe32eb583d6dac86f020b66bfa4
-		return launcher.launch().pwd(resolveWorkspace(build, listener)).cmds(b);
+        return launcher.launch().pwd(resolveWorkspace(build, listener)).cmds(b);
     }
 
     /**
@@ -209,7 +209,7 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     /**
-     * Invoke a command with mercurial
+     * Invoke a command with git
      *
      * @param build
      * @param launcher

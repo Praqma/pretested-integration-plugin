@@ -122,7 +122,6 @@
             <plugin>
                 <groupId>org.jenkins-ci.tools</groupId>
                 <artifactId>maven-hpi-plugin</artifactId>
-                <version>1.109</version> <!-- Older version have some problems with writing the manifest file -->
                 <configuration>
                     <pluginVersionDescription>${buildNumber}</pluginVersionDescription>
                     <compatibleSinceVersion>2.0</compatibleSinceVersion>

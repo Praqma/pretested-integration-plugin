@@ -50,6 +50,8 @@ public class StaticGitRepositoryTestBase {
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedLinux",           "commitMessagesWithDoubleQuotes_linux");
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSquashedWindows",            "commitMessagesWithDoubleQuotes_windows");
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedWindows",         "commitMessagesWithDoubleQuotes_windows");
+        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeAccumulatedWindows",         "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
+        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeAccumulatedWindows_customerSuppliedRepo",         "JENKINS-28640");
         testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitSquashStrategy",         "useAuthorOfLastCommit");
         testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitAccumulatedStrategy",    "useAuthorOfLastCommit");
         testMethodName_vs_staticGitRepoName.put(    "customIntegrationBranchSquashStrategy",         "customIntegrationBranch");
