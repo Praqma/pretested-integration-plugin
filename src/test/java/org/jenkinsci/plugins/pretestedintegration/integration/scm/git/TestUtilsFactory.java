@@ -145,7 +145,8 @@ public class TestUtilsFactory {
                     count--;
                     Thread.sleep(sleepms);
                     if(count <= 0) {
-                        throw new InterruptedException(String.format("Locked files? Failed to delete directory '%s' for %d seconds (%d tries)", dir.toString(), (sleepms*attempts)/1000, attempts));
+                        System.out.println(String.format("Locked files? Failed to delete directory '%s' for %d seconds (%d tries)", dir.toString(), (sleepms*attempts)/1000, attempts));
+                        break;
                     }
                     System.out.println(String.format("Trying again to deleting directory (try #%s): '%s' ", count, dir.toString()));
                 }

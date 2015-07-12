@@ -50,8 +50,10 @@ public class StaticGitRepositoryTestBase {
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedLinux",           "commitMessagesWithDoubleQuotes_linux");
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSquashedWindows",            "commitMessagesWithDoubleQuotes_windows");
         testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedWindows",         "commitMessagesWithDoubleQuotes_windows");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeAccumulatedWindows",         "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeAccumulatedWindows_customerSuppliedRepo",         "JENKINS-28640");
+        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsAccumulated",         "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
+        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsSquashed",         "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
+        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsAccumulated_customerSuppliedRepo",         "JENKINS-28640");
+        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsSquashed_customerSuppliedRepo",         "JENKINS-28640");
         testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitSquashStrategy",         "useAuthorOfLastCommit");
         testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitAccumulatedStrategy",    "useAuthorOfLastCommit");
         testMethodName_vs_staticGitRepoName.put(    "customIntegrationBranchSquashStrategy",         "customIntegrationBranch");
@@ -110,7 +112,6 @@ public class StaticGitRepositoryTestBase {
         String gitRepoBare = gitRepo + ".git";
         System.out.println(String.format("* BARE repository is                      %s", gitRepo));
         System.out.println(String.format("* Working repository is                   %s", gitRepo));
-        System.out.println(String.format("**********************************************************************"));
         
         String zipfile = new File(zipFileURI).toString();
         TestUtilsFactory.unzipFunction(temporaryFolder, zipfile);
@@ -127,6 +128,9 @@ public class StaticGitRepositoryTestBase {
                 .call().close();
         // Open it
         gitrepo = Git.open(workingRepoPath);
+        System.out.println(String.format("**********************************************************************"));
+        System.out.println(String.format("***** setUp for test %s", methodName));
+        System.out.println(String.format("**********************************************************************"));
     }
 
     /**
@@ -136,9 +140,16 @@ public class StaticGitRepositoryTestBase {
      */
     @After
     public void tearDown() throws Exception {
+        String methodName = name.getMethodName();
+        System.out.println(String.format("**********************************************************************"));
+        System.out.println(String.format("***** tearDown for test %s", methodName));
         gitrepo.close();
         bareRepository.close();
         // Repos reside inside temporary folder pr. test, clean up
         TestUtilsFactory.destroyDirectory(tempFolder);
+        tempFolder.delete();
+        // method name of the test method that uses this setUp method NOW!
+        System.out.println(String.format("***** DONE tearDown for test %s", methodName));
+        System.out.println(String.format("**********************************************************************"));
     }
 }

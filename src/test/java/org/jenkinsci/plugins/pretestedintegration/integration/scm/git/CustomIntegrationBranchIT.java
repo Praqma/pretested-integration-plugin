@@ -7,9 +7,12 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.util.RunList;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import static junit.framework.Assert.assertTrue;
@@ -151,7 +154,7 @@ public class CustomIntegrationBranchIT extends StaticGitRepositoryTestBase {
         assertTrue("The squashed commit message, didn't contain expected date string from the git log from the first of the included commits", commitFullMessage.contains("Wed Jun 3 14:03:46 2015 +0200"));
         assertTrue("The squashed commit message, didn't contain part of the original commit messages.", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
         assertTrue("The squashed commit message, doesn't contain the SHA from the git log from the second of the included commits", commitFullMessage.contains("commit 70353ce6771866f29c38b4460b3f74f9024f8ce2"));
-        assertTrue("The squashed commit message, didn't contain expected date string from the git log from the seond of the included commits", commitFullMessage.contains("Wed Jun 3 14:03:46 2015 +0200"));
+        assertTrue("The squashed commit message, didn't contain expected date string from the git log from the second of the included commits", commitFullMessage.contains("Wed Jun 3 14:03:46 2015 +0200")); //English 
         assertTrue("The squashed commit message, didn't contain part of the original commit messages.", commitFullMessage.contains("Added a second line from myDevelopmentBranch in test commit log file."));
 
         // Verify that the collection and gathering of accumulated commit message doesn't collect much information

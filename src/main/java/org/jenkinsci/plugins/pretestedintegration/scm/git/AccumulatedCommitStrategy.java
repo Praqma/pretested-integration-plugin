@@ -135,6 +135,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             // which also print out the exception to the job console to let the
             // user easily investigate.
             logger.log(Level.SEVERE, "Exception while merging. Logging exception", ex);
+            listener.getLogger().println(LOG_PREFIX + String.format("Exception while merging. Logging exception msg: %s", ex.getMessage()));
             logger.exiting("AccumulatedCommitStrategy", "integrate-mergeFailure");
             throw new IntegationFailedExeception(ex);
         }
@@ -179,6 +180,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             // which also print out the exception to the job console to let the
             // user easily investigate.
             logger.log(Level.SEVERE, "Exception while comitting. Logging exception", ex);
+            listener.getLogger().println(LOG_PREFIX + String.format("Exception while committing. Logging exception msg: %s", ex.getMessage()));
             logger.exiting("AccumulatedCommitStrategy", "integrate-commitFailure");
             throw new IntegationFailedExeception(ex);
         }

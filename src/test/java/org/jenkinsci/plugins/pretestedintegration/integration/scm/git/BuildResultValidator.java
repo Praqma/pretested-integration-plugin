@@ -67,8 +67,7 @@ public class BuildResultValidator implements AutoCloseable {
     
     
     public void validate() throws Exception {
-        System.out.println(consoleLog);
-        
+        //System.out.println(consoleLog); // seems to always be null
         if(consolePhrases != null) {
             validateConsoleMessages();
         }
@@ -122,11 +121,11 @@ public class BuildResultValidator implements AutoCloseable {
         while(i.hasNext()) {
             commit = walk.parseCommit(i.next());
             if(commit.equals(head)) {
+                System.out.println(commit.getFullMessage());
                 boolean match = true;
                 boolean matched = false;
                 for(String s : contents) {
                     matched = true;
-                    System.out.println(commit.getFullMessage());
                     match &= commit.getFullMessage().contains(s);
                 }
                 

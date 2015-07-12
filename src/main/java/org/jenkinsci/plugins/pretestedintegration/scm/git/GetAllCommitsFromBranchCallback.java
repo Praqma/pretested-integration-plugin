@@ -10,6 +10,7 @@ import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.eclipse.jgit.lib.ObjectId;
@@ -64,11 +65,15 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             Integer secondsSinceUnixEpoch = rev.getCommitTime();
             // Note that the git log shows different date formats, depending on configuration.
             // The choices in the git commit message below matches the squashed commit message
-            // that git generates on a Ubuntu Linux 14.04 with default git installation.
-            SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM d kk:mm:ss yyyy ZZZZ");
+            // that git generates on a Ubuntu Linux 14.04 with default git installation. 
+            // Locale if forced to enligsh to make it independent from operating system
+            // and environment.
+            // Note that it is not the standard ISO format.
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM d kk:mm:ss yyyy ZZZZ", Locale.ENGLISH);
             Date commitTime = new Date(secondsSinceUnixEpoch * 1000L); // seconds to milis
             String asString = formatter.format(commitTime);
             sb.append(String.format("Date:   %s", asString ));
+            
             sb.append(String.format("%n"));
             sb.append(String.format("%n"));
 

@@ -57,14 +57,14 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         GitClient client;
 
-        String integrationSHA = "Not specified";
-        try {
-            logger.fine("Getting current integration SHA");
-            integrationSHA = (String) build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
-            logger.fine("Found integration SHA");
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Integrate() error, integration SHA not found", ex);
-        }
+//        String integrationSHA = "Not specified";
+//        try {
+//            logger.fine("Getting current integration SHA");
+//            integrationSHA = (String) build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
+//            logger.fine("Found integration SHA");
+//        } catch (Exception ex) {
+//            logger.log(Level.SEVERE, "Integrate() error, integration SHA not found", ex);
+//        }
 
         logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getBranch()));
         listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getBranch()));
@@ -103,11 +103,9 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         }
 
         String commitAuthor; //leaving un-assigned, want to fail later if not assigned
-        String commitMessage; //leaving un-assigned, want to fail later if not assigned
         try {
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Collecting commit messages on development branch (for debug printing): %s", gitDataBranch.getName()));
             listener.getLogger().println(String.format(LOG_PREFIX + "Collecting commit messages on development branch (for debug printing): %s", gitDataBranch.getName()));
-            commitMessage = client.withRepository(new FindCommitMessageCallback(listener, gitDataBranch.getSHA1()));
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Done collecting commit messages"));
             listener.getLogger().println(String.format(LOG_PREFIX + "Done collecting commit messages"));
 
@@ -131,6 +129,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             // which also print out the exception to the job console to let the
             // user easily investigate.
             logger.log(Level.SEVERE, "Exception while merging. Logging exception", ex);
+            listener.getLogger().println(LOG_PREFIX + String.format("Exception while merging. Logging exception msg: %s", ex.getMessage()));
             logger.exiting("SquashCommitStrategy", "integrate-mergeFailure");
 			throw new IntegationFailedExeception(ex);
         }
@@ -169,12 +168,6 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             logger.info("Commit of squashed merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Commit of squashed merge done"));
 
-            // This is for debugging only, so basically FindCommitMessageCallback 
-            // can be removed. We are though planning features that might need 
-            // this method again, to change the commit message, so we leave it
-            // for now.
-            listener.getLogger().println(String.format(LOG_PREFIX + "Debug print - commit message for squash merge:%n%s", commitMessage));
-            logger.info(String.format(LOG_PREFIX + "Debug print - commit message for squash merge:%n%s", commitMessage));
         } catch (Exception ex) {
             // We handle all exceptions here, as we will not continue with
             // anything if there is problems, even if it is only null pointer
@@ -183,7 +176,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             // which also print out the exception to the job console to let the
             // user easily investigate.
             logger.log(Level.SEVERE, "Exception while merging or comitting, logging exception", ex);
-            logger.exiting("SquashCommitStrategy", "integrate-mergeFailure");
+            listener.getLogger().println(LOG_PREFIX + String.format("Exception while committing. Logging exception msg: %s", ex.getMessage()));
+            logger.exiting("SquashCommitStrategy", "integrate-commitFailure");
 			throw new IntegationFailedExeception(ex);
         }
         // NOTICE: The catch-throw exception above means we have handles all 
