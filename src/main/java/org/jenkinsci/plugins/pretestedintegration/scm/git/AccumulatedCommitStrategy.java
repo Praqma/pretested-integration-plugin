@@ -51,7 +51,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         GitBridge gitbridge = (GitBridge)bridge;
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
+        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build, listener);
         String commit = gitBuildData.lastBuild.revision.getSha1String();
 
         //TODO: Implement robustness, in which situations does this one contain 
@@ -61,9 +61,9 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         boolean found = false;
 
 
-        logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getBranch()));
-        listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getBranch()));
         try {
+            logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
+            listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             logger.fine("Resolving and getting git client from workspace:");
             client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
             logger.fine("Finding remote branches:");
@@ -107,7 +107,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
             // based on other commits than the actual merge commit consist of.
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Collecting commit messages on development branch %s", gitDataBranch.getName()));
             listener.getLogger().println(String.format(LOG_PREFIX + "Collecting commit messages on development branch %s", gitDataBranch.getName()));
-            String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1(), gitbridge.getBranch()));
+            String commits = client.withRepository(new GetAllCommitsFromBranchCallback(listener, gitDataBranch.getSHA1(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             String headerLine = String.format("Accumulated commit of the following from branch '%s':%n", gitDataBranch.getName());
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Done collecting commit messages"));
             listener.getLogger().println(String.format(LOG_PREFIX + "Done collecting commit messages"));

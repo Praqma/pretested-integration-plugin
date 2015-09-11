@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import org.kohsuke.stapler.DataBoundConstructor;
 import jenkins.model.Jenkins;
 import hudson.DescriptorExtensionList;
+import hudson.EnvVars;
 import hudson.ExtensionPoint;
 import hudson.Launcher;
 import hudson.model.BuildListener;
@@ -42,6 +43,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         logger.entering("AbstractSCMBridge", "getBranch");// Generated code DONT TOUCH! Bookmark: 7b6f3ea69850ae74b80bcda629a49db3
 		logger.exiting("AbstractSCMBridge", "getBranch");// Generated code DONT TOUCH! Bookmark: 71ff2f36490cbfa5f2ad2fe00d1631a0
 		return branch;
+    }
+
+    public String getExpandedBranch(EnvVars environment) {
+	return environment.expand(branch);
     }
 
     public Descriptor<AbstractSCMBridge> getDescriptor() {
@@ -124,7 +129,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param listener
      * @return 
      */
-    protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
+    protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         logger.entering("AbstractSCMBridge", "determineIntegrationHead", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 94e894e8dad5dfb0e85092e8e93ff296
         logger.exiting("AbstractSCMBridge", "determineIntegrationHead");// Generated code DONT TOUCH! Bookmark: 19478dfa81d1cac69955a0cb6ee4ecdd		
 		return null;

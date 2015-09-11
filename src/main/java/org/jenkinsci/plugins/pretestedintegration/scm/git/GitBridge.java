@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -24,6 +26,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.*;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -73,6 +77,12 @@ public class GitBridge extends AbstractSCMBridge {
 		return StringUtils.isBlank(this.branch) ? "master" : this.branch;
     }
 
+    @Override
+    public String getExpandedBranch(EnvVars environment){
+        String expandedBranch = super.getExpandedBranch(environment);
+        return StringUtils.isBlank(expandedBranch) ? "master" : expandedBranch;
+    }
+
     public String getRevId() {
         logger.entering("GitBridge", "getRevId");// Generated code DONT TOUCH! Bookmark: 7daeaf95ed1ab33f362632d94f8d0775
 		logger.exiting("GitBridge", "getRevId");// Generated code DONT TOUCH! Bookmark: 05723ee14ce48ed93ffbd8d5d9af889a
@@ -85,16 +95,14 @@ public class GitBridge extends AbstractSCMBridge {
     The git SCM might no be the one matching newest build data, but it is always
     the git scm that match changes to be integrated (which can be old data!)
     */
-    private GitSCM findScm(AbstractBuild<?, ?> build) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
+    private GitSCM findScm(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
         logger.entering("GitBridge", "findScm");
-        // get all build data - there can be several scm changes if using MultiScm plugin
-        List<BuildData> bdata = build.getActions(BuildData.class);
         // This method extract the relevant one, leaving us with only one relevant build data object
         // we need this below when selecting which repository to work with.
         // There must be a match between the relevant build data branch and the found scm
         // which must have the branch. This is needed due to MultiScm support
         // where there are several scm at the time.
-        BuildData bd = checkAndDetermineRelevantBuildData(bdata);
+        BuildData bd = checkAndDetermineRelevantBuildData(build, listener);
 
         SCM scm = build.getProject().getScm();
         logger.fine(String.format("Iterating over SCM configuration to find correct one - checking if either GitSCM or MultiSCM"));
@@ -154,8 +162,9 @@ public class GitBridge extends AbstractSCMBridge {
      * Pretested repository configuration field 'Repository name'.
      * @return 
      */
-    private String resolveRepoName() {
-        return StringUtils.isBlank(repoName) ? "origin" : repoName;
+    private String resolveRepoName(EnvVars environment) {
+        String expandedRepoName = environment.expand(repoName);
+        return StringUtils.isBlank(expandedRepoName) ? "origin" : expandedRepoName;
     }
 
     public void setWorkingDirectory(FilePath workingDirectory) {
@@ -170,9 +179,9 @@ public class GitBridge extends AbstractSCMBridge {
 		return this.workingDirectory;
     }
 
-    private ProcStarter buildCommand(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException {
+    private ProcStarter buildCommand(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String... cmds) throws IOException, InterruptedException {
         logger.entering("GitBridge", "buildCommand", new Object[] { build, listener, launcher, cmds }); // Generated code DONT TOUCH! Bookmark: 37725f753e9558763e6ad20b5c536cea
-		GitSCM scm = findScm(build);        
+		GitSCM scm = findScm(build, listener);
         String gitExe = scm.getGitExe(build.getBuiltOn(), listener);
         ArgumentListBuilder b = new ArgumentListBuilder();
         b.add(gitExe);
@@ -193,7 +202,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws IOException
      * @throws InterruptedException
      */
-    public int git(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, String... cmds) throws IOException, InterruptedException {
+    public int git(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String... cmds) throws IOException, InterruptedException {
         logger.entering("GitBridge", "git", new Object[] { build, listener, launcher, cmds });// Generated code DONT TOUCH! Bookmark: eba75a8277a4ac0774f9ab528c2a21c4
 		ProcStarter git = buildCommand(build, launcher, listener, cmds);                
         int exitCode = git.join();
@@ -213,7 +222,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws IOException
      * @throws InterruptedException
      */
-    public int git(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener, OutputStream out, String... cmds) throws IOException, InterruptedException {
+    public int git(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, OutputStream out, String... cmds) throws IOException, InterruptedException {
         logger.entering("GitBridge", "git", new Object[] { build, out, listener, launcher, cmds });// Generated code DONT TOUCH! Bookmark: 2841cb2de272a4236d3804108235b84a
 		ProcStarter git = buildCommand(build, launcher, listener, cmds);
         int exitCode = git.stdout(out).join();
@@ -225,11 +234,15 @@ public class GitBridge extends AbstractSCMBridge {
     @Override
     public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         logger.entering("GitBridge", "ensureBranch", new Object[] { build, branch, listener, launcher });// Generated code DONT TOUCH! Bookmark: eb203ba8b33b4c38087310c398984c1a
-            listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getBranch()));
+
+        listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getBranch()));
+
         try {
+            EnvVars environment = build.getEnvironment(listener);
+            listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getExpandedBranch(environment)));
             //We need to explicitly checkout the remote we have configured            
             //git(build, launcher, listener, "checkout", getBranch(), resolveRepoName()+"/"+getBranch());            
-            git(build, launcher, listener, "checkout", "-B", getBranch(), resolveRepoName()+"/"+getBranch());            
+            git(build, launcher, listener, "checkout", "-B", getExpandedBranch(environment), resolveRepoName(environment)+"/"+getExpandedBranch(environment));
             update(build, launcher, listener);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "ensureBranch", ex);
@@ -240,10 +253,11 @@ public class GitBridge extends AbstractSCMBridge {
         }
     }
 
-    protected void update(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
+    protected void update(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         try {
+            EnvVars environment = build.getEnvironment(listener);
             logger.exiting("GitBridge", "ensureBranch - IOException");// Generated code DONT TOUCH! Bookmark: 775c55327ca90d7a3b1889cb1547bc4c
-            git(build, launcher, listener, "pull", resolveRepoName(), getBranch());
+            git(build, launcher, listener, "pull", resolveRepoName(environment), getExpandedBranch(environment));
         } catch (InterruptedException ex) {
             logger.exiting("GitBridge", "ensureBranch - InterruptedException");// Generated code DONT TOUCH! Bookmark: 775c55327ca90d7a3b1889cb1547bc4c
             throw new EstablishWorkspaceException(ex);
@@ -261,9 +275,10 @@ public class GitBridge extends AbstractSCMBridge {
 		int returncode = -99999;
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
+            EnvVars environment = build.getEnvironment(listener);
             logger.log(Level.INFO, "Pushing changes to integration branch:");
             listener.getLogger().println(LOG_PREFIX + "Pushing changes to integration branch:");
-            returncode = git(build, launcher, listener, output, "push", resolveRepoName(), getBranch());
+            returncode = git(build, launcher, listener, output, "push", resolveRepoName(environment), getExpandedBranch(environment));
             logger.log(Level.INFO, "Done pushing changes");
             listener.getLogger().println(LOG_PREFIX + "Done pushing changes");
         } catch (Exception ex) {
@@ -294,33 +309,40 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException if none of the git build data matches chosen integration repository
      * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException if there is ambiguity about which git build data set to chose to integrate
      */
-    public BuildData checkAndDetermineRelevantBuildData(List<BuildData> data) throws NothingToDoException, UnsupportedConfigurationException {
+    public BuildData checkAndDetermineRelevantBuildData(AbstractBuild<?,?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
+        List<BuildData> data = build.getActions(BuildData.class);
         if(data.isEmpty()) {
             throw new NothingToDoException("No Git SCM change found.");
-        }     
-        
+        }
+
         Set<BuildData> relevantBuildData = new HashSet<BuildData>();
-        
+
         // Using this HashSet only to detech duplicates
         Set<String> revs = new HashSet<String>();
-        
+
         // An example on several BuilData - visualized can be found in 'docs/More_than_1_gitBuild_data.png'
         for(BuildData bdata : data) {
-            // Assume no trailing slash in configuration - we won't match then.
-            if(bdata.lastBuild.revision.getBranches().iterator().next().getName().startsWith(resolveRepoName()+"/")) {
-                // No we now the git build data contain a branch that matches the integration repository name.
-                // Eg. Branch 'origin/ready/feature_1' matches 'origin' configured as integration repository
-                
-                // Check we have not earlier seen this changeset before,
-                // if SHA is the same, it will not be added to the HashSet.
-                // We have to use strings, as 'revision' is different objects.
-                boolean added = revs.add(bdata.lastBuild.revision.getSha1String());
-                if(!added) {
-                    //Noting that revision %s has duplicate entry in  (INFO)
-                    logger.log(Level.INFO, String.format("checkAndDetermineRelevantBuildData - Nothing that revision %s has duplicate BuildaData entry, using first found", bdata.lastBuild.revision.getSha1String()));
-                } else {
-                    relevantBuildData.add(bdata); //bdata is an object, so unique and always able to added
+            try {
+                // Assume no trailing slash in configuration - we won't match then.
+                if(bdata.lastBuild.revision.getBranches().iterator().next().getName().startsWith(resolveRepoName(build.getEnvironment(listener))+"/")) {
+                    // No we now the git build data contain a branch that matches the integration repository name.
+                    // Eg. Branch 'origin/ready/feature_1' matches 'origin' configured as integration repository
+
+                    // Check we have not earlier seen this changeset before,
+                    // if SHA is the same, it will not be added to the HashSet.
+                    // We have to use strings, as 'revision' is different objects.
+                    boolean added = revs.add(bdata.lastBuild.revision.getSha1String());
+                    if(!added) {
+                        //Noting that revision %s has duplicate entry in  (INFO)
+                        logger.log(Level.INFO, String.format("checkAndDetermineRelevantBuildData - Nothing that revision %s has duplicate BuildaData entry, using first found", bdata.lastBuild.revision.getSha1String()));
+                    } else {
+                        relevantBuildData.add(bdata); //bdata is an object, so unique and always able to added
+                    }
                 }
+            } catch (IOException ex) {
+                Logger.getLogger(GitBridge.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GitBridge.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         // If no build data added, there is none relevant - so nothing to do.
@@ -351,14 +373,13 @@ public class GitBridge extends AbstractSCMBridge {
 
     @Override
     public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {        
-        List<BuildData> bdata = build.getActions(BuildData.class);
-        BuildData data = checkAndDetermineRelevantBuildData(bdata);
+        checkAndDetermineRelevantBuildData(build, listener);
     }
     
     @Override
     public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException, NothingToDoException, UnsupportedConfigurationException {
         logger.entering("GitBridge", "deleteIntegratedBranch", new Object[] { build, listener, launcher });
-		BuildData gitBuildData = checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
+		BuildData gitBuildData = checkAndDetermineRelevantBuildData(build, listener);
         
         //At this point in time the lastBuild is also the latests. So thats what we use
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
@@ -369,7 +390,7 @@ public class GitBridge extends AbstractSCMBridge {
             try {
                 logger.log(Level.INFO, "Deleting development branch:");
                 listener.getLogger().println(LOG_PREFIX + "Deleting development branch:");
-                delRemote = git(build, launcher, listener, out, "push", resolveRepoName(),":"+removeOrigin(gitDataBranch.getName()));
+                delRemote = git(build, launcher, listener, out, "push", resolveRepoName(build.getEnvironment(listener)),":"+removeOrigin(gitDataBranch.getName()));
                 logger.log(Level.INFO, "Done deleting development branch");
                 listener.getLogger().println(LOG_PREFIX + "Done deleting development branch");
             } catch (Exception ex) {
@@ -389,7 +410,7 @@ public class GitBridge extends AbstractSCMBridge {
     @Override
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {        
         logger.entering("GitBridge", "updateBuildDescription", new Object[] { build, listener, launcher }); 
-		BuildData gitBuildData = checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
+		BuildData gitBuildData = checkAndDetermineRelevantBuildData(build, listener);
         if(gitBuildData != null) {
             Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();         
             String text = "";
@@ -413,10 +434,10 @@ public class GitBridge extends AbstractSCMBridge {
 		return s;
     }
     
-    public FilePath resolveWorkspace(AbstractBuild<?,?> build, TaskListener listener) throws InterruptedException, IOException {
+    public FilePath resolveWorkspace(AbstractBuild<?,?> build, BuildListener listener) throws InterruptedException, IOException {
         logger.entering("GitBridge", "resolveWorkspace");
         FilePath ws = build.getWorkspace();
-        GitSCM scm = findScm(build);
+        GitSCM scm = findScm(build, listener);
         RelativeTargetDirectory rtd = scm.getExtensions().get(RelativeTargetDirectory.class);        
         
         if(rtd != null) {
@@ -429,14 +450,15 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     @Override
-    protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) {
+    protected Commit<?> determineIntegrationHead(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         logger.entering("GitBridge", "determineIntegrationHead", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: 9151bd5b4bfbdc724c67fa8d42a44f57
 		Commit<?> commit = null;
         try {
-            logger.fine(String.format("About to determine integration head for build, for branch %s", getBranch() ) );
+            EnvVars environment = build.getEnvironment(listener);
+            logger.fine(String.format("About to determine integration head for build, for branch %s", getExpandedBranch(environment)));
             GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
             for(Branch b : client.getBranches()) {
-                if(b.getName().contains(getBranch())) {
+                if(b.getName().contains(getExpandedBranch(environment))) {
                     logger.fine("Found integration head commit sha: "+b.getSHA1String());
                     commit = new Commit(b.getSHA1String());
                 }
@@ -537,15 +559,15 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     public int countCommits(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
-        ObjectId commitId = getCommitId(build);
+        ObjectId commitId = getCommitId(build, listener);
         GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
         GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(listener, commitId, getBranch());
         int commitCount = client.withRepository(commitCountCallback);
         return commitCount;
     }
     
-    public ObjectId getCommitId(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
-        return checkAndDetermineRelevantBuildData(build.getActions(BuildData.class)).lastBuild.revision.getSha1();
+    public ObjectId getCommitId(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
+        return checkAndDetermineRelevantBuildData(build, listener).lastBuild.revision.getSha1();
     }
 
     @Override
@@ -554,7 +576,7 @@ public class GitBridge extends AbstractSCMBridge {
         updateBuildDescription(build, launcher, listener);
 
         // The purpose of this section of code is to disallow usage of the master branch as the polling branch.
-        BuildData gitBuildData = checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
+        BuildData gitBuildData = checkAndDetermineRelevantBuildData(build, listener);
         
         // TODO: Implement robustness, in which situations does this one contain multiple revisons, when two branches point to the same commit? (JENKINS-24909). Check branch spec before doing anything             
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();

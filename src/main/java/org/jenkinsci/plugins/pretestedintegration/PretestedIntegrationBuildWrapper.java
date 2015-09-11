@@ -68,7 +68,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             scmBridge.isApplicable(build, listener);
             
             //Updates workspace to the integration branch
-            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getBranch());
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedBranch(build.getEnvironment(listener)));
             
             //Create the action. Record the state of integration branch
             action = new PretestedIntegrationAction(build, launcher, listener, scmBridge);            

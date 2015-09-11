@@ -55,7 +55,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 
         //TODO: How can you add more than 1 action, MultiSCM plugin with two 
         // seperate gits?
-        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build.getActions(BuildData.class));
+        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build, listener);
 
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         GitClient client;
@@ -69,10 +69,10 @@ public class SquashCommitStrategy extends IntegrationStrategy {
 //            logger.log(Level.SEVERE, "Integrate() error, integration SHA not found", ex);
 //        }
 
-        logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getBranch()));
-        listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getBranch()));
         boolean found = false;
         try {
+            logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
+            listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             logger.fine("Resolving and getting git client from workspace:");
             client = Git.with(listener, build.getEnvironment(listener)).in(gitbridge.resolveWorkspace(build, listener)).getClient();
 
@@ -255,7 +255,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         try {
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Attempting rebase."));
             GitClient client = Git.with(listener, build.getEnvironment(listener)).in(bridge.resolveWorkspace(build, listener)).getClient();
-            ObjectId commitId = bridge.getCommitId(build);
+            ObjectId commitId = bridge.getCommitId(build, listener);
 
             //Rebase the commit, then checkout master for a fast-forward merge.
             int rebaseCode = bridge.git(build, launcher, listener, "rebase", bridge.getBranch(), commitId.getName());
