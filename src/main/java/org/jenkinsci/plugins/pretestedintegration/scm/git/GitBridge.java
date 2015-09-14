@@ -234,9 +234,10 @@ public class GitBridge extends AbstractSCMBridge {
         logger.entering("GitBridge", "ensureBranch", new Object[] { build, branch, listener, launcher });// Generated code DONT TOUCH! Bookmark: eb203ba8b33b4c38087310c398984c1a
 		listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getBranch()));
         try {
-            //We need to explicitly checkout the remote we have configured            
-            //git(build, launcher, listener, "checkout", getBranch(), resolveRepoName()+"/"+getBranch());            
-            git(build, launcher, listener, "checkout", "-B", getBranch(), resolveRepoName()+"/"+getBranch());            
+            //We need to explicitly checkout the remote we have configured 
+            GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
+            client.checkout().branch(branch).ref(resolveRepoName() + "/" + getBranch()).deleteBranchIfExist(true).execute();
+            //git(build, launcher, listener, "checkout", "-B", getBranch(), resolveRepoName()+"/"+getBranch());            
             update(build, launcher, listener);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "ensureBranch", ex);
