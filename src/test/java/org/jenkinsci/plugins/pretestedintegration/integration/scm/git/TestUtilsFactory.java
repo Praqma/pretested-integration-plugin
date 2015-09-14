@@ -249,6 +249,9 @@ public class TestUtilsFactory {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, runOnSlave, integrationBranch);
     }
     
+    public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, String repo, boolean runOnSlave, String integrationBranch) throws Exception {
+        return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig(repo, null, null, null)), null, runOnSlave, integrationBranch);
+    }
     
     public static FreeStyleProject configurePretestedIntegrationPlugin(JenkinsRule rule, STRATEGY_TYPE type, Repository repo, boolean runOnSlave) throws Exception {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, runOnSlave);
