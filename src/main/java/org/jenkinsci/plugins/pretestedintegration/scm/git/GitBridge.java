@@ -24,6 +24,7 @@ import hudson.util.ArgumentListBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -36,6 +37,8 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
@@ -251,7 +254,10 @@ public class GitBridge extends AbstractSCMBridge {
     protected void update(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
         try {
             logger.exiting("GitBridge", "ensureBranch - IOException");// Generated code DONT TOUCH! Bookmark: 775c55327ca90d7a3b1889cb1547bc4c
-            git(build, launcher, listener, "pull", resolveRepoName(), getBranch());
+            GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
+            client.fetch(resolveRepoName(), new RefSpec("refs/heads/" + getBranch()));
+            client.merge().setRevisionToMerge(client.revParse(resolveRepoName() + "/" + getBranch())).execute();
+            //git(build, launcher, listener, "pull", resolveRepoName(), getBranch());
         } catch (InterruptedException ex) {
             logger.exiting("GitBridge", "ensureBranch - InterruptedException");// Generated code DONT TOUCH! Bookmark: 775c55327ca90d7a3b1889cb1547bc4c
             throw new EstablishWorkspaceException(ex);
