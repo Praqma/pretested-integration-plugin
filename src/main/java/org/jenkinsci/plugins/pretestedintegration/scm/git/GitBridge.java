@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -9,25 +8,19 @@ import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Cause;
 import hudson.model.Result;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.Revision;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
-import hudson.triggers.SCMTrigger.SCMTriggerCause;
 import hudson.util.ArgumentListBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +29,7 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
@@ -49,7 +43,6 @@ import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -232,7 +225,7 @@ public class GitBridge extends AbstractSCMBridge {
     @Override
     public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         logger.entering("GitBridge", "ensureBranch", new Object[] { build, branch, listener, launcher });// Generated code DONT TOUCH! Bookmark: eb203ba8b33b4c38087310c398984c1a
-		listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getBranch()));
+            listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getBranch()));
         try {
             //We need to explicitly checkout the remote we have configured            
             //git(build, launcher, listener, "checkout", getBranch(), resolveRepoName()+"/"+getBranch());            
@@ -541,6 +534,18 @@ public class GitBridge extends AbstractSCMBridge {
         }
         
         return true;
+    }
+
+    public int countCommits(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
+        ObjectId commitId = getCommitId(build);
+        GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
+        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(listener, commitId, getBranch());
+        int commitCount = client.withRepository(commitCountCallback);
+        return commitCount;
+    }
+    
+    public ObjectId getCommitId(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
+        return checkAndDetermineRelevantBuildData(build.getActions(BuildData.class)).lastBuild.revision.getSha1();
     }
 
     @Override

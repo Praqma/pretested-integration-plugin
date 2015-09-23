@@ -56,8 +56,8 @@ public class TestUtilsFactory {
     
     public enum STRATEGY_TYPE { SQUASH, ACCUMULATED };
     
-    public static final String AUTHER_NAME = "john Doe";
-    public static final String AUTHER_EMAIL = "Joh@praqma.net";
+    public static final String AUTHOR_NAME = "john Doe";
+    public static final String AUTHOR_EMAIL = "Joh@praqma.net";
 
     public static int countCommits(Repository repository) {
         Git git = new Git(repository);
@@ -396,7 +396,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(".");
         CommitCommand commit = git.commit();
         commit.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, repository.getBranch(), "Initial commit"));
-        commit.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commit.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commit.call();
         
         git.push().setPushAll().setRemote("origin").call();
@@ -448,7 +448,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = git.commit();
         commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, git.getRepository().getBranch(), "feature 1 commit 1"));
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
@@ -456,7 +456,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage(TestUtilsFactory.createCommitMessageForRepo(repoFolderName, git.getRepository().getBranch(), "feature 1 commit 2"));
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
         
         git.push().setPushAll().call();
@@ -467,6 +467,46 @@ public class TestUtilsFactory {
         return repository;
     }
     
+    /**
+     * @return a new repository created using the given list of commits.
+     */
+    public static Repository createRepository(String repoDir, List<TestCommit> commits) throws IOException, GitAPIException {
+        File repo = new File(repoDir + ".git");
+        File worktree = new File(repoDir);
+        Repository repository = new FileRepository(repo);
+        repository.create(true);
+
+        Git.cloneRepository().setURI("file:///" + repo.getAbsolutePath()).setDirectory(worktree)
+                .setBare(false)
+                .setCloneAllBranches(true)
+                .setNoCheckout(false)
+                .call().close();
+        Git git = Git.open(worktree);
+
+        boolean firstCommit = true;
+        for (TestCommit commit : commits) {
+            if (!commit.branch.equals("master")) {
+                boolean branchExists = git.getRepository().getRef(commit.branch) != null;
+                if (!branchExists) {
+                    git.branchCreate().setName(commit.branch).call();
+                }
+            }
+
+            if (!firstCommit) {
+                git.checkout().setName(commit.branch).call();
+            }
+            FileUtils.writeStringToFile(new File(git.getRepository().getWorkTree() + "/" + commit.file), commit.content, true);
+            git.add().addFilepattern(commit.file).call();
+            git.commit().setMessage(commit.message).setAuthor(AUTHOR_NAME, AUTHOR_EMAIL).call();
+            firstCommit = false;
+        }
+
+        git.push().setPushAll().call();
+        git.checkout().setName("master").call();
+        FileUtils.deleteDirectory(worktree);
+        return repository;
+    }
+
     public static Repository createRepositoryWithMergeConflict(String repoFolderName) throws IOException, GitAPIException {
         String FEATURE_BRANCH_NAME = "ready/feature_1";
         
@@ -506,7 +546,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n");
@@ -514,7 +554,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 2");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         git.checkout().setName("master").call();
@@ -524,7 +564,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("merge conflict message 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
         
         git.push().setPushAll().call();
@@ -575,14 +615,14 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
 
         FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
 
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 2");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         git.checkout().setName("master").call();
@@ -599,7 +639,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 2\n\n" + readmeContents);
@@ -607,7 +647,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("feature 2 commit 2");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         git.push().setPushAll().call();        
@@ -659,7 +699,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         CommitCommand commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         FileUtils.writeStringToFile(readme, "FEATURE_1 branch commit 2\n", true);
@@ -667,7 +707,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 2");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         git.checkout().setName("master").call();
@@ -683,7 +723,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("feature 1 commit 1");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
 
         FileUtils.writeStringToFile(readme, "FEATURE_2 branch commit 2\n\n", true);
@@ -691,7 +731,7 @@ public class TestUtilsFactory {
         git.add().addFilepattern(readme.getName()).call();
         commitCommand = git.commit();
         commitCommand.setMessage("feature 2 commit 2");
-        commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+        commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
         commitCommand.call();
                 
         git.push().setPushAll().call();

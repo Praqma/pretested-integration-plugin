@@ -12,8 +12,8 @@ import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
-import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.AUTHER_EMAIL;
-import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.AUTHER_NAME;
+import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.AUTHOR_EMAIL;
+import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.AUTHOR_NAME;
 
 /**
  * <h3>General purpose class that helps using JGit</h3>
@@ -76,7 +76,7 @@ public class UniqueBranchGenerator {
             FileUtils.writeStringToFile(randomFile, rand.toString()+"-"+cnt+"\n", true);
             CommitCommand commitCommand = git.commit();
             commitCommand.setMessage(msg);
-            commitCommand.setAuthor(AUTHER_NAME, AUTHER_EMAIL);
+            commitCommand.setAuthor(AUTHOR_NAME, AUTHOR_EMAIL);
             commitCommand.call();            
             cnt++;
         }

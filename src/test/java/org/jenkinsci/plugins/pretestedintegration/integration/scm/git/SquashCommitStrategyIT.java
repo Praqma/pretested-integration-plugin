@@ -11,15 +11,14 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.revwalk.RevCommit;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
 import org.junit.Before;
 
@@ -83,7 +82,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
-        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
 
     @Test
@@ -107,7 +106,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
-        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION);
     }
 
     @Test
@@ -132,7 +131,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
-        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 2);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION + 2);
     }
 
     @Test
@@ -160,7 +159,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
-        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
 
     @Test
@@ -197,7 +196,7 @@ public class SquashCommitStrategyIT {
 
         final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
 
-        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION + 1);
     }
 
     @Test
@@ -237,7 +236,7 @@ public class SquashCommitStrategyIT {
         
         git.close();
 
-        TestCase.assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION);
     }
 
     @Test
@@ -280,7 +279,7 @@ public class SquashCommitStrategyIT {
 
         git.close();
         
-        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 2);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION + 2);
     }
 
     @Test
@@ -327,6 +326,48 @@ public class SquashCommitStrategyIT {
         
         git.close();
 
-        assertTrue(COMMIT_COUNT_AFTER_EXECUTION == COMMIT_COUNT_BEFORE_EXECUTION + 1);
+        TestCase.assertEquals("Commit count missmatch.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION + 1);
+    }
+ 
+    @Test
+    public void singleCommit_keepsCommitMessage() throws Exception {
+        // Create the test repository
+        String repoName = "squash_singleCommit_keepsCommitMessage";
+        Repository repository = TestUtilsFactory.createRepository(repoName, new ArrayList<TestCommit>() {
+            {
+                add(new TestCommit("master", "README.md", "# Test repository", "Commit 1: readme"));
+                add(new TestCommit("ready/feature_1", "script.groovy", "println 'Hello, world!'", "Commit 2: Groovy Script"));
+                add(new TestCommit("master", "README.md", "Just a test repository containing a Groovy 'Hello, world!'", "Commit 3: readme"));
+            }
+        });
+        repositories.add(repository);
+
+        // Clone test repo
+        File workDir = new File(repoName);
+        Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
+                .setBare(false)
+                .setCloneAllBranches(true)
+                .setNoCheckout(false)
+                .call().close();
+        Git git = Git.open(workDir);
+
+        final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
+        // Build the project, assert SUCCESS
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, STRATEGY_TYPE.SQUASH, repository);
+        TestUtilsFactory.triggerProject(project);
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+        FreeStyleBuild build = project.getLastBuild();
+        String consoleOutput = jenkinsRule.createWebClient().getPage(build, "console").asText();
+        System.out.println(consoleOutput);
+        jenkinsRule.assertBuildStatus(Result.SUCCESS, build);
+        git.pull().call();
+        final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
+        RevCommit lastCommit = git.log().setMaxCount(1).call().iterator().next();
+        String commitMessage = lastCommit.getFullMessage();
+
+        git.close();
+
+        assertEquals("Single commit for rebase.", COMMIT_COUNT_AFTER_EXECUTION, COMMIT_COUNT_BEFORE_EXECUTION + 1);
+        assertEquals("Commit message was altered.", "Commit 2: Groovy Script", commitMessage);
     }
 }

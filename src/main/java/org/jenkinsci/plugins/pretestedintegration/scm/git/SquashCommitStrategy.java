@@ -11,6 +11,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitException;
 import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -23,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 /**
@@ -47,6 +49,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         int exitCodeCommit = unLikelyExitCode;
         GitBridge gitbridge = (GitBridge) bridge;
 
+        if(tryRebase(build, launcher, listener, gitbridge)) return;
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -221,6 +224,53 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         // if no exceptions...
         logger.log(Level.INFO, String.format(LOG_PREFIX + "Commit was successful"));
         listener.getLogger().println(String.format(LOG_PREFIX + "Commit was successful"));
+    }
+
+    /**
+     * Rebases the ready branch onto the integration branch.
+     * ONLY when the ready branch consists of a single commit.
+     * 
+     * @return true if the rebase was a success, false if the branch isn't suitable for a rebase
+     * @throws IntegationFailedExeception when the rebase was a failure
+     */
+    private boolean tryRebase(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegationFailedExeception {
+        logger.log(Level.INFO, String.format(LOG_PREFIX + "Entering tryRebase"));
+
+        //Get the commit count
+        int commitCount;
+        try {
+            commitCount = bridge.countCommits(build, listener);
+            logger.log(Level.INFO, String.format(LOG_PREFIX + "Branch commit count: " + commitCount));
+        } catch (IOException | InterruptedException ex) {
+            throw new IntegationFailedExeception("Failed to count commits.", ex);
+        }
+
+        //Only rebase if it's a single commit
+        if (commitCount != 1) {
+            logger.log(Level.INFO, String.format(LOG_PREFIX + "Not attempting rebase. Exiting tryRebase."));
+            return false;
+        }
+
+        //Rebase the commit
+        try {
+            logger.log(Level.INFO, String.format(LOG_PREFIX + "Attempting rebase."));
+            GitClient client = Git.with(listener, build.getEnvironment(listener)).in(bridge.resolveWorkspace(build, listener)).getClient();
+            ObjectId commitId = bridge.getCommitId(build);
+
+            //Rebase the commit, then checkout master for a fast-forward merge.
+            int rebaseCode = bridge.git(build, launcher, listener, "rebase", bridge.getBranch(), commitId.getName());
+            if (rebaseCode != 0) {
+                throw new IntegationFailedExeception("Rebase failed with exit code " + rebaseCode);
+            }
+            ObjectId rebasedCommit = client.revParse("HEAD");
+            logger.log(Level.INFO, String.format(LOG_PREFIX + "Rebase successful. Attempting fast-forward merge."));
+            client.checkout().ref(bridge.getBranch()).execute();
+            client.merge().setRevisionToMerge(rebasedCommit).execute();
+            logger.log(Level.INFO, String.format(LOG_PREFIX + "Fast-forward merge successful. Exiting tryRebase."));
+            return true;
+        } catch (GitException | IOException | InterruptedException ex) {
+            throw new IntegationFailedExeception("Failed to rebase commit.", ex);
+        }
     }
 
     @Extension
