@@ -21,8 +21,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class PretestedIntegrationPostCheckout extends Publisher {
     
     @DataBoundConstructor
-    public PretestedIntegrationPostCheckout() {
-    }
+    public PretestedIntegrationPostCheckout() { }
 
     /**
      * This should ensure that we only run, when the build result can no longer be changes (is final). 
@@ -76,17 +75,17 @@ public class PretestedIntegrationPostCheckout extends Publisher {
 		return result;
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.BUILD;
     }
 
     @Extension
-    public static final class DescriptorImpl extends Descriptor<Publisher> {
-        
+    public static final class DescriptorImpl extends Descriptor<Publisher> {        
+        @Override
 		public String getDisplayName() {
             return "Pretested Integration post-build";
-        }
-        
+        }        
     }
 
     private static final Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());

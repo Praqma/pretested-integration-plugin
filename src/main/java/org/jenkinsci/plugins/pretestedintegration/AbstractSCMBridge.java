@@ -1,7 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.util.BuildData;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NextCommitFailureException;
@@ -22,7 +20,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Result;
-import hudson.model.TaskListener;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
