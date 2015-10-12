@@ -862,7 +862,7 @@ public class TestUtilsFactory {
 
         // the pattern we want to search for
         Pattern p = Pattern.compile("<link rel=\"stylesheet\" type=\"text/css\" href=\"/jenkins/descriptor/hudson.console.ExpandableDetailsNote/style.css\"/>"
-                + ".*<pre>(.*)</pre>.*</td>.*</tr>.*</tbody>.*</table>", Pattern.DOTALL);
+                + ".*<pre.*>(.*)</pre>", Pattern.DOTALL);
         Matcher m = p.matcher(console);
         // if we find a match, get the group
         if (m.find()) {
@@ -873,9 +873,12 @@ public class TestUtilsFactory {
             System.out.format("'%s'\n", capturedText);
             return true;
         } else {
-            System.out.format("Didn't match any relevant part of the console");
+            System.out.format("Didn't match any relevant part of the console%n");
+            System.out.format("Writing full log to trace%n");
+            System.out.format("************************************************************************%n");
+            System.out.format(console+"%n");
+            System.out.format("************************************************************************%n");           
             return false;
         }
-    }
-	     
+    }     
 }
