@@ -256,15 +256,16 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Attempting rebase."));
             GitClient client = Git.with(listener, build.getEnvironment(listener)).in(bridge.resolveWorkspace(build, listener)).getClient();
             ObjectId commitId = bridge.getCommitId(build, listener);
+            String expandedBranch = bridge.getExpandedBranch(build.getEnvironment(listener));
 
             //Rebase the commit, then checkout master for a fast-forward merge.
-            int rebaseCode = bridge.git(build, launcher, listener, "rebase", bridge.getBranch(), commitId.getName());
+            int rebaseCode = bridge.git(build, launcher, listener, "rebase", expandedBranch, commitId.getName());
             if (rebaseCode != 0) {
                 throw new IntegationFailedExeception("Rebase failed with exit code " + rebaseCode);
             }
             ObjectId rebasedCommit = client.revParse("HEAD");
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Rebase successful. Attempting fast-forward merge."));
-            client.checkout().ref(bridge.getBranch()).execute();
+            client.checkout().ref(expandedBranch).execute();
             client.merge().setRevisionToMerge(rebasedCommit).execute();
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Fast-forward merge successful. Exiting tryRebase."));
             return true;

@@ -6,7 +6,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.TaskListener;
-import hudson.model.queue.QueueTaskFuture;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
@@ -61,8 +60,10 @@ public class EnvVarsIT {
         CaptureEnvironmentBuilder builder = new CaptureEnvironmentBuilder();
         project.getBuildersList().add(builder);
 
-        QueueTaskFuture<FreeStyleBuild> build = project.scheduleBuild2(0);
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
         jenkins.waitUntilNoActivityUpTo(60000);
+        String console = jenkins.createWebClient().getPage(build, "console").asText();
+        System.out.println(console);
         jenkins.assertBuildStatusSuccess(build);
         System.out.println("Built with branch '" + INTEGRATION_BRANCH + "' on repository '" + REPOSITORY + "'.");
         assert builder.getEnvVars().get("INTEGRATION_BRANCH", "default").equals(INTEGRATION_BRANCH);

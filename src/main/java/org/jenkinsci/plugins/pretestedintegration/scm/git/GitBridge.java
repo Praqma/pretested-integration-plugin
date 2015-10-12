@@ -235,8 +235,6 @@ public class GitBridge extends AbstractSCMBridge {
     public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
         logger.entering("GitBridge", "ensureBranch", new Object[] { build, branch, listener, launcher });// Generated code DONT TOUCH! Bookmark: eb203ba8b33b4c38087310c398984c1a
 
-        listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getBranch()));
-
         try {
             EnvVars environment = build.getEnvironment(listener);
             listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", getExpandedBranch(environment)));
@@ -561,7 +559,7 @@ public class GitBridge extends AbstractSCMBridge {
     public int countCommits(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
         ObjectId commitId = getCommitId(build, listener);
         GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
-        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(listener, commitId, getBranch());
+        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(listener, commitId, getExpandedBranch(build.getEnvironment(listener)));
         int commitCount = client.withRepository(commitCountCallback);
         return commitCount;
     }

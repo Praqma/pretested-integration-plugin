@@ -107,6 +107,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         } catch (Exception ex) {
             build.setResult(Result.FAILURE);
             listener.getLogger().println(String.format("%sUnexpected error. Check log for details", LOG_PREFIX));
+            ex.printStackTrace(listener.getLogger());
             logger.log(Level.SEVERE, LOG_PREFIX + "- setUp() - Unexpected error", ex);
             proceedToBuildStep = false;
         } 
