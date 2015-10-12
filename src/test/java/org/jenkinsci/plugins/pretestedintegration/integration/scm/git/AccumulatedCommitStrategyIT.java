@@ -4,26 +4,18 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.RunList;
-
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
-
-
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
 import java.io.File;
-
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
-import org.eclipse.jgit.lib.Ref;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
-import org.junit.Ignore;
 
 /**
  * <h3>Set of tests that test that we react correctly to merge conflicts</h3> 

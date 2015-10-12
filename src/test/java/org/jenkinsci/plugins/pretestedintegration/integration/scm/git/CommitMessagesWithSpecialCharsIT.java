@@ -4,13 +4,10 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.RunList;
-import java.io.File;
 import java.util.Iterator;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNotNull;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -460,6 +457,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      *
      * @throws Exception
      */
+    @Ignore("Wait for Bue's input on changing double quotes to single quotes during FF merges.")
     @Test
     public void commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsAccumulated_customerSuppliedRepo() throws Exception {
 
