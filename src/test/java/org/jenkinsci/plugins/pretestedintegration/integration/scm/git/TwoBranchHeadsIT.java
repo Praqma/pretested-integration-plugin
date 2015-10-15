@@ -5,18 +5,22 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
-import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
-import hudson.triggers.SCMTrigger;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.SubmoduleConfig;
+import hudson.plugins.git.UserRemoteConfig;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
@@ -29,55 +33,56 @@ import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import org.jvnet.hudson.test.Bug;
 
 /**
  * <h3>Integration test for multiple branch heads on same commit</h3>
- * <p>Created by aAndrius on 9/23/14.</p>
- * <p>Test integration of commit with two branch heads: https://trello.com/c/MFzaEMDz</p>
- * <p>This test's purpose is to test the fact that we do not handle the deletion of multiple branch heads
- * pointing to the same commit. We only delete the first one to be discoted.</p>
+ * <p>
+ * Test integration of commit with two branch heads:
+ * https://trello.com/c/MFzaEMDz</p>
+ * <p>
+ * This test's purpose is to test the fact that we do not handle the deletion of
+ * multiple branch heads pointing to the same commit. We only delete the first
+ * one to be discovered.</p>
  */
 @Bug(25512)
 public class TwoBranchHeadsIT {
+
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
     private Repository repository1;
     private Repository repository2;
 
-    private final String READY_BRANCH_1 = "ready/alpha-dev";
-    private final String READY_BRANCH_2 = "ready/my-dev";
+    private static final String READY_BRANCH_1 = "ready/alpha-dev";
+    private static final String READY_BRANCH_2 = "ready/my-dev";
 
     @After
     public void tearDown() throws Exception {
         repository1.close();
         repository2.close();
 
-        if (repository1.getDirectory().exists())
+        if (repository1.getDirectory().exists()) {
             FileUtils.deleteDirectory(repository1.getDirectory().getParentFile());
-        if (repository2.getDirectory().exists())
+        }
+        if (repository2.getDirectory().exists()) {
             FileUtils.deleteDirectory(repository2.getDirectory().getParentFile());
+        }
     }
 
     public void createValidRepositories() throws IOException, GitAPIException {
-        File GitRepo1 = new File(String.format("test-repo-%s-1/.git",this.getClass().getName()));
-        File GitRepo2 = new File(String.format("test-repo-%s-2/.git",this.getClass().getName()));
+        File GitRepo1 = new File(String.format("test-repo-%s-1/.git", this.getClass().getName()));
+        File GitRepo2 = new File(String.format("test-repo-%s-2/.git", this.getClass().getName()));
 
-        if (GitRepo1.getAbsoluteFile().exists())
+        if (GitRepo1.getAbsoluteFile().exists()) {
             FileUtils.deleteDirectory(GitRepo1.getParentFile());
-        if (GitRepo2.getAbsoluteFile().exists())
+        }
+        if (GitRepo2.getAbsoluteFile().exists()) {
             FileUtils.deleteDirectory(GitRepo2.getParentFile());
+        }
 
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
 
@@ -173,7 +178,6 @@ public class TwoBranchHeadsIT {
         checkout.setName("master");
         checkout.call();
 
-        
     }
 
     private FreeStyleProject configurePretestedIntegrationPlugin(IntegrationStrategy integrationStrategy, String repositoryUrl) throws IOException, ANTLRException, InterruptedException {
@@ -184,11 +188,11 @@ public class TwoBranchHeadsIT {
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> repoList = new ArrayList<>();
 
         repoList.add(new UserRemoteConfig(repositoryUrl, null, null, null));
 
-        List<GitSCMExtension> gitSCMExtensions = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
@@ -213,10 +217,10 @@ public class TwoBranchHeadsIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
-        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
+        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() - 1);
 
         Result result = build.getResult();
-        
+
         //Show the log for the latest build
         String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
         System.out.println("=====BUILD-LOG=====");
@@ -226,7 +230,6 @@ public class TwoBranchHeadsIT {
 
         assertFalse(TestUtilsFactory.branchExists(repository1, READY_BRANCH_1));
         assertTrue(TestUtilsFactory.branchExists(repository1, READY_BRANCH_2));
-
 
     }
 
@@ -241,10 +244,10 @@ public class TwoBranchHeadsIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
-        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
+        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() - 1);
 
         Result result = build.getResult();
-        
+
         //Show the log for the latest build
         String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
         System.out.println("=====BUILD-LOG=====");
@@ -267,16 +270,16 @@ public class TwoBranchHeadsIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
-        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
+        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() - 1);
 
         Result result = build.getResult();
-        
+
         //Show the log for the latest build
         String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
         System.out.println("=====BUILD-LOG=====");
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
- 
+
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
         assertFalse(TestUtilsFactory.branchExists(repository1, READY_BRANCH_1));
@@ -294,16 +297,16 @@ public class TwoBranchHeadsIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
-        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() -1 );
+        FreeStyleBuild build = project.getBuildByNumber(project.getNextBuildNumber() - 1);
 
         Result result = build.getResult();
-        
+
         //Show the log for the latest build
         String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
         System.out.println("=====BUILD-LOG=====");
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
-        
+
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 

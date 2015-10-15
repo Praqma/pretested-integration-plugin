@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.model.TaskListener;
@@ -17,7 +12,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 public class FindCommitAuthorCallback extends RepositoryListenerAwareCallback<String> {
 
     private static final Logger logger = Logger.getLogger(FindCommitAuthorCallback.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
-
+    
     public final ObjectId id;
 
     public FindCommitAuthorCallback(TaskListener listener, final ObjectId id) {

@@ -72,6 +72,7 @@ public class EnvVarsIT {
 
     @TestExtension("testEnvironmentVariables")
     public static class JobScopedInjection extends EnvironmentContributor {
+
         @Override
         public void buildEnvironmentFor(Job j, EnvVars envs, TaskListener listener) {
             envs.put("REPOSITORY", REPOSITORY);

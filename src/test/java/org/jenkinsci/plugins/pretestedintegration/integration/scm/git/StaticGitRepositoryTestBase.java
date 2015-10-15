@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import com.google.common.io.Files;
@@ -32,40 +27,38 @@ import org.jvnet.hudson.test.JenkinsRule;
  * 2. Contain a map over which test methods using which static git repositories: 
  *  We have created a hash map, that for each test method that uses a static git 
  *  repository specify which git repository zip-file to use from the default test 
- *  resources. The hashmap serves two purposes: 
+ *  resources. The HashMap serves two purposes: 
  *      1) enabling automatic loop-up of zip-file to use in the setUp method to
  *         avoid parsing parameters 
  *      2) give a simple overview of which repositories are used 
  *         where (we plan for reuse).
- * @author bue
  */
 public class StaticGitRepositoryTestBase {
 
-    
     // Tell which test method name uses which git repository and the setUp method
     // will do the magic.
     HashMap<String, String> testMethodName_vs_staticGitRepoName = new HashMap();
+
     public StaticGitRepositoryTestBase() {
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSquashedLinux",              "commitMessagesWithDoubleQuotes_linux");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedLinux",           "commitMessagesWithDoubleQuotes_linux");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSquashedWindows",            "commitMessagesWithDoubleQuotes_windows");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesAccumulatedWindows",         "commitMessagesWithDoubleQuotes_windows");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsAccumulated",         "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsSquashed",         "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsAccumulated_customerSuppliedRepo",         "JENKINS-28640");
-        testMethodName_vs_staticGitRepoName.put(    "commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsSquashed_customerSuppliedRepo",         "JENKINS-28640");
-        testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitSquashStrategy",         "useAuthorOfLastCommit");
-        testMethodName_vs_staticGitRepoName.put(    "authorOfLastCommitUsedIfMoreThanOneCommitAccumulatedStrategy",    "useAuthorOfLastCommit");
-        testMethodName_vs_staticGitRepoName.put(    "customIntegrationBranchSquashStrategy",         "customIntegrationBranch");
-        testMethodName_vs_staticGitRepoName.put(    "customIntegrationBranchAccumulatedStrategy",    "customIntegrationBranch");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesSquashedLinux", "commitMessagesWithDoubleQuotes_linux");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesAccumulatedLinux", "commitMessagesWithDoubleQuotes_linux");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesSquashedWindows", "commitMessagesWithDoubleQuotes_windows");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesAccumulatedWindows", "commitMessagesWithDoubleQuotes_windows");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsAccumulated", "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsSquashed", "commitMessagesWithDoubleQuotesSingleQuotesMade_windows");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsAccumulated_customerSuppliedRepo", "JENKINS-28640");
+        testMethodName_vs_staticGitRepoName.put("commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsSquashed_customerSuppliedRepo", "JENKINS-28640");
+        testMethodName_vs_staticGitRepoName.put("authorOfLastCommitUsedIfMoreThanOneCommitSquashStrategy", "useAuthorOfLastCommit");
+        testMethodName_vs_staticGitRepoName.put("authorOfLastCommitUsedIfMoreThanOneCommitAccumulatedStrategy", "useAuthorOfLastCommit");
+        testMethodName_vs_staticGitRepoName.put("customIntegrationBranchSquashStrategy", "customIntegrationBranch");
+        testMethodName_vs_staticGitRepoName.put("customIntegrationBranchAccumulatedStrategy", "customIntegrationBranch");
     }
-    
+
     public File tempFolder;
     public String temporaryFolder;
     public Repository bareRepository;
-    String LOG_PREFIX;
     Git gitrepo;
-    
+
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
@@ -74,20 +67,20 @@ public class StaticGitRepositoryTestBase {
 
     /**
      * The setUp method make a git repository available for testing, and creates
-     * the git repository working clone and the bare git repository to use in the
-     * Jenkins job setup.
-     * The method uses the hash map to look up which static git repository (those 
-     * generated by scripts, included as test resources and zipped) to use for a
-     * specific test method.
-     * Debug printing is done on the way...
-     * @throws Exception 
+     * the git repository working clone and the bare git repository to use in
+     * the Jenkins job setup. The method uses the hash map to look up which
+     * static git repository (those generated by scripts, included as test
+     * resources and zipped) to use for a specific test method. Debug printing
+     * is done on the way...
+     *
+     * @throws Exception
      */
     @Before
     public void setUp() throws Exception {
         // creates a temporary folder using Google common io utils
         tempFolder = Files.createTempDir();
         temporaryFolder = tempFolder.toString();
-        
+
         // method name of the test method that uses this setUp method NOW!
         String methodName = name.getMethodName();
         System.out.println(String.format("**********************************************************************"));
@@ -102,20 +95,20 @@ public class StaticGitRepositoryTestBase {
             assertNotNull(String.format("setUp method for %s could not look-up static git repo to use based on test method name", methodName), gitRepoName);
         }
         System.out.println(String.format("* Static git repository NAME:             %s", gitRepoName));
-        
+
         // get resources from test resources, default package, where the zip-files with static git repos reside
         URI zipFileURI = TestUtilsFactory.class.getClassLoader().getResource(gitRepoName + ".zip").toURI();
         System.out.println(String.format("* Using static repository from zip file:    %s", zipFileURI));
-        
+
         // By convention, the way we pack our repository they are unpacked as this:
         String gitRepo = temporaryFolder + "/" + gitRepoName; // working clone, crated below
         String gitRepoBare = gitRepo + ".git";
         System.out.println(String.format("* BARE repository is                      %s", gitRepo));
         System.out.println(String.format("* Working repository is                   %s", gitRepo));
-        
+
         String zipfile = new File(zipFileURI).toString();
         TestUtilsFactory.unzipFunction(temporaryFolder, zipfile);
-        
+
         // bare repository is used as the repository you point Jenkins job to poll
         bareRepository = new FileRepository(gitRepoBare);
         File workingRepoPath = new File(gitRepo);
@@ -136,7 +129,8 @@ public class StaticGitRepositoryTestBase {
     /**
      * Tear down used to delete temporary folder where git repository for tests
      * reside.
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @After
     public void tearDown() throws Exception {

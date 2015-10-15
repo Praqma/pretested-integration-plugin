@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.Extension;
@@ -20,37 +14,33 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
-import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
-import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- *
- * @author Mads
- */
 public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
-    
     private static final String B_NAME = "Accumulated commit";
     private static final Logger logger = Logger.getLogger(AccumulatedCommitStrategy.class.getName());
     private static final String LOG_PREFIX = "[PREINT] ";
     private static final int unLikelyExitCode = -999; // An very unlikely exit code, that we use as default
 
     @DataBoundConstructor
-    public AccumulatedCommitStrategy() { }
+    public AccumulatedCommitStrategy() {
+    }
 
     @Override
-    public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {
-        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
+    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {
+        logger.entering("AccumulatedCommitStrategy", "integrate", new Object[]{build, listener, bridge, launcher});// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
         int exitCodeMerge = unLikelyExitCode;
         int exitCodeCommit = unLikelyExitCode;
+
         GitBridge gitbridge = (GitBridge)bridge;
         
         if(tryFastForward(build, launcher, listener, gitbridge)) return;
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build, listener);
+        BuildData gitBuildData = gitbridge.findRelevantBuildData(build, listener);
         String commit = gitBuildData.lastBuild.revision.getSha1String();
 
         //TODO: Implement robustness, in which situations does this one contain 
@@ -122,7 +112,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             logger.info("Starting accumulated merge (no-ff) - without commit:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting accumulated merge (no-ff) - without commit:"));
             String commitMsg = String.format("%s%n%s", headerLine, commits);
-            String modifiedCommitMsg = commitMsg.replaceAll("\"","'");
+            String modifiedCommitMsg = commitMsg.replaceAll("\"", "'");
             exitCodeMerge = gitbridge.git(build, launcher, listener, out, "merge", "--no-ff", "--no-commit", "-m", modifiedCommitMsg, commit);
             logger.info("Accumulated merge done");
             listener.getLogger().println(String.format(LOG_PREFIX + "Accumulated merge done"));
@@ -164,7 +154,6 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         logger.log(Level.INFO, String.format(LOG_PREFIX + "Merge was successful"));
         listener.getLogger().println(String.format(LOG_PREFIX + "Merge was successful"));
 
-        
         try {
             logger.info("Starting to commit accumulated merge changes:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting to commit accumulated merge changes:"));
@@ -204,7 +193,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
                     build.setDescription(String.format("Failed to commit merge changes"));
                     logger.fine("Done setting build description.");
                 }
-            } catch (IOException ex ) {
+            } catch (IOException ex) {
                 logger.log(Level.SEVERE, "Failed to update build description", ex);
                 logger.exiting("AccumulatedCommitStrategy", "integrate");
                 // It is not fatal to fail setting build description on the job
@@ -223,14 +212,14 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         logger.log(Level.INFO, String.format(LOG_PREFIX + "Commit was successful"));
         listener.getLogger().println(String.format(LOG_PREFIX + "Commit was successful"));
     }
-    
+
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<AccumulatedCommitStrategy> {
 
-		public DescriptorImpl() {
+        public DescriptorImpl() {
             load();
         }
-        
+
         @Override
         public String getDisplayName() {
             return B_NAME;
@@ -240,7 +229,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         public boolean isApplicable(Class<? extends AbstractSCMBridge> bridge) {
             return GitBridge.class.equals(bridge);
         }
-        
+
     }
-    
+
 }

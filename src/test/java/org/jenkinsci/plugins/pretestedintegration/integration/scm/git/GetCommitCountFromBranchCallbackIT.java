@@ -2,19 +2,19 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import hudson.model.TaskListener;
 import java.io.File;
-import static junit.framework.TestCase.assertEquals;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GetCommitCountFromBranchCallback;
 import org.junit.After;
 import org.junit.Test;
+import static junit.framework.TestCase.assertEquals;
 
 public class GetCommitCountFromBranchCallbackIT {
 
-    private final String FOLDER_PREFIX = "CommitCount_";
+    private static final String FOLDER_PREFIX = "CommitCount_";
     private File dir;
-    
+
     @After
     public void tearDown() throws Exception {
         TestUtilsFactory.destroyDirectory(dir);
@@ -44,13 +44,13 @@ public class GetCommitCountFromBranchCallbackIT {
 
         // Counts two commits
         GetCommitCountFromBranchCallback callback = new GetCommitCountFromBranchCallback(TaskListener.NULL, startCommit, "master");
-        assertEquals("Commit count did not match expectations.", new Integer(2), callback.invoke(git.getRepository(), null));
+        assertEquals("Commit count did not match expectations.", Integer.valueOf(2), callback.invoke(git.getRepository(), null));
 
         // Second commit to master
         FileUtils.writeStringToFile(testFile, "master commit 2");
         git.add().addFilepattern("file").call();
         git.commit().setMessage("master commit 2").call();
-        
+
         // STILL counts two commits
         callback = new GetCommitCountFromBranchCallback(TaskListener.NULL, startCommit, "master");
         assertEquals("Commit count did not match expectations.", new Integer(2), callback.invoke(git.getRepository(), null));

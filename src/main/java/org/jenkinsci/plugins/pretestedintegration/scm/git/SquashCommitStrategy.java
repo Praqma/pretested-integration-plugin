@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.Extension;
@@ -13,37 +7,32 @@ import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.util.BuildData;
-import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.pretestedintegration.*;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.pretestedintegration.*;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegationFailedExeception;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- *
- * @author Mads
- */
 public class SquashCommitStrategy extends GitIntegrationStrategy {
-
     private static final String B_NAME = "Squashed commit";
     private static final Logger logger = Logger.getLogger(SquashCommitStrategy.class.getName());
     private static final String LOG_PREFIX = "[PREINT] ";
     private static final int unLikelyExitCode = -999; // An very unlikely exit code, that we use as default
 
     @DataBoundConstructor
-    public SquashCommitStrategy() { }
+    public SquashCommitStrategy() {
+    }
 
     @Override
-    public void integrate(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {
+    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegationFailedExeception, NothingToDoException, UnsupportedConfigurationException {
         logger.entering("SquashCommitStrategy", "integrate", new Object[]{build, listener, bridge, launcher});// Generated code DONT TOUCH! Bookmark: 36174744d49c892c3aeed5e2bc933991
         int exitCodeMerge = unLikelyExitCode;
         int exitCodeCommit = unLikelyExitCode;
@@ -56,7 +45,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
         //TODO: How can you add more than 1 action, MultiSCM plugin with two 
         // seperate gits?
-        BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build, listener);
+        BuildData gitBuildData = gitbridge.findRelevantBuildData(build, listener);
 
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         
@@ -126,7 +115,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             logger.log(Level.SEVERE, "Exception while merging. Logging exception", ex);
             listener.getLogger().println(LOG_PREFIX + String.format("Exception while merging. Logging exception msg: %s", ex.getMessage()));
             logger.exiting("SquashCommitStrategy", "integrate-mergeFailure");
-			throw new IntegationFailedExeception(ex);
+            throw new IntegationFailedExeception(ex);
         }
         // NOTICE: The catch-throw exception above means we have handles all 
         // exceptions at this point, and only need to look to at exit codes.
@@ -155,7 +144,6 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         logger.log(Level.INFO, String.format(LOG_PREFIX + "Merge was successful"));
         listener.getLogger().println(String.format(LOG_PREFIX + "Merge was successful"));
 
-
         try {
             logger.info("Starting to commit squash merge changes:");
             listener.getLogger().println(String.format(LOG_PREFIX + "Starting to commit squash merge changes:"));
@@ -173,7 +161,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             logger.log(Level.SEVERE, "Exception while merging or comitting, logging exception", ex);
             listener.getLogger().println(LOG_PREFIX + String.format("Exception while committing. Logging exception msg: %s", ex.getMessage()));
             logger.exiting("SquashCommitStrategy", "integrate-commitFailure");
-			throw new IntegationFailedExeception(ex);
+            throw new IntegationFailedExeception(ex);
         }
         // NOTICE: The catch-throw exception above means we have handles all 
         // exceptions at this point, and only need to look to at exit codes.
@@ -197,7 +185,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                     build.setDescription(String.format("Failed to commit merge changes"));
                     logger.fine("Done setting build description.");
                 }
-            } catch (IOException ex ) {
+            } catch (IOException ex) {
                 logger.log(Level.SEVERE, "Failed to update build description", ex);
                 logger.exiting("SquashCommitStrategy", "integrate");
                 // It is not fatal to fail setting build description on the job
@@ -219,10 +207,11 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     }
 
     /**
-     * Rebases the ready branch onto the integration branch.
-     * ONLY when the ready branch consists of a single commit.
-     * 
-     * @return true if the rebase was a success, false if the branch isn't suitable for a rebase
+     * Rebases the ready branch onto the integration branch. ONLY when the ready
+     * branch consists of a single commit.
+     *
+     * @return true if the rebase was a success, false if the branch isn't
+     * suitable for a rebase
      * @throws IntegationFailedExeception when the rebase was a failure
      */
     private boolean tryRebase(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegationFailedExeception {
@@ -247,7 +236,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         try {
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Attempting rebase."));
             GitClient client = Git.with(listener, build.getEnvironment(listener)).in(bridge.resolveWorkspace(build, listener)).getClient();
-            ObjectId commitId = bridge.getCommitId(build, listener);
+            ObjectId commitId = bridge.findRelevantBuildData(build, listener).lastBuild.revision.getSha1();
             String expandedBranch = bridge.getExpandedBranch(build.getEnvironment(listener));
 
             //Rebase the commit, then checkout master for a fast-forward merge.
@@ -269,10 +258,11 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<SquashCommitStrategy> {
 
-		public DescriptorImpl() {
+        public DescriptorImpl() {
             load();
         }
 
+        @Override
         public String getDisplayName() {
             return B_NAME;
         }

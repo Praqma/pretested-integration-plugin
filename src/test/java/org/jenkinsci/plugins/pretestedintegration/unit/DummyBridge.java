@@ -1,12 +1,12 @@
 package org.jenkinsci.plugins.pretestedintegration.unit;
 
-import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.io.IOException;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 
 public class DummyBridge extends AbstractSCMBridge {
 
@@ -21,7 +21,7 @@ public class DummyBridge extends AbstractSCMBridge {
 
     @Override
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        //nop
+
     }
 
 }

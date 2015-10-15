@@ -15,28 +15,28 @@ public class PretestedIntegrationJobDslExtensionTest {
     public void testDslWithSquash() throws Exception {
         Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("SQUASHED", "branch", "repo");
         assertThat(node, instanceOf(PretestedIntegrationBuildWrapper.class));
-        PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper)node;
+        PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper) node;
 
         assertThat(wrapper.scmBridge, instanceOf(GitBridge.class));
-        GitBridge bridge = (GitBridge)wrapper.scmBridge;
+        GitBridge bridge = (GitBridge) wrapper.scmBridge;
 
         assertThat(bridge.integrationStrategy, instanceOf(SquashCommitStrategy.class));
         assertEquals(bridge.getBranch(), "branch");
-        assertEquals(bridge.getRepoName(), "repo");
+        assertEquals(bridge.getRepositoryName(), "repo");
     }
 
     @Test
     public void testDslWithAccumulated() throws Exception {
         Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("ACCUMULATED", "branch", "repo");
         assertThat(node, instanceOf(PretestedIntegrationBuildWrapper.class));
-        PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper)node;
+        PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper) node;
 
         assertThat(wrapper.scmBridge, instanceOf(GitBridge.class));
-        GitBridge bridge = (GitBridge)wrapper.scmBridge;
+        GitBridge bridge = (GitBridge) wrapper.scmBridge;
 
         assertThat(bridge.integrationStrategy, instanceOf(AccumulatedCommitStrategy.class));
         assertEquals(bridge.getBranch(), "branch");
-        assertEquals(bridge.getRepoName(), "repo");
+        assertEquals(bridge.getRepositoryName(), "repo");
     }
 
     @Test(expected = DslScriptException.class)

@@ -49,7 +49,7 @@ public class GitIntegrationStrategy extends IntegrationStrategy {
         try {
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Attempting rebase."));
             GitClient client = Git.with(listener, build.getEnvironment(listener)).in(bridge.resolveWorkspace(build, listener)).getClient();
-            ObjectId commitId = bridge.getCommitId(build, listener);
+            ObjectId commitId = bridge.findRelevantBuildData(build, listener).lastBuild.revision.getSha1();
             client.merge().setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).setRevisionToMerge(commitId).execute();
             listener.getLogger().println(String.format(LOG_PREFIX + "FF merge successful."));
             logger.log(Level.INFO, LOG_PREFIX + " Exiting tryFastForward.");

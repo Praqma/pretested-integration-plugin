@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.model.TaskListener;
@@ -18,19 +13,16 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-/**
- *
- * @author andrius
- */
 public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCallback<String> {
+
     public final ObjectId id;
     public final String branch;
-     private static final Logger logger = Logger.getLogger(GetAllCommitsFromBranchCallback.class.getName());
-     private static final String LOG_PREFIX = "[PREINT] ";
-    
-    public GetAllCommitsFromBranchCallback(TaskListener listener, final ObjectId id, final String branch ) {
+    private static final Logger logger = Logger.getLogger(GetAllCommitsFromBranchCallback.class.getName());
+    private static final String LOG_PREFIX = "[PREINT] ";
+
+    public GetAllCommitsFromBranchCallback(TaskListener listener, final ObjectId id, final String branch) {
         super(listener);
-        this.id = id; 
+        this.id = id;
         this.branch = branch;
     }
 
@@ -39,13 +31,13 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         logger.entering("GetAllCommitsFromBranchCallback", "invoke", new Object[]{channel, repo});
         StringBuilder sb = new StringBuilder();
         RevWalk walk = new RevWalk(repo);
-        
+
         // commit on our branch, resolved from the jGit object id
         RevCommit commit = walk.parseCommit(id);
 
         // walk tree starting from the integration commit
         walk.markStart(commit);
-       
+
         logger.info(String.format(LOG_PREFIX + "Collecting commit message until reaching branch %s", branch));
         // limit the tree walk to keep away from master commits
         // Reference for this idea is: https://wiki.eclipse.org/JGit/User_Guide#Restrict_the_walked_revision_graph
@@ -56,12 +48,12 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         // iterating over the commits that will be integrated
         for (RevCommit rev : walk) {
 
-            sb.append(String.format("commit %s",rev.getName()));
+            sb.append(String.format("commit %s", rev.getName()));
             sb.append(String.format("%n"));
             // In the commit message overview, the author is right one to give credit (author wrote the code)
-            sb.append(String.format("Author: %s <%s>",rev.getAuthorIdent().getName(), rev.getAuthorIdent().getEmailAddress()));
+            sb.append(String.format("Author: %s <%s>", rev.getAuthorIdent().getName(), rev.getAuthorIdent().getEmailAddress()));
             sb.append(String.format("%n"));
-            
+
             Integer secondsSinceUnixEpoch = rev.getCommitTime();
             // Note that the git log shows different date formats, depending on configuration.
             // The choices in the git commit message below matches the squashed commit message
@@ -72,8 +64,8 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM d kk:mm:ss yyyy ZZZZ", Locale.ENGLISH);
             Date commitTime = new Date(secondsSinceUnixEpoch * 1000L); // seconds to milis
             String asString = formatter.format(commitTime);
-            sb.append(String.format("Date:   %s", asString ));
-            
+            sb.append(String.format("Date:   %s", asString));
+
             sb.append(String.format("%n"));
             sb.append(String.format("%n"));
 
@@ -89,17 +81,17 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             String indentation = String.format("%" + numberOfSpaces + "s", "");
             String fullMessage = rev.getFullMessage();
             Pattern myregexp = Pattern.compile(newlinechar, Pattern.MULTILINE);
-            
+
             String newstring = myregexp.matcher(fullMessage).replaceAll(newlinechar + indentation);
-            
+
             sb.append(String.format(indentation + "%s", newstring));
             sb.append(String.format("%n"));
             sb.append(String.format("%n"));
         }
-        
+
         walk.dispose();
-        
+
         logger.exiting("GetAllCommitsFromBranchCallback", "invoke", new Object[]{channel, repo});
         return sb.toString();
-    }    
+    }
 }

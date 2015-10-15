@@ -6,13 +6,13 @@ import org.jenkinsci.plugins.pretestedintegration.Commit;
 @Extension
 public class DummyCommit extends Commit<String> {
 
-	/* for unit testing purposes */
-	public DummyCommit(){
-		super("");
-	}
-	
-	public DummyCommit(String commitId) {
-		super(commitId);
-	}
+    /* for unit testing purposes */
+    public DummyCommit() {
+        super("");
+    }
+
+    public DummyCommit(String commitId) {
+        super(commitId);
+    }
 
 }

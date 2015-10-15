@@ -3,14 +3,14 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.Extension;
 import java.util.Arrays;
 import java.util.List;
-import static javaposse.jobdsl.dsl.Preconditions.checkArgument;
-import javaposse.jobdsl.dsl.RequiresPlugin;
 import javaposse.jobdsl.dsl.helpers.wrapper.WrapperContext;
+import javaposse.jobdsl.dsl.RequiresPlugin;
 import javaposse.jobdsl.plugin.ContextExtensionPoint;
 import javaposse.jobdsl.plugin.DslExtensionMethod;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
+import static javaposse.jobdsl.dsl.Preconditions.checkArgument;
 
 /*
 ```
@@ -34,6 +34,7 @@ job("pi-job"){
 
 @Extension(optional = true)
 public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
+
     final List<String> strategies = Arrays.asList("ACCUMULATED", "SQUASHED");
 
     @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.0")

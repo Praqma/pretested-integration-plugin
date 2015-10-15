@@ -18,17 +18,20 @@ import static junit.framework.TestCase.assertEquals;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
 
 /**
- * <h3>Set of tests that test that we react correctly to merge conflicts</h3> 
- * <p>Created by Andrius on 9/2/14.</p>
- * <p>All tests here are using single repository integration, that is the default Git configuration</p>
- * <p>The tests are all using the 'Accumulated commit' strategy in the Pretested integration plugin configuration</p>
- */ 
+ * <h3>Set of tests that test that we react correctly to merge conflicts</h3>
+ * <p>
+ * All tests here are using single repository integration, that is the default
+ * Git configuration</p>
+ * <p>
+ * The tests are all using the 'Accumulated commit' strategy in the Pretested
+ * integration plugin configuration</p>
+ */
 public class AccumulatedCommitStrategyIT {
-    
+
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
-    final String FEATURE_BRANCH_NAME = "ready/feature_1";                                        
+    private static final String FEATURE_BRANCH_NAME = "ready/feature_1";
     private Repository repository;
 
     @After
@@ -38,97 +41,97 @@ public class AccumulatedCommitStrategyIT {
 
     /**
      * Git Plugin
-     * 
+     *
      * Test that show that a ready/feature_1 branch get integrated into master
-     * 
+     *
      * Pretested integration:
      *  - 'Integration branch' : master (default)
      *  - 'Repository name' : origin (default) 
      *  - 'Strategy' : Squash Commit
-     * 
+     *
      * GitSCM:
      *  - 'Name' : (empty)
-     * 
+     *
      * Workflow
      *  - Create a repository containing a 'ready' branch.
      *  - The build is triggered. 
-     * 
+     *
      * Results
      *  - We expect that the plugin triggers, and that the commits on ready branch
      *    is merged into our integration branch master and build result becomes SUCCESS.
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
-    public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {        
+    public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         repository = TestUtilsFactory.createValidRepository("test-repo");
-        
+
         File workDir = new File("test-repo");
-        
-        Git.cloneRepository().setURI("file:///"+repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
-        .setBare(false)
-        .setCloneAllBranches(true) 
-        .setNoCheckout(false)
-        .call().close();
-        
+
+        Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
+                .setBare(false)
+                .setCloneAllBranches(true)
+                .setNoCheckout(false)
+                .call().close();
+
         Git git = Git.open(workDir);
-        
-        System.out.println("Opening git repository in: "+workDir.getAbsolutePath());
-        
+
+        System.out.println("Opening git repository in: " + workDir.getAbsolutePath());
+
         String readmeFromIntegration = FileUtils.readFileToString(new File("test-repo/readme"));
-                
+
         git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(SetupUpstreamMode.TRACK).setCreateBranch(true).call();
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
-        git.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call();        
-        
+        git.checkout().setName("master").setUpstreamMode(SetupUpstreamMode.TRACK).call();
+
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
         TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         RunList<FreeStyleBuild> builds = project.getBuilds();
-        
-        for(FreeStyleBuild b : builds) {
-             String console = jenkinsRule.createWebClient().getPage(b, "console").asText();
-             System.out.println(console);
+
+        for (FreeStyleBuild b : builds) {
+            String console = jenkinsRule.createWebClient().getPage(b, "console").asText();
+            System.out.println(console);
         }
 
         String readmeFileContents = FileUtils.readFileToString(new File("test-repo/readme"));
         assertEquals(readmeFromIntegration, readmeFileContents);
-        
+
         git.pull().call();
-               
+
         final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(git);
-        
+
         git.close();
-        
+
         //We assert that 2 commits from branch gets merged + 1 combined merge commit since we do --no-ff
         assertEquals(COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 3, COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION);
     }
-    
+
     /**
      * Git Plugin
-     * 
-     * Test that shows that a ready/feature_1 branch does not get integrated to master
-     * branch because of merge conflict.
-     * 
+     *
+     * Test that shows that a ready/feature_1 branch does not get integrated to
+     * master branch because of merge conflict.
+     *
      * Pretested integration:
      *  - 'Integration branch' : master (default)
      *  - 'Repository name' : origin (default) 
      *  - 'Strategy' : Squash Commit
-     * 
+     *
      * GitSCM:
      *  - 'Name' : (empty)
-     * 
+     *
      * Workflow
      *  - Create a repository containing a 'ready' branch.
      *  - The build is triggered. 
-     * 
+     *
      * Results
-     *  - We expect that the plugin triggers, and that the build is FAILED with a merge
-     *    conflict error.
-     * 
-     * @throws Exception 
+     *  - We expect that the plugin triggers, and that the build is FAILED
+     *    with a merge conflict error.
+     *
+     * @throws Exception
      */
     @Test
     public void oneInvalidFeatureBranch_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
@@ -147,40 +150,40 @@ public class AccumulatedCommitStrategyIT {
 
     /**
      * Test that show that a ready/feature_1 branch get integrated into master
-     * 
+     *
      * Pretested integration:
      *  - 'Integration branch' : master (default)
      *  - 'Repository name' : origin (default) 
      *  - 'Strategy' : Squash Commit
-     * 
+     *
      * GitSCM:  
      *  - 'Name' : (empty)
-     * 
+     *
      * Workflow
      *  - Create a repository containing a 'ready' branch.
      *  - The build is triggered. 
-     * 
+     *
      * Results
      *  - We expect that the plugin triggers, and that the commits on ready branch
      *    is merged into our integration branch master and build result becomes SUCCESS.
-     * 
-     * @throws Exception 
-     */    
+     *
+     * @throws Exception
+     */
     @Test
     public void oneValidFeatureBranchRunningOnSlave_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         repository = TestUtilsFactory.createValidRepository("test-repo");
-        
+
         File workDir = new File("test-repo");
-        
-        Git.cloneRepository().setURI("file:///"+repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
-        .setBare(false)        
-        .setCloneAllBranches(true)                
-        .setNoCheckout(false)
-        .call().close();
-        
+
+        Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
+                .setBare(false)
+                .setCloneAllBranches(true)
+                .setNoCheckout(false)
+                .call().close();
+
         Git git = Git.open(workDir);
-       
-        String fromIntegration = FileUtils.readFileToString(new File(workDir,"/readme"));
+
+        String fromIntegration = FileUtils.readFileToString(new File(workDir, "/readme"));
 
         git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(SetupUpstreamMode.TRACK).setCreateBranch(true).call();
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
@@ -201,35 +204,35 @@ public class AccumulatedCommitStrategyIT {
         assertEquals(fromIntegration, readmeFileContents);
 
         git.pull().call();
-        
+
         final int COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION = TestUtilsFactory.countCommits(git);
-        
+
         git.close();
-        
+
         assertTrue(COMMIT_COUNT_ON_MASTER_AFTER_EXECUTION == COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION + 3);
     }
 
     /**
-     * Test that shows that a ready/feature_1 branch does not get integrated to master
-     * branch because of merge conflict.
-     * 
+     * Test that shows that a ready/feature_1 branch does not get integrated to
+     * master branch because of merge conflict.
+     *
      * Pretested integration:
      *  - 'Integration branch' : master (default)
      *  - 'Repository name' : origin (default) 
      *  - 'Strategy' : Squash Commit
-     * 
+     *
      * GitSCM:
      *  - 'Name' : (empty)
-     * 
+     *
      * Workflow
      *  - Create a repository containing a 'ready' branch.
      *  - The build is triggered. 
-     * 
+     *
      * Results
-     *  - We expect that the plugin triggers, and that the build is FAILED with a merge
-     *    conflict error.
-     * 
-     * @throws Exception 
+     *  - We expect that the plugin triggers, and that the build is FAILED
+     *    with a merge conflict error.
+     *
+     * @throws Exception
      */
     @Test
     public void oneInvalidFeatureBranchRunningOnSlave_1BuildIsTriggeredNothingGetsIntegratedBuildMarkedAsFAILURE() throws Exception {
@@ -239,10 +242,10 @@ public class AccumulatedCommitStrategyIT {
         TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
-        
+
         FreeStyleBuild b = project.getFirstBuild();
         jenkinsRule.assertBuildStatus(Result.FAILURE, b);
 
     }
-  
+
 }

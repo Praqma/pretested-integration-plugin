@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import hudson.model.FreeStyleBuild;
@@ -10,13 +5,13 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
-import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.SubmoduleConfig;
+import hudson.plugins.git.UserRemoteConfig;
 import hudson.scm.PollingResult;
 import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
@@ -26,11 +21,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import static junit.framework.TestCase.assertNotNull;
@@ -71,10 +66,10 @@ import org.xml.sax.SAXException;
  *  * Pretested Integration configuration:
  *      * Integration branch: `master`
  *      * Integration repository: `repo3`
- *      * Squashed strategy (stragey doesn't really matter in the context)
+ *      * Squashed strategy (strategy doesn't really matter in the context)
  * 
  * Observations:
-         * Pushing a ready branch to `repo3`, sayes nothing to do:
+         * Pushing a ready branch to `repo3`, says nothing to do:
             `Nothing to do the reason is: The branch name (repo3/ready/dev_865487921) 
              used by git, did not match a remote branch name. 
              You might already have integrated the branch`
@@ -82,15 +77,14 @@ import org.xml.sax.SAXException;
             to find changes and build properly (have nothing to do with this plugin.
  * {@link twoMasterPlusOneReadyConfiguration} related to this specific setup.
    {@link oneReadyPlusTwoMasterConfiguration} show the other situation, where 
-         integration repositori is configured first, thus it works.
- * @author Bue Petersen
+         integration repository is configured first, thus it works.
  */
 public class MultipleScm_threeRepos_IT {
 
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
-    private List<Repository> repositoriesToTearDown = new ArrayList<Repository>();
+    private final List<Repository> repositoriesToTearDown = new ArrayList<>();
 
     // Common messages used several times
     // TODO: Move to a shared error message class.
@@ -107,7 +101,7 @@ public class MultipleScm_threeRepos_IT {
     @After
     public void tearDown() throws Exception {
         singleThreadExecutor.shutdownNow();
-        for( Repository r : repositoriesToTearDown ) {
+        for (Repository r : repositoriesToTearDown) {
             TestUtilsFactory.destroyRepo(r);
         }
     }
@@ -142,7 +136,7 @@ public class MultipleScm_threeRepos_IT {
             for (FreeStyleBuild build : builds) {
                 if (build.getNumber() == expectedBuildNumber) {
                     // build.getResult() can return intermediary result if in progress
-                    if ((build.getResult() != null) && (build.isBuilding() !=  true)) {
+                    if ((build.getResult() != null) && (build.isBuilding() != true)) {
                         return build;
                     }
                     break; //Wait until build finished
@@ -155,11 +149,12 @@ public class MultipleScm_threeRepos_IT {
 
     /**
      * Pretty prints console output from build log
+     *
      * @param build
-     * @param buildname - descriptive build name  included in the output
+     * @param buildname - descriptive build name included in the output
      * @return
      * @throws IOException
-     * @throws SAXException 
+     * @throws SAXException
      */
     private String printAndReturnConsoleOfBuild(FreeStyleBuild build, String buildname) throws IOException, SAXException {
         String console = jenkinsRule.createWebClient().getPage(build, "console").asText();
@@ -171,11 +166,12 @@ public class MultipleScm_threeRepos_IT {
 
     /**
      * Pretty prints polling log from build
+     *
      * @param build
      * @param buildname - descriptive build name included in the output
      * @return
      * @throws IOException
-     * @throws SAXException 
+     * @throws SAXException
      */
     private String printAndReturnPollingLogOfBuild(FreeStyleBuild build, String buildname) throws IOException, SAXException {
         String console = jenkinsRule.createWebClient().getPage(build, "pollingLog").asText();
@@ -215,11 +211,11 @@ public class MultipleScm_threeRepos_IT {
      *  * Pretested Integration configuration:
      *      * Integration branch: `master`
      *      * Integration repository: `repo3`
-     *      * Squashed strategy (stragey doesn't really matter in the context)
+     *      * Squashed strategy (strategy doesn't really matter in the context)
      * 
      *  Test work flow:
      *      * First we try to establish a working job setup, where repository
-             builds. MultiSCM have issues in fiding changes in correct order to 
+             builds. MultiSCM have issues in finding changes in correct order to 
              start with in a new job configuration.
             * Then a ready branch is pushed to the integration repository
              and the plugin should integrate it. Several builds start, as MultiSCM
@@ -245,17 +241,17 @@ public class MultipleScm_threeRepos_IT {
         repositoriesToTearDown.add(repo2);
         repositoriesToTearDown.add(repo3);
 
-        List<GitSCMExtension> gitSCMExtensionsRepo1AndRepo2 = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> gitSCMExtensionsRepo1AndRepo2 = new ArrayList<>();
         gitSCMExtensionsRepo1AndRepo2.add(new PruneStaleBranch());
         gitSCMExtensionsRepo1AndRepo2.add(new CleanCheckout());
         gitSCMExtensionsRepo1AndRepo2.add(new RelativeTargetDirectory("repo1andrepo2"));
 
-        List<GitSCMExtension> gitSCMExtensionsRepo3 = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> gitSCMExtensionsRepo3 = new ArrayList<>();
         gitSCMExtensionsRepo3.add(new PruneStaleBranch());
         gitSCMExtensionsRepo3.add(new CleanCheckout());
         gitSCMExtensionsRepo3.add(new RelativeTargetDirectory("repo3"));
 
-        List<UserRemoteConfig> userRemoteConfigRepo1AndRepo2 = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> userRemoteConfigRepo1AndRepo2 = new ArrayList<>();
         userRemoteConfigRepo1AndRepo2.add(new UserRemoteConfig("file://" + repo1.getDirectory().getAbsolutePath(), "repo1", null, null));
         userRemoteConfigRepo1AndRepo2.add(new UserRemoteConfig("file://" + repo2.getDirectory().getAbsolutePath(), "repo2", null, null));
 
@@ -280,7 +276,7 @@ public class MultipleScm_threeRepos_IT {
         triggerSCMTrigger(project.getTrigger(SCMTrigger.class));
 
         build = waitForBuildFinished(project, 1, 60000);
-        assertNotNull(String.format("Job has not been triggered - expected bild1", build));
+        assertNotNull(String.format("Job has not been triggered - expected build1"), build);
 
         poll = project.poll(listener);
         assertTrue("Polling did not findnew changes as expected", poll.hasChanges());
@@ -412,17 +408,17 @@ public class MultipleScm_threeRepos_IT {
         repositoriesToTearDown.add(repo2);
         repositoriesToTearDown.add(repo3);
 
-        List<GitSCMExtension> gitSCMExtensionsRepo1AndRepo2 = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> gitSCMExtensionsRepo1AndRepo2 = new ArrayList<>();
         gitSCMExtensionsRepo1AndRepo2.add(new PruneStaleBranch());
         gitSCMExtensionsRepo1AndRepo2.add(new CleanCheckout());
         gitSCMExtensionsRepo1AndRepo2.add(new RelativeTargetDirectory("repo1andrepo2"));
 
-        List<GitSCMExtension> gitSCMExtensionsRepo3 = new ArrayList<GitSCMExtension>();
+        List<GitSCMExtension> gitSCMExtensionsRepo3 = new ArrayList<>();
         gitSCMExtensionsRepo3.add(new PruneStaleBranch());
         gitSCMExtensionsRepo3.add(new CleanCheckout());
         gitSCMExtensionsRepo3.add(new RelativeTargetDirectory("repo3"));
 
-        List<UserRemoteConfig> userRemoteConfigRepo1AndRepo2 = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> userRemoteConfigRepo1AndRepo2 = new ArrayList<>();
         userRemoteConfigRepo1AndRepo2.add(new UserRemoteConfig("file://" + repo1.getDirectory().getAbsolutePath(), "repo1", null, null));
         userRemoteConfigRepo1AndRepo2.add(new UserRemoteConfig("file://" + repo2.getDirectory().getAbsolutePath(), "repo2", null, null));
 
@@ -510,7 +506,7 @@ public class MultipleScm_threeRepos_IT {
                 assertTrue("Failed build only allowed if it is the git plugin.", console.contains("ERROR: Couldn't find any revision to build. Verify the repository and branch configuration for this job."));
                 System.out.println("Verified failed build");
                 failedOnOtherRepoChanges = true;
-            } else if (build.getResult().equals(Result.NOT_BUILT)) { 
+            } else if (build.getResult().equals(Result.NOT_BUILT)) {
                 // If we now also see this message, we have the situation and problem
                 // reported in JENKINS-25960
                 // and will fail with this message:
@@ -519,7 +515,7 @@ public class MultipleScm_threeRepos_IT {
                 } else {
                     assertTrue(String.format("Unexpected build result found: %s", build.getResult()), false);
                 }
-                
+
             } else {
                 // all other build results
                 assertTrue(String.format("Unexpected build result found: %s", build.getResult()), false);

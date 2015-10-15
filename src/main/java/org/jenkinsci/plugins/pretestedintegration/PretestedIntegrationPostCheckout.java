@@ -11,27 +11,30 @@ import hudson.tasks.Publisher;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge.LOG_PREFIX;
 import org.kohsuke.stapler.DataBoundConstructor;
+import static org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge.LOG_PREFIX;
 
 /**
  * The publisher determines what will happen when the build has been run.
  * Depending on the chosen SCM, a more specific function will be called.
  */
 public class PretestedIntegrationPostCheckout extends Publisher {
-    
+
     @DataBoundConstructor
-    public PretestedIntegrationPostCheckout() { }
+    public PretestedIntegrationPostCheckout() {
+    }
 
     /**
-     * This should ensure that we only run, when the build result can no longer be changes (is final). 
-     * @return 
+     * This should ensure that we only run, when the build result can no longer
+     * be changes (is final).
+     *
+     * @return
      */
     @Override
     public boolean needsToRunAfterFinalized() {
         logger.entering("PretestedIntegrationPostCheckout", "needsToRunAfterFinalized");// Generated code DONT TOUCH! Bookmark: eb726c44daeb157789f42c450477042e
-		logger.exiting("PretestedIntegrationPostCheckout", "needsToRunAfterFinalized");// Generated code DONT TOUCH! Bookmark: 4afd6d3a46055d0c0e5bb180a6ecb84a
-		return true;
+        logger.exiting("PretestedIntegrationPostCheckout", "needsToRunAfterFinalized");// Generated code DONT TOUCH! Bookmark: 4afd6d3a46055d0c0e5bb180a6ecb84a
+        return true;
     }
 
     /**
@@ -44,11 +47,12 @@ public class PretestedIntegrationPostCheckout extends Publisher {
      * @return boolean
      */
     @Override
-    public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) {
-        logger.entering("PretestedIntegrationPostCheckout", "perform", new Object[] { build, listener, launcher });// Generated code DONT TOUCH! Bookmark: f0df32c5903984db7bd92f79a94b81ee
-		PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
-        if (action == null)
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+        logger.entering("PretestedIntegrationPostCheckout", "perform", new Object[]{build, listener, launcher});// Generated code DONT TOUCH! Bookmark: f0df32c5903984db7bd92f79a94b81ee
+        PretestedIntegrationAction action = build.getAction(PretestedIntegrationAction.class);
+        if (action == null) {
             return true;
+        }
 
         listener.getLogger().println(LOG_PREFIX + "Performing pre-verified post build steps");
         Boolean result = false;
@@ -69,23 +73,24 @@ public class PretestedIntegrationPostCheckout extends Publisher {
             logger.log(Level.SEVERE, "IO Exception in post checkout", e);
             build.setResult(Result.FAILURE);
         }
-        
+
         BuildQueue.getInstance().release();
         logger.exiting("PretestedIntegrationPostCheckout", "perform");// Generated code DONT TOUCH! Bookmark: 7a7a9c1108c955514dcf240fb6bf7b4d
-		return result;
+        return result;
     }
 
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.BUILD;
     }
 
     @Extension
-    public static final class DescriptorImpl extends Descriptor<Publisher> {        
+    public static final class DescriptorImpl extends Descriptor<Publisher> {
+
         @Override
-		public String getDisplayName() {
+        public String getDisplayName() {
             return "Pretested Integration post-build";
-        }        
+        }
     }
 
     private static final Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());

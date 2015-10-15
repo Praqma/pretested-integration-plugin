@@ -17,13 +17,11 @@ import org.junit.Test;
 
 /**
  * Tests for checking commit messages can be integrated even though the author
- * have been using double quotes or other special characters  in the commit
+ * have been using double quotes or other special characters in the commit
  * message.
  *
- * Problem is the command line call the plugin does and the risk of not
- * escaping all characters correctly.
- *
- * @author bue
+ * Problem is the command line call the plugin does and the risk of not escaping
+ * all characters correctly.
  */
 public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBase {
 
@@ -42,7 +40,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -60,7 +58,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -111,7 +109,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -129,7 +127,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -180,7 +178,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -198,7 +196,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -250,7 +248,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -268,7 +266,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -304,10 +302,9 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
     }
 
     /**
-     * Tests commit message with double quotes, created in a script using
-     * single quotes can be integrated using accumulated strategy.
-     * Repository created on Windows.
-     * See detailed description of test in class documentation.
+     * Tests commit message with double quotes, created in a script using single
+     * quotes can be integrated using accumulated strategy. Repository created
+     * on Windows. See detailed description of test in class documentation.
      *
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
@@ -320,7 +317,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -338,7 +335,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -373,12 +370,11 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         assertFalse("The last commit on integration branch contain 'squash' but is not a squash commit", commitFullMessage.contains("squash"));
         System.out.println(String.format("***** phew... last verification (asserts) passed :-)"));
     }
-    
+
     /**
-     * Tests commit message with double quotes, created in a script using
-     * single quotes can be integrated using squash strategy.
-     * Repository created on Windows.
-     * See detailed description of test in class documentation.
+     * Tests commit message with double quotes, created in a script using single
+     * quotes can be integrated using squash strategy. Repository created on
+     * Windows. See detailed description of test in class documentation.
      *
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
@@ -391,7 +387,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -409,7 +405,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -447,10 +443,9 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
 
     /**
      * Tests commit message with double quotes, created in a repository we have
-     * been supplied with for testing by a customer.
-     * Test is using accumulated strategy.
-     * Repository created on Windows.
-     * See detailed description of test in class documentation.
+     * been supplied with for testing by a customer. Test is using accumulated
+     * strategy. Repository created on Windows. See detailed description of test
+     * in class documentation.
      *
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
@@ -464,7 +459,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -482,7 +477,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -492,7 +487,6 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
 
         // Two commits already exists, then add the accumulated commit:
         assertEquals(3, commitsOnMasterAfterIntegration);
-
 
         // This will "walk" over the log, but we only take the first entry
         // which will be the integration commit
@@ -518,15 +512,12 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         assertFalse("The last commit on integration branch contain 'squash' but is not a squash commit", commitFullMessage.contains("squash"));
         System.out.println(String.format("***** phew... last verification (asserts) passed :-)"));
     }
-    
-    
 
     /**
      * Tests commit message with double quotes, created in a repository we have
-     * been supplied with for testing by a customer.
-     * Test is using squashed strategy.
-     * Repository created on Windows.
-     * See detailed description of test in class documentation.
+     * been supplied with for testing by a customer. Test is using squashed
+     * strategy. Repository created on Windows. See detailed description of test
+     * in class documentation.
      *
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
@@ -540,7 +531,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         /**
          * ********************************************************************
          * Run test with Jenkins job trying to integrate the feature branch
-         *********************************************************************
+         * ********************************************************************
          */
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, bareRepository);
         TestUtilsFactory.triggerProject(project);
@@ -558,7 +549,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
          * ********************************************************************
          * Verify integration in different aspect like commit message content
          * and actual commits
-         *********************************************************************
+         * ********************************************************************
          */
         // Verify number of commits - first count on master after integration
         gitrepo.checkout().setName("master").call();
@@ -568,7 +559,6 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
 
         // Two commits already exists, then add the accumulated commit:
         assertEquals(2, commitsOnMasterAfterIntegration);
-
 
         // This will "walk" over the log, but we only take the first entry
         // which will be the integration commit

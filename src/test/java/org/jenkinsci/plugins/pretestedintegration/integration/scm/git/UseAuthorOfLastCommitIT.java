@@ -65,7 +65,7 @@ public class UseAuthorOfLastCommitIT extends StaticGitRepositoryTestBase {
                 String capturedText = m.group(1);
 
                 // print the group
-                System.out.format("'%s'\n", capturedText);
+                System.out.format("'%s'%n", capturedText);
             } else {
                 System.out.format("Didn't match any relevant part of the console");
             }
@@ -138,7 +138,7 @@ public class UseAuthorOfLastCommitIT extends StaticGitRepositoryTestBase {
                 String capturedText = m.group(1);
 
                 // print the group
-                System.out.format("'%s'\n", capturedText);
+                System.out.format("'%s'%n", capturedText);
             } else {
                 System.out.format("Didn't match any relevant part of the console");
             }
