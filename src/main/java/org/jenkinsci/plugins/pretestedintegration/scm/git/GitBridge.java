@@ -45,7 +45,6 @@ import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GitBridge extends AbstractSCMBridge {
-    private static final int unlikelyExitCode = -999; // An very unlikely exit code, that we use as default
     private static final Logger LOGGER = Logger.getLogger(GitBridge.class.getName());
 
     private String revisionId;

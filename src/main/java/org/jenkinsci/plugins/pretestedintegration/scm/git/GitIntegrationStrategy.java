@@ -12,21 +12,13 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
-public class GitIntegrationStrategy extends IntegrationStrategy {
+public abstract class GitIntegrationStrategy extends IntegrationStrategy {
 
     private static final Logger logger = Logger.getLogger(GitIntegrationStrategy.class.getName());
-
-    @Override
-    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
-        throw new UnsupportedOperationException("Implement in subclasses");
-    }
 
     /**
      * Creates a PersonIdent object from a full Git identity string.

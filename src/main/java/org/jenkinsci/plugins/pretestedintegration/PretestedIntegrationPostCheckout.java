@@ -4,11 +4,13 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
+import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,21 +21,10 @@ import static org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge.LOG_P
  * The publisher determines what will happen when the build has been run.
  * Depending on the chosen SCM, a more specific function will be called.
  */
-public class PretestedIntegrationPostCheckout extends Publisher {
+public class PretestedIntegrationPostCheckout extends Recorder {
 
     @DataBoundConstructor
     public PretestedIntegrationPostCheckout() {
-    }
-
-    /**
-     * This should ensure that we only run, when the build result can no longer
-     * be changes (is final).
-     *
-     * @return
-     */
-    @Override
-    public boolean needsToRunAfterFinalized() {
-        return true;
     }
 
     private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build) throws AbortException {
@@ -80,12 +71,17 @@ public class PretestedIntegrationPostCheckout extends Publisher {
         return BuildStepMonitor.BUILD;
     }
 
-    @Extension
-    public static final class DescriptorImpl extends Descriptor<Publisher> {
+    @Extension(ordinal = Integer.MIN_VALUE)
+    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         @Override
         public String getDisplayName() {
-            return "Pretested Integration post-build";
+            return "Pretested Integration Publisher";
+        }
+
+        @Override
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
         }
     }
 

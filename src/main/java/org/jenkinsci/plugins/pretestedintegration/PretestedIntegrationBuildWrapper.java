@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Describable;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
@@ -37,7 +35,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     }
 
     /**
-     * Jenkins hook that fires after the workspace is initialized. Calls the
+     * Jenkins hook that fires after the workspace is initialised. Calls the
      * SCM-specific function according to the chosen SCM.
      *
      * @param build
@@ -53,11 +51,6 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             scmBridge.isApplicable(build, listener);
             scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedBranch(build.getEnvironment(listener)));
             scmBridge.prepareWorkspace(build, launcher, listener);
-            try {
-                ensurePublisher(build);
-            } catch (IOException ex) {
-                LOGGER.log(Level.WARNING, LOG_PREFIX + " " + "Failed to add publisher", ex);
-            }
         } catch (NothingToDoException e) {
             build.setResult(Result.NOT_BUILT);
             listener.getLogger().println(e.getMessage());
@@ -78,14 +71,6 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
 
         BuildWrapper.Environment environment = new PretestEnvironment();
         return proceedToBuildStep ? environment : null;
-    }
-
-    public void ensurePublisher(AbstractBuild<?, ?> build) throws IOException {
-        Describable<?> describable = build.getProject().getPublishersList().get(PretestedIntegrationPostCheckout.class);
-        if (describable == null) {
-            LOGGER.info("Adding publisher to project");
-            build.getProject().getPublishersList().add(new PretestedIntegrationPostCheckout());
-        }
     }
 
     /**
