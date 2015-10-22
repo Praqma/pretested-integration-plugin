@@ -7,6 +7,8 @@ import hudson.plugins.git.GitException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.Git;
@@ -25,15 +27,11 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy {
      * @param identity The Git identity string to parse. ex.: john Doe <Joh@praqma.net> 1442321765 +0200
      * @return A PersonIdent object representing given Git author/committer
      */
-    protected PersonIdent getPersonIdent(String identity) {
-        int endOfName = identity.indexOf("<");
-        String authorName = identity.substring(0, endOfName-1);
-        int endOfMail = identity.indexOf(">");
-        String authorMail = identity.substring(endOfName + 1, endOfMail);
-        int endOfTime = identity.indexOf(" ", endOfMail+2);
-        long time = Long.parseLong(identity.substring(endOfMail + 2, endOfTime));
-        int zone = Integer.parseInt(identity.substring(identity.indexOf(" ", identity.indexOf(">")+2)+1));
-        return new PersonIdent(authorName, authorMail, time, zone);
+    public PersonIdent getPersonIdent(String identity) {
+        Pattern regex = Pattern.compile("^([^<(]*?)[ \\t]?<([^<>]*?)>.*$");
+        Matcher match = regex.matcher(identity);
+        if(!match.matches()) return null;
+        return new PersonIdent(match.group(1), match.group(2));
     }
 
     /**
@@ -99,7 +97,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy {
      * suitable for a FF merge.
      * @throws IntegrationFailedException When commit counting fails
      */
-    public boolean tryFastForward(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegrationFailedException{
+    protected boolean tryFastForward(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegrationFailedException{
         logger.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryFastForward"));
 
         //Get the commit count
