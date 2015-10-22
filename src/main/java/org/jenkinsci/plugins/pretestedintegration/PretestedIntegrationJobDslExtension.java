@@ -11,6 +11,7 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrat
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import static javaposse.jobdsl.dsl.Preconditions.checkArgument;
+import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
 
 /*
 ```
@@ -51,5 +52,11 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
                 break;
         }
         return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repo));
+    }
+
+    @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.3")
+    @DslExtensionMethod(context = PublisherContext.class)
+    public Object pretestedIntegration() {
+        return new PretestedIntegrationPostCheckout();
     }
 }
