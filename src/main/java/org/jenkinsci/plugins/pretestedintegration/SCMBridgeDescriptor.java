@@ -11,5 +11,4 @@ public abstract class SCMBridgeDescriptor<T extends AbstractSCMBridge> extends D
     public AbstractSCMBridge newInstance(StaplerRequest req, JSONObject formData) throws FormException {
         return super.newInstance(req, formData);
     }
-
 }

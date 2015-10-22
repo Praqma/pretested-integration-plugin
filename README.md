@@ -168,31 +168,6 @@ Example - just logging to java logger:
 
 _This is not yet achieved fully in the plugin_ - but on our roadmap
 
-#### Automated inserted logging statements
-Praqma have a little java tools called Code-injector that can be used to automatically insert logging statements in java code.
-
-The project is available internally in Praqma.
-
-We have used to add logging to this plugin at a point where there were missing lots of logging.
-
-Automated logging looks like this:
-
-    public String getRevId() {
-      logger.entering("GitBridge", "getRevId");// Generated code DONT TOUCH! Bookmark: 7daeaf95ed1ab33f362632d94f8d0775
-      logger.exiting("GitBridge", "getRevId");// Generated code DONT TOUCH! Bookmark: 05723ee14ce48ed93ffbd8d5d9af889a
-		    return this.revId;
-      }
-
-_Notes to use the project internally in Praqma (add/remove automated logging)_:
-To run the operation clone the `code-injector` project from Praqma's internall Gitlab, and run `mvn clean install` to add it to the local maven cache.
-Next clone both `pretested-integration-plugin` and `usecase-pretested-integration-plugin` from the code-injector namespace.
-
-The java class called `InsertLoggingStatements` contains a path pointing to the `pretested-integration-plugin`, change that as appropriate.
-Run the `Main` class and check the results.
-
-
-
-
 ## Extending the Pretested Integration Plugin
 
 ### Contributing

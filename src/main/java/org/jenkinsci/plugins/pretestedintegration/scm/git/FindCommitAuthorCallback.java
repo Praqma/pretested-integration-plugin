@@ -11,8 +11,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 public class FindCommitAuthorCallback extends RepositoryListenerAwareCallback<String> {
 
-    private static final Logger logger = Logger.getLogger(FindCommitAuthorCallback.class.getName());// Generated code DONT TOUCH! Bookmark: 3ca61d8e671737b5ead8aaccd31875c4
-    
     public final ObjectId id;
 
     public FindCommitAuthorCallback(TaskListener listener, final ObjectId id) {
@@ -22,11 +20,9 @@ public class FindCommitAuthorCallback extends RepositoryListenerAwareCallback<St
 
     @Override
     public String invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-        logger.entering("FindCommitAuthorCallback", "invoke", new Object[]{channel, repo});// Generated code DONT TOUCH! Bookmark: 3e9f1bb124a68aa51ae943d0e765a528
         RevWalk walk = new RevWalk(repo);
         RevCommit commit = walk.parseCommit(id);
         walk.dispose();
-        logger.exiting("FindCommitAuthorCallback", "end");// Generated code DONT TOUCH! Bookmark: 2412143d613a394b72a1b1da928ce975
         return commit.getAuthorIdent().toExternalString();
     }
 }

@@ -6,8 +6,6 @@ package org.jenkinsci.plugins.pretestedintegration.scm.git;
  */
 public class GitMessages {
 
-    public static final String text1 = "";
-
     /**
      * Message for merge strategies to show when they don't find a match between
      * remote branches and relevant SCM change.
@@ -18,5 +16,4 @@ public class GitMessages {
     public static String NoRelevantSCMchange(String branchName) {
         return String.format("There is no relevant SCM change to integrate where branch matches the 'Integration repository'. Either branch (%s) is deleted or already integrated, or the SCM change is not related to the integration repository.", branchName);
     }
-
 }

@@ -79,10 +79,8 @@ public class DoNotAllowMasterBranchAsReadyBranchIT {
                    + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
         assertTrue(console.contains(msg));
         System.out.println("===Result check 2===");
-        System.out.println("===Result check 2===");
-        assertEquals("Unexpected build result.", build1.getResult(), Result.NOT_BUILT);
+        assertEquals("Unexpected build result.", Result.FAILURE, build1.getResult());
         System.out.println("===Result check done===");
-
     }
 
 }

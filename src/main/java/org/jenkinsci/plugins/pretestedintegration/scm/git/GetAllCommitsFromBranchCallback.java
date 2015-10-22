@@ -12,13 +12,13 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 
 public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCallback<String> {
 
     public final ObjectId id;
     public final String branch;
-    private static final Logger logger = Logger.getLogger(GetAllCommitsFromBranchCallback.class.getName());
-    private static final String LOG_PREFIX = "[PREINT] ";
+    private static final Logger LOGGER = Logger.getLogger(GetAllCommitsFromBranchCallback.class.getName());
 
     public GetAllCommitsFromBranchCallback(TaskListener listener, final ObjectId id, final String branch) {
         super(listener);
@@ -28,7 +28,6 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
 
     @Override
     public String invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-        logger.entering("GetAllCommitsFromBranchCallback", "invoke", new Object[]{channel, repo});
         StringBuilder sb = new StringBuilder();
         RevWalk walk = new RevWalk(repo);
 
@@ -38,7 +37,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         // walk tree starting from the integration commit
         walk.markStart(commit);
 
-        logger.info(String.format(LOG_PREFIX + "Collecting commit message until reaching branch %s", branch));
+        LOGGER.info(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit message until reaching branch %s", branch));
         // limit the tree walk to keep away from master commits
         // Reference for this idea is: https://wiki.eclipse.org/JGit/User_Guide#Restrict_the_walked_revision_graph
         ObjectId to = repo.resolve(branch);
@@ -91,7 +90,6 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
 
         walk.dispose();
 
-        logger.exiting("GetAllCommitsFromBranchCallback", "invoke", new Object[]{channel, repo});
         return sb.toString();
     }
 }

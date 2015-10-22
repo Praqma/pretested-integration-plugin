@@ -70,7 +70,7 @@ import org.xml.sax.SAXException;
  * 
  * Observations:
          * Pushing a ready branch to `repo3`, says nothing to do:
-            `Nothing to do the reason is: The branch name (repo3/ready/dev_865487921) 
+            `Nothing to do. The reason is: The branch name (repo3/ready/dev_865487921) 
              used by git, did not match a remote branch name. 
              You might already have integrated the branch`
          * MultiSCM and git SCM have some troubles in the beginning of a new job

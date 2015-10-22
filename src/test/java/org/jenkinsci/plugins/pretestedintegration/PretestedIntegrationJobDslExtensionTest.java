@@ -22,7 +22,7 @@ public class PretestedIntegrationJobDslExtensionTest {
 
         assertThat(bridge.integrationStrategy, instanceOf(SquashCommitStrategy.class));
         assertEquals(bridge.getBranch(), "branch");
-        assertEquals(bridge.getRepositoryName(), "repo");
+        assertEquals(bridge.getRepoName(), "repo");
     }
 
     @Test
@@ -36,7 +36,7 @@ public class PretestedIntegrationJobDslExtensionTest {
 
         assertThat(bridge.integrationStrategy, instanceOf(AccumulatedCommitStrategy.class));
         assertEquals(bridge.getBranch(), "branch");
-        assertEquals(bridge.getRepositoryName(), "repo");
+        assertEquals(bridge.getRepoName(), "repo");
     }
 
     @Test(expected = DslScriptException.class)

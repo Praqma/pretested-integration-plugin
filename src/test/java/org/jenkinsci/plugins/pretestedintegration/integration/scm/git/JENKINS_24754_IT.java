@@ -227,7 +227,7 @@ public class JENKINS_24754_IT {
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
 
-        assertTrue(text.contains("Nothing to do the reason is:"));
+        assertTrue(text.contains("Nothing to do. The reason is:"));
         assertEquals("Unexpected build result.", build.getResult(), Result.NOT_BUILT);
 
     }

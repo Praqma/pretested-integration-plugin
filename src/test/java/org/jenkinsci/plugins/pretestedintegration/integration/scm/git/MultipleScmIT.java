@@ -147,7 +147,7 @@ public class MultipleScmIT {
             if (console.contains("push repo1 :ready/feature_2a")) {
                 assertBuild3 = true;
                 assertEquals("Unexpected build result.", b.getResult(), Result.SUCCESS);
-            } else if (console.contains("Nothing to do the reason is: No revision matches configuration in")) {
+            } else if (console.contains("Nothing to do. The reason is: No revision matches configuration in")) {
                 assertBuild4 = true;
                 assertEquals("Unexpected build result.", b.getResult(), Result.NOT_BUILT);
             }

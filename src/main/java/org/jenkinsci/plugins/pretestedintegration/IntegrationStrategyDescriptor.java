@@ -9,8 +9,8 @@ public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrateg
     public abstract boolean isApplicable(Class<? extends AbstractSCMBridge> bridge);
 
     @Override
-    public IntegrationStrategy newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        return req.bindJSON(IntegrationStrategy.class, formData);
+    public IntegrationStrategy newInstance(StaplerRequest staplerRequest, JSONObject formData) throws FormException {
+        return staplerRequest.bindJSON(IntegrationStrategy.class, formData);
     }
 
 }
