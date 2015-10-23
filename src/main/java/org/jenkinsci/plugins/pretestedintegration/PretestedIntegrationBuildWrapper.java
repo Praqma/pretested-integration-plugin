@@ -29,6 +29,8 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     public static final String LOG_PREFIX = "[PREINT] ";
     public final AbstractSCMBridge scmBridge;
 
+    
+    
     @DataBoundConstructor
     public PretestedIntegrationBuildWrapper(final AbstractSCMBridge scmBridge) {
         this.scmBridge = scmBridge;

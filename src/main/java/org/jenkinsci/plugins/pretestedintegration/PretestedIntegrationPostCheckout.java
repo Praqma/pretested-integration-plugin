@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -27,13 +29,20 @@ public class PretestedIntegrationPostCheckout extends Recorder {
     public PretestedIntegrationPostCheckout() {
     }
 
-    private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build) throws AbortException {
-        if (build.getProject() instanceof FreeStyleProject) {
+    private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build) throws AbortException {        
+        AbstractProject<?,?> proj = build.getProject();
+       
+        
+        if (proj instanceof FreeStyleProject) {
             FreeStyleProject p = (FreeStyleProject) build.getProject();
             PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
             return wrapper.scmBridge;
+        } else if(proj instanceof MatrixConfiguration) {
+            MatrixProject p = ((MatrixConfiguration)proj).getParent();            
+            PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
+            return wrapper.scmBridge;
         } else {
-            throw new AbortException("Not supported for non-FreeStyle projects");
+            throw new AbortException("Unsupported job type.");
         }
     }
 
