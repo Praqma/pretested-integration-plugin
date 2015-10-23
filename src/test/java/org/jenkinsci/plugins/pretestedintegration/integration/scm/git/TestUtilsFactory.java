@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
+import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.BranchSpec;
@@ -264,7 +265,7 @@ public class TestUtilsFactory {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, runOnSlave);
     }
 
-    public static void triggerProject(FreeStyleProject project) throws Exception {
+    public static void triggerProject(AbstractProject<?,?> project) throws Exception {
         project.getTriggers().clear();
         SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
         project.addTrigger(scmTrigger);
