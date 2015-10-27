@@ -18,14 +18,30 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoExceptio
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Commit Strategy that squashes multiple commits into a single commit.
+ */
 public class SquashCommitStrategy extends GitIntegrationStrategy {
-    private static final String B_NAME = "Squashed commit";
+
     private static final Logger LOGGER = Logger.getLogger(SquashCommitStrategy.class.getName());
 
+    /**
+     * Strategy name. Used in UI.
+     * Strategies used to be called Behaviors, hence the field name.
+     */
+    private static final String B_NAME = "Squashed commit";
+
+    /**
+     * Constructor for SquashCommitStrategy.
+     * DataBound to work with the UI.
+     */
     @DataBoundConstructor
     public SquashCommitStrategy() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
         GitBridge gitbridge = (GitBridge) bridge;
@@ -64,7 +80,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             } catch (IOException ex) {
                 LOGGER.log(Level.FINE, "Failed to update build description", ex);
             }
-            logMessage = GitMessages.NoRelevantSCMchange(builtBranch.getName());
+            logMessage = GitMessages.noRelevantSCMchange(builtBranch.getName());
             LOGGER.log(Level.WARNING, logMessage);
             throw new NothingToDoException(logMessage);
         }
@@ -121,35 +137,30 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         listener.getLogger().println(logMessage);
     }
 
-    private boolean containsRemoteBranch(GitClient client, Branch branch) throws IntegrationFailedException {
-        try {
-            LOGGER.fine("Resolving and getting Git client from workspace:");
-            LOGGER.fine("Remote branches:");
-            for (Branch remoteBranch : client.getRemoteBranches()) {
-                LOGGER.fine(String.format("Found remote branch %s", remoteBranch.getName()));
-                if (remoteBranch.getName().equals(branch.getName())) {
-                    return true;
-                }
-            }
-        } catch (GitException | InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "GitClient error", ex);
-            throw new IntegrationFailedException("GitClient error, unspecified", ex);
-        }
-        return false;
-    }
-
+    /**
+     * Descriptor implementation for SquashCommitStrategy
+     */
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<SquashCommitStrategy> {
 
+        /**
+         * Constructor for the descriptor
+         */
         public DescriptorImpl() {
             load();
         }
 
+        /**
+         * {@inheritDoc }
+         */
         @Override
         public String getDisplayName() {
             return B_NAME;
         }
 
+        /**
+         * {@inheritDoc }
+         */
         @Override
         public boolean isApplicable(Class<? extends AbstractSCMBridge> bridge) {
             return GitBridge.class.equals(bridge);

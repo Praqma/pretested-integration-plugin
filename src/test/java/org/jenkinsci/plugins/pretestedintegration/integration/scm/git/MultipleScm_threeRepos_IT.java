@@ -335,7 +335,7 @@ public class MultipleScm_threeRepos_IT {
                 integratedRepo3 = true;
 
             } else if (build.getResult().equals(Result.NOT_BUILT)) {
-                String msg = GitMessages.NoRelevantSCMchange("repo3/ready/repo3_feature_1");
+                String msg = GitMessages.noRelevantSCMchange("repo3/ready/repo3_feature_1");
                 assertTrue("Error message related to detecting the wrong git scm was not found.",
                         console.contains(msg));
                 notBuildOnOtherRepoChanges = true;

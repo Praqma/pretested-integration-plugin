@@ -341,7 +341,7 @@ public class JENKINS_24754_IT {
      * @throws java.lang.Exception
      */
     @Test
-    public void checkMultiScmWithTwoGitConfigurationAmbiguousName() throws Exception {
+    public void checkMultiScmWithTwoGitonfigurationAmbiguousName() throws Exception {
         Repository repo1_1 = TestUtilsFactory.createValidRepository("test-repo1_1");
         Repository repo1_2 = TestUtilsFactory.createValidRepository("test-repo1_2");
         Repository repo2 = TestUtilsFactory.createValidRepository("test-repo2");
@@ -385,7 +385,7 @@ public class JENKINS_24754_IT {
         assertTrue(console.contains("test-repo1/"));
 
         // Check our configuration check detects the problem and the job is failed.
-        assertTrue(console.contains(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES));
+        assertTrue(console.contains(UnsupportedConfigurationException.AMBIGUITY_IN_REMOTE_NAMES));
         assertTrue(build.getResult().isBetterOrEqualTo(Result.FAILURE));
 
         TestUtilsFactory.destroyRepo(repo1_1, repo1_2, repo2);
@@ -453,7 +453,7 @@ public class JENKINS_24754_IT {
         System.out.println("=====BUILD-LOG=====");
         System.out.println(console);
         System.out.println("=====BUILD-LOG=====");
-        assertTrue(console.contains(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES));
+        assertTrue(console.contains(UnsupportedConfigurationException.AMBIGUITY_IN_REMOTE_NAMES));
         assertTrue(build.getResult().isBetterOrEqualTo(Result.FAILURE));
         TestUtilsFactory.destroyRepo(repo1_1, repo1_2, repo2);
     }

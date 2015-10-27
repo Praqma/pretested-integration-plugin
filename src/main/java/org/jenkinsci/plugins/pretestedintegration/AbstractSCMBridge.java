@@ -14,20 +14,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
+/**
+ * Abstract class representing an SCM bridge.
+ */
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
 
+    /**
+     * The integration branch.
+     * This is the branch into which pretested commits will be merged.
+     */
     protected String branch;
+
+    /**
+     * The integration strategy.
+     * This is the strategy applied to merge pretested commits into the integration branch.
+     */
     public final IntegrationStrategy integrationStrategy;
 
     final static String LOG_PREFIX = "[PREINT] ";
 
+    /**
+     * Constructor for the SCM bridge.
+     * @param integrationStrategy The integration strategy to apply when merging commits.
+     */
     public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {
         this.integrationStrategy = integrationStrategy;
     }
@@ -38,9 +54,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param build The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
-     * @throws CommitChangesFailureException
+     * @throws CommitFailedException
      */
-    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
+    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitFailedException {
     }
 
     /**
@@ -49,11 +65,11 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param build The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
-     * @throws DeleteIntegratedBranchException
+     * @throws BranchDeletionFailedException
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException, NothingToDoException, UnsupportedConfigurationException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException {
     }
 
     /**
@@ -63,9 +79,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @param branch The branch to check out
-     * @throws EstablishWorkspaceException
+     * @throws EstablishingWorkspaceFailedException
      */
-    public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException;
+    public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException;
 
     /**
      * Called after the build has run. If the build was successful, the
@@ -115,11 +131,11 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws IntegrationFailedException
-     * @throws EstablishWorkspaceException
+     * @throws EstablishingWorkspaceFailedException
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishWorkspaceException, NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException {
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException {
         mergeChanges(build, launcher, listener);
     }
 
@@ -163,6 +179,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         return behaviours;
     }
 
+    /**
+    * {@inheritDoc}
+    */
     @Override
     public Descriptor<AbstractSCMBridge> getDescriptor() {
         return (SCMBridgeDescriptor<?>) Jenkins.getInstance().getDescriptorOrDie(getClass());

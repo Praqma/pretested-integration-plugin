@@ -14,18 +14,40 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 
+/**
+ * Callback to get a list of all Git commits from a given commit to given branch
+ */
 public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCallback<String> {
 
-    public final ObjectId id;
-    public final String branch;
     private static final Logger LOGGER = Logger.getLogger(GetAllCommitsFromBranchCallback.class.getName());
 
+    /**
+     * The commit Id.
+     * Starting point.
+     */
+    public final ObjectId id;
+
+    /**
+     * The branch name.
+     * Destination.
+     */
+    public final String branch;
+
+    /**
+     * Constructor for GetAllCommitsFromBranchCallback
+     * @param listener The TaskListener
+     * @param id The commit Id of the starting point
+     * @param branch The branch name of the destination.
+     */
     public GetAllCommitsFromBranchCallback(TaskListener listener, final ObjectId id, final String branch) {
         super(listener);
         this.id = id;
         this.branch = branch;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
         StringBuilder sb = new StringBuilder();

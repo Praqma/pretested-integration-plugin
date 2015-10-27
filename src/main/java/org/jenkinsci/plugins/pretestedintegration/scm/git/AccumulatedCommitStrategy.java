@@ -21,14 +21,32 @@ import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * Integration strategy for merging multiple commits.
+ * Merges in all the commits without squashing them.
+ * Provides a custom merge commit message.
+ */
 public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
-    private static final String B_NAME = "Accumulated commit";
+
     private static final Logger LOGGER = Logger.getLogger(AccumulatedCommitStrategy.class.getName());
 
+    /**
+     * Strategy name. Used in UI.
+     * Strategies used to be called Behaviors, hence the field name.
+     */
+    private static final String B_NAME = "Accumulated commit";
+
+    /**
+     * Constructor for AccumulatedCommitStrategy.
+     * DataBound to work in UI.
+     */
     @DataBoundConstructor
     public AccumulatedCommitStrategy() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
         GitBridge gitbridge = (GitBridge) bridge;
@@ -69,7 +87,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             } catch (IOException ex) {
                 LOGGER.log(Level.FINE, "Failed to update build description", ex);
             }
-            logMessage = GitMessages.NoRelevantSCMchange(builtBranch.getName());
+            logMessage = GitMessages.noRelevantSCMchange(builtBranch.getName());
             LOGGER.log(Level.WARNING, logMessage);
             throw new NothingToDoException(logMessage);
         }
@@ -146,35 +164,30 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         listener.getLogger().println(logMessage);
     }
 
-    private boolean containsRemoteBranch(GitClient client, Branch branch) throws IntegrationFailedException {
-        try {
-            LOGGER.fine("Resolving and getting Git client from workspace:");
-            LOGGER.fine("Remote branches:");
-            for (Branch remoteBranch : client.getRemoteBranches()) {
-                LOGGER.fine(String.format("Found remote branch %s", remoteBranch.getName()));
-                if (remoteBranch.getName().equals(branch.getName())) {
-                    return true;
-                }
-            }
-        } catch (GitException | InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "GitClient error", ex);
-            throw new IntegrationFailedException("GitClient error, unspecified", ex);
-        }
-        return false;
-    }
-
+    /**
+     * Descriptor implementation for AccumulatedCommitStrategy
+     */
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<AccumulatedCommitStrategy> {
 
+        /**
+         * Constructor for the Descriptor
+         */
         public DescriptorImpl() {
             load();
         }
 
+        /**
+         * {@inheritDoc }
+         */
         @Override
         public String getDisplayName() {
             return B_NAME;
         }
 
+        /**
+         * {@inheritDoc }
+         */
         @Override
         public boolean isApplicable(Class<? extends AbstractSCMBridge> bridge) {
             return GitBridge.class.equals(bridge);

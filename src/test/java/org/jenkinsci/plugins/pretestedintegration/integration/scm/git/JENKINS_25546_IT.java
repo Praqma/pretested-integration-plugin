@@ -85,7 +85,7 @@ public class JENKINS_25546_IT {
 
         try (BuildResultValidator validator = new BuildResultValidator(lastBuild, repo1, consoleOut)) {
             TestUtilsFactory.destroyRepo(repo2);
-            validator.hasResult(Result.FAILURE).buildLogContains(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES).validate();
+            validator.hasResult(Result.FAILURE).buildLogContains(UnsupportedConfigurationException.AMBIGUITY_IN_REMOTE_NAMES).validate();
         }
 
     }
@@ -213,7 +213,7 @@ public class JENKINS_25546_IT {
 
         try (BuildResultValidator validator = new BuildResultValidator(project.getLastBuild(), repo1, console)) {
             TestUtilsFactory.destroyRepo(repo2, repo3);
-            validator.buildLogContains(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES)
+            validator.buildLogContains(UnsupportedConfigurationException.AMBIGUITY_IN_REMOTE_NAMES)
                     .hasResult(Result.FAILURE).validate();
         }
 

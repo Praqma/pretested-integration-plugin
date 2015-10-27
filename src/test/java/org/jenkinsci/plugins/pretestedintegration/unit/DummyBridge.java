@@ -5,7 +5,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.io.IOException;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 
 public class DummyBridge extends AbstractSCMBridge {
@@ -15,7 +15,7 @@ public class DummyBridge extends AbstractSCMBridge {
     }
 
     @Override
-    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
+    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException {
 
     }
 

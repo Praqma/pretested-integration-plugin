@@ -25,20 +25,30 @@ import static org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge.LOG_P
  */
 public class PretestedIntegrationPostCheckout extends Recorder {
 
+    private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
+
+    /**
+     * Constructor for PretestedIntegrationPostCheckout
+     */
     @DataBoundConstructor
     public PretestedIntegrationPostCheckout() {
     }
 
-    private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build) throws AbortException {        
-        AbstractProject<?,?> proj = build.getProject();
-       
-        
+    /**
+     * Gets the SCM Bridge of the BuildWrapper of this project.
+     *
+     * @param build the Build whose project to get the SCM Bridge of.
+     * @return the SCM Bridge of the BuildWrapper of this project.
+     * @throws AbortException When used outside of FreeStyle projects.
+     */
+    private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build) throws AbortException {
+        AbstractProject<?, ?> proj = build.getProject();
         if (proj instanceof FreeStyleProject) {
             FreeStyleProject p = (FreeStyleProject) build.getProject();
             PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
             return wrapper.scmBridge;
-        } else if(proj instanceof MatrixConfiguration) {
-            MatrixProject p = ((MatrixConfiguration)proj).getParent();            
+        } else if (proj instanceof MatrixConfiguration) {
+            MatrixProject p = ((MatrixConfiguration) proj).getParent();
             PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
             return wrapper.scmBridge;
         } else {
@@ -68,31 +78,41 @@ public class PretestedIntegrationPostCheckout extends Recorder {
         } catch (IOException e) {
             //All our known errors are IOExceptions. Just print the message, log the error.
             listener.getLogger().println(e.getMessage());
-            logger.log(Level.SEVERE, "IOException in post checkout", e);
+            LOGGER.log(Level.SEVERE, "IOException in post checkout", e);
             throw new AbortException(e.getMessage());
         }
 
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
 
+    /**
+     * Descriptor Implementation for PretestedIntegrationPostCheckout
+     */
     @Extension(ordinal = Integer.MIN_VALUE)
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getDisplayName() {
             return "Pretested Integration Publisher";
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
         }
     }
-
-    private static final Logger logger = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 }

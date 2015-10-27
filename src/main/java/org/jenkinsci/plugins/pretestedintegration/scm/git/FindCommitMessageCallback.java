@@ -3,21 +3,34 @@ package org.jenkinsci.plugins.pretestedintegration.scm.git;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
-import java.util.logging.Logger;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+/**
+ * Callback to find the message of a given Git commit
+ */
 public class FindCommitMessageCallback extends RepositoryListenerAwareCallback<String> {
 
+    /**
+     * The commit Id
+     */
     public final ObjectId id;
 
+    /**
+     * Constructor for FindCommitMessageCallback
+     * @param listener The TaskListener
+     * @param id The Commit id of the commit of which to find the author.
+     */
     public FindCommitMessageCallback(TaskListener listener, final ObjectId id) {
         super(listener);
         this.id = id;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
         RevWalk walk = new RevWalk(repo);

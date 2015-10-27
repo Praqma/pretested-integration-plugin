@@ -33,9 +33,9 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitChangesFailureException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.DeleteIntegratedBranchException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishWorkspaceException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
@@ -44,23 +44,34 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapp
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * The Git SCM Bridge.
+ */
 public class GitBridge extends AbstractSCMBridge {
     private static final Logger LOGGER = Logger.getLogger(GitBridge.class.getName());
 
-    private String revisionId;
+    /**
+     * The name of the integration repository.
+     */
     private String repoName;
+
+    /**
+     * FilePath of Git working directory
+     */
     private FilePath workingDirectory;
 
+    /**
+     * Constructor for GitBridge.
+     * DataBound for use in the UI.
+     * @param integrationStrategy The selected IntegrationStrategy
+     * @param branch The Integration Branch name
+     * @param repositoryName The Integration Repository name
+     */
     @DataBoundConstructor
     public GitBridge(IntegrationStrategy integrationStrategy, final String branch, String repositoryName) {
         super(integrationStrategy);
         this.branch = branch;
         this.repoName = repositoryName;
-    }
-
-    public GitBridge(IntegrationStrategy integrationStrategy, final String branch) {
-        super(integrationStrategy);
-        this.branch = branch;
     }
 
     /***
@@ -118,8 +129,11 @@ public class GitBridge extends AbstractSCMBridge {
         throw new InterruptedException("No Git repository configured in MultiSCM that matches the build data branch.");
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
-    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishWorkspaceException {
+    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException {
         try {
             EnvVars environment = build.getEnvironment(listener);
             String expandedBranch = getExpandedBranch(environment);
@@ -130,7 +144,7 @@ public class GitBridge extends AbstractSCMBridge {
             update(build, launcher, listener);
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "ensureBranch", ex);
-            throw new EstablishWorkspaceException(ex);
+            throw new EstablishingWorkspaceFailedException(ex);
         }
     }
 
@@ -151,12 +165,15 @@ public class GitBridge extends AbstractSCMBridge {
             client.fetch(expandedRepo, new RefSpec("refs/heads/" + expandedBranch));
             client.merge().setRevisionToMerge(client.revParse(expandedRepo + "/" + expandedBranch)).execute();
         } catch (InterruptedException | IOException ex) {
-            throw new EstablishWorkspaceException(ex);
+            throw new EstablishingWorkspaceFailedException(ex);
         }
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
-    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitChangesFailureException {
+    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitFailedException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
             EnvVars environment = build.getEnvironment(listener);
@@ -172,7 +189,7 @@ public class GitBridge extends AbstractSCMBridge {
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
-            throw new CommitChangesFailureException(String.format("Failed to push changes to integration branch, message was:%n%s", output.toString()));
+            throw new CommitFailedException(String.format("Failed to push changes to integration branch, message was:%n%s", output.toString()));
         }
     }
 
@@ -220,7 +237,7 @@ public class GitBridge extends AbstractSCMBridge {
         } else if (relevantBuildData.size() > 1) {
             String prettyBuildDatasString = toPrettyString(relevantBuildData);
             LOGGER.log(Level.SEVERE, String.format("Ambiguous build data found. Matching repository names and multiple changes to integrate.%n%s", prettyBuildDatasString));
-            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUIUITY_IN_BUILD_DATA);
+            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUITY_IN_BUILD_DATA);
         } else {
             return relevantBuildData.iterator().next();
         }
@@ -275,13 +292,19 @@ public class GitBridge extends AbstractSCMBridge {
         return builder.toString();
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
         findRelevantBuildData(build, listener);
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws DeleteIntegratedBranchException, NothingToDoException, UnsupportedConfigurationException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException {
         BuildData gitBuildData = findRelevantBuildData(build, listener);
 
         //At this point in time the lastBuild is also the latest.
@@ -300,11 +323,14 @@ public class GitBridge extends AbstractSCMBridge {
             } catch (InterruptedException | IOException ex) {
                 LOGGER.log(Level.SEVERE, "Failed to delete development branch. Exception:", ex);
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Failed to delete development branch. Exception:" + ex.getMessage());
-                throw new DeleteIntegratedBranchException(String.format("Failed to delete development branch %s with the following error:%n%s", gitDataBranch.getName(), ex.getMessage()));
+                throw new BranchDeletionFailedException(String.format("Failed to delete development branch %s with the following error:%n%s", gitDataBranch.getName(), ex.getMessage()));
             }
         }
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
         BuildData gitBuildData = findRelevantBuildData(build, listener);
@@ -354,6 +380,9 @@ public class GitBridge extends AbstractSCMBridge {
         return workspace;
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
         if (project.getScm() instanceof GitSCM) {
@@ -388,7 +417,7 @@ public class GitBridge extends AbstractSCMBridge {
                         throw new UnsupportedConfigurationException(UnsupportedConfigurationException.MULTISCM_REQUIRE_EXPLICIT_NAMING);
                     }
                     if (!remoteNames.add(config.getName())) {
-                        throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUIUTY_IN_REMOTE_NAMES);
+                        throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUITY_IN_REMOTE_NAMES);
                     }
                 }
             }
@@ -412,6 +441,9 @@ public class GitBridge extends AbstractSCMBridge {
         return commitCount;
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
         updateBuildDescription(build, launcher, listener);
@@ -452,22 +484,21 @@ public class GitBridge extends AbstractSCMBridge {
         }
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public String getBranch() {
         return StringUtils.isBlank(this.branch) ? "master" : this.branch;
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public String getExpandedBranch(EnvVars environment) {
         String expandedBranch = super.getExpandedBranch(environment);
         return StringUtils.isBlank(expandedBranch) ? "master" : expandedBranch;
-    }
-
-    /**
-     * @return the revisionId
-     */
-    public String getRevisionId() {
-        return this.revisionId;
     }
 
     /**
@@ -505,18 +536,30 @@ public class GitBridge extends AbstractSCMBridge {
         return environment.expand(getRepoName());
     }
 
+    /**
+     * Descriptor implementation for GitBridge
+     */
     @Extension
     public static final class DescriptorImpl extends SCMBridgeDescriptor<GitBridge> {
 
+        /**
+         * Constructor for the Descriptor
+         */
         public DescriptorImpl() {
             load();
         }
 
+        /**
+        * {@inheritDoc }
+        */
         @Override
         public String getDisplayName() {
             return "Git";
         }
 
+        /**
+         * @return Descriptors of the Integration Strategies
+         */
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {
             List<IntegrationStrategyDescriptor<?>> list = new ArrayList<>();
             for (IntegrationStrategyDescriptor<?> descr : IntegrationStrategy.all()) {
@@ -527,6 +570,9 @@ public class GitBridge extends AbstractSCMBridge {
             return list;
         }
 
+        /**
+         * @return The default Integration Strategy
+         */
         public IntegrationStrategy getDefaultStrategy() {
             return new SquashCommitStrategy();
         }
