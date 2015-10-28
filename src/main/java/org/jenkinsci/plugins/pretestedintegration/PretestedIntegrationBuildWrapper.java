@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
@@ -58,6 +59,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      */
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
+        listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
         boolean proceedToBuildStep = true;
         try {
             scmBridge.validateConfiguration(build.getProject());
@@ -95,6 +97,13 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
+    }
+
+    /**
+     * @return the plugin version
+     */
+    public String getVersion(){
+        return Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion();
     }
 
     /**
