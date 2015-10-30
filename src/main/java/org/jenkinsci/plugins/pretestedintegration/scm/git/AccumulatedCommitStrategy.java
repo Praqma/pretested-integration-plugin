@@ -30,7 +30,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  * @author Mads
  */
-public class AccumulatedCommitStrategy extends IntegrationStrategy {
+public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
     
     private static final String B_NAME = "Accumulated commit";
     private static final Logger logger = Logger.getLogger(AccumulatedCommitStrategy.class.getName());
@@ -45,11 +45,10 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         logger.entering("AccumulatedCommitStrategy", "integrate", new Object[] { build, listener, bridge, launcher });// Generated code DONT TOUCH! Bookmark: ee74dbf7df6fa51582ccc15f5fee72da
         int exitCodeMerge = unLikelyExitCode;
         int exitCodeCommit = unLikelyExitCode;
-
-        GitClient client;
-
         GitBridge gitbridge = (GitBridge)bridge;
         
+        if(tryFastForward(build, launcher, listener, gitbridge)) return;
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build, listener);
         String commit = gitBuildData.lastBuild.revision.getSha1String();
@@ -60,7 +59,7 @@ public class AccumulatedCommitStrategy extends IntegrationStrategy {
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
         boolean found = false;
 
-
+        GitClient client;
         try {
             logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
             listener.getLogger().println(String.format(LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", commit, gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));

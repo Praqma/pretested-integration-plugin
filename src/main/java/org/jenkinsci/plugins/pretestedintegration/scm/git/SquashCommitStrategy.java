@@ -25,19 +25,19 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 /**
  *
  * @author Mads
  */
-public class SquashCommitStrategy extends IntegrationStrategy {
+public class SquashCommitStrategy extends GitIntegrationStrategy {
 
     private static final String B_NAME = "Squashed commit";
     private static final Logger logger = Logger.getLogger(SquashCommitStrategy.class.getName());
     private static final String LOG_PREFIX = "[PREINT] ";
     private static final int unLikelyExitCode = -999; // An very unlikely exit code, that we use as default
-
 
     @DataBoundConstructor
     public SquashCommitStrategy() { }
@@ -49,6 +49,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         int exitCodeCommit = unLikelyExitCode;
         GitBridge gitbridge = (GitBridge) bridge;
 
+        if(tryFastForward(build, launcher, listener, gitbridge)) return;
         if(tryRebase(build, launcher, listener, gitbridge)) return;
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -58,17 +59,8 @@ public class SquashCommitStrategy extends IntegrationStrategy {
         BuildData gitBuildData = gitbridge.checkAndDetermineRelevantBuildData(build, listener);
 
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
+        
         GitClient client;
-
-//        String integrationSHA = "Not specified";
-//        try {
-//            logger.fine("Getting current integration SHA");
-//            integrationSHA = (String) build.getAction(PretestedIntegrationAction.class).getCurrentIntegrationTip().getId();
-//            logger.fine("Found integration SHA");
-//        } catch (Exception ex) {
-//            logger.log(Level.SEVERE, "Integrate() error, integration SHA not found", ex);
-//        }
-
         boolean found = false;
         try {
             logger.log(Level.INFO, String.format("Preparing to merge changes in commit %s on development branch %s to integration branch %s", gitDataBranch.getSHA1String(), gitDataBranch.getName(), gitbridge.getExpandedBranch(build.getEnvironment(listener))));
@@ -266,7 +258,7 @@ public class SquashCommitStrategy extends IntegrationStrategy {
             ObjectId rebasedCommit = client.revParse("HEAD");
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Rebase successful. Attempting fast-forward merge."));
             client.checkout().ref(expandedBranch).execute();
-            client.merge().setRevisionToMerge(rebasedCommit).execute();
+            client.merge().setRevisionToMerge(rebasedCommit).setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).execute();
             logger.log(Level.INFO, String.format(LOG_PREFIX + "Fast-forward merge successful. Exiting tryRebase."));
             return true;
         } catch (GitException | IOException | InterruptedException ex) {

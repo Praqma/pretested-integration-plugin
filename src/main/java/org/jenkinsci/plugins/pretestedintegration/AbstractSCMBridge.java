@@ -31,7 +31,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     
     final static String LOG_PREFIX = "[PREINT] ";
 
-    @DataBoundConstructor
     public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {
         this.integrationStrategy = integrationStrategy;
     }
