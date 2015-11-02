@@ -404,7 +404,7 @@ public class GitBridge extends AbstractSCMBridge {
     /**
      * Validate the Git configurations in MultiSCM.
      * JENKINS-24754
-     * @param scm
+     * @param scms
      * @throws UnsupportedConfigurationException
      */
     private boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
@@ -465,7 +465,8 @@ public class GitBridge extends AbstractSCMBridge {
         // The purpose of this section of code is to disallow usage of the master or integration branch as the polling branch.
         // TODO: This branch check should be moved to job configuration check method.
         String devBranchName = gitDataBranch.getName();
-        if (devBranchName.contains("master") || devBranchName.contains(integrationBranch)) {
+        if (devBranchName.equals("master") || devBranchName.equals(getRepoName() + "/master")
+                || devBranchName.equals(integrationBranch)|| devBranchName.equals(getRepoName() + "/" + integrationBranch) ) {
             String msg = "Using the master or integration branch for polling and development is not "
                        + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
             LOGGER.log(Level.SEVERE, msg);
