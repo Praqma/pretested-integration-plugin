@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.580</version> <!-- Do not forget to update the test harness dependency! -->
+        <version>1.580</version>
     </parent>
 
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin</url>
@@ -495,7 +495,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>jenkins-test-harness</artifactId>
-            <version>1.580</version>
+            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
