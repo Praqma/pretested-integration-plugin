@@ -123,6 +123,7 @@
             <plugin>
                 <groupId>org.jenkins-ci.tools</groupId>
                 <artifactId>maven-hpi-plugin</artifactId>
+                <version>1.115</version>
                 <configuration>
                     <pluginVersionDescription>${buildNumber}</pluginVersionDescription>
                     <compatibleSinceVersion>2.0</compatibleSinceVersion>
