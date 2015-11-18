@@ -29,7 +29,6 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
@@ -404,7 +403,7 @@ public class GitBridge extends AbstractSCMBridge {
     /**
      * Validate the Git configurations in MultiSCM.
      * JENKINS-24754
-     * @param scm
+     * @param scms
      * @throws UnsupportedConfigurationException
      */
     private boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
@@ -435,7 +434,7 @@ public class GitBridge extends AbstractSCMBridge {
      */
     public int countCommits(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
         ObjectId commitId = findRelevantBuildData(build, listener).lastBuild.revision.getSha1();
-        GitClient client = Git.with(listener, build.getEnvironment(listener)).in(resolveWorkspace(build, listener)).getClient();
+        GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
         GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(listener, commitId, getExpandedBranch(build.getEnvironment(listener)));
         int commitCount = client.withRepository(commitCountCallback);
         return commitCount;
@@ -448,7 +447,7 @@ public class GitBridge extends AbstractSCMBridge {
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
         updateBuildDescription(build, launcher, listener);
 
-        // TODO: Implement robustness in situations where this contains multiple revisons where two branches point to the same commit.
+        // TODO: Implement robustness in situations where this contains multiple revisions where two branches point to the same commit.
         // (JENKINS-24909). Check branch spec before doing anything
         BuildData gitBuildData = findRelevantBuildData(build, listener);
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();

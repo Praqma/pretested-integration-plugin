@@ -17,3 +17,6 @@
 # idea files #
 .idea/
 *.iml
+
+# keys for testing #
+/src/test/resources/keys/*

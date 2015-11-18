@@ -49,7 +49,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         if(tryFastForward(build, launcher, listener, gitbridge)) return;
         if(tryRebase(build, launcher, listener, gitbridge)) return;
 
-        GitClient client = null;
+        GitClient client;
         try {
             client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
         } catch (InterruptedException | IOException ex) {
@@ -64,7 +64,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             expandedBranchName = gitbridge.getBranch();
         }
 
-        //TODO: How can you add more than 1 action, MultiSCM plugin with two seperate gits?
+        //TODO: How can you add more than 1 action, MultiSCM plugin with two separate gits?
         BuildData buildData = gitbridge.findRelevantBuildData(build, listener);
         Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
 
