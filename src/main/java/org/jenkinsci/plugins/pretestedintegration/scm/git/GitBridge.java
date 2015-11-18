@@ -256,6 +256,7 @@ public class GitBridge extends AbstractSCMBridge {
 
         for (BuildData buildData : buildDatas) {
             try {
+                if(buildData.lastBuild == null) continue;
                 Branch buildBranch = buildData.lastBuild.revision.getBranches().iterator().next();
                 String expandedRepository = getExpandedRepository(build.getEnvironment(listener)) + "/"; // Assume no trailing slash in configuration
                 if (buildBranch.getName().startsWith(expandedRepository)) { // Check branch matches integration repository
@@ -282,10 +283,14 @@ public class GitBridge extends AbstractSCMBridge {
      */
     private String toPrettyString(Collection<BuildData> buildDatas) {
         StringBuilder builder = new StringBuilder();
-        for (BuildData d : buildDatas) {
-            builder.append(String.format(d.lastBuild.revision.getSha1String() + "%n"));
-            for (Branch b : d.lastBuild.revision.getBranches()) {
-                builder.append(String.format(b.getName() + "%n"));
+        for (BuildData data : buildDatas) {
+            if(data.lastBuild == null){
+                builder.append(String.format("No build data for remote:%n%s", data.getRemoteUrls().iterator().next()));
+            } else {
+                builder.append(String.format(data.lastBuild.revision.getSha1String() + "%n"));
+                for (Branch branch : data.lastBuild.revision.getBranches()) {
+                    builder.append(String.format(branch.getName() + "%n"));
+                }
             }
         }
         return builder.toString();
