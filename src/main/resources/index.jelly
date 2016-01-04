@@ -3,5 +3,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-    This plugin is a sample to explain how to write a Jenkins plugin.
+    The Pretested Integration Plugin offers a branchy approach to pretested integration (also known as pre-tested commits), which upholds the invariant; that for a specific branch, known as the integration branch, all commits have been verified.
 </div>
