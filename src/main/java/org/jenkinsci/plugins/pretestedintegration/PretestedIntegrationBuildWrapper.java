@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Plugin;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -103,7 +104,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @return the plugin version
      */
     public String getVersion(){
-        return Jenkins.getInstance().getPlugin("pretested-integration").getWrapper().getVersion();
+        Plugin pretested = Jenkins.getInstance().getPlugin("pretested-integration");
+        if (pretested != null) return pretested.getWrapper().getVersion();
+        else return "plugin-not-found";
     }
 
     /**

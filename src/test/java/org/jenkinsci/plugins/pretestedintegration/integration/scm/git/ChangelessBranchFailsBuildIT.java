@@ -1,0 +1,62 @@
+package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
+
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Repository;
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+
+import static junit.framework.TestCase.assertTrue;
+
+/**
+ * Currently, if you push a ready branch with no changes, the build fails because either it can't find the MERGE_MSG file, or it is empty.
+ * We need to discuss what it SHOULD do, but I'm fairly sure it shouldn't fail with an odd message.
+ */
+public class ChangelessBranchFailsBuildIT {
+
+    @Rule
+    public JenkinsRule jenkins = new JenkinsRule();
+
+    private Repository repository;
+
+    @After
+    public void tearDown() throws Exception{
+        TestUtilsFactory.destroyRepo(repository);
+    }
+
+    //These tests are just here to point out the flaw. Edit them to have the desired result, then debug.
+
+    @Test
+    public void squash_changelessBranchFailsBuild() throws Exception {
+        repository = TestUtilsFactory.createRepoWithoutBranches("squash_changelessBranchFailsBuild");
+        Git.open(repository.getDirectory()).branchCreate().setName("ready/no-changes").call();
+
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkins, TestUtilsFactory.STRATEGY_TYPE.SQUASH, repository);
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        String console = jenkins.createWebClient().getPage(build, "console").asText();
+        System.out.println(console);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        boolean fileNotFound = console.contains(".git/MERGE_MSG (No such file or directory)");
+        boolean fileWasEmpty = console.contains("Logging exception msg: Cannot commit");
+        assertTrue(fileNotFound || fileWasEmpty);
+    }
+
+    @Test
+    public void accumulated_changelessBranchFailsBuild() throws Exception {
+        repository = TestUtilsFactory.createRepoWithoutBranches("accumulated_changelessBranchFailsBuild");
+        Git.open(repository.getDirectory()).branchCreate().setName("ready/no-changes").call();
+
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkins, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        String console = jenkins.createWebClient().getPage(build, "console").asText();
+        System.out.println(console);
+        jenkins.assertBuildStatus(Result.FAILURE, build);
+        boolean fileNotFound = console.contains(".git/MERGE_MSG (No such file or directory)");
+        boolean fileWasEmpty = console.contains("Logging exception msg: Cannot commit");
+        assertTrue(fileNotFound || fileWasEmpty);
+    }
+}
