@@ -7,6 +7,7 @@ import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.util.BuildData;
+import java.io.FileNotFoundException;
 import org.jenkinsci.plugins.pretestedintegration.*;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -85,7 +86,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             throw new NothingToDoException(logMessage);
         }
 
-        String commitAuthor; //leaving un-assigned, want to fail later if not assigned
+        String commitAuthor = null; //leaving un-assigned, want to fail later if not assigned
         try {
             // Collect author
             logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch");
@@ -127,7 +128,13 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
         } catch (IOException | GitException | InterruptedException ex) {
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while committing. Logging exception msg: %s", ex.getMessage());
+            // If ".git/MERGE_MSG" wasn't found the most likely culrprit is that the merge was an empty
+            // one (No changes) for some reason the merge() command does not complain or throw exception when that happens
+            if(ex.getMessage().contains("Cannot commit") || ex.getMessage().contains("MERGE_MSG (No such file or directory)")) {
+                logMessage = String.format("%sUnable to commit changes. Most likely you are trying to integrate a change that was already integrated", PretestedIntegrationBuildWrapper.LOG_PREFIX);
+            } else {
+                logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while committing. Logging exception msg: %s", ex.getMessage());
+            }
             LOGGER.log(Level.SEVERE, logMessage, ex);
             listener.getLogger().println(logMessage);
             throw new IntegrationFailedException(ex);

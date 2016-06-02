@@ -23,40 +23,34 @@ public class ChangelessBranchFailsBuildIT {
 
     private Repository repository;
 
+    private final String res = "Unable to commit changes. Most likely you are trying to integrate a change that was already integrated";
+
     @After
     public void tearDown() throws Exception{
         TestUtilsFactory.destroyRepo(repository);
     }
 
-    //These tests are just here to point out the flaw. Edit them to have the desired result, then debug.
-
     @Test
     public void squash_changelessBranchFailsBuild() throws Exception {
         repository = TestUtilsFactory.createRepoWithoutBranches("squash_changelessBranchFailsBuild");
         Git.open(repository.getDirectory()).branchCreate().setName("ready/no-changes").call();
-
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkins, TestUtilsFactory.STRATEGY_TYPE.SQUASH, repository);
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String console = jenkins.createWebClient().getPage(build, "console").asText();
         System.out.println(console);
         jenkins.assertBuildStatus(Result.FAILURE, build);
-        boolean fileNotFound = console.contains(".git/MERGE_MSG (No such file or directory)");
-        boolean fileWasEmpty = console.contains("Logging exception msg: Cannot commit");
-        assertTrue(fileNotFound || fileWasEmpty);
+        assertTrue(console.contains(res));
     }
 
     @Test
     public void accumulated_changelessBranchFailsBuild() throws Exception {
         repository = TestUtilsFactory.createRepoWithoutBranches("accumulated_changelessBranchFailsBuild");
         Git.open(repository.getDirectory()).branchCreate().setName("ready/no-changes").call();
-
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkins, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, repository);
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String console = jenkins.createWebClient().getPage(build, "console").asText();
         System.out.println(console);
         jenkins.assertBuildStatus(Result.FAILURE, build);
-        boolean fileNotFound = console.contains(".git/MERGE_MSG (No such file or directory)");
-        boolean fileWasEmpty = console.contains("Logging exception msg: Cannot commit");
-        assertTrue(fileNotFound || fileWasEmpty);
+        assertTrue(console.contains(res));
     }
 }
