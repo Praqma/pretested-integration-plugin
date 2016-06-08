@@ -157,7 +157,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             // If ".git/MERGE_MSG" wasn't found the most likely culrprit is that the merge was an empty
             // one (No changes) for some reason the merge() command does not complain or throw exception when that happens
             if(ex.getMessage().contains("Cannot commit") || ex.getMessage().contains("MERGE_MSG (No such file or directory)")) {
-                logMessage = String.format("%sUnable to commit changes. Most likely you are trying to integrate a change that was already integrated", PretestedIntegrationBuildWrapper.LOG_PREFIX);
+                logMessage = String.format("%sUnable to commit changes. Most likely you are trying to integrate a change that was already integrated. Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, ex.getMessage());
             } else {
                 logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while committing. Logging exception msg: %s", ex.getMessage());
             }
