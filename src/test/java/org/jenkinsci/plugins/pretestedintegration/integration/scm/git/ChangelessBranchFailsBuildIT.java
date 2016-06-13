@@ -14,7 +14,8 @@ import static junit.framework.TestCase.assertTrue;
 
 /**
  * Currently, if you push a ready branch with no changes, the build fails because either it can't find the MERGE_MSG file, or it is empty.
- * We need to discuss what it SHOULD do, but I'm fairly sure it shouldn't fail with an odd message.
+ * Since the exceptions thrown by the API's do a very bad job at actually pointing out what went wrong, we've written these tests
+ * to make sure that the user is presented with a text that make sure there is a chance to decipher the error.
  */
 public class ChangelessBranchFailsBuildIT {
 
