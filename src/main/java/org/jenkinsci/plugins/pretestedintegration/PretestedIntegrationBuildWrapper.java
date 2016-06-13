@@ -106,7 +106,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     public String getVersion(){
         Plugin pretested = Jenkins.getInstance().getPlugin("pretested-integration");
         if (pretested != null) return pretested.getWrapper().getVersion();
-        else return "plugin-not-found";
+        else return "unable to retrieve plugin version";
     }
 
     /**
