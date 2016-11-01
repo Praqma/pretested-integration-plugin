@@ -4,15 +4,15 @@ import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.ExtensionPoint;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import hudson.model.Result;
+import hudson.model.*;
+
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
@@ -25,6 +25,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigur
  * Abstract class representing an SCM bridge.
  */
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
+    private static final Logger LOGGER = Logger.getLogger(AbstractSCMBridge.class.getName());
 
     /**
      * The integration branch.
@@ -69,7 +70,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
     }
 
     /**
@@ -93,7 +94,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @throws IOException A repository could not be reached.
      */
-    public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException;
+    public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException;
 
     /**
      * Determines if we should prepare a workspace for integration. If not we
@@ -104,7 +105,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
+    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
     }
 
     /**
@@ -148,7 +149,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
     }
 
     /**
@@ -206,12 +207,17 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
+     * @return The Integration Branch name as variable expanded if possible - otherwise return branch
+     */
+    public String getExpandedBranch(EnvVars environment) {
+        return  environment.expand(getBranch());
+    }
+
+
+    /**
      * @param environment The environment to expand the branch in
      * @return The Integration Branch name, expanded using given EnvVars.
      */
-    public String getExpandedBranch(EnvVars environment) {
-        return environment.expand(branch);
-    }
 
     /***
      * @return The required result

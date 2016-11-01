@@ -23,8 +23,8 @@ public class FindCommitMessageCallback extends RepositoryListenerAwareCallback<S
      * @param listener The TaskListener
      * @param id The Commit id of the commit of which to find the author.
      */
-    public FindCommitMessageCallback(TaskListener listener, final ObjectId id) {
-        super(listener);
+    public FindCommitMessageCallback(final ObjectId id) {
+//        super(listener);
         this.id = id;
     }
 

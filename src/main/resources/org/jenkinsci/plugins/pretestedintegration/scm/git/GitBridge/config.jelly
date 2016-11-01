@@ -9,6 +9,10 @@
             <f:textbox value="${it.repoName}" default="origin"/>
         </f:entry>
 
+        <f:entry title="Unstable if merge failure" description="If checked, the pretested integration step result fails due to git operation, the status of the build is set to unstable">
+            <f:checkbox name="integrationFailedStatusUnstable" checked="${it.integrationFailedStatusUnstable}"/>
+        </f:entry>
+
         <j:choose>
             <j:when test="${instance.integrationStrategy == null}">
                 <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pre-tested integration strategy" varName="integrationStrategy" instance="${descriptor.getDefaultStrategy()}"/>

@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Plugin;
+import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -19,6 +21,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspa
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -72,9 +75,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
-            proceedToBuildStep = false;
+            proceedToBuildStep = true;
         } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
-            build.setResult(Result.FAILURE);
+            build.setResult(Result.UNSTABLE);
             String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
@@ -142,7 +145,11 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
          */
         @Override
         public boolean isApplicable(AbstractProject<?, ?> arg0) {
-            return arg0 instanceof FreeStyleProject;
+            if (arg0 instanceof FreeStyleProject)
+                return true;
+            if (arg0 instanceof MatrixProject)
+                return true;
+            return false;
         }
     }
 

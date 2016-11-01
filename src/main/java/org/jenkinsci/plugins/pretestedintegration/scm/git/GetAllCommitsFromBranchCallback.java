@@ -35,12 +35,12 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
 
     /**
      * Constructor for GetAllCommitsFromBranchCallback
-     * @param listener The TaskListener
+//     * @param listener The TaskListener
      * @param id The commit Id of the starting point
      * @param branch The branch name of the destination.
      */
-    public GetAllCommitsFromBranchCallback(TaskListener listener, final ObjectId id, final String branch) {
-        super(listener);
+    public GetAllCommitsFromBranchCallback(final ObjectId id, final String branch) {
+//        super(listener);
         this.id = id;
         this.branch = branch;
     }

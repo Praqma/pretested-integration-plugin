@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
@@ -15,33 +15,22 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigur
 /**
  * Abstract class representing a strategy to apply when merging pretested commits into the integration branch.
  */
-public abstract class IntegrationStrategy implements Describable<IntegrationStrategy>, ExtensionPoint {
+public abstract interface IntegrationStrategyAsGitPluginExt{
 
     /**
      * Integrates the commits into the integration branch.
      *
+     * @param scm
      * @param build The Build
-     * @param launcher The Launcher
+     * @param git
      * @param listener The BuildListener
-     * @param bridge The SCM Bridge
      * @throws IntegrationFailedException when integration fails
      * @throws NothingToDoException when there's nothing to do
      * @throws UnsupportedConfigurationException when part of the configuration isn't supported
      */
-    public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException;
 
-    /**
-    * {@inheritDoc}
-    */
-    @Override
-    public Descriptor<IntegrationStrategy> getDescriptor() {
-        return (IntegrationStrategyDescriptor<?>) Jenkins.getInstance().getDescriptorOrDie(getClass());
-    }
+    public abstract void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge)
+            throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException;
 
-    /**
-     * @return All Integration Strategy descriptors
-     */
-    public static DescriptorExtensionList<IntegrationStrategy, IntegrationStrategyDescriptor<IntegrationStrategy>> all() {
-        return Jenkins.getInstance().<IntegrationStrategy, IntegrationStrategyDescriptor<IntegrationStrategy>>getDescriptorList(IntegrationStrategy.class);
-    }
+
 }

@@ -23,8 +23,8 @@ public class FindCommitAuthorCallback extends RepositoryListenerAwareCallback<St
      * @param listener The TaskListener
      * @param id The Commit id of the commit of which to find the author.
      */
-    public FindCommitAuthorCallback(TaskListener listener, final ObjectId id) {
-        super(listener);
+    public FindCommitAuthorCallback(final ObjectId id) {
+//        super(listener);
         this.id = id;
     }
 

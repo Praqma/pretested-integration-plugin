@@ -26,12 +26,12 @@ public class GetCommitCountFromBranchCallback extends RepositoryListenerAwareCal
 
     /**
      * Constructor for GetCommitCountFromBranchCallback
-     * @param listener The TaskListener
+//     * @param listener The TaskListener
      * @param startObjectId The Id of the starting commit
      * @param targetBranchName The name of the destination branch
      */
-    public GetCommitCountFromBranchCallback(TaskListener listener, final ObjectId startObjectId, final String targetBranchName) {
-        super(listener);
+    public GetCommitCountFromBranchCallback(final ObjectId startObjectId, final String targetBranchName) {
+//        super(listener);
         this.startObjectId = startObjectId;
         this.targetBranchName = targetBranchName;
     }

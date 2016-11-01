@@ -4,11 +4,8 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.model.TaskListener;
+import hudson.matrix.MatrixConfiguration;
+import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.GitSCM;
@@ -18,6 +15,7 @@ import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -54,6 +52,8 @@ public class GitBridge extends AbstractSCMBridge {
      */
     private String repoName;
 
+    private boolean integrationFailedStatusUnstable;
+
     /**
      * FilePath of Git working directory
      */
@@ -85,8 +85,8 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws UnsupportedConfigurationException
      * When multiple, ambiguous relevant BuildDatas are found.
      */
-    protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
-        BuildData buildData = findRelevantBuildData(build, listener);
+    protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+        BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
 
         SCM scm = build.getProject().getScm();
         if (scm instanceof GitSCM) {
@@ -132,7 +132,7 @@ public class GitBridge extends AbstractSCMBridge {
      * {@inheritDoc }
      */
     @Override
-    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException {
+    public void ensureBranch(AbstractBuild<?, ?> build,  Launcher launcher , BuildListener listener, String branch) throws EstablishingWorkspaceFailedException {
         try {
             EnvVars environment = build.getEnvironment(listener);
             String expandedBranch = getExpandedBranch(environment);
@@ -140,7 +140,7 @@ public class GitBridge extends AbstractSCMBridge {
             GitClient client = findScm(build, listener).createClient(listener, environment, build, build.getWorkspace());
             listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedBranch));
             client.checkout().branch(expandedBranch).ref(expandedRepo + "/" + expandedBranch).deleteBranchIfExist(true).execute();
-            update(build, launcher, listener);
+            update(build, listener);
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "ensureBranch", ex);
             throw new EstablishingWorkspaceFailedException(ex);
@@ -155,7 +155,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws IOException
      * @throws InterruptedException
      */
-    protected void update(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    protected void update(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
         try {
             EnvVars environment = build.getEnvironment(listener);
             String expandedRepo = getExpandedRepository(environment);
@@ -192,124 +192,22 @@ public class GitBridge extends AbstractSCMBridge {
         }
     }
 
-    /**
-     * Retrieves the BuildData for the given build relevant to the Integration Repository.
-     * <ul>
-     *  <li>
-     *      Extracts only BuildData belonging to the Integration repository
-     *  </li>
-     *  <li>
-     *      Ensures that identical BuildData are narrowed down to different sets
-     *      as MultiScm and the Git plugin may sometimes contribute with several
-     *      identical sets
-     *  </li>
-     *  <li>
-     *      Ensures that only one relevant set is supplied. It throws in case om ambiguity.
-     *  </li>
-     * </ul>
-     * 
-     * For a visualized example of several BuilData: See 'docs/More_than_1_gitBuild_data.png'
-     * TODO:
-     * We don't check that the branch complies with the branch specifier,
-     * or that commits are heads.
-     * See JENKINS-25542, JENKINS-25512, JENKINS-24909
-     *
-     * @param build The Build
-     * @param listener The TaskListener
-     * @return The relevant BuildData
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException
-     * If no relevant BuildData was found.
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException
-     * If multiple, ambiguous BuildDatas were found.
-     */
-    public BuildData findRelevantBuildData(AbstractBuild<?, ?> build, TaskListener listener) throws NothingToDoException, UnsupportedConfigurationException {
-        List<BuildData> buildDatas = build.getActions(BuildData.class);
-        if (buildDatas.isEmpty()) {
-            throw new NothingToDoException("No Git SCM change found.");
-        }
 
-        Set<BuildData> relevantBuildData = findRelevantBuildDataImpl(build, listener, buildDatas);
 
-        if (relevantBuildData.isEmpty()) {
-            String prettyBuildDatasString = toPrettyString(buildDatas);
-            throw new NothingToDoException(String.format("No revision matches configuration in 'Integration repository'%n%s", prettyBuildDatasString));
-        } else if (relevantBuildData.size() > 1) {
-            String prettyBuildDatasString = toPrettyString(relevantBuildData);
-            LOGGER.log(Level.SEVERE, String.format("Ambiguous build data found. Matching repository names and multiple changes to integrate.%n%s", prettyBuildDatasString));
-            throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUITY_IN_BUILD_DATA);
-        } else {
-            return relevantBuildData.iterator().next();
-        }
-    }
-
-    /***
-     * Returns the relevant BuildDatas from the supplied list of BuildDatas.
-     *
-     * @param build The Build
-     * @param listener The TaskListener
-     * @param buildDatas The list of BuildDatas
-     * @return The relevant BuildDatas
-     */
-    private Set<BuildData> findRelevantBuildDataImpl(AbstractBuild<?, ?> build, TaskListener listener, List<BuildData> buildDatas) {
-        Set<BuildData> relevantBuildData = new HashSet<>();
-        Set<String> revisions = new HashSet<>(); //Used to detect duplicates
-
-        for (BuildData buildData : buildDatas) {
-            try {
-                if(buildData.lastBuild == null) continue;
-                Branch buildBranch = buildData.lastBuild.revision.getBranches().iterator().next();
-                String expandedRepository = getExpandedRepository(build.getEnvironment(listener)) + "/"; // Assume no trailing slash in configuration
-                if (buildBranch.getName().startsWith(expandedRepository)) { // Check branch matches integration repository
-                    String revisionSha = buildData.lastBuild.revision.getSha1String();
-                    boolean isDuplicateEntry = !revisions.add(revisionSha); // Check we haven't seen this changeset before
-                    if (isDuplicateEntry) {
-                        LOGGER.log(Level.INFO, String.format("Revision %s has a duplicate BuildData entry. Using first.", revisionSha));
-                    } else {
-                        relevantBuildData.add(buildData);
-                    }
-                }
-            } catch (IOException | InterruptedException ex) {
-                Logger.getLogger(GitBridge.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        return relevantBuildData;
-    }
-
-    /***
-     * Returns a pretty string listing all the passed in BuildData.
-     *
-     * @param buildDatas a Collection of BuildData to list
-     * @return a string listing all the given BuildData
-     */
-    private String toPrettyString(Collection<BuildData> buildDatas) {
-        StringBuilder builder = new StringBuilder();
-        for (BuildData data : buildDatas) {
-            if(data.lastBuild == null){
-                builder.append(String.format("No build data for remote:%n%s", data.getRemoteUrls().iterator().next()));
-            } else {
-                builder.append(String.format(data.lastBuild.revision.getSha1String() + "%n"));
-                for (Branch branch : data.lastBuild.revision.getBranches()) {
-                    builder.append(String.format(branch.getName() + "%n"));
-                }
-            }
-        }
-        return builder.toString();
-    }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
-        findRelevantBuildData(build, listener);
+    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+        PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
     }
-
     /**
      * {@inheritDoc }
      */
     @Override
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException {
-        BuildData gitBuildData = findRelevantBuildData(build, listener);
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+        BuildData gitBuildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
 
         //At this point in time the lastBuild is also the latest.
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
@@ -336,8 +234,8 @@ public class GitBridge extends AbstractSCMBridge {
      * {@inheritDoc }
      */
     @Override
-    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
-        BuildData gitBuildData = findRelevantBuildData(build, listener);
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+        BuildData gitBuildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
         if (gitBuildData != null) {
             Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
             String text;
@@ -403,6 +301,8 @@ public class GitBridge extends AbstractSCMBridge {
         } else {
             throw new UnsupportedConfigurationException("We only support 'Git' and 'Multiple SCMs' plugins");
         }
+//        if ( project instanceof FreeStyleProject == false )
+//            throw new UnsupportedConfigurationException("We only support Freestyle projects, but feel free to try");
     }
 
     /**
@@ -411,7 +311,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @param scms
      * @throws UnsupportedConfigurationException
      */
-    private boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
+    public boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
         Set<String> remoteNames = new HashSet<>();
         for (SCM scm : scms) {
             if (scm instanceof GitSCM) {
@@ -430,31 +330,17 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     /**
-     * Counts the commits in the relevant BuildData
-     * @param build The Build
-     * @param listener The Listener
-     * @return the amount of commits
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    public int countCommits(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
-        ObjectId commitId = findRelevantBuildData(build, listener).lastBuild.revision.getSha1();
-        GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(listener, commitId, getExpandedBranch(build.getEnvironment(listener)));
-        int commitCount = client.withRepository(commitCountCallback);
-        return commitCount;
-    }
-
-    /**
      * {@inheritDoc }
      */
     @Override
-    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
+    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         updateBuildDescription(build, launcher, listener);
 
         // TODO: Implement robustness in situations where this contains multiple revisions where two branches point to the same commit.
         // (JENKINS-24909). Check branch spec before doing anything
-        BuildData gitBuildData = findRelevantBuildData(build, listener);
+
+        String expandedRepo = getExpandedRepository(build.getEnvironment(listener));
+        BuildData gitBuildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), expandedRepo);
         Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
 
         String integrationBranch;
@@ -469,9 +355,8 @@ public class GitBridge extends AbstractSCMBridge {
         // The purpose of this section of code is to disallow usage of the master or integration branch as the polling branch.
         // TODO: This branch check should be moved to job configuration check method.
         String devBranchName = gitDataBranch.getName();
-        if (devBranchName.equals("master") || devBranchName.equals(getRepoName() + "/master")
-                || devBranchName.equals(integrationBranch)|| devBranchName.equals(getRepoName() + "/" + integrationBranch) ) {
-            String msg = "Using the master or integration branch for polling and development is not "
+        if ( devBranchName.equals(integrationBranch)|| devBranchName.equals(expandedRepo + "/" + integrationBranch) ) {
+            String msg = "Using the integration branch for polling and development is not "
                        + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
             LOGGER.log(Level.SEVERE, msg);
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + msg);
@@ -527,9 +412,18 @@ public class GitBridge extends AbstractSCMBridge {
         return StringUtils.isBlank(repoName) ? "origin" : repoName;
     }
 
+    public boolean getIntegrationFailedStatusUnstable() {
+        return this.integrationFailedStatusUnstable;
+    }
+
+    public void setIntegrationFailedStatusUnstable( boolean integrationFailedStatusUnstable) {
+        this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
+    }
+
     /**
      * @param repositoryName the repositoryName to set
      */
+
     public void setRepoName(String repositoryName) {
         this.repoName = repositoryName;
     }
@@ -537,7 +431,7 @@ public class GitBridge extends AbstractSCMBridge {
     /**
      * @return the repository name expanded using given environment variables.
      */
-    private String getExpandedRepository(EnvVars environment) {
+    public String getExpandedRepository(EnvVars environment) {
         return environment.expand(getRepoName());
     }
 
