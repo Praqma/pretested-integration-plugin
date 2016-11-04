@@ -15,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
@@ -85,8 +87,8 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             expandedIntegrationBranch = gitbridge.getBranch();
         }
 
-
-        if (tryFastForward(buildData, listener.getLogger(), client, expandedRepoName,expandedIntegrationBranch)) {
+        ObjectId commitId = buildData.lastBuild.revision.getSha1();
+        if (tryFastForward(commitId, listener.getLogger(), client, expandedIntegrationBranch)) {
             return;
         }
 
@@ -97,7 +99,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             LOGGER.fine("Found no remote branches.");
             try {
                 LOGGER.fine("Setting build description 'Nothing to do':");
-                build.setDescription(String.format("Noting to do"));
+                build.setDescription("Noting to do");
             } catch (IOException ex) {
                 LOGGER.log(Level.FINE, "Failed to update build description", ex);
             }
@@ -190,7 +192,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
 
 // TODO: replace buildData med Branch/rev!!! NOTE
         BuildData buildData = scm.getBuildData(build);
-        new Branch()
+
         String expandedRepoName;
         try {
             expandedRepoName = bridge.getExpandedRepository(build.getEnvironment(listener));
@@ -212,7 +214,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         }
 
 // TODO: CLS: Fast-forward not working as intended
-        if ( tryFastForward(buildData, listener.getLogger() , git, expandedRepoName, expandedIntegrationBranch )) {
+        if ( tryFastForward(rev.getSha1(), listener.getLogger() , git, expandedIntegrationBranch )) {
             return;
         }
 
@@ -273,7 +275,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
                     .setMessage(modifiedCommitMsg)
                     .setCommit(false)
                     .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.NO_FF)
-                    .setRevisionToMerge(buildData.lastBuild.revision.getSha1())
+                    .setRevisionToMerge(rev.getSha1())
                     .execute();
             logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Accumulated merge done";
             LOGGER.info(logMessage);

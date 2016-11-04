@@ -25,14 +25,14 @@ public class PretestedIntegrationGitUtils {
 
     /**
      * Counts the commits in the relevant BuildData
-     * @param buildData The BuildData from the build
-     * @param listener The Listener
+     * @param commitId The BuildData from the build
+     * @param client  The GitClient
      * @return the amount of commits
      * @throws IOException
      * @throws InterruptedException
      */
-    public static int countCommits(BuildData buildData, GitClient client, String repoName, String branch ) throws IOException, InterruptedException {
-        ObjectId commitId = buildData.lastBuild.revision.getSha1();
+    public static int countCommits(ObjectId commitId, GitClient client, String branch ) throws IOException, InterruptedException {
+//        ObjectId commitId = buildData.lastBuild.revision.getSha1();
         GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(commitId, branch);
         int commitCount = client.withRepository(commitCountCallback);
         return commitCount;
@@ -61,7 +61,7 @@ public class PretestedIntegrationGitUtils {
      * See JENKINS-25542, JENKINS-25512, JENKINS-24909
      *
      * @param build The Build
-     * @param listener The TaskListener
+     * @param logger The PrintStream logging object
      * @return The relevant BuildData
      * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException
      * If no relevant BuildData was found.

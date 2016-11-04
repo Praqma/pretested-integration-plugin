@@ -11,7 +11,6 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
-import java.io.FileNotFoundException;
 import org.jenkinsci.plugins.pretestedintegration.*;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -70,8 +69,9 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         //TODO: Implement robustness, in which situations does this one contain
         // multiple revisons, when two branches point to the same commit?
         // (JENKINS-24909). Check branch spec before doing anything
+        // It could be the last rather than the first that is the wanted
         Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
-        String builtSha = buildData.lastBuild.revision.getSha1String();
+
         String expandedIntegrationBranch;
         try {
             expandedIntegrationBranch = gitbridge.getExpandedBranch(build.getEnvironment(listener));
@@ -79,8 +79,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             expandedIntegrationBranch = gitbridge.getBranch();
         }
 
-        if(tryFastForward(buildData, listener.getLogger(), client, expandedRepoName, expandedIntegrationBranch )) return;
-        if(tryRebase(buildData, listener.getLogger(), client, expandedRepoName, expandedIntegrationBranch )) return;
+        if(tryFastForward(buildData.lastBuild.getSHA1(), listener.getLogger(), client, expandedIntegrationBranch )) return;
+        if(tryRebase(buildData.lastBuild.getSHA1(), client, expandedIntegrationBranch )) return;
 
         try {
             client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
@@ -107,7 +107,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             LOGGER.fine("Found no remote branches.");
             try {
                 LOGGER.fine("Setting build description 'Nothing to do':");
-                build.setDescription(String.format("Nothing to do"));
+                build.setDescription("Nothing to do");
                 LOGGER.fine("Done setting build description.");
             } catch (IOException ex) {
                 LOGGER.log(Level.FINE, "Failed to update build description", ex);
@@ -117,10 +117,10 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             throw new NothingToDoException(logMessage);
         }
 
-        String commitAuthor = null; //leaving un-assigned, want to fail later if not assigned
+        String commitAuthor;
         try {
             // Collect author
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch";
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
             commitAuthor = client.withRepository(new FindCommitAuthorCallback( builtBranch.getSHA1()));
@@ -128,12 +128,12 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
 
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting squash merge - without commit:");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting squash merge - without commit:";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
             listener.getLogger().println(String.format("%s merge --squash %s", PretestedIntegrationBuildWrapper.LOG_PREFIX, builtBranch.getName())); // Output asserted in tests.
             client.merge().setSquash(true).setRevisionToMerge(builtBranch.getSHA1()).execute();
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Squash merge done");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Squash merge done";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
         } catch (IOException | InterruptedException | GitException ex) {
@@ -143,19 +143,19 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             throw new IntegrationFailedException(ex);
         }
 
-        logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Merge was successful");
+        logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Merge was successful";
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
 
         try {
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting to commit squash merge changes:");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting to commit squash merge changes:";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
             PersonIdent author = getPersonIdent(commitAuthor);
             String message = client.getWorkTree().child(".git/SQUASH_MSG").readToString();
             client.setAuthor(author);
             client.commit(message);
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of squashed merge done");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of squashed merge done";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
         } catch (IOException | GitException | InterruptedException ex) {
@@ -170,29 +170,31 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
             throw new IntegrationFailedException(ex);
         }
-        logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit was successful");
+        logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit was successful";
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
     }
 
     @Override
-    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
-        GitBridge gitbridge = (GitBridge) bridge;
-        GitClient client = git;
+    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
 
+
+/*
         String expandedRepoName;
         try {
             expandedRepoName = gitbridge.getExpandedRepository(build.getEnvironment(listener));
         } catch (IOException | InterruptedException ex) {
             expandedRepoName = gitbridge.getRepoName();
         }
+*/
         BuildData buildData = scm.getBuildData(build);
 
         //TODO: Implement robustness, in which situations does this one contain
         // multiple revisons, when two branches point to the same commit?
         // (JENKINS-24909). Check branch spec before doing anything
-        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
-        String builtSha = buildData.lastBuild.revision.getSha1String();
+        // Consider to get last of the branches rather than the first
+//        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
+//        String builtSha = buildData.lastBuild.revision.getSha1String();
         String expandedIntegrationBranch;
         try {
             expandedIntegrationBranch = gitbridge.getExpandedBranch(build.getEnvironment(listener));
@@ -200,8 +202,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             expandedIntegrationBranch = gitbridge.getBranch();
         }
 
-        if(tryFastForward(buildData, listener.getLogger(), client, expandedRepoName, expandedIntegrationBranch )) return;
-        if(tryRebase(buildData, listener.getLogger(), client, expandedRepoName, expandedIntegrationBranch )) return;
+        if(tryFastForward(buildData.lastBuild.getSHA1(), listener.getLogger(), client, expandedIntegrationBranch )) return;
+        if(tryRebase(buildData.lastBuild.getSHA1(), client, expandedIntegrationBranch )) return;
 
         String expandedBranchName;
         try {
@@ -210,9 +212,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             expandedBranchName = gitbridge.getBranch();
         }
 
-        //TODO: How can you add more than 1 action, MultiSCM plugin with two separate gits?
-//        BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener);
-//        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
+        Branch builtBranch = rev.getBranches().iterator().next();
 
         String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", builtBranch.getSHA1String(), builtBranch.getName(), expandedBranchName);
         LOGGER.log(Level.INFO, logMessage);
@@ -221,7 +221,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             LOGGER.fine("Found no remote branches.");
             try {
                 LOGGER.fine("Setting build description 'Nothing to do':");
-                build.setDescription(String.format("Nothing to do"));
+                build.setDescription("Nothing to do");
                 LOGGER.fine("Done setting build description.");
             } catch (IOException ex) {
                 LOGGER.log(Level.FINE, "Failed to update build description", ex);
@@ -231,10 +231,10 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             throw new NothingToDoException(logMessage);
         }
 
-        String commitAuthor = null; //leaving un-assigned, want to fail later if not assigned
+        String commitAuthor;
         try {
             // Collect author
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch";
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
             commitAuthor = client.withRepository(new FindCommitAuthorCallback( builtBranch.getSHA1()));
@@ -242,12 +242,12 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
 
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting squash merge - without commit:");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting squash merge - without commit:";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
             listener.getLogger().println(String.format("%s merge --squash %s", PretestedIntegrationBuildWrapper.LOG_PREFIX, builtBranch.getName())); // Output asserted in tests.
             client.merge().setSquash(true).setRevisionToMerge(builtBranch.getSHA1()).execute();
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Squash merge done");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Squash merge done";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
         } catch (IOException | InterruptedException | GitException ex) {
@@ -257,19 +257,19 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             throw new IntegrationFailedException(ex);
         }
 
-        logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Merge was successful");
+        logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Merge was successful";
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
 
         try {
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting to commit squash merge changes:");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting to commit squash merge changes:";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
             PersonIdent author = getPersonIdent(commitAuthor);
             String message = client.getWorkTree().child(".git/SQUASH_MSG").readToString();
             client.setAuthor(author);
             client.commit(message);
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of squashed merge done");
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of squashed merge done";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
         } catch (IOException | GitException | InterruptedException ex) {
@@ -284,7 +284,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
             throw new IntegrationFailedException(ex);
         }
-        logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit was successful");
+        logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit was successful";
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
 
