@@ -5,13 +5,13 @@ import java.io.IOException;
 /**
  * Used when applying commits failed unexpectedly.
  */
-public class CommitFailedException extends IOException {
+public class PushFailedException extends IOException {
 
     /**
-     * Constructor for CommitFailedException
+     * Constructor for PushFailedException
      * @param message The Exception message.
      */
-    public CommitFailedException(String message) {
+    public PushFailedException(String message) {
         super(message);
     }
 }

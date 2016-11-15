@@ -15,7 +15,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 
 /**
- * Callback to get a list of all Git commits from a given commit to given branch
+ * Callback to get a list of all Git commits from a given commit to given integrationBranch
  */
 public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCallback<String> {
 
@@ -28,7 +28,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
     public final ObjectId id;
 
     /**
-     * The branch name.
+     * The integrationBranch name.
      * Destination.
      */
     public final String branch;
@@ -37,7 +37,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
      * Constructor for GetAllCommitsFromBranchCallback
 //     * @param listener The TaskListener
      * @param id The commit Id of the starting point
-     * @param branch The branch name of the destination.
+     * @param branch The integrationBranch name of the destination.
      */
     public GetAllCommitsFromBranchCallback(final ObjectId id, final String branch) {
 //        super(listener);
@@ -53,13 +53,13 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         StringBuilder sb = new StringBuilder();
         RevWalk walk = new RevWalk(repo);
 
-        // commit on our branch, resolved from the jGit object id
+        // commit on our integrationBranch, resolved from the jGit object id
         RevCommit commit = walk.parseCommit(id);
 
         // walk tree starting from the integration commit
         walk.markStart(commit);
 
-        LOGGER.info(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit message until reaching branch %s", branch));
+        LOGGER.info(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit message until reaching integrationBranch %s", branch));
         // limit the tree walk to keep away from master commits
         // Reference for this idea is: https://wiki.eclipse.org/JGit/User_Guide#Restrict_the_walked_revision_graph
         ObjectId to = repo.resolve(branch);

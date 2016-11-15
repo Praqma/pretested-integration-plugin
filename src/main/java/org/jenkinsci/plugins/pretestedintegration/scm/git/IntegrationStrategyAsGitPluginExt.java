@@ -13,12 +13,12 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoExceptio
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 /**
- * Abstract class representing a strategy to apply when merging pretested commits into the integration branch.
+ * Abstract class representing a strategy to apply when merging pretested commits into the integration integrationBranch.
  */
 public abstract interface IntegrationStrategyAsGitPluginExt{
 
     /**
-     * Integrates the commits into the integration branch.
+     * Integrates the commits into the integration integrationBranch.
      *
      * @param scm
      * @param build The Build

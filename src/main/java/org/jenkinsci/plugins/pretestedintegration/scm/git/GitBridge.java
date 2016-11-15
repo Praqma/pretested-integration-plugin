@@ -4,7 +4,6 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.matrix.MatrixConfiguration;
 import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
@@ -15,9 +14,7 @@ import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
@@ -25,12 +22,11 @@ import java.util.logging.Logger;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.PushFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
@@ -54,6 +50,15 @@ public class GitBridge extends AbstractSCMBridge {
 
     private boolean integrationFailedStatusUnstable;
 
+    public Branch triggeredBranch;
+
+    /**
+     * The integration integrationBranch.
+     * This is the integrationBranch into which pretested commits will be merged.
+     */
+    private String integrationBranch;
+
+
     /**
      * FilePath of Git working directory
      */
@@ -67,10 +72,11 @@ public class GitBridge extends AbstractSCMBridge {
      * @param repositoryName The Integration Repository name
      */
     @DataBoundConstructor
-    public GitBridge(IntegrationStrategy integrationStrategy, final String branch, String repositoryName) {
+    public GitBridge(IntegrationStrategy integrationStrategy, final String branch, final String repositoryName,final Branch triggeredBranch) {
         super(integrationStrategy);
-        this.branch = branch;
+        this.integrationBranch = branch;
         this.repoName = repositoryName;
+        this.triggeredBranch = triggeredBranch;
     }
 
     /***
@@ -111,21 +117,21 @@ public class GitBridge extends AbstractSCMBridge {
                 GitSCM gitscm = (GitSCM) subScm;
 
                 // ASSUMPTION:
-                // There's only one Git SCM that matches the branch in our build data.
-                // Returning the first match should be fine, as the origin name is part of the branch name
+                // There's only one Git SCM that matches the integrationBranch in our build data.
+                // Returning the first match should be fine, as the origin name is part of the integrationBranch name
                 // and we require all MultiSCM Git configurations to be explicitly and uniquely named.
                 Revision revision = gitscm.getBuildData(build).lastBuild.revision;
-                for (Branch bdBranch : buildData.lastBuild.revision.getBranches()) { // More than one if several branch heads are in the same commit
+                for (Branch bdBranch : buildData.lastBuild.revision.getBranches()) { // More than one if several integrationBranch heads are in the same commit
                     if (revision.containsBranchName(bdBranch.getName())) {
-                        LOGGER.fine(String.format("Git SCM matches relevant branch."));
+                        LOGGER.fine(String.format("Git SCM matches relevant integrationBranch."));
                         return gitscm;
                     } else {
-                        LOGGER.fine(String.format("Git SCM doesn't match relevant branch."));
+                        LOGGER.fine(String.format("Git SCM doesn't match relevant integrationBranch."));
                     }
                 }
             }
         }
-        throw new InterruptedException("No Git repository configured in MultiSCM that matches the build data branch.");
+        throw new InterruptedException("No Git repository configured in MultiSCM that matches the build data integrationBranch.");
     }
 
     /**
@@ -135,10 +141,10 @@ public class GitBridge extends AbstractSCMBridge {
     public void ensureBranch(AbstractBuild<?, ?> build,  Launcher launcher , BuildListener listener, String branch) throws EstablishingWorkspaceFailedException {
         try {
             EnvVars environment = build.getEnvironment(listener);
-            String expandedBranch = getExpandedBranch(environment);
+            String expandedBranch = getExpandedIntegrationBranch(environment);
             String expandedRepo = getExpandedRepository(environment);
             GitClient client = findScm(build, listener).createClient(listener, environment, build, build.getWorkspace());
-            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedBranch));
+            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration integrationBranch %s:", expandedBranch));
             client.checkout().branch(expandedBranch).ref(expandedRepo + "/" + expandedBranch).deleteBranchIfExist(true).execute();
             update(build, listener);
         } catch (IOException | InterruptedException ex) {
@@ -148,9 +154,8 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     /**
-     * Pulls in the remote branch
+     * Pulls in the remote integrationBranch
      * @param build The Build
-     * @param launcher The Launcher
      * @param listener The Listener
      * @throws IOException
      * @throws InterruptedException
@@ -159,7 +164,7 @@ public class GitBridge extends AbstractSCMBridge {
         try {
             EnvVars environment = build.getEnvironment(listener);
             String expandedRepo = getExpandedRepository(environment);
-            String expandedBranch = getExpandedBranch(environment);
+            String expandedBranch = getExpandedIntegrationBranch(environment);
             GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
             client.fetch(expandedRepo, new RefSpec("refs/heads/" + expandedBranch));
             client.merge().setRevisionToMerge(client.revParse(expandedRepo + "/" + expandedBranch)).execute();
@@ -172,23 +177,23 @@ public class GitBridge extends AbstractSCMBridge {
      * {@inheritDoc }
      */
     @Override
-    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitFailedException {
+    public void pushToIntegrationBranch(AbstractBuild<?, ?> build, BuildListener listener) throws PushFailedException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
             EnvVars environment = build.getEnvironment(listener);
             String expandedRepo = getExpandedRepository(environment);
-            String expandedBranch = getExpandedBranch(environment);
+            String expandedBranch = getExpandedIntegrationBranch(environment);
             
             GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-            LOGGER.log(Level.INFO, "Pushing changes to integration branch:");
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Pushing changes to integration branch:");
+            LOGGER.log(Level.INFO, "Pushing changes to integration integrationBranch:");
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Pushing changes to integration integrationBranch:");
             client.push(expandedRepo, "refs/heads/" + expandedBranch);
             LOGGER.log(Level.INFO, "Done pushing changes");
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done pushing changes");
         } catch (IOException | InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
-            throw new CommitFailedException(String.format("Failed to push changes to integration branch, message was:%n%s", output.toString()));
+            LOGGER.log(Level.SEVERE, "Failed to push changes to integration integrationBranch. Exception:", ex);
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + String.format("Failed to push changes to integration integrationBranch. Exception %s", ex));
+            throw new PushFailedException(String.format("Failed to push changes to integration integrationBranch, message was:%n%s", output.toString()));
         }
     }
 
@@ -214,18 +219,18 @@ public class GitBridge extends AbstractSCMBridge {
 
         if (build.getResult().isBetterOrEqualTo(getRequiredResult())) {
             try {
-                LOGGER.log(Level.INFO, "Deleting development branch:");
+                LOGGER.log(Level.INFO, "Deleting development integrationBranch:");
                 String expandedRepo = getExpandedRepository(build.getEnvironment(listener));
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting development branch:");
+                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting development integrationBranch:");
                 GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
                 client.push(expandedRepo, ":" + removeRepository(gitDataBranch.getName()));
                 listener.getLogger().println("push " + expandedRepo + " :" + removeRepository(gitDataBranch.getName()));
-                LOGGER.log(Level.INFO, "Done deleting development branch");
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done deleting development branch");
+                LOGGER.log(Level.INFO, "Done deleting development integrationBranch");
+                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done deleting development integrationBranch");
             } catch (InterruptedException | IOException ex) {
-                LOGGER.log(Level.SEVERE, "Failed to delete development branch. Exception:", ex);
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Failed to delete development branch. Exception:" + ex.getMessage());
-                throw new BranchDeletionFailedException(String.format("Failed to delete development branch %s with the following error:%n%s", gitDataBranch.getName(), ex.getMessage()));
+                LOGGER.log(Level.SEVERE, "Failed to delete development integrationBranch. Exception:", ex);
+                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Failed to delete development integrationBranch. Exception:" + ex.getMessage());
+                throw new BranchDeletionFailedException(String.format("Failed to delete development integrationBranch %s with the following error:%n%s", gitDataBranch.getName(), ex.getMessage()));
             }
         }
     }
@@ -236,13 +241,15 @@ public class GitBridge extends AbstractSCMBridge {
     @Override
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
         BuildData gitBuildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
+
         if (gitBuildData != null) {
             Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
             String text;
             if (!StringUtils.isBlank(build.getDescription())) {
-                text = String.format("%s<br/>Branch: %s", build.getDescription(), gitDataBranch.getName());
+                text = String.format("%s\n%s", build.getDescription(),
+                        "(" + getRequiredResult() + "):" + gitDataBranch.getName() + " -> " + integrationBranch);
             } else {
-                text = String.format("Branch: %s", gitDataBranch.getName());
+                text = String.format("%s", "(" + getRequiredResult() + "):" + gitDataBranch.getName() + " -> " + integrationBranch);
             }
             try {
                 build.setDescription(text);
@@ -251,11 +258,34 @@ public class GitBridge extends AbstractSCMBridge {
         }
     }
 
+    @Override
+    public void updateBuildDescription(Run<?, ?> run) throws IOException, InterruptedException {
+        String text;
+        text = createBuildDescription();
+        if (!StringUtils.isBlank(run.getDescription())) {
+            text = run.getDescription() + "\n" + text;
+        }
+        try {
+            run.setDescription(text);
+        } catch (Exception ex) {
+            LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */ }
+    }
+
     /**
-     * Removes the repository from the branch.
-     * e.g. 'origin/branch' -> 'branch'
-     * @param branch the branch to strip the repository from
-     * @return the branch name
+     * {@inheritDoc }
+     */
+    @Override
+    public String createBuildDescription() throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+        return String.format("%s", "(" + getResultInfo() + "):" + triggeredBranch.getName() + " -> " + integrationBranch);
+    }
+
+
+
+    /**
+     * Removes the repository from the integrationBranch.
+     * e.g. 'origin/integrationBranch' -> 'integrationBranch'
+     * @param branch the integrationBranch to strip the repository from
+     * @return the integrationBranch name
      */
     private String removeRepository(String branch) {
         return branch.substring(branch.indexOf('/') + 1, branch.length());
@@ -334,40 +364,13 @@ public class GitBridge extends AbstractSCMBridge {
      */
     @Override
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-        updateBuildDescription(build, launcher, listener);
-
-        // TODO: Implement robustness in situations where this contains multiple revisions where two branches point to the same commit.
-        // (JENKINS-24909). Check branch spec before doing anything
-
-        String expandedRepo = getExpandedRepository(build.getEnvironment(listener));
-        BuildData gitBuildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), expandedRepo);
-        Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
-
-        String integrationBranch;
-        EnvVars environment;
-        try {
-            environment = build.getEnvironment(listener);
-            integrationBranch = getExpandedBranch(environment);
-        } catch (InterruptedException ex) {
-            integrationBranch = getBranch();
-        }
-
-        // The purpose of this section of code is to disallow usage of the master or integration branch as the polling branch.
-        // TODO: This branch check should be moved to job configuration check method.
-        String devBranchName = gitDataBranch.getName();
-        if ( devBranchName.equals(integrationBranch)|| devBranchName.equals(expandedRepo + "/" + integrationBranch) ) {
-            String msg = "Using the integration branch for polling and development is not "
-                       + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
-            LOGGER.log(Level.SEVERE, msg);
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + msg);
-            build.setResult(Result.FAILURE);
-        }
 
         Result result = build.getResult();
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
-            commit(build, launcher, listener);
+            setResultInfo("Push");
+            pushToIntegrationBranch(build, listener);
+            setResultInfo("Delete integrationBranch");
             deleteIntegratedBranch(build, launcher, listener);
-
         } else {
             LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
@@ -377,17 +380,17 @@ public class GitBridge extends AbstractSCMBridge {
     /**
      * {@inheritDoc }
      */
-    @Override
-    public String getBranch() {
-        return StringUtils.isBlank(this.branch) ? "master" : this.branch;
+//    @Override
+    public String getIntegrationBranch() {
+        return StringUtils.isBlank(this.integrationBranch) ? "master" : this.integrationBranch;
     }
 
     /**
      * {@inheritDoc }
      */
-    @Override
-    public String getExpandedBranch(EnvVars environment) {
-        String expandedBranch = super.getExpandedBranch(environment);
+//    @Override
+    public String getExpandedIntegrationBranch(EnvVars environment) {
+        String expandedBranch = environment.expand(this.integrationBranch);
         return StringUtils.isBlank(expandedBranch) ? "master" : expandedBranch;
     }
 
@@ -423,7 +426,6 @@ public class GitBridge extends AbstractSCMBridge {
     /**
      * @param repositoryName the repositoryName to set
      */
-
     public void setRepoName(String repositoryName) {
         this.repoName = repositoryName;
     }
@@ -434,6 +436,21 @@ public class GitBridge extends AbstractSCMBridge {
     public String getExpandedRepository(EnvVars environment) {
         return environment.expand(getRepoName());
     }
+
+    /**
+     * @param triggeredBranch the triggeredBranch to set
+     */
+    public void setTriggeredBranch(Branch triggeredBranch) {
+        this.triggeredBranch = triggeredBranch;
+    }
+
+    /**
+     * @return the repository name expanded using given environment variables.
+     */
+    public Branch getTriggeredBranch() {
+        return this.triggeredBranch;
+    }
+
 
     /**
      * Descriptor implementation for GitBridge

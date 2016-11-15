@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Plugin;
-import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -21,7 +20,6 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspa
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -68,7 +66,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         try {
             scmBridge.validateConfiguration(build.getProject());
             scmBridge.isApplicable(build, listener);
-            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedBranch(build.getEnvironment(listener)));
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
             scmBridge.prepareWorkspace(build, launcher, listener);
         } catch (NothingToDoException e) {
             build.setResult(Result.NOT_BUILT);

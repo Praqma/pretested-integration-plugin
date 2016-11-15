@@ -6,24 +6,18 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.UserMergeOptions;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
-import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.GitUtils;
 import hudson.plugins.git.util.MergeRecord;
 import jenkins.model.Jenkins;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.transport.RefSpec;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
@@ -35,33 +29,28 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static hudson.model.Result.FAILURE;
-
 import org.kohsuke.stapler.DataBoundSetter;
 
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
 /**
- * Speculatively merge the selected commit with another branch before the build to answer the "what happens
- * if I were to integrate this feature branch back to the master?" question.
+ * The Praqma Git Phlow - Automated Git branching model - as a Git Plugin Extension
  *
- * @author Nigel Magney
- * @author Nicolas Deloof
- * @author Andrew Bayer
- * @author Kohsuke Kawaguchi
  */
 public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
-    private static final Logger LOGGER = Logger.getLogger(GitBridge.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationAsGitPluginExt.class.getName());
 
     /**
      * The name of the integration repository.
      */
-    public final String repoName;
-    public final String branch;
+//    public final String repoName;
+//    public final String branch;
 
-    private boolean integrationFailedStatusUnstable;
+//    private boolean integrationFailedStatusUnstable;
 
-    public final GitIntegrationStrategy gitIntegrationStrategy;
+    private GitBridge gitBridge;
+
+//    public GitIntegrationStrategy gitIntegrationStrategy;
 
     final static String LOG_PREFIX = "[PREINT] ";
 
@@ -74,23 +63,39 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * Constructor for GitBridge.
      * DataBound for use in the UI.
      * @param gitIntegrationStrategy The selected IntegrationStrategy
-     * @param branch The Integration Branch name
+     * @param integrationBranch The Integration Branch name
      * @param repoName The Integration Repository name
      */
     @DataBoundConstructor
-    public PretestedIntegrationAsGitPluginExt(GitIntegrationStrategy gitIntegrationStrategy, final String branch, String repoName) {
-        this.gitIntegrationStrategy = gitIntegrationStrategy;
-        this.branch = branch;
-        this.repoName = repoName;
+    public PretestedIntegrationAsGitPluginExt(GitIntegrationStrategy gitIntegrationStrategy, final String integrationBranch, String repoName) {
+        this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName,null);
     }
 
     @DataBoundSetter
     public void setIntegrationFailedStatusUnstable(boolean integrationFailedStatusUnstable){
-        this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
+        this.gitBridge.setIntegrationFailedStatusUnstable(integrationFailedStatusUnstable);
     }
 
-    public boolean isIntegrationFailedStatusUnstable(){
-        return this.integrationFailedStatusUnstable;
+    public boolean getIntegrationFailedStatusUnstable(){
+        if ( gitBridge == null ) {
+            return false;
+        } else {
+            return gitBridge.getIntegrationFailedStatusUnstable();
+        }
+    }
+    public String getIntegrationBranch(){
+        if ( gitBridge == null ) {
+            return "master";
+        } else {
+            return gitBridge.getIntegrationBranch();
+        }
+    }
+
+    public void setGitBridge(GitBridge gitBridge ){
+        this.gitBridge = gitBridge;
+    }
+    public GitBridge getGitBridge(){
+        return this.gitBridge;
     }
 
     /**
@@ -103,36 +108,55 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     }
 
     @Override
-    public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> run, GitClient git, TaskListener listener, Revision marked, Revision rev)
+    public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> run, GitClient git, TaskListener listener, Revision marked, Revision triggeredRevision)
             throws IOException, InterruptedException {
-        String remoteBranchRef = this.branch;
+        //String remoteBranchRef = this.integrationBranch;
 
-        // if the branch we are merging is already at the commit being built, the entire merge becomes no-op
+
+        // if the integrationBranch we are merging is already at the commit being built, the entire merge becomes no-op
         // so there's nothing to
 // TODO: use this?
 /*
         if (rev.containsBranchName(remoteBranchRef))
             return rev;
 
-        // Only merge if there's a branch to merge that isn't us..
+        // Only merge if there's a integrationBranch to merge that isn't us..
         listener.getLogger().println("Merging " + rev + " to " + remoteBranchRef );
 */
         // checkout origin/blah
 //        ObjectId target = git.revParse(remoteBranchRef);
 /*
         String paramLocalBranch = scm.getParamLocalBranch(build, listener);
-        CheckoutCommand checkoutCommand = git.checkout().branch(paramLocalBranch).ref(remoteBranchRef).deleteBranchIfExist(true);
+        CheckoutCommand checkoutCommand = git.checkout().integrationBranch(paramLocalBranch).ref(remoteBranchRef).deleteBranchIfExist(true);
         for (GitSCMExtension ext : scm.getExtensions())
             ext.decorateCheckoutCommand(scm, build, git, listener, checkoutCommand);
         checkoutCommand.execute();
 */
+        Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
+
+        gitBridge.setTriggeredBranch(triggeredBranch);
+
+        EnvVars environment = run.getEnvironment(listener);
+        String expandedBranch = gitBridge.getExpandedIntegrationBranch(environment);
+        String expandedRepo = gitBridge.getExpandedRepository(environment);
 
         try {
-            GitBridge scmBridge = new GitBridge(gitIntegrationStrategy, branch, repoName );
             // TODO: do Praqma Git Phlow stuff
             listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
-            boolean proceedToBuildStep = true;
+
+
             try {
+                String devBranchName = expandedBranch;
+                if ( expandedBranch.equals(gitBridge.triggeredBranch.getName() ) ||
+                        devBranchName.equals(expandedRepo + "/" + gitBridge.triggeredBranch.getName() ) ) {
+                    String msg = "Using the integration integrationBranch for polling and development is not "
+                               + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
+                    LOGGER.log(Level.SEVERE, msg);
+                    listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + msg);
+                    run.setResult(Result.FAILURE);
+                    throw new AbortException(msg);
+                }
+
 
 // Extracted from               scmBridge.validateConfiguration(build.getProject());
 /* TODO: Does it make sense to consider if Git / MultiSCM during integration as we are under GitPlugin which should work out-of-the-box?
@@ -155,51 +179,100 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
 
 
-/* Extracted: Start from scmBridge.ensureBranch(build, listener, scmBridge.getExpandedBranch(build.getEnvironment(listener)));
+/* Extracted: Start from scmBridge.ensureBranch(build, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
 scmBridge.update((AbstractBuild)run, (BuildListener)listener);
 */
-                EnvVars environment = run.getEnvironment(listener);
-                String expandedBranch = scmBridge.getExpandedBranch(environment);
-                String expandedRepo = scmBridge.getExpandedRepository(environment);
 //                    GitClient client = findScm(build, listener).createClient(listener, environment, build, build.getWorkspace());
-                listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedBranch));
+                listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration integrationBranch %s:", expandedBranch));
                 git.checkout().branch(expandedBranch).ref(expandedRepo + "/" + expandedBranch).deleteBranchIfExist(true).execute();
                 git.merge().setRevisionToMerge(git.revParse(expandedRepo + "/" + expandedBranch)).execute();
-/* Extracted: End from scmBridge.ensureBranch(build, listener, scmBridge.getExpandedBranch(build.getEnvironment(listener)));
+/* Extracted: End from scmBridge.ensureBranch(build, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
 */
 
 // Integrate extracted from scmBridge.prepareWorkspace(build, listener);
-                gitIntegrationStrategy.integrateAsGitPluginExt(scm,run,git,listener,marked,rev, scmBridge);
+                ((GitIntegrationStrategy)gitBridge.integrationStrategy).integrateAsGitPluginExt(scm,run,git,listener,marked,triggeredRevision, gitBridge);
 
             } catch (NothingToDoException e) {
                 run.setResult(Result.NOT_BUILT);
-                String logMessage = LOG_PREFIX + String.format("%s - decorateRevisionToBuild() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
+                String logMessage = String.format("%s - decorateRevisionToBuild() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);
-            } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
-                run.setResult(Result.UNSTABLE);
-                String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
+                try {
+                    LOGGER.fine("Setting build description 'Nothing to do':");
+                    run.setDescription("Noting to do: " + triggeredRevision.getBranches().iterator().next().getName());
+                } catch (IOException ex) {
+                    LOGGER.log(Level.FINE, "Failed to update build description", ex);
+                }
+                gitBridge.setResultInfo("NothingToDo");
+                gitBridge.updateBuildDescription(run);
+                throw new GitException("Nothing to do..");
+            } catch (IntegrationFailedException| UnsupportedConfigurationException e) {
+                if (gitBridge.getIntegrationFailedStatusUnstable()) {
+                    run.setResult(Result.UNSTABLE);
+                } else {
+                    run.setResult(Result.FAILURE);
+                }
+                gitBridge.setResultInfo("MergeFailed");
+                String logMessage = String.format("%s - decorateRevisionToBuild() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);
+
+                // merge conflict. First, avoid leaving any conflict markers in the working tree
+                // by checking out some known clean state. We don't really mind what commit this is,
+                // since the next build is going to pick its own commit to build, but 'rev' is as good any.
+                CheckoutCommand checkoutCommand = git.checkout().branch(this.gitBridge.getExpandedIntegrationBranch(environment)).ref(triggeredRevision.getSha1String()).deleteBranchIfExist(true);
+                checkoutCommand.execute();
+
+                // record the fact that we've tried building 'rev' and it failed, or else
+                // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
+                // all over again.
+/*                BuildData buildData = scm.getBuildData(run);
+                if ( buildData != null ) {
+                    scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), Result.UNSTABLE));
+                } else {
+                    buildData = new BuildData("git");
+                    buildData.saveBuild(new Build(marked, triggeredRevision, run.getNumber(), Result.UNSTABLE));
+                    logMessage = String.format("%s - Why is buildData empty?. %n%s", LOG_PREFIX, e.getMessage());
+                    LOGGER.log(Level.SEVERE, logMessage, e);
+                    listener.getLogger().println(logMessage);
+                }
+*/
             } catch (IOException e) {
                 run.setResult(Result.FAILURE);
                 String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
                 LOGGER.log(Level.SEVERE, logMessage, e);
                 listener.getLogger().println(logMessage);
                 e.printStackTrace(listener.getLogger());
+                throw new InterruptedException();
             }
 
         } catch (GitException ex) {
-            // merge conflict. First, avoid leaving any conflict markers in the working tree
-             scm.getBuildData(run).saveBuild(new Build(marked,rev, run.getNumber(), FAILURE));
-            throw new AbortException("Branch not suitable for integration as it does not merge cleanly: " + ex.getMessage());
+//           scm.getBuildData(run).saveBuild(new Build(marked,triggeredRevision, run.getNumber(), NOT_BUILT));
+
+//            run.addAction(scm.getBuildData(run));
+//            run.addAction(new MergeRecord(this.integrationBranch,triggeredRevision.getBranches().iterator().next().getName()));
+
+            String logMessage = LOG_PREFIX + "Git operation failed";
+            LOGGER.log(Level.SEVERE, logMessage, ex);
+            listener.getLogger().println(logMessage);
+
+            gitBridge.updateBuildDescription(run);
+
+            throw new AbortException(ex.getMessage());
         }
 
-//        build.addAction(new MergeRecord(remoteBranchRef,target.getName()));
-//
-//        Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
-//        mergeRevision.getBranches().add(new Branch(remoteBranchRef, target));
-        return rev;
+
+
+        if ( run.getResult() == null || run.getResult() == Result.SUCCESS ) {
+            Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
+            gitBridge.setResultInfo("Build");
+            mergeRevision.getBranches().add(
+                    new Branch(gitBridge.getExpandedIntegrationBranch(environment), triggeredRevision.getSha1()));
+            return mergeRevision;
+        } else {
+            return triggeredRevision;
+        }
+
     }
 
     @Override
@@ -215,7 +288,7 @@ scmBridge.update((AbstractBuild)run, (BuildListener)listener);
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
         @Override
         public String getDisplayName() {
-            return "Praqma Git Phlow - PreIntegration before build";
+            return "Praqma Git Phlow - Verification before merge to integration integrationBranch";
         }
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {
             List<IntegrationStrategyDescriptor<?>> list = new ArrayList<>();

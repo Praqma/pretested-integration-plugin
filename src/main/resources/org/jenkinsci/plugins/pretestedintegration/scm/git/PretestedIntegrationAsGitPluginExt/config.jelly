@@ -1,8 +1,8 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:block>
-        <f:entry title="Integration branch" field="branch">
-            <f:textbox value="${it.branch}" />
+        <f:entry title="Integration branch" field="integrationBranch">
+            <f:textbox value="${it.integrationBranch}" />
         </f:entry>
 
         <f:entry title="Repository name" field="repoName">

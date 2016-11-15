@@ -68,15 +68,15 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
         //TODO: Implement robustness, in which situations does this one contain
         // multiple revisons, when two branches point to the same commit?
-        // (JENKINS-24909). Check branch spec before doing anything
+        // (JENKINS-24909). Check integrationBranch spec before doing anything
         // It could be the last rather than the first that is the wanted
         Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
 
         String expandedIntegrationBranch;
         try {
-            expandedIntegrationBranch = gitbridge.getExpandedBranch(build.getEnvironment(listener));
+            expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
         } catch (IOException | InterruptedException ex) {
-            expandedIntegrationBranch = gitbridge.getBranch();
+            expandedIntegrationBranch = gitbridge.getIntegrationBranch();
         }
 
         if(tryFastForward(buildData.lastBuild.getSHA1(), listener.getLogger(), client, expandedIntegrationBranch )) return;
@@ -91,16 +91,16 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
         String expandedBranchName;
         try {
-            expandedBranchName = gitbridge.getExpandedBranch(build.getEnvironment(listener));
+            expandedBranchName = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
         } catch (IOException | InterruptedException ex) {
-            expandedBranchName = gitbridge.getBranch();
+            expandedBranchName = gitbridge.getIntegrationBranch();
         }
 
         //TODO: How can you add more than 1 action, MultiSCM plugin with two separate gits?
 //        BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener);
 //        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
 
-        String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", builtBranch.getSHA1String(), builtBranch.getName(), expandedBranchName);
+        String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development integrationBranch %s to integration integrationBranch %s", builtBranch.getSHA1String(), builtBranch.getName(), expandedBranchName);
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
         if (!containsRemoteBranch(client, builtBranch)) {
@@ -120,7 +120,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         String commitAuthor;
         try {
             // Collect author
-            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch";
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development integrationBranch";
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
             commitAuthor = client.withRepository(new FindCommitAuthorCallback( builtBranch.getSHA1()));
@@ -191,15 +191,15 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
         //TODO: Implement robustness, in which situations does this one contain
         // multiple revisons, when two branches point to the same commit?
-        // (JENKINS-24909). Check branch spec before doing anything
+        // (JENKINS-24909). Check integrationBranch spec before doing anything
         // Consider to get last of the branches rather than the first
 //        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
 //        String builtSha = buildData.lastBuild.revision.getSha1String();
         String expandedIntegrationBranch;
         try {
-            expandedIntegrationBranch = gitbridge.getExpandedBranch(build.getEnvironment(listener));
+            expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
         } catch (IOException | InterruptedException ex) {
-            expandedIntegrationBranch = gitbridge.getBranch();
+            expandedIntegrationBranch = gitbridge.getIntegrationBranch();
         }
 
         if(tryFastForward(buildData.lastBuild.getSHA1(), listener.getLogger(), client, expandedIntegrationBranch )) return;
@@ -207,14 +207,14 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
         String expandedBranchName;
         try {
-            expandedBranchName = gitbridge.getExpandedBranch(build.getEnvironment(listener));
+            expandedBranchName = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
         } catch (IOException | InterruptedException ex) {
-            expandedBranchName = gitbridge.getBranch();
+            expandedBranchName = gitbridge.getIntegrationBranch();
         }
 
         Branch builtBranch = rev.getBranches().iterator().next();
 
-        String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", builtBranch.getSHA1String(), builtBranch.getName(), expandedBranchName);
+        String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development integrationBranch %s to integration integrationBranch %s", builtBranch.getSHA1String(), builtBranch.getName(), expandedBranchName);
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
         if (!containsRemoteBranch(client, builtBranch)) {
@@ -234,7 +234,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         String commitAuthor;
         try {
             // Collect author
-            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch";
+            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development integrationBranch";
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
             commitAuthor = client.withRepository(new FindCommitAuthorCallback( builtBranch.getSHA1()));

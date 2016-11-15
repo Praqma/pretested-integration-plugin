@@ -1,17 +1,19 @@
-package org.jenkinsci.plugins.pretestedintegration;
+package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.Extension;
-import java.util.Arrays;
-import java.util.List;
-import javaposse.jobdsl.dsl.helpers.wrapper.WrapperContext;
 import javaposse.jobdsl.dsl.RequiresPlugin;
+import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
+import javaposse.jobdsl.dsl.helpers.wrapper.WrapperContext;
 import javaposse.jobdsl.plugin.ContextExtensionPoint;
 import javaposse.jobdsl.plugin.DslExtensionMethod;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
+
+import java.util.Arrays;
+import java.util.List;
+
 import static javaposse.jobdsl.dsl.Preconditions.checkArgument;
-import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
 
 /**
  * ExtensionPoint used to support the Jenkins Job DSL.
@@ -38,7 +40,7 @@ import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
  * ```
  */
 @Extension(optional = true)
-public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
+public class PretestedIntegrationAsGitPluginExtJobDslExtension extends ContextExtensionPoint {
 
     /**
      * Valid options for integrationStrategy
@@ -55,7 +57,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
      */
     @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.0")
     @DslExtensionMethod(context = WrapperContext.class)
-    public Object pretestedIntegration(String strategy, String branch, String repository) {
+    public Object pretestedIntegrationAsGitPluginExt(String strategy, String branch, String repository) {
         checkArgument(strategies.contains(strategy), "Strategy must be one of " + strategies);
         IntegrationStrategy integrationStrategy = null;
         switch (strategy) {
@@ -66,8 +68,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
                 integrationStrategy = new SquashCommitStrategy();
                 break;
         }
-
-        return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository, null));
+        return new PretestedIntegrationAsGitPluginExt((GitIntegrationStrategy)integrationStrategy, branch, repository);
     }
 
     /**

@@ -43,7 +43,7 @@ public class GetCommitCountFromBranchCallbackIT {
         ObjectId startCommit = git.commit().setMessage("branch commit 2").call();
 
         // Counts two commits
-        GetCommitCountFromBranchCallback callback = new GetCommitCountFromBranchCallback(TaskListener.NULL, startCommit, "master");
+        GetCommitCountFromBranchCallback callback = new GetCommitCountFromBranchCallback( startCommit, "master");
         assertEquals("Commit count did not match expectations.", Integer.valueOf(2), callback.invoke(git.getRepository(), null));
 
         // Second commit to master
@@ -52,7 +52,7 @@ public class GetCommitCountFromBranchCallbackIT {
         git.commit().setMessage("master commit 2").call();
 
         // STILL counts two commits
-        callback = new GetCommitCountFromBranchCallback(TaskListener.NULL, startCommit, "master");
+        callback = new GetCommitCountFromBranchCallback(startCommit, "master");
         assertEquals("Commit count did not match expectations.", new Integer(2), callback.invoke(git.getRepository(), null));
     }
 }

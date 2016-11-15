@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import com.tikal.jenkins.plugins.multijob.MultiJobProject;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.Launcher;
@@ -15,6 +16,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,23 +52,42 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
      * @return the SCM Bridge of the BuildWrapper of this project.
      * @throws AbortException When used outside of FreeStyle projects.
      */
-    private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build) throws AbortException {
+    private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build, BuildListener listener) throws AbortException {
         AbstractProject<?, ?> proj = build.getProject();
-// TODO: Add MultiJob handling - the same way as FreeStyleProject
+
         GitSCM client = (GitSCM)build.getProject().getScm();
         if ( ! ( client instanceof GitSCM ) ) {
             throw new AbortException("Unsupported SCM type.");
+        }
+
+        PretestedIntegrationAsGitPluginExt pretestedGitPluginExt = client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class) ;
+        if ( pretestedGitPluginExt != null ) {
+            if (proj instanceof FreeStyleProject ) {
+                FreeStyleProject p = (FreeStyleProject) build.getProject();
+                PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
+                if ( wrapper != null ) {
+                    listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "BuildWrapper also configured,but skip as GitExtension prevails");
+                }
+            } else if (proj instanceof MultiJobProject ) {
+                MultiJobProject p = (MultiJobProject) build.getProject();
+                PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
+                if ( wrapper != null ) {
+                    listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "BuildWrapper also configured, but skip as GitExtension prevails");
+                }
+            }
+            return pretestedGitPluginExt.getGitBridge();
         }
 
         if (proj instanceof FreeStyleProject ) {
             FreeStyleProject p = (FreeStyleProject) build.getProject();
             PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
             return wrapper.scmBridge;
-        }
-
-
-        if (proj instanceof MatrixProject) {
+        } else if (proj instanceof MatrixProject) {
             MatrixProject p = (MatrixProject)proj.getParent();
+            PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
+            return wrapper.scmBridge;
+        } else if (proj instanceof MultiJobProject ) {
+            MultiJobProject p = (MultiJobProject)proj.getParent();
             PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
             return wrapper.scmBridge;
         } else {
@@ -93,22 +114,43 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
             return false;
         }
 
-        GitSCMExtension pretestedGitPluginExt;
-
-        
+        GitBridge bridge = (GitBridge)getScmBridge(build, listener);
 
         if ( client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class ) != null ) {
-
             if (proj instanceof MatrixConfiguration) {
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
             } else {
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
                 try {
-                    PretestedIntegrationAsGitPluginExt pretestedIntegrationAsGitPluginExt = (PretestedIntegrationAsGitPluginExt)client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class);
-                    GitBridge bridge = new GitBridge(
-                            pretestedIntegrationAsGitPluginExt.gitIntegrationStrategy,
-                            pretestedIntegrationAsGitPluginExt.branch,
-                            pretestedIntegrationAsGitPluginExt.repoName);
+                    bridge.handlePostBuild(build, launcher, listener);
+                } catch (NullPointerException | IllegalArgumentException e) {
+                    listener.getLogger().println(String.format("Caught %s during post-checkout. Failing build.", e.getClass().getSimpleName()));
+                    e.printStackTrace(listener.getLogger());
+                    bridge.setResultInfo("Unknown");
+                    bridge.updateBuildDescription((Run)build);
+                    throw new AbortException("Unexpected error. Trace written to log.");
+                } catch (IOException e) {
+                    //All our known errors are IOExceptions. Just print the message, log the error.
+                    listener.getLogger().println(e.getMessage());
+                    LOGGER.log(Level.SEVERE, "IOException in post checkout", e);
+                    bridge.setResultInfo("Unknown");
+                    bridge.updateBuildDescription(build, launcher, listener);
+                    throw new AbortException(e.getMessage());
+                }
+            }
+            if ( build.getResult() == Result.SUCCESS ) {
+                bridge.setResultInfo("Ok");
+            }
+            bridge.updateBuildDescription((Run)build);
+            return true;
+        } else { /* */
+            if (proj instanceof MatrixConfiguration) {
+                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
+                bridge.setResultInfo("Ok");
+                bridge.updateBuildDescription(build, launcher, listener);
+            } else {
+                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
+                try {
                     bridge.handlePostBuild(build, launcher, listener);
                 } catch (NullPointerException | IllegalArgumentException e) {
                     listener.getLogger().println(String.format("Caught %s during post-checkout. Failing build.", e.getClass().getSimpleName()));
@@ -121,27 +163,9 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                     throw new AbortException(e.getMessage());
                 }
             }
+            bridge.setResultInfo("Ok");
+            bridge.updateBuildDescription(build, launcher, listener);
             return true;
-        } else { /* */
-            if (proj instanceof MatrixConfiguration) {
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
-            } else {
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
-                try {
-                    getScmBridge(build).handlePostBuild(build, launcher, listener);
-                } catch (NullPointerException | IllegalArgumentException e) {
-                    listener.getLogger().println(String.format("Caught %s during post-checkout. Failing build.", e.getClass().getSimpleName()));
-                    e.printStackTrace(listener.getLogger());
-                    throw new AbortException("Unexpected error. Trace written to log.");
-                } catch (IOException e) {
-                    //All our known errors are IOExceptions. Just print the message, log the error.
-                    listener.getLogger().println(e.getMessage());
-                    LOGGER.log(Level.SEVERE, "IOException in post checkout", e);
-                    throw new AbortException(e.getMessage());
-                }
-            }
-            return true;
-
         }
 
     }
@@ -151,6 +175,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
      */
     public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
         return new MatrixAggregator(build,launcher,listener) {
+
             @Override
             public boolean endBuild() throws InterruptedException, IOException {
                 return PretestedIntegrationPostCheckout.this.perform(build,launcher,listener);

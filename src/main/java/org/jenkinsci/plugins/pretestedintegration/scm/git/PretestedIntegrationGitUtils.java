@@ -56,7 +56,7 @@ public class PretestedIntegrationGitUtils {
      *
      * For a visualized example of several BuilData: See 'docs/More_than_1_gitBuild_data.png'
      * TODO:
-     * We don't check that the branch complies with the branch specifier,
+     * We don't check that the integrationBranch complies with the integrationBranch specifier,
      * or that commits are heads.
      * See JENKINS-25542, JENKINS-25512, JENKINS-24909
      *
@@ -105,7 +105,7 @@ public class PretestedIntegrationGitUtils {
             if(buildData.lastBuild == null) continue;
                 Branch buildBranch = buildData.lastBuild.revision.getBranches().iterator().next();
                 String expandedRepository = repoName + "/"; // Assume no trailing slash in configuration
-                if (buildBranch.getName().startsWith(expandedRepository)) { // Check branch matches integration repository
+                if (buildBranch.getName().startsWith(expandedRepository)) { // Check integrationBranch matches integration repository
                     String revisionSha = buildData.lastBuild.revision.getSha1String();
                     boolean isDuplicateEntry = !revisions.add(revisionSha); // Check we haven't seen this changeset before
                     if (isDuplicateEntry) {

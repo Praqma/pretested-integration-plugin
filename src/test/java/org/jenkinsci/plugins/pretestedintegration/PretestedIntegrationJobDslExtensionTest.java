@@ -21,7 +21,7 @@ public class PretestedIntegrationJobDslExtensionTest {
      */
     @Test
     public void testDslWithSquash() throws Exception {
-        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("SQUASHED", "branch", "repo");
+        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("SQUASHED", "integrationBranch", "repo");
         assertThat(node, instanceOf(PretestedIntegrationBuildWrapper.class));
         PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper) node;
 
@@ -29,7 +29,7 @@ public class PretestedIntegrationJobDslExtensionTest {
         GitBridge bridge = (GitBridge) wrapper.scmBridge;
 
         assertThat(bridge.integrationStrategy, instanceOf(SquashCommitStrategy.class));
-        assertEquals(bridge.getBranch(), "branch");
+        assertEquals(bridge.getIntegrationBranch(), "integrationBranch");
         assertEquals(bridge.getRepoName(), "repo");
     }
 
@@ -39,7 +39,7 @@ public class PretestedIntegrationJobDslExtensionTest {
      */
     @Test
     public void testDslWithAccumulated() throws Exception {
-        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("ACCUMULATED", "branch", "repo");
+        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("ACCUMULATED", "integrationBranch", "repo");
         assertThat(node, instanceOf(PretestedIntegrationBuildWrapper.class));
         PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper) node;
 
@@ -47,7 +47,7 @@ public class PretestedIntegrationJobDslExtensionTest {
         GitBridge bridge = (GitBridge) wrapper.scmBridge;
 
         assertThat(bridge.integrationStrategy, instanceOf(AccumulatedCommitStrategy.class));
-        assertEquals(bridge.getBranch(), "branch");
+        assertEquals(bridge.getIntegrationBranch(), "integrationBranch");
         assertEquals(bridge.getRepoName(), "repo");
     }
 
@@ -57,6 +57,6 @@ public class PretestedIntegrationJobDslExtensionTest {
      */
     @Test(expected = DslScriptException.class)
     public void testDslWithInvalidStrategy() throws Exception {
-        new PretestedIntegrationJobDslExtension().pretestedIntegration("b0rk", "branch", "repo");
+        new PretestedIntegrationJobDslExtension().pretestedIntegration("b0rk", "integrationBranch", "repo");
     }
 }

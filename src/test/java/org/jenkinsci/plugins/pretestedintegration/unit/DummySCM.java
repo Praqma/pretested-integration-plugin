@@ -8,7 +8,7 @@ import hudson.model.Result;
 import java.io.IOException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.PushFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
@@ -27,7 +27,7 @@ public class DummySCM extends AbstractSCMBridge {
     }
 
     @Override
-    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitFailedException {
+    public void pushToIntegrationBranch(AbstractBuild<?, ?> build, BuildListener listener) throws PushFailedException {
         commited = true;
     }
 
@@ -47,7 +47,7 @@ public class DummySCM extends AbstractSCMBridge {
     @Override
     public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
         if (build.getResult().isBetterOrEqualTo(Result.SUCCESS)) {
-            commit(build, launcher, listener);
+            pushToIntegrationBranch(build, listener);
         }
     }
 

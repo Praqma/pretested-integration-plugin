@@ -7,14 +7,13 @@ import hudson.Launcher;
 import hudson.model.*;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import hudson.plugins.git.Branch;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.PushFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
@@ -27,15 +26,15 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigur
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
     private static final Logger LOGGER = Logger.getLogger(AbstractSCMBridge.class.getName());
 
+
     /**
-     * The integration branch.
-     * This is the branch into which pretested commits will be merged.
+     * Information about the result of the integration (Unknown, Conflict, Build, Push).
      */
-    protected String branch;
+    protected String resultInfo = "Unknown";
 
     /**
      * The integration strategy.
-     * This is the strategy applied to merge pretested commits into the integration branch.
+     * This is the strategy applied to merge pretested commits into the integration integrationBranch.
      */
     public final IntegrationStrategy integrationStrategy;
 
@@ -43,6 +42,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
 
     /**
      * Constructor for the SCM bridge.
+     *
      * @param integrationStrategy The integration strategy to apply when merging commits.
      */
     public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {
@@ -50,20 +50,19 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * Pushes changes to the integration branch.
+     * Pushes changes to the integration integrationBranch.
      *
-     * @param build The Build
-     * @param launcher The Launcher
+     * @param build    The Build
      * @param listener The BuildListener
-     * @throws CommitFailedException
+     * @throws PushFailedException
      */
-    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitFailedException {
+    public void pushToIntegrationBranch(AbstractBuild<?, ?> build, BuildListener listener) throws PushFailedException {
     }
 
     /**
-     * Deletes the integrated branch.
+     * Deletes the integrated integrationBranch.
      *
-     * @param build The Build
+     * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws BranchDeletionFailedException
@@ -74,12 +73,12 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * Make sure the SCM is checked out on the given branch.
+     * Make sure the SCM is checked out on the given integrationBranch.
      *
-     * @param build The Build
+     * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
-     * @param branch The branch to check out
+     * @param branch   The integrationBranch to check out
      * @throws EstablishingWorkspaceFailedException
      */
     public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException;
@@ -88,10 +87,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Called after the build has run. If the build was successful, the
      * changes should be committed, otherwise the workspace is reset.
      *
-     * @param build The Build
+     * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
-     *
      * @throws IOException A repository could not be reached.
      */
     public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException;
@@ -100,7 +98,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Determines if we should prepare a workspace for integration. If not we
      * throw a NothingToDoException
      *
-     * @param build The Build
+     * @param build    The Build
      * @param listener The BuildListener
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
@@ -109,10 +107,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * Integrates the commit into the integration branch.
+     * Integrates the commit into the integration integrationBranch.
      * Uses the selected IntegrationStrategy.
      *
-     * @param build The Build
+     * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws NothingToDoException
@@ -126,9 +124,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * Called after the SCM plugin has updated the workspace with remote changes.
      * Afterwards, the workspace must be ready to perform builds and tests.
-     * The integration branch must be checked out, and the given commit must be merged in.
+     * The integration integrationBranch must be checked out, and the given commit must be merged in.
      *
-     * @param build The Build
+     * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws IntegrationFailedException
@@ -143,13 +141,27 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * Updates the description of the Jenkins build.
      *
-     * @param build The Build
+     * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    }
+
+    /**
+     * Updates the description of the Jenkins build.
+     *
+     * @param run    The Build
+     * @throws NothingToDoException
+     * @throws UnsupportedConfigurationException
+     */
+    public void updateBuildDescription(Run<?, ?> run) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    }
+
+    public String createBuildDescription() throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException{
+       return "";
     }
 
     /**
@@ -162,9 +174,11 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
     }
 
-    /**
-     * @return all the SCM Bridge Descriptors
-     */
+
+
+        /**
+         * @return all the SCM Bridge Descriptors
+         */
     public static DescriptorExtensionList<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>> all() {
         return Jenkins.getInstance().<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>>getDescriptorList(AbstractSCMBridge.class);
     }
@@ -202,20 +216,34 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * @return The Integration Branch name
      */
-    public String getBranch() {
-        return branch;
+/*    public String getIntegrationBranch() {
+        return integrationBranch;
     }
-
+    */
     /**
-     * @return The Integration Branch name as variable expanded if possible - otherwise return branch
+     * @return The information of the result of the Phlow
      */
-    public String getExpandedBranch(EnvVars environment) {
-        return  environment.expand(getBranch());
+    public String getResultInfo() {
+        return resultInfo;
     }
 
+    /**
+     * @return The information of the result of the Phlow
+     */
+    public void setResultInfo(String resultInfo) {
+        this.resultInfo = resultInfo;
+    }
 
     /**
-     * @param environment The environment to expand the branch in
+     * @return The Integration Branch name as variable expanded if possible - otherwise return integrationBranch
+     */
+/*    public String getExpandedIntegrationBranch(EnvVars environment) {
+        return  environment.expand(getIntegrationBranch());
+    }
+*/
+
+    /**
+     * @param environment The environment to expand the integrationBranch in
      * @return The Integration Branch name, expanded using given EnvVars.
      */
 
