@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -35,12 +34,10 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
 
     /**
      * Constructor for GetAllCommitsFromBranchCallback
-//     * @param listener The TaskListener
      * @param id The commit Id of the starting point
      * @param branch The integrationBranch name of the destination.
      */
     public GetAllCommitsFromBranchCallback(final ObjectId id, final String branch) {
-//        super(listener);
         this.id = id;
         this.branch = branch;
     }
@@ -78,7 +75,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             Integer secondsSinceUnixEpoch = rev.getCommitTime();
             // Note that the git log shows different date formats, depending on configuration.
             // The choices in the git commit message below matches the squashed commit message
-            // that git generates on a Ubuntu Linux 14.04 with default git installation. 
+            // that git generates on a Ubuntu Linux 14.04 with default git installation.
             // Locale if forced to enligsh to make it independent from operating system
             // and environment.
             // Note that it is not the standard ISO format.

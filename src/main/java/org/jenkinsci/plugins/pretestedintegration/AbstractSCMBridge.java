@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.DescriptorExtensionList;
-import hudson.EnvVars;
 import hudson.ExtensionPoint;
 import hudson.Launcher;
 import hudson.model.*;
@@ -11,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import hudson.plugins.git.Branch;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.PushFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;

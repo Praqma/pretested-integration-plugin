@@ -96,10 +96,6 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             expandedBranchName = gitbridge.getIntegrationBranch();
         }
 
-        //TODO: How can you add more than 1 action, MultiSCM plugin with two separate gits?
-//        BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener);
-//        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
-
         String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development integrationBranch %s to integration integrationBranch %s", builtBranch.getSHA1String(), builtBranch.getName(), expandedBranchName);
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
@@ -177,24 +173,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
     @Override
     public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
-
-
-/*
-        String expandedRepoName;
-        try {
-            expandedRepoName = gitbridge.getExpandedRepository(build.getEnvironment(listener));
-        } catch (IOException | InterruptedException ex) {
-            expandedRepoName = gitbridge.getRepoName();
-        }
-*/
         BuildData buildData = scm.getBuildData(build);
-
-        //TODO: Implement robustness, in which situations does this one contain
-        // multiple revisons, when two branches point to the same commit?
-        // (JENKINS-24909). Check integrationBranch spec before doing anything
-        // Consider to get last of the branches rather than the first
-//        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
-//        String builtSha = buildData.lastBuild.revision.getSha1String();
         String expandedIntegrationBranch;
         try {
             expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));

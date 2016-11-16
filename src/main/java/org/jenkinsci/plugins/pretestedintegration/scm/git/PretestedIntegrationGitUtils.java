@@ -1,8 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
@@ -27,13 +25,13 @@ public class PretestedIntegrationGitUtils {
      * Counts the commits in the relevant BuildData
      * @param commitId The BuildData from the build
      * @param client  The GitClient
+     * @param devBranch the development branch we want to count commits one
      * @return the amount of commits
      * @throws IOException
      * @throws InterruptedException
      */
-    public static int countCommits(ObjectId commitId, GitClient client, String branch ) throws IOException, InterruptedException {
-//        ObjectId commitId = buildData.lastBuild.revision.getSha1();
-        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(commitId, branch);
+    public static int countCommits(ObjectId commitId, GitClient client, String devBranch ) throws IOException, InterruptedException {
+        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(commitId, devBranch);
         int commitCount = client.withRepository(commitCountCallback);
         return commitCount;
     }
@@ -91,7 +89,6 @@ public class PretestedIntegrationGitUtils {
     /***
      * Returns the relevant BuildDatas from the supplied list of BuildDatas.
      *
-//     * @param build The Build
      * @param logger PrintStream logger
      * @param buildDatas The list of BuildDatas
      * @param repoName The expanded repoName
