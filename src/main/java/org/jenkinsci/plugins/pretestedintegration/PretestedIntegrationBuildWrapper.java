@@ -20,6 +20,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspa
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -38,7 +39,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     /**
      * The SCM Bridge used for this project.
      */
-    public final AbstractSCMBridge scmBridge;
+    public final GitBridge scmBridge;
 
     /**
      * Constructor for the Build Wrapper.
@@ -46,7 +47,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @param scmBridge the SCM bridge
      */
     @DataBoundConstructor
-    public PretestedIntegrationBuildWrapper(final AbstractSCMBridge scmBridge) {
+    public PretestedIntegrationBuildWrapper(final GitBridge scmBridge) {
         this.scmBridge = scmBridge;
     }
 
