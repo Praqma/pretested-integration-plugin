@@ -42,11 +42,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     final static String LOG_PREFIX = "[PREINT] ";
 
     /**
-     * FilePath of Git working directory
-     */
-    private FilePath workingDirectory;
-
-    /**
      * Constructor for GitBridge.
      * DataBound for use in the UI.
      * @param gitIntegrationStrategy The selected IntegrationStrategy
@@ -55,7 +50,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      */
     @DataBoundConstructor
     public PretestedIntegrationAsGitPluginExt(GitIntegrationStrategy gitIntegrationStrategy, final String integrationBranch, String repoName) {
-        this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName,null);
+        this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName);
     }
 
     @DataBoundSetter
@@ -100,7 +95,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         EnvVars environment = run.getEnvironment(listener);
 
         Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
-        gitBridge.setTriggeredBranch(triggeredBranch);
+        run.addAction(new PretestTriggerCommitAction(triggeredBranch));
 
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
@@ -111,8 +106,8 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
             try {
                 String devBranchName = expandedIntegrationBranch;
-                if ( expandedIntegrationBranch.equals(gitBridge.triggeredBranch.getName() ) ||
-                        devBranchName.equals(expandedRepo + "/" + gitBridge.triggeredBranch.getName() ) ) {
+                if ( expandedIntegrationBranch.equals(triggeredBranch.getName() ) ||
+                        devBranchName.equals(expandedRepo + "/" + triggeredBranch.getName() ) ) {
                     String msg = "Using the integration integrationBranch for polling and development is not "
                                + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
                     LOGGER.log(Level.SEVERE, msg);
@@ -199,10 +194,12 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+
         @Override
         public String getDisplayName() {
             return "Praqma Git Phlow - Verification before merge to integration integrationBranch";
         }
+
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {
             List<IntegrationStrategyDescriptor<?>> list = new ArrayList<>();
             for (IntegrationStrategyDescriptor<?> descr : IntegrationStrategy.all()) {

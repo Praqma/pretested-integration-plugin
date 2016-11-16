@@ -158,7 +158,16 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public void updateBuildDescription(Run<?, ?> run) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
     }
 
-    public String createBuildDescription() throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException{
+    /**
+     *
+     * @param tBranch the branch that triggered this build
+     * @return a build description
+     * @throws NothingToDoException
+     * @throws UnsupportedConfigurationException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public String createBuildDescription(String tBranch) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException{
        return "";
     }
 
