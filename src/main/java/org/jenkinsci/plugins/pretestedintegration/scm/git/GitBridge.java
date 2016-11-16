@@ -370,6 +370,7 @@ public class GitBridge extends AbstractSCMBridge {
     /**
      * {@inheritDoc }
      */
+    @Override
     public String getIntegrationBranch() {
         return StringUtils.isBlank(this.integrationBranch) ? "master" : this.integrationBranch;
     }

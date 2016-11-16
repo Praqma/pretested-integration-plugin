@@ -39,7 +39,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     /**
      * The SCM Bridge used for this project.
      */
-    public final GitBridge scmBridge;
+    public final AbstractSCMBridge scmBridge;
 
     /**
      * Constructor for the Build Wrapper.
@@ -52,7 +52,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     }
 
     /**
-     * Jenkins hook that fires after the workspace has been initialized. 
+     * Jenkins hook that fires after the workspace has been initialized.
      * Calls the SCM specific function according to the chosen SCM.
      *
      * @param build - The build in progress for which an BuildWrapper.Environment object is created. Never null.

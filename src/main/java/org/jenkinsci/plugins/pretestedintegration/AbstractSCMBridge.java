@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.DescriptorExtensionList;
+import hudson.EnvVars;
 import hudson.ExtensionPoint;
 import hudson.Launcher;
 import hudson.model.*;
@@ -29,6 +30,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Information about the result of the integration (Unknown, Conflict, Build, Push).
      */
     protected String resultInfo = "Unknown";
+    protected abstract String getIntegrationBranch();
 
     /**
      * The integration strategy.
@@ -220,13 +222,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * @return The Integration Branch name
-     */
-/*    public String getIntegrationBranch() {
-        return integrationBranch;
-    }
-    */
-    /**
      * @return The information of the result of the Phlow
      */
     public String getResultInfo() {
@@ -234,19 +229,20 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * @return The information of the result of the Phlow
+     * @param resultInfo
      */
     public void setResultInfo(String resultInfo) {
         this.resultInfo = resultInfo;
     }
 
     /**
+     * @param environment environment
      * @return The Integration Branch name as variable expanded if possible - otherwise return integrationBranch
      */
-/*    public String getExpandedIntegrationBranch(EnvVars environment) {
-        return  environment.expand(getIntegrationBranch());
+    public String getExpandedIntegrationBranch(EnvVars environment) {
+        return environment.expand(getIntegrationBranch());
     }
-*/
+
 
     /**
      * @param environment The environment to expand the integrationBranch in

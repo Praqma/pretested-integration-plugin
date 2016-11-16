@@ -51,6 +51,11 @@ public class DummySCM extends AbstractSCMBridge {
         }
     }
 
+    @Override
+    protected String getIntegrationBranch() {
+        return "master";
+    }
+
     @Extension
     public static final class DescriptorImpl extends SCMBridgeDescriptor<DummyBridge> {
 
