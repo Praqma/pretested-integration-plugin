@@ -71,10 +71,6 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
         //Rebase the commit
         try {
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting rebase.");
-//            GitClient client = bridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-//            ObjectId commitId = buildData.lastBuild.revision.getSha1();
-//            String expandedBranch = PretestedIntegrationGitUtils.getExpandedIntegrationBranch(build.getEnvironment(listener));
-
             //Rebase the commit, then checkout master for a fast-forward merge.
             client.checkout().ref(commitId.getName()).execute();
             client.rebase().setUpstream(branch).execute();

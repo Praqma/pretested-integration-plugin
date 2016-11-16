@@ -7,26 +7,16 @@ import hudson.Launcher;
 import hudson.matrix.*;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.Revision;
-import hudson.plugins.git.extensions.GitSCMExtension;
-import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import hudson.util.DescribableList;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitIntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.kohsuke.stapler.DataBoundConstructor;
 

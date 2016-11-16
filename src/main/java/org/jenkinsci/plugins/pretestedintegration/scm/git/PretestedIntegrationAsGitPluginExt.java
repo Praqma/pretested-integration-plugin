@@ -10,7 +10,6 @@ import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.GitUtils;
-import hudson.plugins.git.util.MergeRecord;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.gitclient.CheckoutCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -39,25 +38,8 @@ import static org.eclipse.jgit.lib.Constants.HEAD;
  */
 public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationAsGitPluginExt.class.getName());
-
-    /**
-     * The name of the integration repository.
-     */
-//    public final String repoName;
-//    public final String branch;
-
-//    private boolean integrationFailedStatusUnstable;
-
     private GitBridge gitBridge;
-
-//    public GitIntegrationStrategy gitIntegrationStrategy;
-
     final static String LOG_PREFIX = "[PREINT] ";
-
-    /**
-     * FilePath of Git working directory
-     */
-    private FilePath workingDirectory;
 
     /**
      * Constructor for GitBridge.
@@ -68,7 +50,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      */
     @DataBoundConstructor
     public PretestedIntegrationAsGitPluginExt(GitIntegrationStrategy gitIntegrationStrategy, final String integrationBranch, String repoName) {
-        this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName,null);
+        this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName);
     }
 
     @DataBoundSetter
@@ -110,30 +92,22 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     @Override
     public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> run, GitClient git, TaskListener listener, Revision marked, Revision triggeredRevision)
             throws IOException, InterruptedException {
-
         EnvVars environment = run.getEnvironment(listener);
+
         Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
-        gitBridge.setTriggeredBranch(triggeredBranch);
+        run.addAction(new PretestTriggerCommitAction(triggeredBranch));
 
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
 
-
-// TODO: use this? - instead of nothing to do?
-        // if the integrationBranch we are merging is already at the commit being built, the entire merge becomes no-op
-        // so there's nothing to do
-/*        if (triggeredRevision.containsBranchName(gitBridge.getExpandedIntegrationBranch(environment)))
-            return triggeredRevision;
-*/
         try {
             // TODO: do Praqma Git Phlow stuff
             listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
 
-
             try {
                 String devBranchName = expandedIntegrationBranch;
-                if ( expandedIntegrationBranch.equals(gitBridge.triggeredBranch.getName() ) ||
-                        devBranchName.equals(expandedRepo + "/" + gitBridge.triggeredBranch.getName() ) ) {
+                if ( expandedIntegrationBranch.equals(triggeredBranch.getName() ) ||
+                        devBranchName.equals(expandedRepo + "/" + triggeredBranch.getName() ) ) {
                     String msg = "Using the integration integrationBranch for polling and development is not "
                                + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
                     LOGGER.log(Level.SEVERE, msg);
@@ -142,39 +116,10 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                     throw new AbortException(msg);
                 }
 
-
-// Extracted from               scmBridge.validateConfiguration(build.getProject());
-/* TODO: Does it make sense to consider if Git / MultiSCM during integration as we are under GitPlugin which should work out-of-the-box?
-                if ( ! (scm instanceof GitSCM)) {
-                    throw new UnsupportedConfigurationException("We only support 'Git'");
-                }
-                if (Jenkins.getInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM) {
-                    MultiSCM multiscm = (MultiSCM)scm.get;
-                    scmBridge.validateMultiScm(multiscm.getConfiguredSCMs());
-                } else {
-                    throw new UnsupportedConfigurationException("We only support 'Git' and 'Multiple SCMs' plugins");
-                }
-*/
-//        if ( project instanceof FreeStyleProject == false )
-//            throw new UnsupportedConfigurationException("We only support Freestyle projects, but feel free to try");
-
-//
-// TODO: just find buildData, but we already have it if needed:
-// scmBridge.isApplicable(build, listener);
-
-
-
-/* Extracted: Start from scmBridge.ensureBranch(build, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
-scmBridge.update((AbstractBuild)run, (BuildListener)listener);
-*/
-//                    GitClient client = findScm(build, listener).createClient(listener, environment, build, build.getWorkspace());
                 listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration integrationBranch %s:", expandedIntegrationBranch));
                 git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
                 git.merge().setRevisionToMerge(git.revParse(expandedRepo + "/" + expandedIntegrationBranch)).execute();
-/* Extracted: End from scmBridge.ensureBranch(build, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
-*/
 
-// Integrate extracted from scmBridge.prepareWorkspace(build, listener);
                 ((GitIntegrationStrategy)gitBridge.integrationStrategy).integrateAsGitPluginExt(scm,run,git,listener,marked,triggeredRevision, gitBridge);
 
             } catch (NothingToDoException e) {
@@ -207,21 +152,6 @@ scmBridge.update((AbstractBuild)run, (BuildListener)listener);
                 // since the next build is going to pick its own commit to build, but 'rev' is as good any.
                 CheckoutCommand checkoutCommand = git.checkout().branch(this.gitBridge.getExpandedIntegrationBranch(environment)).ref(triggeredRevision.getSha1String()).deleteBranchIfExist(true);
                 checkoutCommand.execute();
-
-                // record the fact that we've tried building 'rev' and it failed, or else
-                // BuildChooser in future builds will pick up this same 'rev' again and we'll see the exact same merge failure
-                // all over again.
-/*                BuildData buildData = scm.getBuildData(run);
-                if ( buildData != null ) {
-                    scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), Result.UNSTABLE));
-                } else {
-                    buildData = new BuildData("git");
-                    buildData.saveBuild(new Build(marked, triggeredRevision, run.getNumber(), Result.UNSTABLE));
-                    logMessage = String.format("%s - Why is buildData empty?. %n%s", LOG_PREFIX, e.getMessage());
-                    LOGGER.log(Level.SEVERE, logMessage, e);
-                    listener.getLogger().println(logMessage);
-                }
-*/
             } catch (IOException e) {
                 run.setResult(Result.FAILURE);
                 gitBridge.setResultInfo("UNKNOWN");
@@ -234,21 +164,12 @@ scmBridge.update((AbstractBuild)run, (BuildListener)listener);
             }
 
         } catch (GitException ex) {
-//           scm.getBuildData(run).saveBuild(new Build(marked,triggeredRevision, run.getNumber(), NOT_BUILT));
-
-//            run.addAction(scm.getBuildData(run));
-//            run.addAction(new MergeRecord(this.integrationBranch,triggeredRevision.getBranches().iterator().next().getName()));
-
             String logMessage = LOG_PREFIX + "Git operation failed";
             LOGGER.log(Level.SEVERE, logMessage, ex);
             listener.getLogger().println(logMessage);
-
             gitBridge.updateBuildDescription(run);
-
             throw new AbortException(ex.getMessage());
         }
-
-
 
         if ( run.getResult() == null || run.getResult() == Result.SUCCESS ) {
             Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
@@ -273,10 +194,12 @@ scmBridge.update((AbstractBuild)run, (BuildListener)listener);
 
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
+
         @Override
         public String getDisplayName() {
             return "Praqma Git Phlow - Verification before merge to integration integrationBranch";
         }
+
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {
             List<IntegrationStrategyDescriptor<?>> list = new ArrayList<>();
             for (IntegrationStrategyDescriptor<?> descr : IntegrationStrategy.all()) {

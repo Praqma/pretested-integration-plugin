@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import hudson.plugins.git.Branch;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.PushFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
@@ -31,6 +30,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Information about the result of the integration (Unknown, Conflict, Build, Push).
      */
     protected String resultInfo = "Unknown";
+    protected abstract String getIntegrationBranch();
 
     /**
      * The integration strategy.
@@ -92,7 +92,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param listener The BuildListener
      * @throws IOException A repository could not be reached.
      */
-    public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException;
+    public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException;
 
     /**
      * Determines if we should prepare a workspace for integration. If not we
@@ -103,8 +103,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-    }
+    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException { }
 
     /**
      * Integrates the commit into the integration integrationBranch.
@@ -157,10 +156,19 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void updateBuildDescription(Run<?, ?> run) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    public void updateBuildDescription(Run<?, ?> run) throws NothingToDoException, UnsupportedConfigurationException, IOException {
     }
 
-    public String createBuildDescription() throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException{
+    /**
+     *
+     * @param tBranch the branch that triggered this build
+     * @return a build description
+     * @throws NothingToDoException
+     * @throws UnsupportedConfigurationException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public String createBuildDescription(String tBranch) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException{
        return "";
     }
 
@@ -214,13 +222,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * @return The Integration Branch name
-     */
-/*    public String getIntegrationBranch() {
-        return integrationBranch;
-    }
-    */
-    /**
      * @return The information of the result of the Phlow
      */
     public String getResultInfo() {
@@ -228,19 +229,20 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * @return The information of the result of the Phlow
+     * @param resultInfo
      */
     public void setResultInfo(String resultInfo) {
         this.resultInfo = resultInfo;
     }
 
     /**
+     * @param environment environment
      * @return The Integration Branch name as variable expanded if possible - otherwise return integrationBranch
      */
-/*    public String getExpandedIntegrationBranch(EnvVars environment) {
-        return  environment.expand(getIntegrationBranch());
+    public String getExpandedIntegrationBranch(EnvVars environment) {
+        return environment.expand(getIntegrationBranch());
     }
-*/
+
 
     /**
      * @param environment The environment to expand the integrationBranch in

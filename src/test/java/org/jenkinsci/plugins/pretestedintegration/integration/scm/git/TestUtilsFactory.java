@@ -104,7 +104,7 @@ public class TestUtilsFactory {
     }
 
     // Count commits on the branch with name branch.
-    // Jgit example code modified from here: 
+    // Jgit example code modified from here:
     // https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/api/WalkRev.java
     public static int countCommitsOnBranch(Git git, String branch) throws IOException {
 
@@ -287,9 +287,9 @@ public class TestUtilsFactory {
 
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranch, repoName, null);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranch, repoName);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranch, repoName, null);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranch, repoName);
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
@@ -314,9 +314,9 @@ public class TestUtilsFactory {
         FreeStyleProject project = rule.createFreeStyleProject();
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName, null);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName, null);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName);
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
@@ -344,9 +344,9 @@ public class TestUtilsFactory {
         FreeStyleProject project = rule.createFreeStyleProject();
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoNamePluginConfig, null);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoNamePluginConfig);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoNamePluginConfig, null);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoNamePluginConfig);
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));

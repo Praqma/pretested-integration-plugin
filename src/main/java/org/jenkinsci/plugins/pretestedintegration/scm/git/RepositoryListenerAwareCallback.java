@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import org.eclipse.jgit.lib.Repository;

@@ -67,7 +67,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
                 break;
         }
 
-        return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository, null));
+        return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository));
     }
 
     /**
