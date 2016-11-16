@@ -90,7 +90,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param listener The BuildListener
      * @throws IOException A repository could not be reached.
      */
-    public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException;
+    public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException;
 
     /**
      * Determines if we should prepare a workspace for integration. If not we
@@ -101,8 +101,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-    }
+    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException { }
 
     /**
      * Integrates the commit into the integration integrationBranch.
@@ -155,7 +154,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void updateBuildDescription(Run<?, ?> run) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    public void updateBuildDescription(Run<?, ?> run) throws NothingToDoException, UnsupportedConfigurationException, IOException {
     }
 
     /**

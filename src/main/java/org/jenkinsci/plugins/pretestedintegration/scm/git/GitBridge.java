@@ -209,7 +209,7 @@ public class GitBridge extends AbstractSCMBridge {
      * {@inheritDoc }
      */
     @Override
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException {
             String triggerBranch = build.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
             try {
                 LOGGER.log(Level.INFO, "Deleting development branch:");
@@ -251,13 +251,13 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     @Override
-    public void updateBuildDescription(Run<?, ?> run) throws IOException, InterruptedException {
+    public void updateBuildDescription(Run<?, ?> run) throws IOException {
+        try {
         Branch triggerBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch;
         String text = createBuildDescription(triggerBranch.getName());
         if (!StringUtils.isBlank(run.getDescription())) {
             text = run.getDescription() + "\n" + text;
         }
-        try {
             run.setDescription(text);
         } catch (Exception ex) {
             LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */ }
@@ -353,7 +353,7 @@ public class GitBridge extends AbstractSCMBridge {
      * {@inheritDoc }
      */
     @Override
-    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
 
         Result result = build.getResult();
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
