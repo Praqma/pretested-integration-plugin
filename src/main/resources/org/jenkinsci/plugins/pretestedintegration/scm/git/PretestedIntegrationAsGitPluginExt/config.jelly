@@ -9,7 +9,13 @@
             <f:textbox value="${it.repoName}" default="origin"/>
         </f:entry>
 
-        <f:entry title="Unstable if merge failure" description="If checked, the pretested integration step result fails due to git operation, the status of the build is set to unstable">
+        <f:entry title="Number of commits allowed on delivery branch" field="allowedNoCommits">
+            <f:textbox value="${it.allowedNoCommits}" default=""/>
+        </f:entry>
+
+        <!-- TODO: Move the description to help?-->
+        <f:entry title="Unstable if merge failure" description="Check this option if a merge/integration failure should leave the build status in an 'UNSTABLE' rather than 'FAILURE' condition. Please be aware that 'UNSTABLE' condition will let the build continue. This can be handled smoothly with https://wiki.jenkins-ci.org/display/JENKINS/Conditional+BuildStep+Plugin which can execute the build-step(or part of) depending the current build status.">
+
             <f:checkbox name="integrationFailedStatusUnstable" field="integrationFailedStatusUnstable" />
         </f:entry>
 

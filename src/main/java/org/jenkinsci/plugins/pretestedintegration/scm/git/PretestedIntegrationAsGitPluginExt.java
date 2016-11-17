@@ -17,6 +17,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
@@ -47,10 +48,11 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * @param gitIntegrationStrategy The selected IntegrationStrategy
      * @param integrationBranch The Integration Branch name
      * @param repoName The Integration Repository name
+     * @param allowedNoCommits The amount of commits allowed for integration
      */
     @DataBoundConstructor
-    public PretestedIntegrationAsGitPluginExt(GitIntegrationStrategy gitIntegrationStrategy, final String integrationBranch, String repoName) {
-        this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName);
+    public PretestedIntegrationAsGitPluginExt(GitIntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName, String allowedNoCommits) {
+        this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName, Integer.valueOf(allowedNoCommits));
     }
 
     @DataBoundSetter
@@ -63,6 +65,13 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             return false;
         } else {
             return gitBridge.getIntegrationFailedStatusUnstable();
+        }
+    }
+    public String getAllowedNoCommits(){
+        if ( gitBridge == null ) {
+            return "";
+        } else {
+            return Integer.toString(gitBridge.getAllowedNoCommits());
         }
     }
     public String getIntegrationBranch(){
@@ -101,13 +110,11 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         String expandedRepo = gitBridge.getExpandedRepository(environment);
 
         try {
-            // TODO: do Praqma Git Phlow stuff
             listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
 
             try {
-                String devBranchName = expandedIntegrationBranch;
                 if ( expandedIntegrationBranch.equals(triggeredBranch.getName() ) ||
-                        devBranchName.equals(expandedRepo + "/" + triggeredBranch.getName() ) ) {
+                        expandedIntegrationBranch.equals(expandedRepo + "/" + triggeredBranch.getName() ) ) {
                     String msg = "Using the integration integrationBranch for polling and development is not "
                                + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
                     LOGGER.log(Level.SEVERE, msg);
@@ -116,7 +123,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                     throw new AbortException(msg);
                 }
 
-                listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration integrationBranch %s:", expandedIntegrationBranch));
+                listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
                 git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
                 git.merge().setRevisionToMerge(git.revParse(expandedRepo + "/" + expandedIntegrationBranch)).execute();
 
@@ -152,6 +159,17 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 // since the next build is going to pick its own commit to build, but 'rev' is as good any.
                 CheckoutCommand checkoutCommand = git.checkout().branch(this.gitBridge.getExpandedIntegrationBranch(environment)).ref(triggeredRevision.getSha1String()).deleteBranchIfExist(true);
                 checkoutCommand.execute();
+            } catch ( IntegrationAllowedNoCommitException e) {
+                if (gitBridge.getIntegrationFailedStatusUnstable()) {
+                    run.setResult(Result.UNSTABLE);
+                } else {
+                    run.setResult(Result.FAILURE);
+                }
+                gitBridge.setResultInfo("NoCommits");
+                String logMessage = String.format("%s - decorateRevisionToBuild() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
+                listener.getLogger().println(logMessage);
+                LOGGER.log(Level.SEVERE, logMessage, e);
+
             } catch (IOException e) {
                 run.setResult(Result.FAILURE);
                 gitBridge.setResultInfo("UNKNOWN");
@@ -197,7 +215,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
         @Override
         public String getDisplayName() {
-            return "Praqma Git Phlow - Verification before merge to integration integrationBranch";
+            return "Praqma Git Phlow - Verification before merge to integration branch";
         }
 
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {

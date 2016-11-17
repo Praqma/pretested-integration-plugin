@@ -49,6 +49,7 @@ public class GitBridge extends AbstractSCMBridge {
     private String repoName;
 
     private boolean integrationFailedStatusUnstable;
+    private Integer allowedNoCommits;
 
     /**
      * The integration integrationBranch.
@@ -68,12 +69,14 @@ public class GitBridge extends AbstractSCMBridge {
      * @param integrationStrategy The selected IntegrationStrategy
      * @param branch The Integration Branch name
      * @param repositoryName The Integration Repository name
+     * @param allowedNoCommits The Integration Repository name
      */
     @DataBoundConstructor
-    public GitBridge(IntegrationStrategy integrationStrategy, final String branch, final String repositoryName) {
+    public GitBridge(IntegrationStrategy integrationStrategy, final String branch, final String repositoryName, final int allowedNoCommits) {
         super(integrationStrategy);
         this.integrationBranch = branch;
         this.repoName = repositoryName;
+        this.allowedNoCommits = allowedNoCommits;
     }
 
     /***
@@ -410,6 +413,14 @@ public class GitBridge extends AbstractSCMBridge {
 
     public void setIntegrationFailedStatusUnstable( boolean integrationFailedStatusUnstable) {
         this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
+    }
+
+    public Integer getAllowedNoCommits() {
+        return this.allowedNoCommits;
+    }
+
+    public void setAllowedNoCommits( Integer allowedNoCommits) {
+        this.allowedNoCommits = allowedNoCommits;
     }
 
     /**

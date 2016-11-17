@@ -192,7 +192,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
          */
         @Override
         public String getDisplayName() {
-            return "Pretested Integration Publisher";
+            return "Praqma Git Phlow - Update remote repository";
         }
 
         /**

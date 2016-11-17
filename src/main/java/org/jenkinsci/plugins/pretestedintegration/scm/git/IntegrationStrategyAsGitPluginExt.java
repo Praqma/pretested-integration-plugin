@@ -8,6 +8,8 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedEx
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
+import java.io.IOException;
+
 /**
  * Abstract class representing a strategy to apply when merging pretested commits into the integration integrationBranch.
  */
@@ -26,7 +28,7 @@ public abstract interface IntegrationStrategyAsGitPluginExt{
      */
 
     public abstract void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge)
-            throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException;
+            throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException;
 
 
 }

@@ -21,6 +21,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
@@ -188,34 +189,47 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
     }
 
     @Override
-    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge) throws NothingToDoException, IntegrationFailedException{
-
-// TODO: replace buildData med Branch/rev!!! NOTE
-        BuildData buildData = scm.getBuildData(build);
-
-        String expandedRepoName;
-        try {
-            expandedRepoName = bridge.getExpandedRepository(build.getEnvironment(listener));
-        } catch (IOException | InterruptedException ex) {
-            expandedRepoName = bridge.getRepoName();
-        }
+    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge) throws NothingToDoException, IntegrationFailedException, IOException, InterruptedException{
 
         //TODO: Implement robustness, in which situations does this one contain
         // multiple revisons, when two branches point to the same commit?
-        // (JENKINS-24909). Check integrationBranch spec before doing anything
+        // (JENKINS-24909). Check branch spec before doing anything
 
         Branch builtBranch = rev.getBranches().iterator().next();
 
-        String expandedIntegrationBranch;
+        String expandedIntegrationBranch = bridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
+
+        //Get the commit count
+        int commitCount;
         try {
-            expandedIntegrationBranch = bridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
+            commitCount = PretestedIntegrationGitUtils.countCommits(rev.getSha1(), git, expandedIntegrationBranch);
+            String text = "Branch commit count: " + commitCount;
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
         } catch (IOException | InterruptedException ex) {
-            expandedIntegrationBranch = bridge.getIntegrationBranch();
+            throw new IntegrationFailedException("Failed to count commits.", ex);
         }
 
-// TODO: CLS: Fast-forward not working as intended
-        if ( tryFastForward(rev.getSha1(), listener.getLogger() , git, expandedIntegrationBranch )) {
-            return;
+        if ( commitCount == 0 ) {
+            String text = "Nothing to do!!";
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text );
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text );
+            throw new NothingToDoException();
+        }
+
+        if ( bridge.getAllowedNoCommits() != null &&  commitCount > bridge.getAllowedNoCommits().intValue() ){
+            String text = "Only " + bridge.getAllowedNoCommits() + " commit(s) allowed. Total commits found: " + commitCount;
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text );
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text );
+            throw new IntegrationAllowedNoCommitException();
+        }
+
+        //Only fast forward if it's a single commit
+        if ( commitCount == 1) {
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Try FF as there is only one commit");
+            if ( tryFastForward(rev.getSha1(), listener.getLogger() , git, expandedIntegrationBranch) ) {
+                return;
+            }
         }
 
         GitClient client = git;

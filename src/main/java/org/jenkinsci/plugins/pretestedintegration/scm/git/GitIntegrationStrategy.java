@@ -99,7 +99,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
     protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client, String branch) throws IntegrationFailedException, NothingToDoException {
         LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryFastForward");
 
-        //Get the commit count
+/*        //Get the commit count
         int commitCount;
         try {
             commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, branch);
@@ -118,7 +118,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
             return false;
         }
 
-
+*/
         //FF merge the commit
         try {
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting merge with FF.");
