@@ -5,6 +5,8 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
@@ -54,7 +56,7 @@ public class PretestedIntegrationGitUtils {
      *
      * For a visualized example of several BuilData: See 'docs/More_than_1_gitBuild_data.png'
      * TODO:
-     * We don't check that the integrationBranch complies with the integrationBranch specifier,
+     * We don't check that the integration branch complies with the branch specifier,
      * or that commits are heads.
      * See JENKINS-25542, JENKINS-25512, JENKINS-24909
      *
@@ -86,6 +88,23 @@ public class PretestedIntegrationGitUtils {
         }
     }
 
+    public static void verdictNoOfCommits(int commitCount, Integer allowedNoCommits, PrintStream logger ) throws NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
+        if (commitCount == 0) {
+            String text = "Nothing to do!!";
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+            throw new NothingToDoException();
+        }
+
+        if ( allowedNoCommits != null && commitCount > allowedNoCommits.intValue()) {
+            String text = "Only " + allowedNoCommits + " commit(s) allowed. Total commits found: " + commitCount;
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+            throw new IntegrationAllowedNoCommitException();
+        }
+    }
+
+
     /***
      * Returns the relevant BuildDatas from the supplied list of BuildDatas.
      *
@@ -114,6 +133,7 @@ public class PretestedIntegrationGitUtils {
         }
         return relevantBuildData;
     }
+
 
     /***
      * Returns a pretty string listing all the passed in BuildData.

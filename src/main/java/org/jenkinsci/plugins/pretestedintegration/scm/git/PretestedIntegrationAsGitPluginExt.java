@@ -51,7 +51,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * @param allowedNoCommits The amount of commits allowed for integration
      */
     @DataBoundConstructor
-    public PretestedIntegrationAsGitPluginExt(GitIntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName, String allowedNoCommits) {
+    public PretestedIntegrationAsGitPluginExt(IntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName, String allowedNoCommits) {
         this.gitBridge = new GitBridge(gitIntegrationStrategy,integrationBranch,repoName, Integer.valueOf(allowedNoCommits));
     }
 

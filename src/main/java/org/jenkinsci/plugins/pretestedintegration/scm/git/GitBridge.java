@@ -72,7 +72,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @param allowedNoCommits The Integration Repository name
      */
     @DataBoundConstructor
-    public GitBridge(IntegrationStrategy integrationStrategy, final String branch, final String repositoryName, final int allowedNoCommits) {
+    public GitBridge(IntegrationStrategy integrationStrategy, final String branch, final String repositoryName, final Integer allowedNoCommits) {
         super(integrationStrategy);
         this.integrationBranch = branch;
         this.repoName = repositoryName;

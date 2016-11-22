@@ -5,6 +5,7 @@ import hudson.ExtensionPoint;
 import hudson.Launcher;
 import hudson.model.*;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
@@ -25,7 +26,7 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
      * @throws NothingToDoException when there's nothing to do
      * @throws UnsupportedConfigurationException when part of the configuration isn't supported
      */
-    public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException;
+    public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException;
 
     /**
     * {@inheritDoc}

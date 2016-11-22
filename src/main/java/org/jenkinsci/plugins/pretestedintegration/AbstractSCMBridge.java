@@ -12,12 +12,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.PushFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 
 /**
  * Abstract class representing an SCM bridge.
@@ -116,7 +111,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IntegrationFailedException
      * @throws UnsupportedConfigurationException
      */
-    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException {
+    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
         integrationStrategy.integrate(build, launcher, listener, this);
     }
 
@@ -133,7 +128,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException {
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
         mergeChanges(build, launcher, listener);
     }
 

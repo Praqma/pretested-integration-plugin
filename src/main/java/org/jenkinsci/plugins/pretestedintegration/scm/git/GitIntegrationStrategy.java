@@ -96,35 +96,19 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
      * suitable for a FF merge.
      * @throws IntegrationFailedException When commit counting fails
      */
-    protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client, String branch) throws IntegrationFailedException, NothingToDoException {
+    protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client, int commitCount ) throws IntegrationFailedException, NothingToDoException {
         LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryFastForward");
 
-/*        //Get the commit count
-        int commitCount;
-        try {
-            commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, branch);
-            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Branch commit count: " + commitCount);
-        } catch (IOException | InterruptedException ex) {
-            throw new IntegrationFailedException("Failed to count commits.", ex);
-        }
-
-        if ( commitCount == 0 ) {
-            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Nothing to do!! Commit count: " + commitCount);
-            throw new NothingToDoException();
-        }
-        //Only fast forward if it's a single commit
-        if (commitCount != 1) {
-            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Not attempting fast forward. Exiting tryFastForward.");
+        if ( commitCount == 1) {
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Try FF as there is only one commit");
+        } else {
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Skip FF as there are several commits");
             return false;
         }
 
-*/
         //FF merge the commit
         try {
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting merge with FF.");
-//            GitClient client = PretestedIntegrationGitUtils.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-//            ObjectId commitId = buildData.lastBuild.revision.getSha1();
-
             client.merge().setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).setRevisionToMerge(commitId).execute();
             logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "FF merge successful.");
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + " Exiting tryFastForward.");

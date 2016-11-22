@@ -22,6 +22,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoExceptio
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * The build wrapper determines what will happen before the build will run.
@@ -39,7 +40,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     /**
      * The SCM Bridge used for this project.
      */
-    public final AbstractSCMBridge scmBridge;
+    public final GitBridge scmBridge;
 
     /**
      * Constructor for the Build Wrapper.
@@ -49,6 +50,32 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     @DataBoundConstructor
     public PretestedIntegrationBuildWrapper(final GitBridge scmBridge) {
         this.scmBridge = scmBridge;
+    }
+    @DataBoundSetter
+    public void setIntegrationFailedStatusUnstable(boolean integrationFailedStatusUnstable){
+        this.scmBridge.setIntegrationFailedStatusUnstable(integrationFailedStatusUnstable);
+    }
+
+    public boolean getIntegrationFailedStatusUnstable(){
+        if ( scmBridge == null ) {
+            return false;
+        } else {
+            return scmBridge.getIntegrationFailedStatusUnstable();
+        }
+    }
+    public String getAllowedNoCommits(){
+        if ( scmBridge == null ) {
+            return "";
+        } else {
+            return Integer.toString(scmBridge.getAllowedNoCommits());
+        }
+    }
+    public String getIntegrationBranch(){
+        if ( scmBridge == null ) {
+            return "master";
+        } else {
+            return scmBridge.getIntegrationBranch();
+        }
     }
 
     /**

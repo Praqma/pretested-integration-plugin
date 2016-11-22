@@ -65,7 +65,7 @@ public class IntegrationBranchNameRestrictions_IT {
 
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
         project.setScm(gitSCM1);
-        GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master", "origin");
+        GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master", "origin", null);
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());
