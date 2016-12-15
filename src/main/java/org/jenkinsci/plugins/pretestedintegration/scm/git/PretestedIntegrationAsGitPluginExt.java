@@ -165,7 +165,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 } else {
                     run.setResult(Result.FAILURE);
                 }
-                gitBridge.setResultInfo("NoCommits");
+                gitBridge.setResultInfo("NumCommits");
                 String logMessage = String.format("%s - decorateRevisionToBuild() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);

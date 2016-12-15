@@ -12,7 +12,7 @@ git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
 git config --add branch.master.remote origin
 git config --add branch.master.merge refs/heads/master
 
-sleep_sec=10
+sleep_sec=5
 git checkout -B master
 echo "# HEADER" >> README.md
 git add .
@@ -21,48 +21,20 @@ git tag -a -m "init" init
 git push origin -f --mirror
 git push origin -f master:refs/heads/masterMatrix
 git push origin -f master:refs/heads/masterMultijob
-
-branch_prefix="ready-bw" && git reset --hard init && echo "test FF" >> README.md && git add . && git commit -m "test FF" && git push origin HEAD:refs/heads/${branch_prefix}/test-01-ff && git reset --hard init
-branch_prefix="ready-bw" && git reset --hard init && echo "test merge failure" >> README.md && git add . && git commit -m "test merge failure" && git push origin HEAD:refs/heads/${branch_prefix}/test-02-merge-failure && git reset --hard init
-branch_prefix="ready-bw" && git reset --hard init && echo "test merge ok" >> test.md && git add . && git commit -m "test merge ok" && git push origin HEAD:refs/heads/${branch_prefix}/test-03-merge-ok && git reset --hard init
-branch_prefix="ready-bw" && git reset --hard init && echo "# build-failed" >> build_failed.md && git add . && git commit -m "build failed" && git push origin HEAD:refs/heads/${branch_prefix}/test-04-build-failed && git reset --hard init
-branch_prefix="ready-bw" && git reset --hard init \
-&& echo "# commit 1" >> multible_commit.md && git add . && git commit -m "commit 1" \
-&& echo "# commit 2" >> multible_commit.md && git add . && git commit -m "commit 2" \
-&& git push origin HEAD:refs/heads/${branch_prefix}/test-05-multiple_commits && git reset --hard init
-
-if [ "X" == "Y" ]; then
-branch_prefix="ready" && git reset --hard init && echo "test FF" >> README.md && git add . && git commit -m "test FF" && git push origin HEAD:refs/heads/${branch_prefix}/test-01-ff && git reset --hard init
-branch_prefix="readyMatrix" && git reset --hard init && echo "test FF" >> README.md && git add . && git commit -m "test FF" && git push origin HEAD:refs/heads/${branch_prefix}/test-01-ff && git reset --hard init
-branch_prefix="readyMultijob" && git reset --hard init && echo "test FF" >> README.md && git add . && git commit -m "test FF" && git push origin HEAD:refs/heads/${branch_prefix}/test-01-ff && git reset --hard init
-sleep ${sleep_sec}
-branch_prefix="ready" && git reset --hard init && echo "test merge failure" >> README.md && git add . && git commit -m "test merge failure" && git push origin HEAD:refs/heads/${branch_prefix}/test-02-merge-failure && git reset --hard init
-branch_prefix="readyMatrix" && git reset --hard init && echo "test merge failure" >> README.md && git add . && git commit -m "test merge failure" && git push origin HEAD:refs/heads/${branch_prefix}/test-02-merge-failure && git reset --hard init
-branch_prefix="readyMultijob" && git reset --hard init && echo "test merge failure" >> README.md && git add . && git commit -m "test merge failure" && git push origin HEAD:refs/heads/${branch_prefix}/test-02-merge-failure && git reset --hard init
-sleep ${sleep_sec}
-branch_prefix="ready" && git reset --hard init && echo "test merge ok" >> test.md && git add . && git commit -m "test merge ok" && git push origin HEAD:refs/heads/${branch_prefix}/test-03-merge-ok && git reset --hard init
-branch_prefix="readyMatrix" && git reset --hard init && echo "test merge ok" >> test.md && git add . && git commit -m "test merge ok" && git push origin HEAD:refs/heads/${branch_prefix}/test-03-merge-ok && git reset --hard init
-branch_prefix="readyMultijob" && git reset --hard init && echo "test merge ok" >> test.md && git add . && git commit -m "test merge ok" && git push origin HEAD:refs/heads/${branch_prefix}/test-03-merge-ok && git reset --hard init
-sleep ${sleep_sec}
-branch_prefix="ready" && git reset --hard init && echo "# build-failed" >> build_failed.md && git add . && git commit -m "build failed" && git push origin HEAD:refs/heads/${branch_prefix}/test-04-build-failed && git reset --hard init
-branch_prefix="readyMatrix" && git reset --hard init && echo "# build-failed" >> build_failed.md && git add . && git commit -m "build failed" && git push origin HEAD:refs/heads/${branch_prefix}/test-04-build-failed && git reset --hard init
-branch_prefix="readyMultijob" && git reset --hard init && echo "# build-failed" >> build_failed.md && git add . && git commit -m "build failed" && git push origin HEAD:refs/heads/${branch_prefix}/test-04-build-failed && git reset --hard init
-sleep ${sleep_sec}
+#git push origin -f master:refs/heads/masterNapatech
 
 
-branch_prefix="ready" && git reset --hard init \
-&& echo "# commit 1" >> multible_commit.md && git add . && git commit -m "commit 1" \
-&& echo "# commit 2" >> multible_commit.md && git add . && git commit -m "commit 2" \
-&& git push origin HEAD:refs/heads/${branch_prefix}/test-05-multiple_commits && git reset --hard init
+branch_prefixes="ready readyMatrix readyMultijob"
 
+for branch_prefix in $branch_prefixes ; do
+  sleep ${sleep_sec}
+  git reset --hard init && echo "test FF" >> README.md && git add . && git commit -m "test FF" && git push origin HEAD:refs/heads/${branch_prefix}/test-01-ff && git reset --hard init
+  git reset --hard init && echo "test merge failure" >> README.md && git add . && git commit -m "test merge failure" && git push origin HEAD:refs/heads/${branch_prefix}/test-02-merge-failure && git reset --hard init
+  git reset --hard init && echo "test merge ok" >> test.md && git add . && git commit -m "test merge ok" && git push origin HEAD:refs/heads/${branch_prefix}/test-03-merge-ok && git reset --hard init
+  git reset --hard init && echo "# build-failed" >> build_failed.md && git add . && git commit -m "build failed" && git push origin HEAD:refs/heads/${branch_prefix}/test-04-build-failed && git reset --hard init
+  git reset --hard init \
+   && echo "# commit 1" >> multible_commit.md && git add . && git commit -m "commit 1" \
+   && echo "# commit 2" >> multible_commit.md && git add . && git commit -m "commit 2" \
+   && git push origin HEAD:refs/heads/${branch_prefix}/test-05-multiple_commits && git reset --hard init
+done
 
-branch_prefix="readyMatrix" && git reset --hard init \
-&& echo "# commit 1" >> multible_commit.md && git add . && git commit -m "commit 1" \
-&& echo "# commit 2" >> multible_commit.md && git add . && git commit -m "commit 2" \
-&& git push origin HEAD:refs/heads/${branch_prefix}/test-05-multiple_commits && git reset --hard init
-branch_prefix="readyMultijob" && git reset --hard init \
-&& echo "# commit 1" >> multible_commit.md && git add . && git commit -m "commit 1" \
-&& echo "# commit 2" >> multible_commit.md && git add . && git commit -m "commit 2" \
-&& git push origin HEAD:refs/heads/${branch_prefix}/test-05-multiple_commits && git reset --hard init
-
-fi
