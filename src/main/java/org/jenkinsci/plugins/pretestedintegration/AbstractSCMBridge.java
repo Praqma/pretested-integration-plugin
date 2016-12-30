@@ -9,6 +9,7 @@ import hudson.model.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
@@ -24,7 +25,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * Information about the result of the integration (Unknown, Conflict, Build, Push).
      */
-    protected String resultInfo = "Unknown";
+//    protected String resultInfo = "Unknown";
     protected abstract String getIntegrationBranch();
 
     /**
@@ -33,6 +34,11 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      */
     public final IntegrationStrategy integrationStrategy;
 
+    protected boolean integrationFailedStatusUnstable;
+    protected Integer allowedNoCommits;
+
+
+
     final static String LOG_PREFIX = "[PREINT] ";
 
     /**
@@ -40,9 +46,76 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @param integrationStrategy The integration strategy to apply when merging commits.
      */
-    public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {
+    public AbstractSCMBridge(IntegrationStrategy integrationStrategy, boolean integrationFailedStatusUnstable ) {
         this.integrationStrategy = integrationStrategy;
+        this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
     }
+
+    public boolean getIntegrationFailedStatusUnstable() {
+        return this.integrationFailedStatusUnstable;
+    }
+
+    public void setIntegrationFailedStatusUnstable( boolean integrationFailedStatusUnstable) {
+        this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
+    }
+
+    public Integer getAllowedNoCommits() {
+        return this.allowedNoCommits;
+    }
+
+    public void setAllowedNoCommits( Integer allowedNoCommits) {
+        this.allowedNoCommits = allowedNoCommits;
+    }
+
+    public void handleIntegrationExceptions(Run run, TaskListener listener, Exception e) {
+        if ( e instanceof NothingToDoException ) {
+            run.setResult(Result.NOT_BUILT);
+            String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
+            listener.getLogger().println(logMessage);
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            return;
+        }
+        if ( e instanceof IntegrationFailedException ||
+                e instanceof IntegrationAllowedNoCommitException ) {
+            String logMessage = String.format("%s - setUp() - %s%n%s%s",
+                    LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage(),
+                    "You have configured the Pretested plugin to set the status to UNSTABLE. " +
+                            "The Jenkins logic is to process the build steps in UNSTABLE mode.%n" +
+                            "Consider to configure/guard your build steps with: %n" +
+                            "   https://wiki.jenkins-ci.org/display/JENKINS/Conditional+BuildStep+Plugin%n" +
+                            "and test for build status.%n" +
+                            "This will free up time/resources as there where content issues.%n" +
+                            "The publisher part is only executed if the build is successful - hence no consequences%n" +
+                            "of handling it either way..%n" );
+            if (getIntegrationFailedStatusUnstable()) {
+                run.setResult(Result.UNSTABLE);
+            } else {
+                run.setResult(Result.FAILURE);
+            }
+            listener.getLogger().println(logMessage);
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            return;
+        }
+        if ( e instanceof UnsupportedConfigurationException ||
+                e instanceof IntegrationUnknownFailureException ||
+                e instanceof EstablishingWorkspaceFailedException ) {
+            run.setResult(Result.FAILURE);
+            String logMessage = String.format("%s - Unforeseen error preparing preparing for integration. %n%s", LOG_PREFIX, e.getMessage());
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            listener.getLogger().println(logMessage);
+            e.printStackTrace(listener.getLogger());
+            return;
+        }
+
+        // Any other exceptions (expected: IOException | InterruptedException)
+        run.setResult(Result.FAILURE);
+        String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
+        LOGGER.log(Level.SEVERE, logMessage, e);
+        listener.getLogger().println(logMessage);
+        e.printStackTrace(listener.getLogger());
+        return;
+    }
+
 
     /**
      * Pushes changes to the integration integrationBranch.
@@ -111,7 +184,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IntegrationFailedException
      * @throws UnsupportedConfigurationException
      */
-    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
+    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
         integrationStrategy.integrate(build, launcher, listener, this);
     }
 
@@ -128,7 +201,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException,UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
         mergeChanges(build, launcher, listener);
     }
 
@@ -219,17 +292,17 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * @return The information of the result of the Phlow
      */
-    public String getResultInfo() {
+/*    public String getResultInfo() {
         return resultInfo;
     }
-
+*/
     /**
      * @param resultInfo
      */
-    public void setResultInfo(String resultInfo) {
+/*    public void setResultInfo(String resultInfo) {
         this.resultInfo = resultInfo;
     }
-
+*/
     /**
      * @param environment environment
      * @return The Integration Branch name as variable expanded if possible - otherwise return integrationBranch

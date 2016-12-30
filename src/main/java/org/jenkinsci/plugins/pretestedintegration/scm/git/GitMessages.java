@@ -14,6 +14,6 @@ public class GitMessages {
      * @return
      */
     public static String noRelevantSCMchange(String branchName) {
-        return String.format("There is no relevant SCM change to integrate where integrationBranch matches the 'Integration repository'. Either integrationBranch (%s) is deleted or already integrated, or the SCM change is not related to the integration repository.", branchName);
+        return String.format("There is no relevant SCM change to integrate where branch matches the 'Integration repository'. Either branch (%s) is deleted or already integrated, or the SCM change is not related to the integration repository.", branchName);
     }
 }

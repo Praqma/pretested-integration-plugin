@@ -56,7 +56,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         // walk tree starting from the integration commit
         walk.markStart(commit);
 
-        LOGGER.info(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit message until reaching integrationBranch %s", branch));
+        LOGGER.info(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit message until reaching branch %s", branch));
         // limit the tree walk to keep away from master commits
         // Reference for this idea is: https://wiki.eclipse.org/JGit/User_Guide#Restrict_the_walked_revision_graph
         ObjectId to = repo.resolve(branch);

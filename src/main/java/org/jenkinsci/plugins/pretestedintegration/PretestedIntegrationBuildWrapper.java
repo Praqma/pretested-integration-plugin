@@ -1,9 +1,9 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
+import com.tikal.jenkins.plugins.multijob.MultiJobProject;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Plugin;
-import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -11,18 +11,11 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
-import java.io.IOException;
+
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * The build wrapper determines what will happen before the build will run.
@@ -40,7 +33,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     /**
      * The SCM Bridge used for this project.
      */
-    public final GitBridge scmBridge;
+    public final AbstractSCMBridge scmBridge;
 
     /**
      * Constructor for the Build Wrapper.
@@ -48,10 +41,12 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @param scmBridge the SCM bridge
      */
     @DataBoundConstructor
-    public PretestedIntegrationBuildWrapper(final GitBridge scmBridge) {
+    public PretestedIntegrationBuildWrapper(final AbstractSCMBridge scmBridge) {
         this.scmBridge = scmBridge;
     }
-    @DataBoundSetter
+
+
+/*    @DataBoundSetter
     public void setIntegrationFailedStatusUnstable(boolean integrationFailedStatusUnstable){
         this.scmBridge.setIntegrationFailedStatusUnstable(integrationFailedStatusUnstable);
     }
@@ -63,6 +58,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             return scmBridge.getIntegrationFailedStatusUnstable();
         }
     }
+
     public String getAllowedNoCommits(){
         if ( scmBridge == null ) {
             return "";
@@ -77,6 +73,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             return scmBridge.getIntegrationBranch();
         }
     }
+*/
 
     /**
      * Jenkins hook that fires after the workspace has been initialized.
@@ -90,35 +87,23 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     @Override
     public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
-        boolean proceedToBuildStep = true;
         try {
             scmBridge.validateConfiguration(build.getProject());
             scmBridge.isApplicable(build, listener);
             scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
             scmBridge.prepareWorkspace(build, launcher, listener);
-        } catch (NothingToDoException e) {
-            build.setResult(Result.NOT_BUILT);
-            String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
-            listener.getLogger().println(logMessage);
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            proceedToBuildStep = true;
-        } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
-            build.setResult(Result.UNSTABLE);
-            String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
-            listener.getLogger().println(logMessage);
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            proceedToBuildStep = false;
-        } catch (IOException | InterruptedException e) {
-            build.setResult(Result.FAILURE);
-            String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            listener.getLogger().println(logMessage);
-            e.printStackTrace(listener.getLogger());
-            proceedToBuildStep = false;
+        } catch (Exception e) {
+            scmBridge.handleIntegrationExceptions(build,listener, e);
         }
 
-        BuildWrapper.Environment environment = new PretestEnvironment();
-        return proceedToBuildStep ? environment : null;
+        if ( build.getResult() == null ||
+             build.getResult() == Result.SUCCESS ||
+             build.getResult() == Result.UNSTABLE ) {
+//            gitBridge.setResultInfo("Build");
+            return new PretestEnvironment();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -173,7 +158,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         public boolean isApplicable(AbstractProject<?, ?> arg0) {
             if (arg0 instanceof FreeStyleProject)
                 return true;
-            if (arg0 instanceof MatrixProject)
+            if (arg0 instanceof MultiJobProject)
                 return true;
             return false;
         }

@@ -22,10 +22,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -45,52 +42,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
      */
     private static final String B_NAME = "Accumulated commit";
 
-    /**
-     * Constructor for AccumulatedCommitStrategy.
-     * DataBound to work in UI.
-     */
-    @DataBoundConstructor
-    public AccumulatedCommitStrategy() {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
-
- //       Run r = (Run)build;
-        GitBridge gitbridge = (GitBridge) bridge;
-        GitClient client;
-        try {
-            client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-        } catch (InterruptedException | IOException ex) {
-            LOGGER.log(Level.SEVERE, "Failed to initialize GitClient", ex);
-            throw new IntegrationFailedException(ex);
-        }
-
-        String expandedRepoName;
-        try {
-            expandedRepoName = gitbridge.getExpandedRepository(build.getEnvironment(listener));
-        } catch (IOException | InterruptedException ex) {
-            expandedRepoName = gitbridge.getRepoName();
-        }
-        BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), expandedRepoName);
-
-        //TODO: Implement robustness, in which situations does this one contain
-        // multiple revisons, when two branches point to the same commit?
-        // (JENKINS-24909). Check integrationBranch spec before doing anything
-        Branch builtBranch = buildData.lastBuild.revision.getBranches().iterator().next();
-        ObjectId commitId = buildData.lastBuild.revision.getSha1();
-        String expandedIntegrationBranch;
-        try {
-            expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
-        } catch (IOException | InterruptedException ex) {
-            expandedIntegrationBranch = gitbridge.getIntegrationBranch();
-        }
-
-        Branch triggerBranch = build.getAction(PretestTriggerCommitAction.class).triggerBranch;
-
+    private void doTheIntegration (Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException, IntegrationUnknownFailureException {
         //Get the commit count
         int commitCount;
         try {
@@ -108,10 +60,10 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             return;
         }
 
-        String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", commitId.getName(), builtBranch.getName(), expandedIntegrationBranch);
+        String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to merge changes in commit %s on development branch %s to integration branch %s", commitId.getName(), triggerBranch.getName(), expandedIntegrationBranch);
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
-        if (!containsRemoteBranch(client, builtBranch)) {
+        if (!containsRemoteBranch(client, triggerBranch)) {
             LOGGER.fine("Found no remote branches.");
             try {
                 LOGGER.fine("Setting build description 'Nothing to do':");
@@ -119,7 +71,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             } catch (IOException ex) {
                 LOGGER.log(Level.FINE, "Failed to update build description", ex);
             }
-            logMessage = GitMessages.noRelevantSCMchange(builtBranch.getName());
+            logMessage = GitMessages.noRelevantSCMchange(triggerBranch.getName());
             LOGGER.log(Level.WARNING, logMessage);
             throw new NothingToDoException(logMessage);
         }
@@ -131,21 +83,21 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             // The method that gets all the commits from a integrationBranch walks the git tree using JGit.
             // It's complete independent from the following merge.
             // Worst case scenario: The merge commit message is based on different commits than those actually merged.
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit messages on development integrationBranch %s", builtBranch.getName());
+            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit messages on development branch %s", triggerBranch.getName());
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
 
-            String headerLine = String.format("Accumulated commit of the following from integrationBranch '%s':%n", builtBranch.getName());
+            String headerLine = String.format("Accumulated commit of the following from branch '%s':%n", triggerBranch.getName());
             // Collect commits
-            String commits = client.withRepository(new GetAllCommitsFromBranchCallback( builtBranch.getSHA1(), expandedIntegrationBranch));
+            String commits = client.withRepository(new GetAllCommitsFromBranchCallback( triggerBranch.getSHA1(), expandedIntegrationBranch));
             logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done collecting commit messages");
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development integrationBranch"));
+            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch"));
 
             // Collect author
-            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development integrationBranch"));
-            commitAuthor = client.withRepository(new FindCommitAuthorCallback( builtBranch.getSHA1()));
+            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch"));
+            commitAuthor = client.withRepository(new FindCommitAuthorCallback( triggerBranch.getSHA1()));
             logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done colecting last commit author: %s", commitAuthor);
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
@@ -155,47 +107,57 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
             String commitMsg = String.format("%s%n%s", headerLine, commits);
             String modifiedCommitMsg = commitMsg.replaceAll("\"", "'");
-            client.merge()
-                    .setMessage(modifiedCommitMsg)
-                    .setCommit(false)
-                    .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.NO_FF)
-                    .setRevisionToMerge(buildData.lastBuild.revision.getSha1())
-                    .execute();
-            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Accumulated merge done";
-            LOGGER.info(logMessage);
-            listener.getLogger().println(logMessage);
-        } catch (IOException | InterruptedException | GitException ex) {
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while merging. Logging exception msg: %s", ex.getMessage());
-            LOGGER.log(Level.SEVERE, logMessage, ex);
-            listener.getLogger().println(logMessage);
-            throw new IntegrationFailedException(ex);
+            try {
+                client.merge()
+                        .setMessage(modifiedCommitMsg)
+                        .setCommit(false)
+                        .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.NO_FF)
+                        .setRevisionToMerge(commitId).execute();
+            } catch ( GitException | InterruptedException ex ){
+                logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while merging. Logging exception msg: %s", ex.getMessage());
+                LOGGER.log(Level.SEVERE, logMessage, ex);
+                listener.getLogger().println(logMessage);
+                throw new IntegrationFailedException(ex);
+            }
+        } catch ( IOException | InterruptedException ex) {
+            if ( ex instanceof IntegrationFailedException ) {
+                throw new IntegrationFailedException(ex);
+            } else {
+                logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while setting up merging. Logging exception msg: %s", ex.getMessage());
+                LOGGER.log(Level.SEVERE, logMessage, ex);
+                listener.getLogger().println(logMessage);
+                throw new IntegrationUnknownFailureException(ex);
+            }
         }
 
         LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Merge was successful"));
         listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Merge was successful"));
+        String message = "";
         try {
             logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting to commit accumulated merge changes:");
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
-            String message = client.getWorkTree().child(".git/MERGE_MSG").readToString();
+            message = client.getWorkTree().child(".git/MERGE_MSG").readToString();
             PersonIdent author = getPersonIdent(commitAuthor);
             client.setAuthor(author);
             client.commit(message);
             logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of accumulated merge done");
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
-        }  catch (IOException | GitException | InterruptedException ex) {
+        }  catch (IOException | InterruptedException ex) {
             // If ".git/MERGE_MSG" wasn't found the most likely culrprit is that the merge was an empty
             // one (No changes) for some reason the merge() command does not complain or throw exception when that happens
             if(ex.getMessage().contains("Cannot commit") || ex.getMessage().contains("MERGE_MSG (No such file or directory)")) {
-                logMessage = String.format("%sUnable to commit changes. Most likely you are trying to integrate a change that was already integrated. Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, ex.getMessage());
+                logMessage = String.format("%sUnable to commit changes. There are two known reasons:\n" +
+                        "A) You are trying to integrate a change that was already integrated.\n" +
+                        "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a merge. If you REALLY want the empty commit to me accepted, you can rebase your single empty commit on top of the integration branch. Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, ex.getMessage());
             } else {
                 logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while committing. Logging exception msg: %s", ex.getMessage());
             }
             LOGGER.log(Level.SEVERE, logMessage, ex);
             listener.getLogger().println(logMessage);
             ex.printStackTrace(listener.getLogger());
-            throw new IntegrationFailedException(ex);
+            throw new IntegrationUnknownFailureException(ex);
         }
 
         logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit was successful");
@@ -203,14 +165,65 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         listener.getLogger().println(logMessage);
     }
 
+    /**
+     * Constructor for AccumulatedCommitStrategy.
+     * DataBound to work in UI.
+     */
+    @DataBoundConstructor
+    public AccumulatedCommitStrategy() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge) throws NothingToDoException, IntegrationFailedException, IOException, InterruptedException{
+    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
 
-        Branch triggerBranch = build.getAction(PretestTriggerCommitAction.class).triggerBranch;
+        GitBridge gitbridge = (GitBridge) bridge;
+        GitClient client;
+        try {
+            client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
+        } catch (InterruptedException | IOException ex) {
+            LOGGER.log(Level.SEVERE, "Failed to initialize GitClient", ex);
+            throw new IntegrationUnknownFailureException(ex);
+        }
 
-        String expandedIntegrationBranch = bridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
+        String expandedRepoName;
+        try {
+            expandedRepoName = gitbridge.getExpandedRepository(build.getEnvironment(listener));
+        } catch (IOException | InterruptedException ex) {
+            expandedRepoName = gitbridge.getRepoName();
+        }
+        BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), expandedRepoName);
 
-        //Get the commit count
+        //TODO: Implement robustness, in which situations does this one contain
+        // multiple revisons, when two branches point to the same commit?
+        // (JENKINS-24909). Check branch spec before doing anything ( consider taking the last rather than the first )
+        Branch triggerBranch = buildData.lastBuild.revision.getBranches().iterator().next();
+        ObjectId commitId = buildData.lastBuild.revision.getSha1();
+        String expandedIntegrationBranch;
+        try {
+            expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
+        } catch (IOException | InterruptedException ex) {
+            expandedIntegrationBranch = gitbridge.getIntegrationBranch();
+        }
+
+        build.addAction(new PretestTriggerCommitAction(triggerBranch));
+
+        doTheIntegration((Run)build, listener, gitbridge, commitId, client, expandedIntegrationBranch, triggerBranch);
+    }
+
+    @Override
+    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws NothingToDoException, IntegrationFailedException, IOException, InterruptedException {
+
+        Branch triggerBranch = rev.getBranches().iterator().next();
+
+        String expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
+
+        doTheIntegration((Run) build, listener, gitbridge, triggerBranch.getSHA1(), git, expandedIntegrationBranch, triggerBranch);
+    }
+
+/*        //Get the commit count
         int commitCount;
         try {
             commitCount = PretestedIntegrationGitUtils.countCommits(rev.getSha1(), git, expandedIntegrationBranch);
@@ -230,7 +243,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         GitClient client = git;
 
         String logMessage = String.format( PretestedIntegrationBuildWrapper.LOG_PREFIX
-                        + "Preparing to merge changes in commit %s on development integrationBranch %s to integration integrationBranch %s",
+                        + "Preparing to merge changes in commit %s on development branch %s to integration branch %s",
                 triggerBranch.getSHA1(),
                 triggerBranch.getName(),
                 expandedIntegrationBranch);
@@ -257,20 +270,20 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             // The method that gets all the commits from a integrationBranch walks the git tree using JGit.
             // It's complete independent from the following merge.
             // Worst case scenario: The merge commit message is based on different commits than those actually merged.
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit messages on development integrationBranch %s", triggerBranch.getName());
+            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit messages on development branch %s", triggerBranch.getName());
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
 
-            String headerLine = String.format("Accumulated commit of the following from integrationBranch '%s':%n", triggerBranch.getName());
+            String headerLine = String.format("Accumulated commit of the following from branch '%s':%n", triggerBranch.getName());
             // Collect commits
             String commits = client.withRepository(new GetAllCommitsFromBranchCallback( triggerBranch.getSHA1(), expandedIntegrationBranch));
             logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done collecting commit messages";
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
-            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development integrationBranch");
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch");
 
             // Collect author
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development integrationBranch");
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch");
             commitAuthor = client.withRepository(new FindCommitAuthorCallback( triggerBranch.getSHA1()));
             logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done colecting last commit author: %s", commitAuthor);
             LOGGER.log(Level.INFO, logMessage);
@@ -329,8 +342,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
     }
-
-
+*/
 
     /**
      * Descriptor implementation for AccumulatedCommitStrategy

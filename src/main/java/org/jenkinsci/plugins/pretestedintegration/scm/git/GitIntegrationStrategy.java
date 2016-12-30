@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 
 /**
@@ -43,43 +44,58 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
      *
      * @param commitId The sha1 from the polled integrationBranch
      * @param client The GitClient
-     * @param branch The integrationBranch which the commitId need to be merged to
+     * @param integrationBranch The integrationBranch which the commitId need to be merged to
      * @return true if the rebase was a success, false if the integrationBranch isn't
      * suitable for a rebase
      * @throws IntegrationFailedException When commit counting or rebasing fails
      */
-    protected boolean tryRebase(ObjectId commitId, GitClient client, String branch ) throws IntegrationFailedException {
+    protected boolean tryRebase(ObjectId commitId, GitClient client, PrintStream logger, String integrationBranch ) throws IntegrationFailedException, IntegrationUnknownFailureException {
         LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryRebase");
-
-
+        logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryRebase");
 
         //Get the commit count
         int commitCount;
         try {
-            commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, branch);
+            commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, integrationBranch);
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Branch commit count: " + commitCount);
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Branch commit count: " + commitCount);
         } catch (IOException | InterruptedException ex) {
-            throw new IntegrationFailedException("Failed to count commits.", ex);
+            throw new IntegrationUnknownFailureException("Failed to count commits.", ex);
         }
 
         //Only rebase if it's a single commit
         if (commitCount != 1) {
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Not attempting rebase. Exiting tryRebase.");
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Not attempting rebase. Exiting tryRebase.");
             return false;
         }
 
         //Rebase the commit
         try {
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting rebase.");
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting rebase.");
             //Rebase the commit, then checkout master for a fast-forward merge.
             client.checkout().ref(commitId.getName()).execute();
-            client.rebase().setUpstream(branch).execute();
+            client.rebase().setUpstream(integrationBranch).execute();
             ObjectId rebasedCommit = client.revParse("HEAD");
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebase successful. Attempting fast-forward merge.");
-            client.checkout().ref(branch).execute();
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebase successful. Attempting fast-forward merge.");
+
+            client.checkout().ref(integrationBranch).execute();
+            ObjectId integrationBranchCommitBefore = client.revParse("HEAD");
             client.merge().setRevisionToMerge(rebasedCommit).setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).execute();
-            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Fast-forward merge successful. Exiting tryRebase.");
-            return true;
+            if ( integrationBranchCommitBefore.equals(rebasedCommit) ){
+                String logMessage = String.format("%sThe integration branch did not change during the rebase of development branch on top of it.%n" +
+                        "There are two known reasons:%n" +
+                        "A) You are trying to integrate a change that was already integrated.%n" +
+                        "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a rebase. If you REALLY want the empty commit to me accepted, you can rebase your single empty commit on top of the integration branch.%n", PretestedIntegrationBuildWrapper.LOG_PREFIX);
+                LOGGER.log(Level.SEVERE, logMessage);
+                throw new IntegrationFailedException(logMessage);
+            } else {
+                LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebasing successful.");
+                logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebasing successful.");
+                return true;
+            }
         } catch (GitException | InterruptedException ex) {
             throw new IntegrationFailedException("Failed to rebase commit.", ex);
         }
@@ -132,7 +148,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
             LOGGER.fine("Resolving and getting Git client from workspace:");
             LOGGER.fine("Remote branches:");
             for (Branch remoteBranch : client.getRemoteBranches()) {
-                LOGGER.fine(String.format("Found remote integrationBranch %s", remoteBranch.getName()));
+                LOGGER.fine(String.format("Found remote branch %s", remoteBranch.getName()));
                 if (remoteBranch.getName().equals(branch.getName())) {
                     return true;
                 }

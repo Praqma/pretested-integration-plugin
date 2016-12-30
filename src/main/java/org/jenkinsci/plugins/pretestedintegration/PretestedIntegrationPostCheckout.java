@@ -116,27 +116,27 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 } catch (NullPointerException | IllegalArgumentException e) {
                     listener.getLogger().println(String.format("Caught %s during post-checkout. Failing build.", e.getClass().getSimpleName()));
                     e.printStackTrace(listener.getLogger());
-                    bridge.setResultInfo("Unknown");
+//                    bridge.setResultInfo("Unknown");
                     bridge.updateBuildDescription((Run)build);
                     throw new AbortException("Unexpected error. Trace written to log.");
                 } catch (IOException e) {
                     //All our known errors are IOExceptions. Just print the message, log the error.
                     listener.getLogger().println(e.getMessage());
                     LOGGER.log(Level.SEVERE, "IOException in post checkout", e);
-                    bridge.setResultInfo("Unknown");
+//                    bridge.setResultInfo("Unknown");
                     bridge.updateBuildDescription(build, launcher, listener);
                     throw new AbortException(e.getMessage());
                 }
             }
             if ( build.getResult() == Result.SUCCESS ) {
-                bridge.setResultInfo("Ok");
+//                bridge.setResultInfo("Ok");
             }
             bridge.updateBuildDescription((Run)build);
             return true;
         } else { /* */
             if (proj instanceof MatrixConfiguration) {
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
-                bridge.setResultInfo("Ok");
+//                bridge.setResultInfo("Ok");
                 bridge.updateBuildDescription(build, launcher, listener);
             } else {
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
@@ -153,7 +153,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                     throw new AbortException(e.getMessage());
                 }
             }
-            bridge.setResultInfo("Ok");
+//            bridge.setResultInfo("Ok");
             bridge.updateBuildDescription(build, launcher, listener);
             return true;
         }
