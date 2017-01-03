@@ -135,19 +135,6 @@ public class PretestedIntegrationGitUtils {
         return relevantBuildData;
     }
 
-    public static void evalBranchConfigurations (Branch triggeredBranch, String integrationBranch, String repoName )
-            throws AbortException {
-        // The purpose of this section of code is to disallow usage of the master or integration branch as the polling branch.
-        // TODO: This branch check should be moved to job configuration check method.
-       if ( integrationBranch.equals(triggeredBranch.getName() ) ||
-                integrationBranch.equals(repoName + "/" + triggeredBranch.getName() ) ) {
-            String msg = "Using the integration branch for polling and development is not "
-                    + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
-           throw new AbortException(msg);
-        }
-    }
-
-
     /***
      * Returns a pretty string listing all the passed in BuildData.
      *

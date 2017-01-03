@@ -113,73 +113,18 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
 
+        try {
+            gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
 
-            try {
-                PretestedIntegrationGitUtils.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
-
-                listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
-                git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-                ((GitIntegrationStrategy)gitBridge.integrationStrategy).integrateAsGitPluginExt(scm,run,git,listener,marked,triggeredRevision, gitBridge);
-            } catch (Exception e) {
-                gitBridge.handleIntegrationExceptions(run, listener, e);
-            }
-/*
-            } catch (NothingToDoException e) {
-                run.setResult(Result.NOT_BUILT);
-                String logMessage = String.format("%s - decorateRevisionToBuild() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
-                listener.getLogger().println(logMessage);
-                LOGGER.log(Level.SEVERE, logMessage, e);
-
-//                gitBridge.setResultInfo("NothingToDo");
-                gitBridge.updateBuildDescription(run);
-                throw new AbortException();
-            } catch (IntegrationFailedException | UnsupportedConfigurationException e) {
-                if (gitBridge.getIntegrationFailedStatusUnstable()) {
-                    run.setResult(Result.UNSTABLE);
-                } else {
-                    run.setResult(Result.FAILURE);
-                }
-//                gitBridge.setResultInfo("MergeFailed");
-                String logMessage = String.format("%s - decorateRevisionToBuild() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
-                listener.getLogger().println(logMessage);
-                LOGGER.log(Level.SEVERE, logMessage, e);
-
-                // merge conflict. First, avoid leaving any conflict markers in the working tree
-                // by checking out some known clean state. We don't really mind what commit this is,
-                // since the next build is going to pick its own commit to build, but 'rev' is as good any.
-                CheckoutCommand checkoutCommand = git.checkout().branch(this.gitBridge.getExpandedIntegrationBranch(environment)).ref(triggeredRevision.getSha1String()).deleteBranchIfExist(true);
-                checkoutCommand.execute();
-            } catch ( IntegrationAllowedNoCommitException e) {
-                if (gitBridge.getIntegrationFailedStatusUnstable()) {
-                    run.setResult(Result.UNSTABLE);
-                } else {
-                    run.setResult(Result.FAILURE);
-                }
-//                gitBridge.setResultInfo("NumCommits");
-                String logMessage = String.format("%s - decorateRevisionToBuild() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
-                listener.getLogger().println(logMessage);
-                LOGGER.log(Level.SEVERE, logMessage, e);
-
-            } catch (IOException e) {
-                run.setResult(Result.FAILURE);
-//                gitBridge.setResultInfo("UNKNOWN");
-                gitBridge.updateBuildDescription(run);
-                String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
-                LOGGER.log(Level.SEVERE, logMessage, e);
-                listener.getLogger().println(logMessage);
-                e.printStackTrace(listener.getLogger());
-                throw new AbortException();
-            }
-
-        } catch (GitException ex) {
-            String logMessage = LOG_PREFIX + "Git operation failed";
-            LOGGER.log(Level.SEVERE, logMessage, ex);
-            listener.getLogger().println(logMessage);
-            gitBridge.updateBuildDescription(run);
-            throw new AbortException(ex.getMessage());
+            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
+            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+            ((GitIntegrationStrategy)gitBridge.integrationStrategy).integrateAsGitPluginExt(scm,run,git,listener,marked,triggeredRevision, gitBridge);
+        } catch (Exception e) {
+            gitBridge.handleIntegrationExceptions(run, listener, e);
         }
-*/
-        if ( run.getResult() == null || run.getResult() == Result.SUCCESS ) {
+
+        if (    run.getResult() == null ||
+                run.getResult() == Result.SUCCESS ) {
             Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
 //            gitBridge.setResultInfo("Build");
             mergeRevision.getBranches().add(
@@ -188,7 +133,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         } else {
             return triggeredRevision;
         }
-
     }
 
     @Override

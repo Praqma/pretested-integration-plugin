@@ -1,9 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.DescriptorExtensionList;
-import hudson.EnvVars;
-import hudson.ExtensionPoint;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.*;
 
 import java.io.IOException;
@@ -67,30 +64,33 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         this.allowedNoCommits = allowedNoCommits;
     }
 
-    public void handleIntegrationExceptions(Run run, TaskListener listener, Exception e) {
+    public void handleIntegrationExceptions(Run run, TaskListener listener, Exception e) throws IOException, InterruptedException {
         if ( e instanceof NothingToDoException ) {
             run.setResult(Result.NOT_BUILT);
             String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
-            return;
+            throw new AbortException(e.getMessage());
         }
         if ( e instanceof IntegrationFailedException ||
                 e instanceof IntegrationAllowedNoCommitException ) {
             String logMessage = String.format("%s - setUp() - %s%n%s%s",
                     LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage(),
-                    "You have configured the Pretested plugin to set the status to UNSTABLE. " +
-                            "The Jenkins logic is to process the build steps in UNSTABLE mode.%n" +
-                            "Consider to configure/guard your build steps with: %n" +
-                            "   https://wiki.jenkins-ci.org/display/JENKINS/Conditional+BuildStep+Plugin%n" +
-                            "and test for build status.%n" +
-                            "This will free up time/resources as there where content issues.%n" +
-                            "The publisher part is only executed if the build is successful - hence no consequences%n" +
-                            "of handling it either way..%n" );
+                            "\n" +
+                            "NOTE:You have configured the Pretested plugin to set the status to UNSTABLE. \n" +
+                            "The Jenkins logic is to process the build steps in UNSTABLE mode.\n" +
+                            "Consider to configure/guard your build steps with: \n" +
+                            "   https://wiki.jenkins-ci.org/display/JENKINS/Conditional+BuildStep+Plugin \n" +
+                            "and test for build status.\n" +
+                            "This will free up time/resources as there where content issues.\n" +
+                            "The publisher part is only executed if the build is successful - hence no consequences\n" +
+                            "of handling it either way..\n" +
+                            "\n" );
             if (getIntegrationFailedStatusUnstable()) {
                 run.setResult(Result.UNSTABLE);
             } else {
                 run.setResult(Result.FAILURE);
+                throw new AbortException(e.getMessage());
             }
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
@@ -104,7 +104,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
             LOGGER.log(Level.SEVERE, logMessage, e);
             listener.getLogger().println(logMessage);
             e.printStackTrace(listener.getLogger());
-            return;
+            throw new AbortException(e.getMessage());
         }
 
         // Any other exceptions (expected: IOException | InterruptedException)
@@ -113,7 +113,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         LOGGER.log(Level.SEVERE, logMessage, e);
         listener.getLogger().println(logMessage);
         e.printStackTrace(listener.getLogger());
-        return;
+        throw new AbortException(e.getMessage());
     }
 
 

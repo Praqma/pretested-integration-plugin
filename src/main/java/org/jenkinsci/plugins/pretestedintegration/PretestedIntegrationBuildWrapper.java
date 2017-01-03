@@ -12,6 +12,7 @@ import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -45,36 +46,6 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         this.scmBridge = scmBridge;
     }
 
-
-/*    @DataBoundSetter
-    public void setIntegrationFailedStatusUnstable(boolean integrationFailedStatusUnstable){
-        this.scmBridge.setIntegrationFailedStatusUnstable(integrationFailedStatusUnstable);
-    }
-
-    public boolean getIntegrationFailedStatusUnstable(){
-        if ( scmBridge == null ) {
-            return false;
-        } else {
-            return scmBridge.getIntegrationFailedStatusUnstable();
-        }
-    }
-
-    public String getAllowedNoCommits(){
-        if ( scmBridge == null ) {
-            return "";
-        } else {
-            return Integer.toString(scmBridge.getAllowedNoCommits());
-        }
-    }
-    public String getIntegrationBranch(){
-        if ( scmBridge == null ) {
-            return "master";
-        } else {
-            return scmBridge.getIntegrationBranch();
-        }
-    }
-*/
-
     /**
      * Jenkins hook that fires after the workspace has been initialized.
      * Calls the SCM specific function according to the chosen SCM.
@@ -85,7 +56,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @return non-null if the build can continue, null if there was an error and the build needs to be aborted.
      */
     @Override
-    public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener)throws IOException, InterruptedException {
         listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
         try {
             scmBridge.validateConfiguration(build.getProject());

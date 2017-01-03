@@ -1,9 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.*;
 import hudson.plugins.git.*;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
@@ -421,6 +418,24 @@ public class GitBridge extends AbstractSCMBridge {
         return environment.expand(getRepoName());
     }
 
+    /**
+     * @param triggeredBranch The triggered branch
+     * @param integrationBranch  The integration branch
+     * @param repoName The repo name like 'origin'
+     */
+    public void evalBranchConfigurations (Branch triggeredBranch, String integrationBranch, String repoName )
+            throws AbortException {
+        // The purpose of this section of code is to disallow usage of the master or integration branch as the polling branch.
+        // TODO: This branch check should be moved to job configuration check method.
+        // NOTE: It is important to keep this check at runtime as it could that the 'assumptions' of branch extractions
+        //       from sha1 (first branch) could result in the integration branch.
+        if ( integrationBranch.equals(triggeredBranch.getName() ) ||
+                integrationBranch.equals(repoName + "/" + triggeredBranch.getName() ) ) {
+            String msg = "Using the integration branch for polling and development is not "
+                    + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
+            throw new AbortException(msg);
+        }
+    }
     /**
      * Descriptor implementation for GitBridge
      */

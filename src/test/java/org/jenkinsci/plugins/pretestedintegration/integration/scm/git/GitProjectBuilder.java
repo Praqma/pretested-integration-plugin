@@ -5,6 +5,7 @@
  */
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
+import com.tikal.jenkins.plugins.multijob.MultiJobBuild;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixProject;
@@ -87,15 +88,15 @@ public class GitProjectBuilder {
     
     public AbstractProject<?,?> generateJenkinsJob() throws IOException, Exception {
         
-        assert jobType.equals(FreeStyleProject.class) || jobType.equals(MatrixProject.class) : "We must use either matrix or free style job types";
+        assert jobType.equals(FreeStyleProject.class) || jobType.equals(MultiJobBuild.class) : "We must use either MultiJob or free style job types";
         
         AbstractProject<?,?> project = null;
         
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranchName, repoName,null);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranchName, repoName, false, null);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranchName, repoName,null);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranchName, repoName, false, null);
         }
         
         if (jobType.equals(FreeStyleProject.class)) {
