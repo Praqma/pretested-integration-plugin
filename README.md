@@ -1,3 +1,7 @@
+---
+maintainer:
+ - buep
+---
 # Jenkins Pretested Integration Plugin
 
 In this readme file you find _developer oriented documentation_, about contributing, testing, the architecture and different design decisions.
