@@ -112,7 +112,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
             } else {
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
                 try {
-                    bridge.handlePostBuild(build, launcher, listener);
+                    bridge.handlePostBuild(build, launcher, listener );
                 } catch (NullPointerException | IllegalArgumentException e) {
                     listener.getLogger().println(String.format("Caught %s during post-checkout. Failing build.", e.getClass().getSimpleName()));
                     e.printStackTrace(listener.getLogger());

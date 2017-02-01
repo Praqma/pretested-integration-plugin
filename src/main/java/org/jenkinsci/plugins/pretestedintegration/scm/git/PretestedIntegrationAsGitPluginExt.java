@@ -16,12 +16,18 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -108,29 +114,81 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         EnvVars environment = run.getEnvironment(listener);
 
         Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
-        run.addAction(new PretestTriggerCommitAction(triggeredBranch));
 
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
+
+        run.addAction(new PretestTriggerCommitAction(triggeredBranch));
+
 
         try {
             gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
 
             listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-            ((GitIntegrationStrategy)gitBridge.integrationStrategy).integrateAsGitPluginExt(scm,run,git,listener,marked,triggeredRevision, gitBridge);
+            ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
+        } catch ( IntegrationAllowedNoCommitException | IntegrationFailedException e ) {
+                gitBridge.handleIntegrationExceptionsGit(run, listener, e, git);
         } catch (Exception e) {
-            gitBridge.handleIntegrationExceptions(run, listener, e);
+            // Get back to the triggered state, before handling the exceptions
+            gitBridge.handleIntegrationExceptionsGit(run, listener, e, git);
+        }
+
+        String[] branchProcessList = {"merged","buildFailed","mergeFailed","pushFailed","NumCommitFailed"};
+
+        String tempBranch = null;
+        Pattern patternTriggeredBranchWhat = Pattern.compile(".*/(.*)");
+        Matcher matcher = patternTriggeredBranchWhat.matcher(triggeredBranch.getName());
+        String triggeredWhat = null;
+        while (matcher.find()) {
+            triggeredWhat = matcher.group(1);
+        }
+
+        String prefix = null;
+        Pattern patternIntegrationBranchPrefix = Pattern.compile("(.*)/.*");
+        Matcher matcher2 = patternIntegrationBranchPrefix.matcher(expandedIntegrationBranch);
+        while (matcher2.find()) {
+            prefix = matcher2.group(1) + "/";
         }
 
         if (    run.getResult() == null ||
                 run.getResult() == Result.SUCCESS ) {
             Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
 //            gitBridge.setResultInfo("Build");
-            mergeRevision.getBranches().add(
-                    new Branch(gitBridge.getExpandedIntegrationBranch(environment), triggeredRevision.getSha1()));
+//            mergeRevision.getBranches().add( new Branch(gitBridge.getExpandedIntegrationBranch(environment), mergeRevision.getSha1()));
+
+            gitBridge.deleteIntegratedBranchGit(run,listener,git, triggeredWhat);
+            gitBridge.deleteBranch(run, listener, git, triggeredBranch.getName().replaceFirst(expandedRepo + "/", ""),expandedRepo);
+
+            if (prefix == null) {
+                tempBranch = branchProcessList[0] + "/" + triggeredWhat;
+            } else {
+                tempBranch = prefix + "/" + branchProcessList[0] + "/" + triggeredWhat;
+            }
+            gitBridge.pushToBranch(listener,git,tempBranch,expandedRepo);
+//            run.addAction(new PretestTriggerCommitAction(triggeredBranch));
+            run.addAction(new PretestTriggerCommitAction(new Branch(tempBranch,triggeredBranch.getSHA1())));
+
+
+//            mergeRevision.getBranches().add( new Branch(tempBranch, triggeredRevision.getSha1()));
             return mergeRevision;
         } else {
+            // We could not integrate, but we want to update the branch name accordingly. Checkout the triggered branch
+            // branch again before pushing
+            git.checkout().ref(triggeredBranch.getName()).execute();
+
+            if (prefix == null) {
+                tempBranch = branchProcessList[2] + "/" + triggeredWhat;
+            } else {
+                tempBranch = prefix + "/" + branchProcessList[2] + "/" + triggeredWhat;
+            }
+
+            run.addAction(new PretestTriggerCommitAction(new Branch(tempBranch,triggeredBranch.getSHA1())));
+
+            gitBridge.deleteIntegratedBranchGit(run,listener,git,triggeredWhat);
+            gitBridge.pushToBranch(listener,git,tempBranch,expandedRepo);
+            gitBridge.deleteBranch(run, listener, git, triggeredBranch.getName().replaceFirst(expandedRepo + "/", ""),expandedRepo);
+
             return triggeredRevision;
         }
     }

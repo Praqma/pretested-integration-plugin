@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 
 /**
@@ -36,7 +37,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
 
 
 
-    final static String LOG_PREFIX = "[PREINT] ";
+    protected final static String LOG_PREFIX = "[PREINT] ";
 
     /**
      * Constructor for the SCM bridge.
@@ -87,6 +88,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
                             "of handling it either way..\n" +
                             "\n" );
             if (getIntegrationFailedStatusUnstable()) {
+
                 run.setResult(Result.UNSTABLE);
             } else {
                 run.setResult(Result.FAILURE);
@@ -130,14 +132,13 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * Deletes the integrated integrationBranch.
      *
-     * @param build    The Build
-     * @param launcher The Launcher
+     * @param run    The Build
      * @param listener The BuildListener
      * @throws BranchDeletionFailedException
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, TaskListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
     }
 
     /**

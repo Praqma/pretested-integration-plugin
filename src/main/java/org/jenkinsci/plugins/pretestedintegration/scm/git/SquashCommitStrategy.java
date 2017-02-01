@@ -46,7 +46,19 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         {
             build.addAction(new PretestTriggerCommitAction(triggerBranch));
 
-            if (tryFastForward(commitId, listener.getLogger(), client, gitbridge.getAllowedNoCommits())) return;
+            int commitCount;
+            try {
+                commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, expandedIntegrationBranch);
+                String text = "Branch commit count: " + commitCount;
+                LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+            } catch (IOException | InterruptedException ex) {
+                throw new IntegrationFailedException("Failed to count commits.", ex);
+            }
+
+            PretestedIntegrationGitUtils.verdictNoOfCommits( commitCount, gitbridge.getAllowedNoCommits(), listener.getLogger() );
+
+            if (tryFastForward(commitId, listener.getLogger(), client, commitCount)) return;
             if (tryRebase(commitId, client, listener.getLogger(), expandedIntegrationBranch)) return;
 
             String expandedBranchName;

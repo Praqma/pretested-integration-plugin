@@ -8,12 +8,12 @@ import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
@@ -30,6 +30,8 @@ import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.swing.text.html.HTMLDocument;
+
 /**
  * The Git SCM Bridge.
  */
@@ -40,6 +42,7 @@ public class GitBridge extends AbstractSCMBridge {
      * The name of the integration repository.
      */
     private String repoName;
+
 
     /**
      * The integration integrationBranch.
@@ -183,14 +186,40 @@ public class GitBridge extends AbstractSCMBridge {
 
             GitSCM gitSCM = findScm(build, listener);
             GitClient client = gitSCM.createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-            LOGGER.log(Level.INFO, "Pushing changes to integration branch:");
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Pushing changes to integration branch:");
-            client.push(expandedRepo, "refs/heads/" + expandedBranch);
-            LOGGER.log(Level.INFO, "Done pushing changes");
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done pushing changes");
+            pushToBranch(listener, client, expandedBranch, expandedRepo);
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
+            throw new PushFailedException(String.format("Failed to push changes to integration branch, message was:%n%s", output.toString()));
+        }
+    }
+
+    public void pushToIntegrationBranchGit(Run<?, ?> run, TaskListener listener, GitClient client) throws PushFailedException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            EnvVars environment = run.getEnvironment(listener);
+            String expandedRepo = getExpandedRepository(environment);
+            String expandedBranch = getExpandedIntegrationBranch(environment);
+
+            pushToBranch(listener, client, expandedBranch, expandedRepo);
+        } catch (IOException | InterruptedException ex) {
+            LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
+            throw new PushFailedException(String.format("Failed to push changes to integration branch, message was:%n%s", output.toString()));
+        }
+    }
+
+    public void pushToBranch( TaskListener listener, GitClient client, String branchToPush, String expandedRepo  ) throws PushFailedException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            LOGGER.log(Level.INFO, "Pushing changes to: " + branchToPush );
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Pushing changes to integration branch:");
+            client.push(expandedRepo, "HEAD:refs/heads/" + branchToPush);
+            LOGGER.log(Level.INFO, "Done pushing changes");
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done pushing changes");
+        } catch ( InterruptedException ex) {
+            LOGGER.log(Level.SEVERE, "Failed to push changes to: " + branchToPush +".\nException:", ex);
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + String.format("Failed to push changes to: " + branchToPush + ".\nException: %s", ex));
             throw new PushFailedException(String.format("Failed to push changes to integration branch, message was:%n%s", output.toString()));
         }
     }
@@ -206,22 +235,118 @@ public class GitBridge extends AbstractSCMBridge {
      * {@inheritDoc }
      */
     @Override
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException {
-            String triggerBranch = build.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
-            try {
-                LOGGER.log(Level.INFO, "Deleting development branch:");
-                String expandedRepo = getExpandedRepository(build.getEnvironment(listener));
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting development branch:");
-                GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-                client.push(expandedRepo, ":" + removeRepository(triggerBranch));
-                listener.getLogger().println("push " + expandedRepo + " :" + removeRepository(triggerBranch));
-                LOGGER.log(Level.INFO, "Done deleting development branch");
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done deleting development branch");
-            } catch (InterruptedException | IOException ex) {
-                LOGGER.log(Level.SEVERE, "Failed to delete development branch. Exception:", ex);
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Failed to delete development branch. Exception:" + ex.getMessage());
-                throw new BranchDeletionFailedException(String.format("Failed to delete development branch %s with the following error:%n%s", triggerBranch, ex.getMessage()));
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, TaskListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException {
+        String triggeredBranch = build.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
+
+        try {
+            String expandedRepo = getExpandedRepository(build.getEnvironment(listener));
+            String expandedIntegrationBranch = getExpandedIntegrationBranch(build.getEnvironment(listener));
+
+            String tempBranch = null;
+            Pattern patternTriggeredBranchWhat = Pattern.compile(".*/(.*)");
+            Matcher matcher = patternTriggeredBranchWhat.matcher(triggeredBranch);
+            String triggeredWhat = null;
+            while (matcher.find()) {
+                triggeredWhat = matcher.group(1);
             }
+            String triggeredProcessBlob = triggeredBranch.replaceAll(expandedRepo + "/", "").replaceAll("/" + triggeredWhat, "");
+
+            String prefix = null;
+            Pattern patternIntegrationBranchPrefix = Pattern.compile("(.*)/.*");
+            Matcher matcher2 = patternIntegrationBranchPrefix.matcher(expandedIntegrationBranch);
+            while (matcher2.find()) {
+                prefix = matcher2.group(1) + "/";
+            }
+
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting development process branches:");
+            GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
+
+            String[] branchProcessList = {"merged","buildFailed","mergeFailed","pushFailed","NumCommitFailed"};
+
+            if (triggeredWhat != null) {
+                for (String branchProcess : branchProcessList) {
+                    String branchToDelete = "";
+                    try {
+                        if (prefix == null) {
+                            branchToDelete = branchProcess + "/" + triggeredWhat;
+                        } else {
+                            branchToDelete = prefix + "/" + branchProcess + "/" + triggeredWhat;
+                        }
+                        deleteBranch(build, listener, client, branchToDelete , expandedRepo);
+                        listener.getLogger().println("Deleted: " + branchToDelete + " successfully");
+                    } catch (Exception e) {
+                        listener.getLogger().println("Tried to delete: " + branchToDelete + " did not succeeded - likely did not exist");
+                    }
+                }
+            }
+        } catch (InterruptedException | IOException ex) {
+            throw new BranchDeletionFailedException(String.format("Failed to delete development branch %s with the following error:%n%s", triggeredBranch, ex.getMessage()));
+        }
+    }
+
+    public void deleteIntegratedBranchGit(Run<?, ?> run, TaskListener listener, GitClient client, String triggeredWhat) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException {
+
+
+        try {
+            String expandedRepo = getExpandedRepository(run.getEnvironment(listener));
+            String expandedIntegrationBranch = getExpandedIntegrationBranch(run.getEnvironment(listener));
+
+            String prefix = null;
+            if ( triggeredWhat == null ) {
+                String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
+                String tempBranch = null;
+                Pattern patternTriggeredBranchWhat = Pattern.compile(".*/(.*)");
+                Matcher matcher = patternTriggeredBranchWhat.matcher(triggeredBranch);
+
+                while (matcher.find()) {
+                    triggeredWhat = matcher.group(1);
+                }
+
+                Pattern patternIntegrationBranchPrefix = Pattern.compile("(.*)/.*");
+                Matcher matcher2 = patternIntegrationBranchPrefix.matcher(expandedIntegrationBranch);
+                while (matcher2.find()) {
+                    prefix = matcher2.group(1) + "/";
+                }
+            }
+
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting development process branches:");
+
+            String[] branchProcessList = {"merged","buildFailed","mergeFailed","pushFailed","NumCommitFailed"};
+
+            if (triggeredWhat != null) {
+                for (String branchProcess : branchProcessList) {
+                    String branchToDelete = "";
+                    try {
+                        if (prefix == null) {
+                            branchToDelete = branchProcess + "/" + triggeredWhat;
+                        } else {
+                            branchToDelete = prefix + "/" + branchProcess + "/" + triggeredWhat;
+                        }
+                        deleteBranch(run, listener, client, branchToDelete , expandedRepo);
+                        listener.getLogger().println("Deleted: " + branchToDelete + " successfully");
+                    } catch (Exception e) {
+                        listener.getLogger().println("Tried to delete: " + branchToDelete + " did not succeeded - likely did not exist");
+                    }
+                }
+            }
+        } catch (InterruptedException | IOException ex) {
+            throw new BranchDeletionFailedException(String.format("Failed to delete development branch %s with the following error:%n%s", triggeredWhat, ex.getMessage()));
+        }
+    }
+
+    public void deleteBranch(Run<?, ?> run, TaskListener listener, GitClient client, String branchToBeDeleted, String expandedRepo) throws BranchDeletionFailedException, IOException {
+        try {
+            LOGGER.log(Level.INFO, "Deleting branch:");
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting branch:");
+            client.push(expandedRepo, ":" + branchToBeDeleted);
+            listener.getLogger().println("push " + expandedRepo + " :" + branchToBeDeleted);
+            LOGGER.log(Level.INFO, "Done deleting branch");
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done deleting development branch");
+        } catch (InterruptedException ex) {
+            LOGGER.log(Level.SEVERE, "Failed to delete branch. Exception:", ex);
+            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Failed to delete development branch. Exception:" + ex.getMessage());
+            throw new BranchDeletionFailedException(String.format("Failed to delete branch %s with the following error:%n%s", branchToBeDeleted, ex.getMessage()));
+        }
     }
 
     /**
@@ -358,8 +483,25 @@ public class GitBridge extends AbstractSCMBridge {
 //            setResultInfo("Push");
             pushToIntegrationBranch(build, listener);
 //            setResultInfo("CleanUpRemote");
-            deleteIntegratedBranch(build, launcher, listener);
+            deleteIntegratedBranch(build, listener);
         } else {
+            List<PretestTriggerCommitAction> list = build.getActions(PretestTriggerCommitAction.class);
+            Branch mergedSuccess = null;
+            Iterator itr = list.iterator();
+            while ( itr.hasNext() ){
+                PretestTriggerCommitAction currentBranch = (PretestTriggerCommitAction)itr.next();
+                if ( currentBranch.triggerBranch.getName().contains("merged/") ) {
+                    String buildFailedBranch = currentBranch.triggerBranch.getName().replace("merged/", "buildFailed/");
+                    deleteIntegratedBranch(build, listener);
+                    try {
+                        GitSCM gitSCM = findScm(build, listener);
+                        GitClient client = gitSCM.createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
+                        pushToBranch(listener,client,buildFailedBranch,getExpandedRepository(build.getEnvironment(listener)));
+                    } catch (InterruptedException e){
+                        new IOException(e);
+                    }
+                }
+            }
             LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
         }
@@ -429,12 +571,64 @@ public class GitBridge extends AbstractSCMBridge {
         // TODO: This branch check should be moved to job configuration check method.
         // NOTE: It is important to keep this check at runtime as it could that the 'assumptions' of branch extractions
         //       from sha1 (first branch) could result in the integration branch.
-        if ( integrationBranch.equals(triggeredBranch.getName() ) ||
-                integrationBranch.equals(repoName + "/" + triggeredBranch.getName() ) ) {
+        if (integrationBranch.equals(triggeredBranch.getName()) ||
+                integrationBranch.equals(repoName + "/" + triggeredBranch.getName())) {
             String msg = "Using the integration branch for polling and development is not "
                     + "allowed since it will attempt to merge it to other branches and delete it after. Failing build.";
             throw new AbortException(msg);
         }
+    }
+
+    public void handleIntegrationExceptionsGit(Run run,  TaskListener listener, Exception e, GitClient client) throws IOException, InterruptedException {
+        if ( e instanceof NothingToDoException ) {
+            run.setResult(Result.NOT_BUILT);
+            String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
+            listener.getLogger().println(logMessage);
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            throw new AbortException(e.getMessage());
+        }
+        if ( e instanceof IntegrationFailedException ||
+                e instanceof IntegrationAllowedNoCommitException ) {
+            String logMessage = String.format("%s - setUp() - %s%n%s%s",
+                    LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage(),
+                    "\n" +
+                            "NOTE:You have configured the Pretested plugin to set the status to UNSTABLE. \n" +
+                            "The Jenkins logic is to process the build steps in UNSTABLE mode.\n" +
+                            "Consider to configure/guard your build steps with: \n" +
+                            "   https://wiki.jenkins-ci.org/display/JENKINS/Conditional+BuildStep+Plugin \n" +
+                            "and test for build status.\n" +
+                            "This will free up time/resources as there where content issues.\n" +
+                            "The publisher part is only executed if the build is successful - hence no consequences\n" +
+                            "of handling it either way..\n" +
+                            "\n" );
+            if (getIntegrationFailedStatusUnstable()) {
+                run.setResult(Result.UNSTABLE);
+            } else {
+                run.setResult(Result.FAILURE);
+                throw new AbortException(e.getMessage());
+            }
+            listener.getLogger().println(logMessage);
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            return;
+        }
+        if ( e instanceof UnsupportedConfigurationException ||
+                e instanceof IntegrationUnknownFailureException ||
+                e instanceof EstablishingWorkspaceFailedException ) {
+            run.setResult(Result.FAILURE);
+            String logMessage = String.format("%s - Unforeseen error preparing preparing for integration. %n%s", LOG_PREFIX, e.getMessage());
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            listener.getLogger().println(logMessage);
+            e.printStackTrace(listener.getLogger());
+            throw new AbortException(e.getMessage());
+        }
+
+        // Any other exceptions (expected: IOException | InterruptedException)
+        run.setResult(Result.FAILURE);
+        String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
+        LOGGER.log(Level.SEVERE, logMessage, e);
+        listener.getLogger().println(logMessage);
+        e.printStackTrace(listener.getLogger());
+        throw new AbortException(e.getMessage());
     }
     /**
      * Descriptor implementation for GitBridge
