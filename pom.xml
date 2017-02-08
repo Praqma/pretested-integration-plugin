@@ -75,8 +75,6 @@
         * mvn compile findbugs:findbugs to use findbugs and get xml report
         * mvn checkstyle:checkstyle to do checkstyle analysis and get xml report
         * mvn pmd:pmd pmd:cpd to use PMD tool and get xml report for pmd and cpd
-        * mvn javancss:check will also do java code analysis and report to console
-            * use mvn javancss:report to make a report in xml and html
         * mvn jdepend:generate will do yet another java code analysis and report
 
         * mvn site will generate site report, including all the above results.
@@ -279,20 +277,6 @@
                 </configuration>
             </plugin>
 
-
-            <!--
-            Java source code complexity analysis, use javancss:check to get result
-            Included in reporting below to also include it in the site reports.
-            -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>javancss-maven-plugin</artifactId>
-                <version>2.1</version>
-                <configuration>
-                    <failOnViolation>false</failOnViolation>
-                </configuration>
-            </plugin>
-
             <!--
             Another Java code metric reporting tool. Included in the site report
             as a plugin under reporting.
@@ -391,17 +375,6 @@
                         </reports>
                     </reportSet>
                 </reportSets>
-            </plugin>
-
-            <!--
-            Include java complexity metrics in the site report.
-            Also used in build/plugin as a goal to manually use for developers
-            or in the build pipeline.
-            -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>javancss-maven-plugin</artifactId>
-                <version>2.1</version>
             </plugin>
 
             <!--
