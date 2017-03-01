@@ -115,7 +115,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             // Collect author
             listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch"));
             commitAuthor = client.withRepository(new FindCommitAuthorCallback(listener, builtBranch.getSHA1()));
-            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done colecting last commit author: %s", commitAuthor);
+            logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done collecting last commit author: %s", commitAuthor);
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
 
