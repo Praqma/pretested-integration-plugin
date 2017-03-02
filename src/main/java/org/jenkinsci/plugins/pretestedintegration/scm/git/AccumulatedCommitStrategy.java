@@ -84,7 +84,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             LOGGER.fine("Found no remote branches.");
             try {
                 LOGGER.fine("Setting build description 'Nothing to do':");
-                build.setDescription(String.format("Noting to do"));
+                build.setDescription(String.format("Nothing to do"));
             } catch (IOException ex) {
                 LOGGER.log(Level.FINE, "Failed to update build description", ex);
             }
