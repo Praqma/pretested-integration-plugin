@@ -23,12 +23,12 @@ public abstract interface IntegrationStrategyAsGitPluginExt{
      * @param git current git client
      * @param listener The BuildListener
      * @param marked marked revision for use in GitExtensions
-     * @param rev revison f
+     * @param rev revision f
      * @param bridge
      */
 
     public abstract void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge)
-            throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException;
+        throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException;
 
 
 }

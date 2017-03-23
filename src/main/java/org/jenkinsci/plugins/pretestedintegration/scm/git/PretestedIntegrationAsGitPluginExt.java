@@ -23,7 +23,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import java.util.regex.Pattern;
@@ -114,16 +113,12 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         EnvVars environment = run.getEnvironment(listener);
 
         Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
-
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
-
         run.addAction(new PretestTriggerCommitAction(triggeredBranch));
-
 
         try {
             gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
-
             listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
             ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
@@ -151,12 +146,8 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             prefix = matcher2.group(1) + "/";
         }
 
-        if (    run.getResult() == null ||
-                run.getResult() == Result.SUCCESS ) {
+        if ( run.getResult() == null || run.getResult() == Result.SUCCESS ) {
             Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
-//            gitBridge.setResultInfo("Build");
-//            mergeRevision.getBranches().add( new Branch(gitBridge.getExpandedIntegrationBranch(environment), mergeRevision.getSha1()));
-
             gitBridge.deleteIntegratedBranchGit(run,listener,git, triggeredWhat);
             gitBridge.deleteBranch(run, listener, git, triggeredBranch.getName().replaceFirst(expandedRepo + "/", ""),expandedRepo);
 
@@ -166,11 +157,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 tempBranch = prefix + "/" + branchProcessList[0] + "/" + triggeredWhat;
             }
             gitBridge.pushToBranch(listener,git,tempBranch,expandedRepo);
-//            run.addAction(new PretestTriggerCommitAction(triggeredBranch));
             run.addAction(new PretestTriggerCommitAction(new Branch(tempBranch,triggeredBranch.getSHA1())));
-
-
-//            mergeRevision.getBranches().add( new Branch(tempBranch, triggeredRevision.getSha1()));
             return mergeRevision;
         } else {
             // We could not integrate, but we want to update the branch name accordingly. Checkout the triggered branch

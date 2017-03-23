@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 
 /**
@@ -22,8 +21,8 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
 
     /**
      * Information about the result of the integration (Unknown, Conflict, Build, Push).
+     * @return the integration branch name
      */
-//    protected String resultInfo = "Unknown";
     protected abstract String getIntegrationBranch();
 
     /**
@@ -43,6 +42,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Constructor for the SCM bridge.
      *
      * @param integrationStrategy The integration strategy to apply when merging commits.
+     * @param integrationFailedStatusUnstable
      */
     public AbstractSCMBridge(IntegrationStrategy integrationStrategy, boolean integrationFailedStatusUnstable ) {
         this.integrationStrategy = integrationStrategy;
@@ -132,7 +132,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * Deletes the integrated integrationBranch.
      *
-     * @param run    The Build
+     * @param build
      * @param listener The BuildListener
      * @throws BranchDeletionFailedException
      * @throws NothingToDoException
@@ -200,7 +200,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IntegrationFailedException
      * @throws EstablishingWorkspaceFailedException
      * @throws NothingToDoException
+     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException
      * @throws UnsupportedConfigurationException
+     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException
      */
     public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException,UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
         mergeChanges(build, launcher, listener);
@@ -214,6 +216,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param listener The BuildListener
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
+     * @throws java.lang.InterruptedException
      */
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
     }
@@ -291,32 +294,12 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * @return The information of the result of the Phlow
-     */
-/*    public String getResultInfo() {
-        return resultInfo;
-    }
-*/
-    /**
-     * @param resultInfo
-     */
-/*    public void setResultInfo(String resultInfo) {
-        this.resultInfo = resultInfo;
-    }
-*/
-    /**
      * @param environment environment
      * @return The Integration Branch name as variable expanded if possible - otherwise return integrationBranch
      */
     public String getExpandedIntegrationBranch(EnvVars environment) {
         return environment.expand(getIntegrationBranch());
     }
-
-
-    /**
-     * @param environment The environment to expand the integrationBranch in
-     * @return The Integration Branch name, expanded using given EnvVars.
-     */
 
     /***
      * @return The required result

@@ -286,7 +286,6 @@ public class GitBridge extends AbstractSCMBridge {
 
     public void deleteIntegratedBranchGit(Run<?, ?> run, TaskListener listener, GitClient client, String triggeredWhat) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException {
 
-
         try {
             String expandedRepo = getExpandedRepository(run.getEnvironment(listener));
             String expandedIntegrationBranch = getExpandedIntegrationBranch(run.getEnvironment(listener));
@@ -294,7 +293,6 @@ public class GitBridge extends AbstractSCMBridge {
             String prefix = null;
             if ( triggeredWhat == null ) {
                 String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
-                String tempBranch = null;
                 Pattern patternTriggeredBranchWhat = Pattern.compile(".*/(.*)");
                 Matcher matcher = patternTriggeredBranchWhat.matcher(triggeredBranch);
 
@@ -390,20 +388,7 @@ public class GitBridge extends AbstractSCMBridge {
      */
     @Override
     public String createBuildDescription(String triggerBranchName) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-//        return String.format("%s", "(" + getResultInfo() + "):" + triggerBranchName + " -> " + integrationBranch);
         return String.format("%s", triggerBranchName + " -> " + integrationBranch);
-    }
-
-
-
-    /**
-     * Removes the repository from the integrationBranch.
-     * e.g. 'origin/integrationBranch' -> 'integrationBranch'
-     * @param branch the integrationBranch to strip the repository from
-     * @return the integrationBranch name
-     */
-    private String removeRepository(String branch) {
-        return branch.substring(branch.indexOf('/') + 1, branch.length());
     }
 
     /**
@@ -452,6 +437,7 @@ public class GitBridge extends AbstractSCMBridge {
      * Validate the Git configurations in MultiSCM.
      * JENKINS-24754
      * @param scms
+     * @return boolean indicating if the MultiSCM is ok
      * @throws UnsupportedConfigurationException
      */
     public boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {

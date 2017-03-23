@@ -67,10 +67,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
             scmBridge.handleIntegrationExceptions(build,listener, e);
         }
 
-        if ( build.getResult() == null ||
-             build.getResult() == Result.SUCCESS ||
-             build.getResult() == Result.UNSTABLE ) {
-//            gitBridge.setResultInfo("Build");
+        if ( build.getResult() == null || build.getResult() == Result.SUCCESS || build.getResult() == Result.UNSTABLE ) {
             return new PretestEnvironment();
         } else {
             return null;

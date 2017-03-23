@@ -13,7 +13,6 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -209,17 +208,13 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         }
 
         build.addAction(new PretestTriggerCommitAction(triggerBranch));
-
         doTheIntegration((Run)build, listener, gitbridge, commitId, client, expandedIntegrationBranch, triggerBranch);
     }
 
     @Override
     public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws NothingToDoException, IntegrationFailedException, IOException, InterruptedException {
-
         Branch triggerBranch = rev.getBranches().iterator().next();
-
         String expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
-
         doTheIntegration((Run) build, listener, gitbridge, triggerBranch.getSHA1(), git, expandedIntegrationBranch, triggerBranch);
     }
 

@@ -7,7 +7,6 @@ import javaposse.jobdsl.dsl.helpers.wrapper.WrapperContext;
 import javaposse.jobdsl.plugin.ContextExtensionPoint;
 import javaposse.jobdsl.plugin.DslExtensionMethod;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 
 import java.util.Arrays;
@@ -53,6 +52,8 @@ public class PretestedIntegrationAsGitPluginExtJobDslExtension extends ContextEx
      * @param strategy the Integration Strategy to use
      * @param branch the Integration Branch
      * @param repository the repository
+     * @param integrationFailedStatusUnstable
+     * @param allowedNoCommits
      * @return a configured PretestedIntegrationBuildWrapper
      */
     @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.0")

@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.AbortException;
 import hudson.model.AbstractBuild;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.BuildData;
@@ -97,7 +96,7 @@ public class PretestedIntegrationGitUtils {
             throw new NothingToDoException();
         }
 
-        if ( allowedNoCommits != null && commitCount > allowedNoCommits.intValue()) {
+        if ( allowedNoCommits != null && commitCount > allowedNoCommits) {
             String text = "Only " + allowedNoCommits + " commit(s) allowed. Total commits found: " + commitCount;
             logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
