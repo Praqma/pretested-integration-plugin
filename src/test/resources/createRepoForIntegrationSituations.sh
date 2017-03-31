@@ -27,7 +27,7 @@ git push origin -f master:refs/heads/masterBWSquash
 
 
 #branch_prefixes="FS BW BWSquash Matrix Multijob"
-branch_prefixes="FS"
+branch_prefixes="Matrix"
 # TODO. Add test for pushing to integrationBranch
 
 for branch_prefix in ${branch_prefixes} ; do

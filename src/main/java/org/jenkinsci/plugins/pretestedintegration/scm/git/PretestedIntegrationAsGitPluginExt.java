@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.*;
+import hudson.matrix.*;
 import hudson.model.*;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
@@ -22,6 +23,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -110,8 +112,17 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     {
         listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
 
+        if ( run instanceof MatrixRun ) {
+            Branch mergedBranch = ((MatrixRun) run).getParentBuild().getAction(PretestTriggerCommitAction.class).triggerBranch;
+            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out merged branch %s from MatrixParent job ", mergedBranch.getName()));
+            git.checkout().branch(mergedBranch.getName()).execute();
+            Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
+            return mergeRevision;
+        }
+
         EnvVars environment = run.getEnvironment(listener);
 
+        // TODO: Should this be last branch in stead of?
         Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
