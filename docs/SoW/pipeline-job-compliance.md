@@ -8,7 +8,7 @@ In addition the plugin restricts it use to only the Freestyle job type in Jenkin
 We will implement support for using PIP in Pipeline jobs, both supporting Declarative Pipeline and Scripted Pipeline syntax.
 The plugin will still support Jenkins Job DSL as well.
 We will support separation of the pretesting part from the integration part, so more creative job construction can be used allowing the user to control these steps on their own.
-Officially we will still only support Freestyle jobs.
+Officially we will still only support Freestyle jobs and now Pipeline jobs.
 
 ## Implementation
 To support the solution the plugin will be changed to a Git Plugin extension instead. The integration part where we push the changes will be available as an independent post-build step in Jenkins.
