@@ -201,3 +201,6 @@ Code contributions were initially made by Computer Science students at Universit
 ### Sponsors
 
 The plugin is primarily developed for our customer - see the [Pretested Integration Plugin wiki page](https://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin)
+
+### CodeScene analysis data
+[![](https://codescene.io/projects/1346/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/1346/jobs/latest-successful/results)
