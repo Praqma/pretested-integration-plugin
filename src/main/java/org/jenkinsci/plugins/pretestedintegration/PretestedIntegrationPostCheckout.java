@@ -59,8 +59,8 @@ public class PretestedIntegrationPostCheckout extends Recorder {
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @return boolean True on success.
-     * @throws InterruptedException
-     * @throws IOException
+     * @throws InterruptedException IException
+     * @throws IOException IOexception
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {

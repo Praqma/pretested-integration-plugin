@@ -153,7 +153,7 @@ public class MultipleScm_threeRepos_IT {
      * @param build
      * @param buildname - descriptive build name included in the output
      * @return
-     * @throws IOException
+     * @throws IOException IOexception
      * @throws SAXException
      */
     private String printAndReturnConsoleOfBuild(FreeStyleBuild build, String buildname) throws IOException, SAXException {
@@ -170,7 +170,7 @@ public class MultipleScm_threeRepos_IT {
      * @param build
      * @param buildname - descriptive build name included in the output
      * @return
-     * @throws IOException
+     * @throws IOException IOexception
      * @throws SAXException
      */
     private String printAndReturnPollingLogOfBuild(FreeStyleBuild build, String buildname) throws IOException, SAXException {

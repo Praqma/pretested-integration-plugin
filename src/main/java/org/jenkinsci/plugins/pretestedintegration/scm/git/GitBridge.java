@@ -78,11 +78,11 @@ public class GitBridge extends AbstractSCMBridge {
      * @param build The Build
      * @param listener The BuildListener
      * @return the Git SCM for the relevant build data.
-     * @throws InterruptedException
+     * @throws InterruptedException IException
      * When no matching SCMs are found
-     * @throws NothingToDoException
+     * @throws NothingToDoException when it is an empty merge
      * When no relevant BuildData is found.
-     * @throws UnsupportedConfigurationException
+     * @throws UnsupportedConfigurationException when the configuration is not supported
      * When multiple, ambiguous relevant BuildDatas are found.
      */
     protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException {
@@ -152,8 +152,8 @@ public class GitBridge extends AbstractSCMBridge {
      * @param build The Build
      * @param launcher The Launcher
      * @param listener The Listener
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException IOexception
+     * @throws InterruptedException IException
      */
     protected void update(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         try {
@@ -368,8 +368,8 @@ public class GitBridge extends AbstractSCMBridge {
      * @param build The Build
      * @param listener The Listener
      * @return a FilePath representing the workspace
-     * @throws InterruptedException
-     * @throws IOException
+     * @throws InterruptedException IException IException
+     * @throws IOException IOexception IOException
      */
     public FilePath resolveWorkspace(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
         FilePath workspace = build.getWorkspace();
@@ -409,7 +409,7 @@ public class GitBridge extends AbstractSCMBridge {
      * Validate the Git configurations in MultiSCM.
      * JENKINS-24754
      * @param scms
-     * @throws UnsupportedConfigurationException
+     * @throws UnsupportedConfigurationException when the configuration is not supported
      */
     private boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
         Set<String> remoteNames = new HashSet<>();
@@ -434,8 +434,8 @@ public class GitBridge extends AbstractSCMBridge {
      * @param build The Build
      * @param listener The Listener
      * @return the amount of commits
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException IOexception exception of IO
+     * @throws InterruptedException IException exception of interrupt
      */
     public int countCommits(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
         ObjectId commitId = findRelevantBuildData(build, listener).lastBuild.revision.getSha1();

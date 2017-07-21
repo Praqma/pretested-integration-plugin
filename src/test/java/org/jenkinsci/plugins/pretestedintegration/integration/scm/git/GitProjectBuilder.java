@@ -103,7 +103,7 @@ public class GitProjectBuilder {
             ((FreeStyleProject)project).getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
             project.getPublishersList().add(new PretestedIntegrationPostCheckout());
         } else if(jobType.equals(MatrixProject.class)) {
-            project = rule.createMatrixProject();
+            project = rule.createProject(MatrixProject.class);
             ((MatrixProject)project).getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
             project.getPublishersList().add(new PretestedIntegrationPostCheckout());            
             ((MatrixProject)project).setAxes(new AxisList(new Axis("X", Arrays.asList("X1","X2"))));

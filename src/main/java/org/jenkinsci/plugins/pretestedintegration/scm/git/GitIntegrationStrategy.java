@@ -27,8 +27,8 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy {
 
     /**
      * Creates a PersonIdent object from a full Git identity string.
-     * @param identity The Git identity string to parse. ex.: john Doe <Joh@praqma.net> 1442321765 +0200
-     * @return A PersonIdent object representing given Git author/committer
+     * @param identity The Git identity string to parse. ex.: john Doe &lt;Joh@praqma.net&gt;  1442321765 +0200
+     * @return A PersonIdent object representing given Git Author or committer
      */
     public PersonIdent getPersonIdent(String identity) {
         Pattern regex = Pattern.compile("^([^<(]*?)[ \\t]?<([^<>]*?)>.*$");
@@ -47,7 +47,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy {
      * @param bridge The GitBridge
      * @return true if the rebase was a success, false if the branch isn't
      * suitable for a rebase
-     * @throws IntegrationFailedException When commit counting or rebasing fails
+     * @throws IntegrationFailedException when the integration failed (merge conflict) When commit counting or rebasing fails
      */
     protected boolean tryRebase(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegrationFailedException {
         LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryRebase"));
@@ -98,7 +98,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy {
      * @param bridge The GitBridge
      * @return true if the FF merge was a success, false if the branch isn't
      * suitable for a FF merge.
-     * @throws IntegrationFailedException When commit counting fails
+     * @throws IntegrationFailedException when the integration failed (merge conflict) When commit counting fails
      */
     protected boolean tryFastForward(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegrationFailedException{
         LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryFastForward"));
@@ -139,7 +139,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy {
      * @param client the Git Client
      * @param branch the branch to look for
      * @return True if the branch was found, otherwise False.
-     * @throws IntegrationFailedException when the Git call failed unexpectedly
+     * @throws IntegrationFailedException when the integration failed (merge conflict) when the Git call failed unexpectedly
      */
     protected boolean containsRemoteBranch(GitClient client, Branch branch) throws IntegrationFailedException {
         try {

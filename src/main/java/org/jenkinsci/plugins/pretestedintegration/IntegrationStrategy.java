@@ -24,9 +24,9 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @param bridge The SCM Bridge
-     * @throws IntegrationFailedException when integration fails
-     * @throws NothingToDoException when there's nothing to do
-     * @throws UnsupportedConfigurationException when part of the configuration isn't supported
+     * @throws IntegrationFailedException when the integration failed (merge conflict) when integration fails
+     * @throws NothingToDoException when it is an empty merge when there's nothing to do
+     * @throws UnsupportedConfigurationException when the configuration is not supported when part of the configuration isn't supported
      */
     public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException;
 

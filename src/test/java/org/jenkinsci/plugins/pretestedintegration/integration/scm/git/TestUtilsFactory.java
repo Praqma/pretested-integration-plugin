@@ -132,8 +132,8 @@ public class TestUtilsFactory {
      * @param directoryToDelete Full path to directory
      * @param sleepms milliseconds to sleep between each attempt
      * @param attempts number of attempt to try to delete the directory
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException IOexception
+     * @throws InterruptedException IException
      */
     public static void destroyDirectory(File directoryToDelete, Integer sleepms, Integer attempts) throws IOException, InterruptedException {
         File dir = new File(directoryToDelete.getAbsoluteFile().getAbsolutePath());
@@ -156,8 +156,8 @@ public class TestUtilsFactory {
      * creating a lot of temporary folders and files during functional tests.
      *
      * @param directoryToDelete Full path to directory
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException IOexception
+     * @throws InterruptedException IException
      */
     public static void destroyDirectory(File directoryToDelete) throws IOException, InterruptedException {
         TestUtilsFactory.destroyDirectory(directoryToDelete, 300, 50);
@@ -168,8 +168,8 @@ public class TestUtilsFactory {
      * it tries several times until max 20 seconds.
      *
      * @param repository
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException IOexception
+     * @throws InterruptedException IException
      */
     public static void destroyRepo(Repository repository) throws IOException, InterruptedException {
         if (repository != null) {
@@ -368,7 +368,7 @@ public class TestUtilsFactory {
      *
      * @param repoFolderName
      * @return
-     * @throws IOException
+     * @throws IOException IOexception
      * @throws GitAPIException
      */
     public static Repository createRepoWithoutBranches(String repoFolderName) throws IOException, GitAPIException {
@@ -769,7 +769,7 @@ public class TestUtilsFactory {
      * @param file File name
      * @param stringToCheck String, representing a complete line in the file.
      * @return true if line is found, false if not found or exception thrown
-     * @throws IOException
+     * @throws IOException IOexception
      */
     public static boolean checkForLineInFile(File file, String stringToCheck) throws IOException {
         boolean result = false;
@@ -866,7 +866,7 @@ public class TestUtilsFactory {
      * @param build
      * @param buildname - descriptive build name included in the output
      * @return boolean - true matched console like text, else false
-     * @throws IOException
+     * @throws IOException IOexception
      * @throws SAXException
      */
     public static boolean printAndReturnConsoleOfBuild(FreeStyleBuild build, String buildname, JenkinsRule jenkinsRule) throws IOException, SAXException {
