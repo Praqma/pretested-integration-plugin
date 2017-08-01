@@ -143,16 +143,22 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of accumulated merge done");
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
-        }  catch (IOException | InterruptedException ex) {
+        } catch (GitException | InterruptedException gex) {
+            //Git commit failed for some wierd reasone
+            logMessage = String.format("%sUnable to commit changes. There are two known reasons:\n" +
+                    "A) You are trying to integrate a change that was already integrated.\n" +
+                    "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a merge. If you REALLY want the empty commit to me accepted, you can rebase your single empty commit on top of the integration branch. Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, gex.getMessage());
+            LOGGER.log(Level.SEVERE, logMessage, gex);
+            listener.getLogger().println(logMessage);
+            gex.printStackTrace(listener.getLogger());
+            throw new IntegrationUnknownFailureException(gex);
+
+        }  catch (IOException  ex) {
             // If ".git/MERGE_MSG" wasn't found the most likely culrprit is that the merge was an empty
             // one (No changes) for some reason the merge() command does not complain or throw exception when that happens
-            if(ex.getMessage().contains("Cannot commit") || ex.getMessage().contains("MERGE_MSG (No such file or directory)")) {
-                logMessage = String.format("%sUnable to commit changes. There are two known reasons:\n" +
+            logMessage = String.format("%sUnable to commit changes. There are two known reasons:\n" +
                         "A) You are trying to integrate a change that was already integrated.\n" +
                         "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a merge. If you REALLY want the empty commit to me accepted, you can rebase your single empty commit on top of the integration branch. Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, ex.getMessage());
-            } else {
-                logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while committing. Logging exception msg: %s", ex.getMessage());
-            }
             LOGGER.log(Level.SEVERE, logMessage, ex);
             listener.getLogger().println(logMessage);
             ex.printStackTrace(listener.getLogger());
