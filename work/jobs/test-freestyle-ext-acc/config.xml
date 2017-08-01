@@ -18,18 +18,26 @@
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/readyBW/*</name>
+        <name>*/readyFsExtAcc/*</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
     <submoduleCfg class="list"/>
     <extensions>
+      <org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt plugin="pretested-integration@2.4.2-SNAPSHOT">
+        <gitBridge>
+          <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
+          <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
+          <allowedNoCommits>1</allowedNoCommits>
+          <repoName>origin</repoName>
+          <integrationBranch>masterFsExtAcc</integrationBranch>
+        </gitBridge>
+      </org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt>
       <hudson.plugins.git.extensions.impl.PruneStaleBranch/>
-      <hudson.plugins.git.extensions.impl.WipeWorkspace/>
     </extensions>
   </scm>
   <canRoam>true</canRoam>
-  <disabled>true</disabled>
+  <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
@@ -76,15 +84,5 @@ fi</command>
     </hudson.plugins.textfinder.TextFinderPublisher>
     <org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout plugin="pretested-integration@2.4.2-SNAPSHOT"/>
   </publishers>
-  <buildWrappers>
-    <org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper plugin="pretested-integration@2.4.2-SNAPSHOT">
-      <scmBridge class="org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge">
-        <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
-        <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
-        <allowedNoCommits>1</allowedNoCommits>
-        <repoName>origin</repoName>
-        <integrationBranch>masterBW</integrationBranch>
-      </scmBridge>
-    </org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper>
-  </buildWrappers>
+  <buildWrappers/>
 </project>

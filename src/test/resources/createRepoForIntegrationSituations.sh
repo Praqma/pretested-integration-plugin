@@ -19,28 +19,23 @@ git add .
 git commit -m "init"
 git tag -a -m "init" init
 git push origin -f --mirror
-git push origin -f master:refs/heads/masterFS
-git push origin -f master:refs/heads/masterMatrix
-git push origin -f master:refs/heads/masterMultijob
-git push origin -f master:refs/heads/masterBW
-git push origin -f master:refs/heads/masterBWSquash
 
 
 #branch_prefixes="FS BW BWSquash Matrix Multijob"
-branch_prefixes="Matrix"
+branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq"
 # TODO. Add test for pushing to integrationBranch
 
 for branch_prefix in ${branch_prefixes} ; do
+    git push origin -f master:refs/heads/master${branch_prefix}
+done
+
+for branch_prefix in ${branch_prefixes} ; do
   sleep ${sleep_sec}
-  echo "test new branch but same sha1 as master" && \
-        git reset --hard origin/master${branch_prefix} && \
-        git push origin HEAD:refs/heads/ready${branch_prefix}/test-00-sha1-as-master && \
-        git reset --hard init
   echo "test FF" >> README.md && \
         git add . && git commit -m "test FF" && \
         git push origin HEAD:refs/heads/ready${branch_prefix}/test-01-ff && \
         git reset --hard init
-  echo "test merge/squash failure (Conflict)" >> README.md && \
+  echo "test integration failure (Conflict)" >> README.md && \
         git add . && git commit -m "test conflicts" && \
         git push origin HEAD:refs/heads/ready${branch_prefix}/test-02-merge-conflicts && \
         git reset --hard init
@@ -58,8 +53,8 @@ for branch_prefix in ${branch_prefixes} ; do
         git add . && git commit -m "commit 2" && \
         git push origin HEAD:refs/heads/ready${branch_prefix}/test-05-multiple_commits && \
         git reset --hard init
-  echo "test empty commit merge/rebase/squash failure" && \
-        git commit --allow-empty -m "test empty commit merge failure" && \
-        git push origin HEAD:refs/heads/ready${branch_prefix}/test-06-merge-empty-commit-failure && \
+  echo "test integrate empty commit" && \
+        git commit --allow-empty -m "test integrate empty commit" && \
+        git push origin HEAD:refs/heads/ready${branch_prefix}/test-06-merge-empty-commit && \
         git reset --hard init
 done

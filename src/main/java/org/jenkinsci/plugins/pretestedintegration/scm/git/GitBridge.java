@@ -240,95 +240,11 @@ public class GitBridge extends AbstractSCMBridge {
 
         try {
             String expandedRepo = getExpandedRepository(build.getEnvironment(listener));
-            String expandedIntegrationBranch = getExpandedIntegrationBranch(build.getEnvironment(listener));
-
-            String tempBranch = null;
-            Pattern patternTriggeredBranchWhat = Pattern.compile(".*/(.*)");
-            Matcher matcher = patternTriggeredBranchWhat.matcher(triggeredBranch);
-            String triggeredWhat = null;
-            while (matcher.find()) {
-                triggeredWhat = matcher.group(1);
-            }
-            String triggeredProcessBlob = triggeredBranch.replaceAll(expandedRepo + "/", "").replaceAll("/" + triggeredWhat, "");
-
-            String prefix = null;
-            Pattern patternIntegrationBranchPrefix = Pattern.compile("(.*)/.*");
-            Matcher matcher2 = patternIntegrationBranchPrefix.matcher(expandedIntegrationBranch);
-            while (matcher2.find()) {
-                prefix = matcher2.group(1) + "/";
-            }
-
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting development process branches:");
             GitClient client = findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
+            deleteBranch(build, listener, client, triggeredBranch , expandedRepo);
 
-            String[] branchProcessList = {"merged","buildFailed","mergeFailed","pushFailed","NumCommitFailed"};
-
-            if (triggeredWhat != null) {
-                for (String branchProcess : branchProcessList) {
-                    String branchToDelete = "";
-                    try {
-                        if (prefix == null) {
-                            branchToDelete = branchProcess + "/" + triggeredWhat;
-                        } else {
-                            branchToDelete = prefix + "/" + branchProcess + "/" + triggeredWhat;
-                        }
-                        deleteBranch(build, listener, client, branchToDelete , expandedRepo);
-                        listener.getLogger().println("Deleted: " + branchToDelete + " successfully");
-                    } catch (Exception e) {
-                        listener.getLogger().println("Tried to delete: " + branchToDelete + " did not succeeded - likely did not exist");
-                    }
-                }
-            }
         } catch (InterruptedException | IOException ex) {
             throw new BranchDeletionFailedException(String.format("Failed to delete development branch %s with the following error:%n%s", triggeredBranch, ex.getMessage()));
-        }
-    }
-
-    public void deleteIntegratedBranchGit(Run<?, ?> run, TaskListener listener, GitClient client, String triggeredWhat) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException {
-
-        try {
-            String expandedRepo = getExpandedRepository(run.getEnvironment(listener));
-            String expandedIntegrationBranch = getExpandedIntegrationBranch(run.getEnvironment(listener));
-
-            String prefix = null;
-            if ( triggeredWhat == null ) {
-                String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
-                Pattern patternTriggeredBranchWhat = Pattern.compile(".*/(.*)");
-                Matcher matcher = patternTriggeredBranchWhat.matcher(triggeredBranch);
-
-                while (matcher.find()) {
-                    triggeredWhat = matcher.group(1);
-                }
-
-                Pattern patternIntegrationBranchPrefix = Pattern.compile("(.*)/.*");
-                Matcher matcher2 = patternIntegrationBranchPrefix.matcher(expandedIntegrationBranch);
-                while (matcher2.find()) {
-                    prefix = matcher2.group(1) + "/";
-                }
-            }
-
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting development process branches:");
-
-            String[] branchProcessList = {"merged","buildFailed","mergeFailed","pushFailed","NumCommitFailed"};
-
-            if (triggeredWhat != null) {
-                for (String branchProcess : branchProcessList) {
-                    String branchToDelete = "";
-                    try {
-                        if (prefix == null) {
-                            branchToDelete = branchProcess + "/" + triggeredWhat;
-                        } else {
-                            branchToDelete = prefix + "/" + branchProcess + "/" + triggeredWhat;
-                        }
-                        deleteBranch(run, listener, client, branchToDelete , expandedRepo);
-                        listener.getLogger().println("Deleted: " + branchToDelete + " successfully");
-                    } catch (Exception e) {
-                        listener.getLogger().println("Tried to delete: " + branchToDelete + " did not succeeded - likely did not exist");
-                    }
-                }
-            }
-        } catch (InterruptedException | IOException ex) {
-            throw new BranchDeletionFailedException(String.format("Failed to delete development branch %s with the following error:%n%s", triggeredWhat, ex.getMessage()));
         }
     }
 
@@ -336,7 +252,7 @@ public class GitBridge extends AbstractSCMBridge {
         try {
             LOGGER.log(Level.INFO, "Deleting branch:");
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Deleting branch:");
-            client.push(expandedRepo, ":" + branchToBeDeleted);
+            client.push(expandedRepo, ":refs/heads" + branchToBeDeleted.replace(expandedRepo,""));
             listener.getLogger().println("push " + expandedRepo + " :" + branchToBeDeleted);
             LOGGER.log(Level.INFO, "Done deleting branch");
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done deleting development branch");
@@ -466,28 +382,9 @@ public class GitBridge extends AbstractSCMBridge {
 
         Result result = build.getResult();
         if (result != null && result.isBetterOrEqualTo(getRequiredResult())) {
-//            setResultInfo("Push");
             pushToIntegrationBranch(build, listener);
-//            setResultInfo("CleanUpRemote");
             deleteIntegratedBranch(build, listener);
         } else {
-            List<PretestTriggerCommitAction> list = build.getActions(PretestTriggerCommitAction.class);
-            Branch mergedSuccess = null;
-            Iterator itr = list.iterator();
-            while ( itr.hasNext() ){
-                PretestTriggerCommitAction currentBranch = (PretestTriggerCommitAction)itr.next();
-                if ( currentBranch.triggerBranch.getName().contains("merged/") ) {
-                    String buildFailedBranch = currentBranch.triggerBranch.getName().replace("merged/", "buildFailed/");
-                    deleteIntegratedBranch(build, listener);
-                    try {
-                        GitSCM gitSCM = findScm(build, listener);
-                        GitClient client = gitSCM.createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-                        pushToBranch(listener,client,buildFailedBranch,getExpandedRepository(build.getEnvironment(listener)));
-                    } catch (InterruptedException e){
-                        new IOException(e);
-                    }
-                }
-            }
             LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
             listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
         }

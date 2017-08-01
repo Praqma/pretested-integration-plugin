@@ -18,14 +18,22 @@
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/readyFsBwSq/*</name>
+        <name>*/readyFsExtSq/*</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
     <submoduleCfg class="list"/>
     <extensions>
+      <org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt plugin="pretested-integration@2.4.2-SNAPSHOT">
+        <gitBridge>
+          <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
+          <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
+          <allowedNoCommits>1</allowedNoCommits>
+          <repoName>origin</repoName>
+          <integrationBranch>masterFsExtSq</integrationBranch>
+        </gitBridge>
+      </org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt>
       <hudson.plugins.git.extensions.impl.PruneStaleBranch/>
-      <hudson.plugins.git.extensions.impl.WipeWorkspace/>
     </extensions>
   </scm>
   <canRoam>true</canRoam>
@@ -76,15 +84,5 @@ fi</command>
     </hudson.plugins.textfinder.TextFinderPublisher>
     <org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout plugin="pretested-integration@2.4.2-SNAPSHOT"/>
   </publishers>
-  <buildWrappers>
-    <org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper plugin="pretested-integration@2.4.2-SNAPSHOT">
-      <scmBridge class="org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge">
-        <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy"/>
-        <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
-        <allowedNoCommits>1</allowedNoCommits>
-        <repoName>origin</repoName>
-        <integrationBranch>masterFsBwSq</integrationBranch>
-      </scmBridge>
-    </org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper>
-  </buildWrappers>
+  <buildWrappers/>
 </project>
