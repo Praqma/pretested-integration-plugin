@@ -28,7 +28,6 @@
         <gitBridge>
           <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
           <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
-          <allowedNoCommits>1</allowedNoCommits>
           <repoName>origin</repoName>
           <integrationBranch>masterMatrix</integrationBranch>
         </gitBridge>

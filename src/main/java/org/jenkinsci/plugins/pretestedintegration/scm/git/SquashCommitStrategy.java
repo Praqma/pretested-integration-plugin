@@ -42,7 +42,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     public SquashCommitStrategy() {
     }
 
-    private void doTheIntegration (Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException, IntegrationUnknownFailureException {
+    private void doTheIntegration (Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
         {
             build.addAction(new PretestTriggerCommitAction(triggerBranch));
 
@@ -55,8 +55,6 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             } catch (IOException | InterruptedException ex) {
                 throw new IntegrationFailedException("Failed to count commits.", ex);
             }
-
-            PretestedIntegrationGitUtils.verdictNoOfCommits( commitCount, gitbridge.getAllowedNoCommits(), listener.getLogger() );
 
             if (tryFastForward(commitId, listener.getLogger(), client, commitCount)) return;
             if (tryRebase(commitId, client, listener.getLogger(), expandedIntegrationBranch)) return;
@@ -148,7 +146,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
      * {@inheritDoc}
      */
     @Override
-    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationAllowedNoCommitException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
+    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
 
         GitBridge gitbridge = (GitBridge) bridge;
         GitClient client;
@@ -186,7 +184,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
 
     @Override
-    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws IntegrationFailedException, IntegrationAllowedNoCommitException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
+    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
 
         String expandedIntegrationBranch;
         try {

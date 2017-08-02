@@ -62,14 +62,12 @@ public class GitBridge extends AbstractSCMBridge {
      * @param integrationStrategy The selected IntegrationStrategy
      * @param integrationBranch The Integration Branch name
      * @param repoName The Integration Repository name
-     * @param allowedNoCommits The Integration Repository name
      */
     @DataBoundConstructor
-    public GitBridge(IntegrationStrategy integrationStrategy, final String integrationBranch, final String repoName, final boolean integrationFailedStatusUnstable, final Integer allowedNoCommits) {
+    public GitBridge(IntegrationStrategy integrationStrategy, final String integrationBranch, final String repoName, final boolean integrationFailedStatusUnstable){
         super(integrationStrategy, integrationFailedStatusUnstable);
         this.integrationBranch = integrationBranch;
         this.repoName = repoName;
-        this.allowedNoCommits = allowedNoCommits;
     }
 
     /***
@@ -274,8 +272,9 @@ public class GitBridge extends AbstractSCMBridge {
             Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
             String text;
             if (!StringUtils.isBlank(build.getDescription())) {
-                text = String.format("%s\n%s", build.getDescription(),
-                        "(" + getRequiredResult() + "):" + gitDataBranch.getName() + " -> " + integrationBranch);
+                text = String.format("%s\n%s",
+                        build.getDescription(),
+                        gitDataBranch.getName() + " -> " + integrationBranch);
             } else {
                 text = String.format("%s", gitDataBranch.getName() + " -> " + integrationBranch);
             }
@@ -470,8 +469,7 @@ public class GitBridge extends AbstractSCMBridge {
             LOGGER.log(Level.SEVERE, logMessage, e);
             throw new AbortException(e.getMessage());
         }
-        if ( e instanceof IntegrationFailedException ||
-                e instanceof IntegrationAllowedNoCommitException ) {
+        if ( e instanceof IntegrationFailedException  ) {
             String logMessage = String.format("%s - setUp() - %s%n%s%s",
                     LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage(),
                     "\n" +

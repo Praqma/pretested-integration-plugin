@@ -23,7 +23,7 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
      * @throws NothingToDoException when there's nothing to do
      * @throws UnsupportedConfigurationException when part of the configuration isn't supported
      */
-    public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException;
+    public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException;
 
     /**
     * {@inheritDoc}

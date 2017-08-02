@@ -27,14 +27,14 @@ branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq"
 
 for branch_prefix in ${branch_prefixes} ; do
     git push origin -f master:refs/heads/master${branch_prefix}
+    echo "test FF" >> README.md && \
+        git add . && git commit -m "test FF" && \
+        git push origin HEAD:refs/heads/ready${branch_prefix}/test-01-ff && \
+        git reset --hard init
 done
 
 for branch_prefix in ${branch_prefixes} ; do
   sleep ${sleep_sec}
-  echo "test FF" >> README.md && \
-        git add . && git commit -m "test FF" && \
-        git push origin HEAD:refs/heads/ready${branch_prefix}/test-01-ff && \
-        git reset --hard init
   echo "test integration failure (Conflict)" >> README.md && \
         git add . && git commit -m "test conflicts" && \
         git push origin HEAD:refs/heads/ready${branch_prefix}/test-02-merge-conflicts && \

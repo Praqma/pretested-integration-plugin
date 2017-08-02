@@ -287,9 +287,9 @@ public class TestUtilsFactory {
 
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranch, repoName, false, null);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranch, repoName, false);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranch, repoName, false, null);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranch, repoName, false);
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
@@ -314,9 +314,9 @@ public class TestUtilsFactory {
         FreeStyleProject project = rule.createFreeStyleProject();
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName, false, null);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName, false);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName, false, null);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName, false );
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
@@ -344,9 +344,9 @@ public class TestUtilsFactory {
         FreeStyleProject project = rule.createFreeStyleProject();
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoNamePluginConfig, false, null);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoNamePluginConfig, false);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoNamePluginConfig, false, null);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoNamePluginConfig, false);
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));

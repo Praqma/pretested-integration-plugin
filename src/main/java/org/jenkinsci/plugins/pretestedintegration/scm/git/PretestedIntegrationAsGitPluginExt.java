@@ -17,8 +17,7 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -49,16 +48,15 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * @param gitIntegrationStrategy The selected IntegrationStrategy
      * @param integrationBranch The Integration Branch name
      * @param repoName The Integration Repository name
-     * @param allowedNoCommits The amount of commits allowed for integration
      */
     @DataBoundConstructor
-    public PretestedIntegrationAsGitPluginExt(IntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName, boolean integrationFailedStatusUnstable, String allowedNoCommits) {
+    public PretestedIntegrationAsGitPluginExt(IntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName, boolean integrationFailedStatusUnstable) {
         this.gitBridge = new GitBridge(
                 gitIntegrationStrategy,
                 integrationBranch,
                 repoName,
-                integrationFailedStatusUnstable,
-                Integer.valueOf(allowedNoCommits));
+                integrationFailedStatusUnstable
+        );
     }
 
     @DataBoundSetter
@@ -73,13 +71,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             return gitBridge.getIntegrationFailedStatusUnstable();
         }
     }
-    public String getAllowedNoCommits(){
-        if ( gitBridge == null ) {
-            return "";
-        } else {
-            return Integer.toString(gitBridge.getAllowedNoCommits());
-        }
-    }
+
     public String getIntegrationBranch(){
         if ( gitBridge == null ) {
             return "master";
@@ -133,7 +125,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
             ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
-        } catch ( IntegrationAllowedNoCommitException | IntegrationFailedException e ) {
+        } catch ( IntegrationFailedException e ) {
                 gitBridge.handleIntegrationExceptionsGit(run, listener, e, git);
         } catch (Exception e) {
             // Get back to the triggered state, before handling the exceptions

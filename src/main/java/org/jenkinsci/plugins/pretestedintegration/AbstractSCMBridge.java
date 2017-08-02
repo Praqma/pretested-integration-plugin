@@ -32,9 +32,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public final IntegrationStrategy integrationStrategy;
 
     protected boolean integrationFailedStatusUnstable;
-    protected Integer allowedNoCommits;
-
-
 
     protected final static String LOG_PREFIX = "[PREINT] ";
 
@@ -57,14 +54,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
         this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
     }
 
-    public Integer getAllowedNoCommits() {
-        return this.allowedNoCommits;
-    }
-
-    public void setAllowedNoCommits( Integer allowedNoCommits) {
-        this.allowedNoCommits = allowedNoCommits;
-    }
-
     public void handleIntegrationExceptions(Run run, TaskListener listener, Exception e) throws IOException, InterruptedException {
         if ( e instanceof NothingToDoException ) {
             run.setResult(Result.NOT_BUILT);
@@ -73,8 +62,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
             LOGGER.log(Level.SEVERE, logMessage, e);
             throw new AbortException(e.getMessage());
         }
-        if ( e instanceof IntegrationFailedException ||
-                e instanceof IntegrationAllowedNoCommitException ) {
+        if ( e instanceof IntegrationFailedException  ) {
             String logMessage = String.format("%s - setUp() - %s%n%s%s",
                     LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage(),
                             "\n" +
@@ -185,7 +173,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws IntegrationFailedException
      * @throws UnsupportedConfigurationException
      */
-    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
+    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException, UnsupportedConfigurationException {
         integrationStrategy.integrate(build, launcher, listener, this);
     }
 
@@ -202,9 +190,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws NothingToDoException
      * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException
      * @throws UnsupportedConfigurationException
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException
+     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException,UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException,UnsupportedConfigurationException {
         mergeChanges(build, launcher, listener);
     }
 

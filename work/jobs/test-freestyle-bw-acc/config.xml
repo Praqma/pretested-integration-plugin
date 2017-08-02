@@ -81,7 +81,6 @@ fi</command>
       <scmBridge class="org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge">
         <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
         <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
-        <allowedNoCommits>1</allowedNoCommits>
         <repoName>origin</repoName>
         <integrationBranch>masterFsBwAcc</integrationBranch>
       </scmBridge>

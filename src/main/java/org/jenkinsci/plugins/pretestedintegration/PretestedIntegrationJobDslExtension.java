@@ -55,7 +55,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
      */
     @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.0")
     @DslExtensionMethod(context = WrapperContext.class)
-    public Object pretestedIntegration(String strategy, String branch, String repository, boolean integrationFailedStatusUnstable ,String allowedNoCommits) {
+    public Object pretestedIntegration(String strategy, String branch, String repository, boolean integrationFailedStatusUnstable) {
         checkArgument(strategies.contains(strategy), "Strategy must be one of " + strategies);
         IntegrationStrategy integrationStrategy = null;
         switch (strategy) {
@@ -67,7 +67,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
                 break;
         }
 
-        return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository, integrationFailedStatusUnstable, Integer.getInteger(allowedNoCommits)));
+        return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository, integrationFailedStatusUnstable));
     }
 
     /**

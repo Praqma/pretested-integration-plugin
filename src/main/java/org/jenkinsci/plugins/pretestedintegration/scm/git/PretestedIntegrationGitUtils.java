@@ -6,9 +6,7 @@ import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationAllowedNoCommitException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -87,23 +85,6 @@ public class PretestedIntegrationGitUtils {
             return relevantBuildData.iterator().next();
         }
     }
-
-    public static void verdictNoOfCommits(int commitCount, Integer allowedNoCommits, PrintStream logger ) throws NothingToDoException, UnsupportedConfigurationException, IntegrationAllowedNoCommitException {
-        if (commitCount == 0) {
-            String text = "Nothing to do!!";
-            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
-            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
-            throw new NothingToDoException();
-        }
-
-        if ( allowedNoCommits != null && commitCount > allowedNoCommits) {
-            String text = "Only " + allowedNoCommits + " commit(s) allowed. Total commits found: " + commitCount;
-            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
-            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
-            throw new IntegrationAllowedNoCommitException();
-        }
-    }
-
 
     /***
      * Returns the relevant BuildDatas from the supplied list of BuildDatas.
