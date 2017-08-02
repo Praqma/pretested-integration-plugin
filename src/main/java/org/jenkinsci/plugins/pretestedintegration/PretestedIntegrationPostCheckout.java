@@ -116,7 +116,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 } catch (NullPointerException | IllegalArgumentException e) {
                     listener.getLogger().println(String.format("Caught %s during post-checkout. Failing build.", e.getClass().getSimpleName()));
                     e.printStackTrace(listener.getLogger());
-                    bridge.updateBuildDescription((Run)build);
+                    bridge.updateBuildDescription(build, launcher, listener);
                     throw new AbortException("Unexpected error. Trace written to log.");
                 } catch (IOException e) {
                     //All our known errors are IOExceptions. Just print the message, log the error.
@@ -126,12 +126,12 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                     throw new AbortException(e.getMessage());
                 }
             }
-            bridge.updateBuildDescription((Run)build);
+            bridge.updateBuildDescription(build, launcher, listener);
             return true;
         } else { /* */
             if (proj instanceof MatrixConfiguration) {
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
-                bridge.updateBuildDescription(build, launcher, listener);
+  TODO:              bridge.updateBuildDescription(build, launcher, listener);
             } else {
                 listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
                 try {

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import java.util.regex.Pattern;
@@ -50,27 +51,14 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * @param repoName The Integration Repository name
      */
     @DataBoundConstructor
-    public PretestedIntegrationAsGitPluginExt(IntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName, boolean integrationFailedStatusUnstable) {
+    public PretestedIntegrationAsGitPluginExt(IntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName) {
         this.gitBridge = new GitBridge(
                 gitIntegrationStrategy,
                 integrationBranch,
-                repoName,
-                integrationFailedStatusUnstable
+                repoName
         );
     }
 
-    @DataBoundSetter
-    public void setIntegrationFailedStatusUnstable(boolean integrationFailedStatusUnstable){
-        this.gitBridge.setIntegrationFailedStatusUnstable(integrationFailedStatusUnstable);
-    }
-
-    public boolean getIntegrationFailedStatusUnstable(){
-        if ( gitBridge == null ) {
-            return false;
-        } else {
-            return gitBridge.getIntegrationFailedStatusUnstable();
-        }
-    }
 
     public String getIntegrationBranch(){
         if ( gitBridge == null ) {
@@ -125,11 +113,26 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
             ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
-        } catch ( IntegrationFailedException e ) {
-                gitBridge.handleIntegrationExceptionsGit(run, listener, e, git);
-        } catch (Exception e) {
-            // Get back to the triggered state, before handling the exceptions
-            gitBridge.handleIntegrationExceptionsGit(run, listener, e, git);
+
+        } catch (NothingToDoException e) {
+            run.setResult(Result.NOT_BUILT);
+            String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
+            listener.getLogger().println(logMessage);
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+        } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
+            run.setResult(Result.FAILURE);
+            String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
+            listener.getLogger().println(logMessage);
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+        } catch (IOException | InterruptedException e) {
+            run.setResult(Result.FAILURE);
+            String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
+            LOGGER.log(Level.SEVERE, logMessage, e);
+            listener.getLogger().println(logMessage);
+            e.printStackTrace(listener.getLogger());
+            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
         }
 
         if ( run.getResult() == null || run.getResult() == Result.SUCCESS ) {
@@ -137,12 +140,9 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             run.addAction(new PretestTriggerCommitAction(new Branch(triggeredBranch.getName(),triggeredBranch.getSHA1())));
             return mergeRevision;
         } else {
-            // We could not integrate, but we want to update the branch name accordingly. Checkout the triggered branch
-            // branch again before pushing
+            // We could not integrate, but we must return a revision for recording it so it does not retrigger
             git.checkout().ref(triggeredBranch.getName()).execute();
-
             run.addAction(new PretestTriggerCommitAction(new Branch(triggeredBranch.getName(),triggeredBranch.getSHA1())));
-
             return triggeredRevision;
         }
     }

@@ -27,7 +27,6 @@
       <org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt plugin="pretested-integration@2.4.2-SNAPSHOT">
         <gitBridge>
           <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
-          <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
           <repoName>origin</repoName>
           <integrationBranch>masterFsExtAcc</integrationBranch>
         </gitBridge>

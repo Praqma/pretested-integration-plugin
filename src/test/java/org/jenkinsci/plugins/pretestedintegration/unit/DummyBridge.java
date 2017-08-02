@@ -11,7 +11,7 @@ import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 public class DummyBridge extends AbstractSCMBridge {
 
     public DummyBridge(IntegrationStrategy behaves) {
-        super(behaves,false);
+        super(behaves);
     }
 
     @Override

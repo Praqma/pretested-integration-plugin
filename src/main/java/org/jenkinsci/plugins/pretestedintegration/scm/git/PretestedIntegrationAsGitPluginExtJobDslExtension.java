@@ -52,12 +52,11 @@ public class PretestedIntegrationAsGitPluginExtJobDslExtension extends ContextEx
      * @param strategy the Integration Strategy to use
      * @param branch the Integration Branch
      * @param repository the repository
-     * @param integrationFailedStatusUnstable
      * @return a configured PretestedIntegrationBuildWrapper
      */
     @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.0")
     @DslExtensionMethod(context = WrapperContext.class)
-    public Object pretestedIntegrationAsGitPluginExt(String strategy, String branch, String repository, boolean integrationFailedStatusUnstable) {
+    public Object pretestedIntegrationAsGitPluginExt(String strategy, String branch, String repository) {
         checkArgument(strategies.contains(strategy), "Strategy must be one of " + strategies);
         IntegrationStrategy integrationStrategy = null;
         switch (strategy) {
@@ -68,7 +67,7 @@ public class PretestedIntegrationAsGitPluginExtJobDslExtension extends ContextEx
                 integrationStrategy = new SquashCommitStrategy();
                 break;
         }
-        return new PretestedIntegrationAsGitPluginExt((GitIntegrationStrategy)integrationStrategy, branch, repository, integrationFailedStatusUnstable );
+        return new PretestedIntegrationAsGitPluginExt((GitIntegrationStrategy)integrationStrategy, branch, repository );
     }
 
     /**

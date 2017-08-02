@@ -31,27 +31,15 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      */
     public final IntegrationStrategy integrationStrategy;
 
-    protected boolean integrationFailedStatusUnstable;
-
     protected final static String LOG_PREFIX = "[PREINT] ";
 
     /**
      * Constructor for the SCM bridge.
      *
      * @param integrationStrategy The integration strategy to apply when merging commits.
-     * @param integrationFailedStatusUnstable
      */
-    public AbstractSCMBridge(IntegrationStrategy integrationStrategy, boolean integrationFailedStatusUnstable ) {
+    public AbstractSCMBridge(IntegrationStrategy integrationStrategy ) {
         this.integrationStrategy = integrationStrategy;
-        this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
-    }
-
-    public boolean getIntegrationFailedStatusUnstable() {
-        return this.integrationFailedStatusUnstable;
-    }
-
-    public void setIntegrationFailedStatusUnstable( boolean integrationFailedStatusUnstable) {
-        this.integrationFailedStatusUnstable = integrationFailedStatusUnstable;
     }
 
     public void handleIntegrationExceptions(Run run, TaskListener listener, Exception e) throws IOException, InterruptedException {
@@ -63,28 +51,15 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
             throw new AbortException(e.getMessage());
         }
         if ( e instanceof IntegrationFailedException  ) {
-            String logMessage = String.format("%s - setUp() - %s%n%s%s",
-                    LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage(),
-                            "\n" +
-                            "NOTE:You have configured the Pretested plugin to set the status to UNSTABLE. \n" +
-                            "The Jenkins logic is to process the build steps in UNSTABLE mode.\n" +
-                            "Consider to configure/guard your build steps with: \n" +
-                            "   https://wiki.jenkins-ci.org/display/JENKINS/Conditional+BuildStep+Plugin \n" +
-                            "and test for build status.\n" +
-                            "This will free up time/resources as there where content issues.\n" +
-                            "The publisher part is only executed if the build is successful - hence no consequences\n" +
-                            "of handling it either way..\n" +
-                            "\n" );
-            if (getIntegrationFailedStatusUnstable()) {
-
-                run.setResult(Result.UNSTABLE);
-            } else {
-                run.setResult(Result.FAILURE);
-                throw new AbortException(e.getMessage());
-            }
+            String logMessage = String.format(
+                    "%s - setUp() - %s%n%s",
+                    LOG_PREFIX,
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
-            return;
+            run.setResult(Result.FAILURE);
+            throw new AbortException(e.getMessage());
         }
         if ( e instanceof UnsupportedConfigurationException ||
                 e instanceof IntegrationUnknownFailureException ||
@@ -133,7 +108,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Make sure the SCM is checked out on the given integrationBranch.
      *
      * @param build    The Build
-     * @param launcher The Launcher
      * @param listener The BuildListener
      * @param branch   The integrationBranch to check out
      * @throws EstablishingWorkspaceFailedException
@@ -207,29 +181,6 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @throws java.lang.InterruptedException
      */
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-    }
-
-    /**
-     * Updates the description of the Jenkins build.
-     *
-     * @param run    The Build
-     * @throws NothingToDoException
-     * @throws UnsupportedConfigurationException
-     */
-    public void updateBuildDescription(Run<?, ?> run) throws NothingToDoException, UnsupportedConfigurationException, IOException {
-    }
-
-    /**
-     *
-     * @param tBranch the branch that triggered this build
-     * @return a build description
-     * @throws NothingToDoException
-     * @throws UnsupportedConfigurationException
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    public String createBuildDescription(String tBranch) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException{
-       return "";
     }
 
     /**

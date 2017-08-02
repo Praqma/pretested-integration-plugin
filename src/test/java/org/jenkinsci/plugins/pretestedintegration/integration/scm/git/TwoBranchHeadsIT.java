@@ -183,7 +183,7 @@ public class TwoBranchHeadsIT {
     private FreeStyleProject configurePretestedIntegrationPlugin(IntegrationStrategy integrationStrategy, String repositoryUrl) throws IOException, ANTLRException, InterruptedException {
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
 
-        GitBridge gitBridge = new GitBridge(integrationStrategy, "master", "origin", false);
+        GitBridge gitBridge = new GitBridge(integrationStrategy, "master", "origin");
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());

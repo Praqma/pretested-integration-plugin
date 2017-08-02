@@ -21,7 +21,7 @@ public class PretestedIntegrationJobDslExtensionTest {
      */
     @Test
     public void testDslWithSquash() throws Exception {
-        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("SQUASHED", "integrationBranch", "repo", false);
+        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("SQUASHED", "integrationBranch", "repo");
         assertThat(node, instanceOf(PretestedIntegrationBuildWrapper.class));
         PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper) node;
 
@@ -39,7 +39,7 @@ public class PretestedIntegrationJobDslExtensionTest {
      */
     @Test
     public void testDslWithAccumulated() throws Exception {
-        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("ACCUMULATED", "integrationBranch", "repo", false);
+        Object node = new PretestedIntegrationJobDslExtension().pretestedIntegration("ACCUMULATED", "integrationBranch", "repo");
         assertThat(node, instanceOf(PretestedIntegrationBuildWrapper.class));
         PretestedIntegrationBuildWrapper wrapper = (PretestedIntegrationBuildWrapper) node;
 
@@ -57,6 +57,6 @@ public class PretestedIntegrationJobDslExtensionTest {
      */
     @Test(expected = DslScriptException.class)
     public void testDslWithInvalidStrategy() throws Exception {
-        new PretestedIntegrationJobDslExtension().pretestedIntegration("b0rk", "integrationBranch", "repo", false);
+        new PretestedIntegrationJobDslExtension().pretestedIntegration("b0rk", "integrationBranch", "repo");
     }
 }

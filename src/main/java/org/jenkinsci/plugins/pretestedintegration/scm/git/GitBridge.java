@@ -64,8 +64,8 @@ public class GitBridge extends AbstractSCMBridge {
      * @param repoName The Integration Repository name
      */
     @DataBoundConstructor
-    public GitBridge(IntegrationStrategy integrationStrategy, final String integrationBranch, final String repoName, final boolean integrationFailedStatusUnstable){
-        super(integrationStrategy, integrationFailedStatusUnstable);
+    public GitBridge(IntegrationStrategy integrationStrategy, final String integrationBranch, final String repoName){
+        super(integrationStrategy);
         this.integrationBranch = integrationBranch;
         this.repoName = repoName;
     }
@@ -266,44 +266,26 @@ public class GitBridge extends AbstractSCMBridge {
      */
     @Override
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-        BuildData gitBuildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
-
-        if (gitBuildData != null) {
-            Branch gitDataBranch = gitBuildData.lastBuild.revision.getBranches().iterator().next();
-            String text;
+        Branch triggerBranch = build.getAction(PretestTriggerCommitAction.class).triggerBranch;
+        if (triggerBranch != null) {
+            String postfixText = "";
+            Result result = build.getResult();
+            if ( result != null && result.isBetterOrEqualTo(getRequiredResult())) {
+                postfixText = " -> " + integrationBranch;
+            }
+            String finalDescription;
             if (!StringUtils.isBlank(build.getDescription())) {
-                text = String.format("%s\n%s",
+                finalDescription = String.format("%s\n%s",
                         build.getDescription(),
-                        gitDataBranch.getName() + " -> " + integrationBranch);
+                        triggerBranch.getName() + postfixText );
             } else {
-                text = String.format("%s", gitDataBranch.getName() + " -> " + integrationBranch);
+                finalDescription = String.format("%s", triggerBranch.getName() + postfixText);
             }
             try {
-                build.setDescription(text);
+                build.setDescription(finalDescription);
             } catch (Exception ex) {
                 LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */ }
         }
-    }
-
-    @Override
-    public void updateBuildDescription(Run<?, ?> run) throws IOException {
-        try {
-        Branch triggerBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch;
-        String text = createBuildDescription(triggerBranch.getName());
-        if (!StringUtils.isBlank(run.getDescription())) {
-            text = run.getDescription() + "\n" + text;
-        }
-            run.setDescription(text);
-        } catch (Exception ex) {
-            LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */ }
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public String createBuildDescription(String triggerBranchName) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-        return String.format("%s", triggerBranchName + " -> " + integrationBranch);
     }
 
     /**
@@ -470,27 +452,16 @@ public class GitBridge extends AbstractSCMBridge {
             throw new AbortException(e.getMessage());
         }
         if ( e instanceof IntegrationFailedException  ) {
-            String logMessage = String.format("%s - setUp() - %s%n%s%s",
-                    LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage(),
-                    "\n" +
-                            "NOTE:You have configured the Pretested plugin to set the status to UNSTABLE. \n" +
-                            "The Jenkins logic is to process the build steps in UNSTABLE mode.\n" +
-                            "Consider to configure/guard your build steps with: \n" +
-                            "   https://wiki.jenkins-ci.org/display/JENKINS/Conditional+BuildStep+Plugin \n" +
-                            "and test for build status.\n" +
-                            "This will free up time/resources as there where content issues.\n" +
-                            "The publisher part is only executed if the build is successful - hence no consequences\n" +
-                            "of handling it either way..\n" +
-                            "\n" );
-            if (getIntegrationFailedStatusUnstable()) {
-                run.setResult(Result.UNSTABLE);
-            } else {
-                run.setResult(Result.FAILURE);
-                throw new AbortException(e.getMessage());
-            }
+            String logMessage = String.format(
+                    "%s - setUp() - %s%n%s",
+                    LOG_PREFIX,
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
+            );
+            run.setResult(Result.FAILURE);
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
-            return;
+            throw new AbortException(e.getMessage());
         }
         if ( e instanceof UnsupportedConfigurationException ||
                 e instanceof IntegrationUnknownFailureException ||

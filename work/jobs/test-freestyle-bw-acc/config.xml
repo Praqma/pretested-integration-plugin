@@ -80,7 +80,6 @@ fi</command>
     <org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper plugin="pretested-integration@2.4.2-SNAPSHOT">
       <scmBridge class="org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge">
         <integrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
-        <integrationFailedStatusUnstable>true</integrationFailedStatusUnstable>
         <repoName>origin</repoName>
         <integrationBranch>masterFsBwAcc</integrationBranch>
       </scmBridge>

@@ -94,9 +94,9 @@ public class GitProjectBuilder {
         
         GitBridge gitBridge;
         if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranchName, repoName, false);
+            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranchName, repoName);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranchName, repoName, false);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranchName, repoName);
         }
         
         if (jobType.equals(FreeStyleProject.class)) {

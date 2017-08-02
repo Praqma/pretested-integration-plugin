@@ -23,7 +23,7 @@ public class DummySCM extends AbstractSCMBridge {
 
     @DataBoundConstructor
     public DummySCM(IntegrationStrategy behaves) {
-        super(behaves, false);
+        super(behaves);
     }
 
     @Override
