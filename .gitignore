@@ -18,5 +18,7 @@
 .idea/
 *.iml
 
-# keys for testing #
+# testing #
 /src/test/resources/keys/*
+**/*.git
+/test-*/

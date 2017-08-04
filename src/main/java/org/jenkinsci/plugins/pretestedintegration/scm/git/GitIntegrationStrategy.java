@@ -1,15 +1,14 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -17,11 +16,13 @@ import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 
 /**
  * Abstract IntegrationStrategy containing common logic for Git integration strategies.
  */
-public abstract class GitIntegrationStrategy extends IntegrationStrategy {
+public abstract class GitIntegrationStrategy extends IntegrationStrategy implements IntegrationStrategyAsGitPluginExt {
 
     private static final Logger LOGGER = Logger.getLogger(GitIntegrationStrategy.class.getName());
 
@@ -38,107 +39,108 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy {
     }
 
     /**
-     * Attempts to rebase the ready branch onto the integration branch.
-     * Only when the ready branch consists of a single commit.
+     * Attempts to rebase the ready integrationBranch onto the integration integrationBranch.
+     * Only when the ready integrationBranch consists of a single commit.
      *
-     * @param build The Build
-     * @param launcher The Launcher
-     * @param listener The BuildListener
-     * @param bridge The GitBridge
-     * @return true if the rebase was a success, false if the branch isn't
+     * @param commitId The sha1 from the polled integrationBranch
+     * @param client The GitClient
+     * @param integrationBranch The integrationBranch which the commitId need to be merged to
+     * @return true if the rebase was a success, false if the integrationBranch isn't
      * suitable for a rebase
      * @throws IntegrationFailedException When commit counting or rebasing fails
      */
-    protected boolean tryRebase(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegrationFailedException {
-        LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryRebase"));
+    protected boolean tryRebase(ObjectId commitId, GitClient client, PrintStream logger, String integrationBranch ) throws IntegrationFailedException, IntegrationUnknownFailureException {
+        LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryRebase");
+        logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryRebase");
 
         //Get the commit count
         int commitCount;
         try {
-            commitCount = bridge.countCommits(build, listener);
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Branch commit count: " + commitCount));
+            commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, integrationBranch);
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Branch commit count: " + commitCount);
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Branch commit count: " + commitCount);
         } catch (IOException | InterruptedException ex) {
-            throw new IntegrationFailedException("Failed to count commits.", ex);
+            throw new IntegrationUnknownFailureException("Failed to count commits.", ex);
         }
 
         //Only rebase if it's a single commit
         if (commitCount != 1) {
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Not attempting rebase. Exiting tryRebase."));
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Not attempting rebase. Exiting tryRebase.");
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Not attempting rebase. Exiting tryRebase.");
             return false;
         }
 
         //Rebase the commit
         try {
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting rebase."));
-            GitClient client = bridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-            ObjectId commitId = bridge.findRelevantBuildData(build, listener).lastBuild.revision.getSha1();
-            String expandedBranch = bridge.getExpandedBranch(build.getEnvironment(listener));
-
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting rebase.");
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting rebase.");
             //Rebase the commit, then checkout master for a fast-forward merge.
             client.checkout().ref(commitId.getName()).execute();
-            client.rebase().setUpstream(expandedBranch).execute();
+            client.rebase().setUpstream(integrationBranch).execute();
             ObjectId rebasedCommit = client.revParse("HEAD");
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebase successful. Attempting fast-forward merge."));
-            client.checkout().ref(expandedBranch).execute();
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebase successful. Attempting fast-forward merge.");
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebase successful. Attempting fast-forward merge.");
+
+            client.checkout().ref(integrationBranch).execute();
+            ObjectId integrationBranchCommitBefore = client.revParse("HEAD");
             client.merge().setRevisionToMerge(rebasedCommit).setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).execute();
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Fast-forward merge successful. Exiting tryRebase."));
-            return true;
-        } catch (GitException | IOException | InterruptedException ex) {
+            if ( integrationBranchCommitBefore.equals(rebasedCommit) ){
+                String logMessage = String.format("%sThe integration branch did not change during the rebase of development branch on top of it.%n" +
+                        "There are two known reasons:%n" +
+                        "A) You are trying to integrate a change that was already integrated.%n" +
+                        "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a rebase. If you REALLY want the empty commit to me accepted, you can rebase your single empty commit on top of the integration branch.%n", PretestedIntegrationBuildWrapper.LOG_PREFIX);
+                LOGGER.log(Level.SEVERE, logMessage);
+                throw new IntegrationFailedException(logMessage);
+            } else {
+                LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebasing successful.");
+                logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Rebasing successful.");
+                return true;
+            }
+        } catch (GitException | InterruptedException ex) {
             throw new IntegrationFailedException("Failed to rebase commit.", ex);
         }
     }
 
     /**
-     * Attempts to fast-forward merge the integration branch to the ready branch.
-     * Only when the ready branch consists of a single commit.
+     * Attempts to fast-forward merge the integration integrationBranch to the ready integrationBranch.
+     * Only when the ready integrationBranch consists of a single commit.
      *
-     * @param build The Build
-     * @param launcher The Launcher
-     * @param listener The BuildListener
-     * @param bridge The GitBridge
-     * @return true if the FF merge was a success, false if the branch isn't
+     * @param commitId The commit
+     * @param logger The logger for console logging
+     * @param client The GitClient
+     * @return true if the FF merge was a success, false if the integrationBranch isn't
      * suitable for a FF merge.
      * @throws IntegrationFailedException When commit counting fails
      */
-    protected boolean tryFastForward(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, GitBridge bridge) throws IntegrationFailedException{
-        LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryFastForward"));
+    protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client, int commitCount ) throws IntegrationFailedException, NothingToDoException {
+        LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryFastForward");
 
-        //Get the commit count
-        int commitCount;
-        try {
-            commitCount = bridge.countCommits(build, listener);
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Branch commit count: " + commitCount));
-        } catch (IOException | InterruptedException ex) {
-            throw new IntegrationFailedException("Failed to count commits.", ex);
-        }
-
-        //Only fast forward if it's a single commit
-        if (commitCount != 1) {
-            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Not attempting fast forward. Exiting tryFastForward."));
+        if ( commitCount == 1) {
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Try FF as there is only one commit");
+        } else {
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Skip FF as there are several commits");
             return false;
         }
 
         //FF merge the commit
         try {
-            LOGGER.log(Level.INFO, String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting rebase."));
-            GitClient client = bridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-            ObjectId commitId = bridge.findRelevantBuildData(build, listener).lastBuild.revision.getSha1();
+            LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Attempting merge with FF.");
             client.merge().setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).setRevisionToMerge(commitId).execute();
-            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "FF merge successful."));
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "FF merge successful.");
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + " Exiting tryFastForward.");
             return true;
-        } catch (GitException | IOException | InterruptedException ex) {
-            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "FF merge failed."));
+        } catch (GitException | InterruptedException ex) {
+            logger.println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "FF merge failed.");
             LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + " Exiting tryFastForward.");
             return false;
         }
     }
 
     /**
-     * Checks whether or not we can find the given remote branch.
+     * Checks whether or not we can find the given remote integrationBranch.
      * @param client the Git Client
-     * @param branch the branch to look for
-     * @return True if the branch was found, otherwise False.
+     * @param branch the integrationBranch to look for
+     * @return True if the integrationBranch was found, otherwise False.
      * @throws IntegrationFailedException when the Git call failed unexpectedly
      */
     protected boolean containsRemoteBranch(GitClient client, Branch branch) throws IntegrationFailedException {

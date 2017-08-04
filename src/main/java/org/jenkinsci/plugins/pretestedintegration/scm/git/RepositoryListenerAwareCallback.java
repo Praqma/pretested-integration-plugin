@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import org.eclipse.jgit.lib.Repository;
@@ -15,15 +14,12 @@ public abstract class RepositoryListenerAwareCallback<T> implements RepositoryCa
     /**
      * The TaskListener for use in invoke
      */
-    public final TaskListener listener;
+//    public final TaskListener listener;
 
     /**
      * Constructor for a RepositoryListenerAwareCallback
-     * @param listener The TaskListener
      */
-    public RepositoryListenerAwareCallback(TaskListener listener) {
-        this.listener = listener;
-    }
+    public RepositoryListenerAwareCallback() {}
 
     /**
      * {@inheritDoc }

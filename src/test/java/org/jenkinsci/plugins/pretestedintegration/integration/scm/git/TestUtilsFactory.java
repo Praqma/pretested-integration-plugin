@@ -104,7 +104,7 @@ public class TestUtilsFactory {
     }
 
     // Count commits on the branch with name branch.
-    // Jgit example code modified from here: 
+    // Jgit example code modified from here:
     // https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/api/WalkRev.java
     public static int countCommitsOnBranch(Git git, String branch) throws IOException {
 
@@ -316,7 +316,7 @@ public class TestUtilsFactory {
         if (type == STRATEGY_TYPE.SQUASH) {
             gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName );
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
