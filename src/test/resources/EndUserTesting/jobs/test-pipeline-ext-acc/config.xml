@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1.14.2">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@1.14.2">
+    <script>node {
+   // Mark the code checkout &apos;stage&apos;....
+   stage &apos;Checkout&apos;
+
+   // Get some code from a GitHub repository
+   checkout([
+        $class: &apos;GitSCM&apos;,
+        branches: [[name: &apos;*/readyPipe/*&apos;]],
+        userRemoteConfigs: [[
+            name: &apos;origin&apos;,
+            url: &apos;git@github.com:bicschneider/test-git-phlow-plugin.git&apos;
+        ]],
+        extensions: [
+        [
+            $class: &apos;PretestedIntegrationAsGitPluginExt&apos;,
+                gitIntegrationStrategy : [ $class: &apos;AccumulatedCommitStrategy&apos; ], 
+                integrationBranch : &apos;masterPipe&apos;,
+                repoName: &apos;origin&apos;
+        ],[
+            $class: &apos;ChangelogToBranch&apos;, options: [compareRemote: &apos;origin&apos;, compareTarget: &apos;masterPipe&apos;]
+            ]
+        ]
+    ])
+    try { 
+        sh &apos;&apos;&apos;
+        if [ -e ./build_failed.md ]; then
+          exit 1
+        fi
+        &apos;&apos;&apos;
+    } catch(Exception e) {
+        currentBuild.result = &apos;UNSTABLE&apos;
+    }
+    step([$class: &apos;PretestedIntegrationPostCheckout&apos;])
+}</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec>* * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
+</flow-definition>

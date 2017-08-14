@@ -18,8 +18,7 @@ git add .
 git commit -m "init"
 git tag -a -m "init" init
 
-#branch_prefixes="FS BW BWSquash Matrix Multijob"
-branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq"
+branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq Pipe"
 # TODO. Add test for pushing to integrationBranch
 
 function resetToInit(){
