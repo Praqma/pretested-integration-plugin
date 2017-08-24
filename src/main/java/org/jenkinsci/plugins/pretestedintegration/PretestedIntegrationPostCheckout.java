@@ -1,41 +1,27 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import hudson.*;
 import hudson.matrix.*;
 import hudson.model.*;
 import hudson.plugins.git.*;
-import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.io.Writer;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jenkins.tasks.SimpleBuildStep;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.gitclient.*;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestTriggerCommitAction;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.CheckForNull;
 
 /**
  * The publisher determines what will happen when the build has been run.
@@ -44,6 +30,7 @@ import javax.annotation.CheckForNull;
 public class PretestedIntegrationPostCheckout extends Recorder implements Serializable, MatrixAggregatable, SimpleBuildStep {
 
     private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
+    final static String LOG_PREFIX = "[PREINT] ";
 
     /**
      * Constructor for PretestedIntegrationPostCheckout
@@ -100,7 +87,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         AbstractProject<?, ?> proj = build.getProject();
         if ( ! ( build.getProject().getScm() instanceof GitSCM) ) {
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Unsupported SCM type: expects Git");
+            listener.getLogger().println(LOG_PREFIX + "Unsupported SCM type: expects Git");
             return false;
         }
         GitSCM client = (GitSCM)build.getProject().getScm();
@@ -109,9 +96,9 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
 
         if ( client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class ) != null ) {
             if (proj instanceof MatrixConfiguration) {
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
+                listener.getLogger().println(LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
             } else {
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
+                listener.getLogger().println(LOG_PREFIX + "Performing pre-verified post build steps");
                 try {
                     bridge.handlePostBuild(build, launcher, listener );
                 } catch (NullPointerException | IllegalArgumentException e) {
@@ -131,10 +118,10 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
             return true;
         } else { /* */
             if (proj instanceof MatrixConfiguration) {
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
+                listener.getLogger().println(LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
                 bridge.updateBuildDescription(build, launcher, listener);
             } else {
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Performing pre-verified post build steps");
+                listener.getLogger().println(LOG_PREFIX + "Performing pre-verified post build steps");
                 try {
                     bridge.handlePostBuild(build, launcher, listener);
                 } catch (NullPointerException | IllegalArgumentException e) {
@@ -171,27 +158,46 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     @Override
     public void perform(Run<?,?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
         Result result = run.getResult();
+        Job project = run.getParent();
 
         String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
-
-        GitBridge bridge = new GitBridge(new AccumulatedCommitStrategy(),"masterPipe","origin");
+        String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
+        String integrationRepo= run.getAction(PretestTriggerCommitAction.class).integrationRepo;
+        String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
 
         try {
-            // TODO: Credentials
-            GitClient client = new GitSCM("origin").createClient(listener,run.getEnvironment(listener),run,ws);
+            // The choice of 'jgit' or 'git'. It must be set though..
+            GitClient client = Git.with(listener,run.getEnvironment(listener)).in(ws).using("git").getClient();
 
-             if (result == null || result.isBetterOrEqualTo(result.SUCCESS)) {
-                bridge.pushToIntegrationBranchGit(run,listener,client);
-                bridge.deleteBranch(run,listener,client,triggeredBranch,"origin");
+            if (ucCredentialsId != null) {
+/* TODO: What is this for? Copied from GitSCM..
+                String url = "origin"; // getParameterString(uc.getUrl(), environment);
+
+                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class,project,
+                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build());
+                CredentialsMatcher ucMatcher = CredentialsMatchers.withId(ucCredentialsId);
+                CredentialsMatcher idMatcher = CredentialsMatchers.allOf(ucMatcher, GitClient.CREDENTIALS_MATCHER);
+                StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
+                */
+                StandardUsernameCredentials credentials = CredentialsProvider.findCredentialById(ucCredentialsId, StandardUsernameCredentials.class, run, Collections.EMPTY_LIST);
+
+                if (credentials != null) {
+                    client.addCredentials(integrationRepo, credentials);
+                }
+            }
+
+             if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult()) ) {
+                 GitBridge.pushToIntegrationBranchGit(run,listener,client,integrationRepo,integrationBranch);
+                 GitBridge.deleteBranch(run,listener,client,triggeredBranch,integrationRepo);
             } else {
                 LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
+                listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
             }
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Cannot launch the Git Client.." + ex);
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Cannot launch the Git Client.." + ex);
+            listener.getLogger().println(LOG_PREFIX + "Cannot launch the Git Client.." + ex);
         }
-        bridge.updateBuildDescription(run, listener);
+        GitBridge.updateBuildDescription(run, listener,integrationBranch,triggeredBranch.replace(integrationRepo + "/", ""));
 
     }
         /**

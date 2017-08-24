@@ -1,0 +1,35 @@
+node {
+   // Mark the code checkout 'stage'....
+   stage ('Checkout'){
+
+       // Get some code from a GitHub repository
+       checkout([
+            $class: 'GitSCM',
+            branches: [[name: '*/readyPipe/*']],
+            userRemoteConfigs: [[
+                name: 'origin',
+                url: 'git@github.com:bicschneider/test-git-phlow-plugin.git'
+            ]],
+            extensions: [
+            [
+                $class: 'PretestedIntegrationAsGitPluginExt',
+                    gitIntegrationStrategy : [ $class: 'AccumulatedCommitStrategy' ],
+                    integrationBranch : 'masterPipe',
+                    repoName: 'origin'
+            ],[
+                $class: 'ChangelogToBranch', options: [compareRemote: 'origin', compareTarget: 'masterPipe']
+                ]
+            ]
+        ])
+        try {
+            sh '''
+            if [ -e ./build_failed.md ]; then
+              exit 1
+            fi
+            '''
+        } catch(Exception e) {
+            currentBuild.result = 'UNSTABLE'
+        }
+        step([$class: 'PretestedIntegrationPostCheckout'])
+   }
+}

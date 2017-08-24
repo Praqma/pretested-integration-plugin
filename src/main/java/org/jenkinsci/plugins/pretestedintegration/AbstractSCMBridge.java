@@ -243,7 +243,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /***
      * @return The required result
      */
-    public Result getRequiredResult() {
+    public static Result getRequiredResult() {
         return Result.SUCCESS;
     }
 }

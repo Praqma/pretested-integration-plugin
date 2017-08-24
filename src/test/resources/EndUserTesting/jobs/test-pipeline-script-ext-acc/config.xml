@@ -12,7 +12,7 @@
    // Get some code from a GitHub repository
    checkout([
         $class: &apos;GitSCM&apos;,
-        branches: [[name: &apos;*/readyPipe/*&apos;]],
+        branches: [[name: &apos;*/readyPipeScript/*&apos;]],
         userRemoteConfigs: [[
             name: &apos;origin&apos;,
             url: &apos;git@github.com:bicschneider/test-git-phlow-plugin.git&apos;
@@ -21,10 +21,10 @@
         [
             $class: &apos;PretestedIntegrationAsGitPluginExt&apos;,
                 gitIntegrationStrategy : [ $class: &apos;AccumulatedCommitStrategy&apos; ], 
-                integrationBranch : &apos;masterPipe&apos;,
+                integrationBranch : &apos;masterPipeScript&apos;,
                 repoName: &apos;origin&apos;
         ],[
-            $class: &apos;ChangelogToBranch&apos;, options: [compareRemote: &apos;origin&apos;, compareTarget: &apos;masterPipe&apos;]
+            $class: &apos;ChangelogToBranch&apos;, options: [compareRemote: &apos;origin&apos;, compareTarget: &apos;masterPipeScript&apos;]
             ]
         ]
     ])
