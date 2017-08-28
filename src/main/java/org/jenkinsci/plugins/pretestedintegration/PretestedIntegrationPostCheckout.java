@@ -186,7 +186,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 }
             }
 
-             if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult()) ) {
+            if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult()) ) {
                  GitBridge.pushToIntegrationBranchGit(run,listener,client,integrationRepo,integrationBranch);
                  GitBridge.deleteBranch(run,listener,client,triggeredBranch,integrationRepo);
             } else {
