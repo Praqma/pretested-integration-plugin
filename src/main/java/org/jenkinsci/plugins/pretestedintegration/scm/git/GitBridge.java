@@ -148,8 +148,8 @@ public class GitBridge extends AbstractSCMBridge {
      * Pulls in the remote branch
      * @param build The Build
      * @param listener The Listener
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException An unforeseen IO issue
+     * @throws InterruptedException An foreseen issue
      */
     protected void update(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
         GitClient client;
@@ -307,8 +307,8 @@ public class GitBridge extends AbstractSCMBridge {
      * @param build The Build
      * @param listener The Listener
      * @return a FilePath representing the workspace
-     * @throws InterruptedException
-     * @throws IOException
+     * @throws InterruptedException Unforeseen issue
+     * @throws IOException Unforeseen IO issue
      */
     public FilePath resolveWorkspace(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
         FilePath workspace = build.getWorkspace();
@@ -354,9 +354,9 @@ public class GitBridge extends AbstractSCMBridge {
     /**
      * Validate the Git configurations in MultiSCM.
      * JENKINS-24754
-     * @param scms
+     * @param scms The list of the configured SCMs
      * @return boolean indicating if the MultiSCM is ok
-     * @throws UnsupportedConfigurationException
+     * @throws UnsupportedConfigurationException Mismatch combination in job configuration
      */
     public boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
         Set<String> remoteNames = new HashSet<>();
@@ -449,6 +449,7 @@ public class GitBridge extends AbstractSCMBridge {
      * @param triggeredBranch The triggered branch
      * @param integrationBranch  The integration branch
      * @param repoName The repo name like 'origin'
+     * @throws AbortException The triggered branch and the integration is the same - not allowed
      */
     public void evalBranchConfigurations (Branch triggeredBranch, String integrationBranch, String repoName )
             throws AbortException {

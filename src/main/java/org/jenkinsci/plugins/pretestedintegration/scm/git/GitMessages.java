@@ -10,8 +10,8 @@ public class GitMessages {
      * Message for merge strategies to show when they don't find a match between
      * remote branches and relevant SCM change.
      *
-     * @param branchName
-     * @return
+     * @param branchName The name of triggered branch
+     * @return The formatted string
      */
     public static String noRelevantSCMchange(String branchName) {
         return String.format("There is no relevant SCM change to integrate where branch matches the 'Integration repository'. Either branch (%s) is deleted or already integrated, or the SCM change is not related to the integration repository.", branchName);

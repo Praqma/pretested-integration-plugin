@@ -27,8 +27,8 @@ public class PretestedIntegrationGitUtils {
      * @param client  The GitClient
      * @param devBranch the development branch we want to count commits one
      * @return the amount of commits
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException Unforseen IO issues
+     * @throws InterruptedException Unforseen other issues
      */
     public static int countCommits(ObjectId commitId, GitClient client, String devBranch ) throws IOException, InterruptedException {
         GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(commitId, devBranch);
@@ -60,11 +60,10 @@ public class PretestedIntegrationGitUtils {
      *
      * @param build The Build
      * @param logger The PrintStream logging object
+     * @param repoName The repository name
      * @return The relevant BuildData
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException
-     * If no relevant BuildData was found.
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException
-     * If multiple, ambiguous BuildDatas were found.
+     * @throws NothingToDoException If no relevant BuildData was found.
+     * @throws UnsupportedConfigurationException If multiple, ambiguous BuildDatas were found.
      */
     public static BuildData findRelevantBuildData(AbstractBuild<?, ?> build, PrintStream logger, String repoName) throws NothingToDoException, UnsupportedConfigurationException {
         List<BuildData> buildDatas = build.getActions(BuildData.class);

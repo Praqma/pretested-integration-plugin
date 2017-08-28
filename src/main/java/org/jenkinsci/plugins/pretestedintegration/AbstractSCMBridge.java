@@ -87,7 +87,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @param build    The Build
      * @param listener The BuildListener
-     * @throws PushFailedException
+     * @throws PushFailedException Used in case of not being able to push
      */
     public void pushToIntegrationBranch(AbstractBuild<?, ?> build, BuildListener listener) throws PushFailedException {
     }
@@ -95,22 +95,22 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     /**
      * Deletes the integrated integrationBranch.
      *
-     * @param build
+     * @param build The Abstractbuild
      * @param listener The BuildListener
-     * @throws BranchDeletionFailedException
-     * @throws NothingToDoException
-     * @throws UnsupportedConfigurationException
+     * @throws BranchDeletionFailedException Used in case remote branch deletion fails
+     * @throws InterruptedException An foreseen issue
      */
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, TaskListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, TaskListener listener) throws BranchDeletionFailedException, IOException, InterruptedException {
     }
 
     /**
      * Make sure the SCM is checked out on the given integrationBranch.
      *
      * @param build    The Build
+     * @param launcher The Launcher
      * @param listener The BuildListener
      * @param branch   The integrationBranch to check out
-     * @throws EstablishingWorkspaceFailedException
+     * @throws EstablishingWorkspaceFailedException Used in case the branch cannot be checked out
      */
     public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException;
 
@@ -131,8 +131,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      *
      * @param build    The Build
      * @param listener The BuildListener
-     * @throws NothingToDoException
-     * @throws UnsupportedConfigurationException
+     * @throws NothingToDoException Used in no git SCM data found
+     * @throws UnsupportedConfigurationException Used in case of ambiguous git data of the remote repo
+     * @throws InterruptedException An unforeseen issue
      */
     public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException { }
 
@@ -143,9 +144,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
-     * @throws NothingToDoException
-     * @throws IntegrationFailedException
-     * @throws UnsupportedConfigurationException
+     * @throws NothingToDoException Used in case the submitted commit is behind the integration
+     * @throws IntegrationFailedException Used in case the merge/integration fails or cannot count commits
+     * @throws UnsupportedConfigurationException UnsupportedConfigurationException
+     * @throws IntegrationUnknownFailureException An unforeseen issue
      */
     protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException, UnsupportedConfigurationException {
         integrationStrategy.integrate(build, launcher, listener, this);
@@ -159,12 +161,11 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
-     * @throws IntegrationFailedException
-     * @throws EstablishingWorkspaceFailedException
-     * @throws NothingToDoException
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException
-     * @throws UnsupportedConfigurationException
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions
+     * @throws IntegrationFailedException Used in case the merge/integration fails or cannot count commits
+     * @throws EstablishingWorkspaceFailedException EstablishingWorkspaceFailedException
+     * @throws NothingToDoException Used in case the submitted commit is behind the integration
+     * @throws IntegrationUnknownFailureException An unforeseen issue
+     * @throws UnsupportedConfigurationException Mismatch in job configuration
      */
     public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException,UnsupportedConfigurationException {
         mergeChanges(build, launcher, listener);
@@ -176,9 +177,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
-     * @throws NothingToDoException
-     * @throws UnsupportedConfigurationException
-     * @throws java.lang.InterruptedException
+     * @throws NothingToDoException Used in case the submitted commit is behind the integration
+     * @throws UnsupportedConfigurationException Mismatch in job configuration
+     * @throws InterruptedException An unforeseen issue
      */
     public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
     }
@@ -188,7 +189,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Throws an exception when the configuration is invalid.
      *
      * @param project The Project
-     * @throws UnsupportedConfigurationException
+     * @throws UnsupportedConfigurationException Mismatch in job configuration
      */
     public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
     }

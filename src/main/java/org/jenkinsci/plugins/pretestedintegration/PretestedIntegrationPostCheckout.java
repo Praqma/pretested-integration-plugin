@@ -80,8 +80,8 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @return boolean True on success.
-     * @throws InterruptedException
-     * @throws IOException
+     * @throws InterruptedException An foreseen issue
+     * @throws IOException An foreseen IO issue
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {

@@ -28,7 +28,7 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
 
     /**
      * Creates a PersonIdent object from a full Git identity string.
-     * @param identity The Git identity string to parse. ex.: john Doe <Joh@praqma.net> 1442321765 +0200
+     * @param identity The Git identity string to parse. ex.: 'john Doe Joh@praqma.net 1442321765 +0200'
      * @return A PersonIdent object representing given Git author/committer
      */
     public PersonIdent getPersonIdent(String identity) {
@@ -45,9 +45,11 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
      * @param commitId The sha1 from the polled integrationBranch
      * @param client The GitClient
      * @param integrationBranch The integrationBranch which the commitId need to be merged to
+     * @param logger The Printstream
      * @return true if the rebase was a success, false if the integrationBranch isn't
      * suitable for a rebase
      * @throws IntegrationFailedException When commit counting or rebasing fails
+     * @throws IntegrationUnknownFailureException An unforseen failure
      */
     protected boolean tryRebase(ObjectId commitId, GitClient client, PrintStream logger, String integrationBranch ) throws IntegrationFailedException, IntegrationUnknownFailureException {
         LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryRebase");
@@ -106,11 +108,13 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
      * Only when the ready integrationBranch consists of a single commit.
      *
      * @param commitId The commit
+     * @param commitCount The amount of commits
      * @param logger The logger for console logging
      * @param client The GitClient
      * @return true if the FF merge was a success, false if the integrationBranch isn't
      * suitable for a FF merge.
      * @throws IntegrationFailedException When commit counting fails
+     * @throws NothingToDoException In case there is no commit to integrate/FF
      */
     protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client, int commitCount ) throws IntegrationFailedException, NothingToDoException {
         LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + "Entering tryFastForward");
