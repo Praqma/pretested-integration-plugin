@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.9">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <hudson.triggers.SCMTrigger>
+          <spec>* * * * *</spec>
+          <ignorePostCommitHooks>false</ignorePostCommitHooks>
+        </hudson.triggers.SCMTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.24">
+    <script>node {
+   // Mark the code checkout &apos;stage&apos;....
+   stage (&apos;Checkout&apos;){
+
+       // Get some code from a GitHub repository
+       checkout([
+            $class: &apos;GitSCM&apos;,
+            branches: [[name: &apos;*/readyPipeScriptedScript/*&apos;]],
+            userRemoteConfigs: [[
+                name: &apos;origin&apos;,
+                url: &apos;git@github.com:bicschneider/test-git-phlow-plugin.git&apos;
+            ]],
+            extensions: [
+            [
+                $class: &apos;PretestedIntegrationAsGitPluginExt&apos;,
+                    gitIntegrationStrategy : [ $class: &apos;AccumulatedCommitStrategy&apos; ],
+                    integrationBranch : &apos;masterPipeScriptedScript&apos;,
+                    repoName: &apos;origin&apos;
+            ],[
+                $class: &apos;ChangelogToBranch&apos;, options: [compareRemote: &apos;origin&apos;, compareTarget: &apos;masterPipeScriptedScript&apos;]
+                ]
+            ]
+        ])
+        try {
+            sh &apos;&apos;&apos;
+            if [ -e ./build_failed.md ]; then
+              exit 1
+            fi
+            &apos;&apos;&apos;
+        } catch(Exception e) {
+            currentBuild.result = &apos;UNSTABLE&apos;
+        }
+        step([$class: &apos;PretestedIntegrationPostCheckout&apos;])
+   }
+}
+</script>
+    <sandbox>false</sandbox>
+  </definition>
+</flow-definition>

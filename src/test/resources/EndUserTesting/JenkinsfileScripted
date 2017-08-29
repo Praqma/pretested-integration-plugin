@@ -1,25 +1,24 @@
 node {
-   // Mark the code checkout 'stage'....
-   stage ('Checkout'){
+    // Mark the code checkout 'stage'....
+    stage ('Checkout'){
 
        // Get some code from a GitHub repository
-       checkout([
-            $class: 'GitSCM',
-            branches: [[name: '*/readyPipeSCM/*']],
+    checkout([
+        $class: 'GitSCM',
+            branches: [[name: '*/readyPipeScriptedSCM/*']],
             userRemoteConfigs: [[
                 name: 'origin',
                 url: 'git@github.com:bicschneider/test-git-phlow-plugin.git'
             ]],
-            extensions: [
-            [
+            extensions: [[
                 $class: 'PretestedIntegrationAsGitPluginExt',
                     gitIntegrationStrategy : [ $class: 'AccumulatedCommitStrategy' ],
-                    integrationBranch : 'masterPipeSCM',
+                    integrationBranch : 'masterPipeScriptedSCM',
                     repoName: 'origin'
             ],[
-                $class: 'ChangelogToBranch', options: [compareRemote: 'origin', compareTarget: 'masterPipeSCM']
-                ]
-            ]
+                $class: 'ChangelogToBranch',
+                    options: [compareRemote: 'origin', compareTarget: 'masterPipeScriptedSCM']
+            ]]
         ])
         try {
             sh '''

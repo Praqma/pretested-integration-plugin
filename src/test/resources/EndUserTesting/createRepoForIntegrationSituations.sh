@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -x
+set -e
 
 #git clone git@github.com:bicschneider/test-git-phlow-plugin.git refs/tags/init --shallow
 rm -rf test-git-phlow-plugin 
@@ -14,23 +15,31 @@ git config --add branch.master.merge refs/heads/master
 
 git checkout -B master
 echo "# HEADER" >> README.md
-cp `pwd`/../`dirname $0`/Jenkinsfile .
+cp `pwd`/../`dirname $0`/JenkinsfileScripted .
+cp `pwd`/../`dirname $0`/JenkinsfileDeclarative .
 git add .
 git commit -m "init"
 git tag -a -m "init" init
 
-branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq PipeSCM PipeScript"
-#branch_prefixes="PipeSCM PipeScript"
+branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq PipeScriptedSCM PipeScriptedScript PipeDeclSCM PipeDeclScript"
+#branch_prefixes="PipeScriptedSCM PipeScriptedScript PipeDeclSCM PipeDeclScript"
+#branch_prefixes="PipeScriptedSCM PipeDeclSCM"
+#branch_prefixes="PipeScriptedSCM"
 # TODO. Add test for pushing to integrationBranch
 
 function resetToInit(){
+    if [ "${1}x" == "x" ]; then
+       tag="init"
+    else
+       tag=${1}
+    fi
     git checkout master
-    git reset --hard init
+    git reset --hard ${tag}
     git clean -xfd
 }
 
 function checkoutMyBranch(){
-    git checkout -B $1 refs/tags/init
+    git checkout -B $1
 }
 
 function createSimpleTestScenario(){
@@ -42,13 +51,22 @@ function createSimpleTestScenario(){
     git commit -m "$text"
 }
 
-
 for branch_prefix in ${branch_prefixes} ; do
     resetToInit && checkoutMyBranch master${branch_prefix}
 done
+
 for branch_prefix in ${branch_prefixes} ; do
-    createSimpleTestScenario "test-01-ff" README.md
+    # Place it on to top of
+    text="test-01-change-Jenkinsfile-ff" && \
+        resetToInit && checkoutMyBranch ready${branch_prefix}/$text && \
+        echo "println \"$text\"" > JenkinsfileScripted && \
+        echo "println \"$text\"" > JenkinsfileDeclarative && \
+        cat `pwd`/../`dirname $0`/JenkinsfileScripted >> JenkinsfileScripted && \
+        cat `pwd`/../`dirname $0`/JenkinsfileDeclarative >> JenkinsfileDeclarative && \
+        git add . && \
+        git commit -m "$text"
 done
+
 for branch_prefix in ${branch_prefixes} ; do
     createSimpleTestScenario "test-02-merge-conflicts" README.md
     createSimpleTestScenario "test-03-merge-ok" test.md
@@ -69,14 +87,13 @@ for branch_prefix in ${branch_prefixes} ; do
 
   text="test-07-change-Jenkinsfile" && \
         resetToInit && checkoutMyBranch ready${branch_prefix}/$text && \
-        echo "println \"$text\"" >> Jenkinsfile && \
+        echo "println \"$text\"" >> JenkinsfileScripted && \
+        echo "println \"$text\"" >> JenkinsfileDeclarative && \
         git add . && \
         git commit -m "$text"
 done
-resetToInit && checkoutMyBranch master
+checkoutMyBranch "master" && resetToInit
 
 git push origin --mirror
 
 git log --graph --decorate --all --oneline
-
-
