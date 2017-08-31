@@ -21,11 +21,8 @@ git add .
 git commit -m "init"
 git tag -a -m "init" init
 
-branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq PipeScriptedSCM PipeScriptedScript PipeDeclSCM PipeDeclScript"
-#branch_prefixes="PipeScriptedSCM PipeScriptedScript PipeDeclSCM PipeDeclScript"
-#branch_prefixes="PipeScriptedSCM PipeDeclSCM"
-#branch_prefixes="PipeScriptedSCM"
-# TODO. Add test for pushing to integrationBranch
+branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq MvnExtAcc  PipeScriptedSCM PipeScriptedScript PipeDeclSCM PipeDeclScript"
+#branch_prefixes="MvnExtAcc"
 
 function resetToInit(){
     if [ "${1}x" == "x" ]; then
@@ -57,15 +54,27 @@ done
 
 for branch_prefix in ${branch_prefixes} ; do
     # Place it on to top of
-    text="test-01-change-Jenkinsfile-ff" && \
+    text="test-01-change-Jenkinsfile_README.dk-ff" && \
         resetToInit && checkoutMyBranch ready${branch_prefix}/$text && \
         echo "println \"$text\"" > JenkinsfileScripted && \
         echo "println \"$text\"" > JenkinsfileDeclarative && \
         cat `pwd`/../`dirname $0`/JenkinsfileScripted >> JenkinsfileScripted && \
+        git add JenkinsfileScripted && \
         cat `pwd`/../`dirname $0`/JenkinsfileDeclarative >> JenkinsfileDeclarative && \
-        git add . && \
+        git add JenkinsfileDeclarative && \
+        echo $text >> README.md
+        git add README.md && \
         git commit -m "$text"
 done
+git push --mirror
+checkoutMyBranch "master" && resetToInit
+for branch_prefix in ${branch_prefixes} ; do
+  git branch -D master${branch_prefix}
+  git branch -D ready${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
+done
+
+
+#read -n 1 -p "Enter to continue" enter
 
 for branch_prefix in ${branch_prefixes} ; do
     createSimpleTestScenario "test-02-merge-conflicts" README.md
