@@ -149,12 +149,19 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             // A) Git commit failed for some wierd reason
             // b) If ".git/MERGE_MSG" wasn't found the most likely culrprit is that the merge was an empty
             //    one (No changes) for some reason the merge() command does not complain or throw exception when that happens
-            logMessage = String.format("%sUnable to commit changes. There are two known reasons:%n" +
-                    "A) You are trying to integrate a change that was already integrated.%n" +
-                    "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a merge. %n" +
-                    "   If you REALLY want the empty commit to be accepted, you can rebase your empty commit(s) on top %n" +
-                    "   of the integration branch and it will be fast-forwarded. %n" +
-                    "Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, ex.getMessage());
+            if (    ex.getMessage().contains("Cannot commit") ||
+                    ex.getMessage().contains("MERGE_MSG (No such file or directory)") ||
+                    ex.getMessage().contains("MERGE_MSG (The system cannot find the file specified)") ) {
+                logMessage = String.format("%sUnable to commit changes. There are two known reasons:%n" +
+                        "A) You are trying to integrate a change that was already integrated.%n" +
+                        "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a merge. %n" +
+                        "   If you REALLY want the empty commit to be accepted, you can rebase your empty commit(s) on top %n" +
+                        "   of the integration branch and it will be fast-forwarded. %n" +
+                        "Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, ex.getMessage());
+                // TODO: SHould we throw a "Nothing to do" exception?
+            } else {
+                logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while committing. Logging exception msg: %s", ex.getMessage());
+            }
             LOGGER.log(Level.SEVERE, logMessage, ex);
             listener.getLogger().println(logMessage);
             ex.printStackTrace(listener.getLogger());

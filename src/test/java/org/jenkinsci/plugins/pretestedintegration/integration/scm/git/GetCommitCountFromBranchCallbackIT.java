@@ -17,7 +17,13 @@ public class GetCommitCountFromBranchCallbackIT {
 
     @After
     public void tearDown() throws Exception {
-        TestUtilsFactory.destroyDirectory(dir);
+        try {
+            TestUtilsFactory.destroyDirectory(dir);
+        } catch ( Exception e ){
+            System.out.format("WARNING: Could not delete the dir: " + dir.getAbsolutePath() );
+        }
+
+
     }
 
     @Test

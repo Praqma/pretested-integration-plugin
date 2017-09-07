@@ -387,7 +387,19 @@ public class TestUtilsFactory {
         //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 objects
         //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 refs
         File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+
         File workDirForRepo = new File(repoFolderName);
+
+        System.out.format(workDirForRepo.getAbsolutePath());
+
+        if ( repo.exists() ) {
+            System.out.format("EXIST:" + repo.getAbsolutePath());
+            try {
+                TestUtilsFactory.destroyDirectory(repo);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
 
         Repository repository = new FileRepository(repo);
         repository.create(true);
@@ -422,6 +434,16 @@ public class TestUtilsFactory {
 
     public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {
         File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+
+        if ( repo.exists() ) {
+            System.out.format("EXIST:" + repo.getAbsolutePath());
+            try {
+                TestUtilsFactory.destroyDirectory(repo);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
+
         File workDirForRepo = new File(repoFolderName);
         Repository repository = new FileRepository(repo);
         repository.create(true);
