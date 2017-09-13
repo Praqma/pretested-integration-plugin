@@ -176,13 +176,13 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         return GitClientType.GITCLI;
     }
 
-    @Symbol("gitPhlowIntegration")
+    @Symbol("PretestedIntegration")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         @Override
         public String getDisplayName() {
-            return "Praqma Git Phlow - Verification before merge to integration branch";
+            return "Pretested Integration";
         }
 
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {
