@@ -148,7 +148,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
         @Override
         public boolean isApplicable(AbstractProject<?, ?> arg0) {
             if (arg0 instanceof FreeStyleProject)
-                return true;
+                return false;
             return false;
         }
     }
