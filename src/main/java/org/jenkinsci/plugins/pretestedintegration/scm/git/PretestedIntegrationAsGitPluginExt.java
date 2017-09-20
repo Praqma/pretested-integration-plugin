@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
 /**
- * The Praqma Git Phlow - Automated Git branching model - as a Git Plugin Extension
+ * The Pretested Integration Plugin - automating The Phlow for git in Jenkins - as a Git Plugin Extension
  *
  */
 public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
@@ -176,7 +176,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
         @Override
         public String getDisplayName() {
-            return "Praqma Git Phlow - Verification before merge to integration branch";
+            return "Use pretested integration";
         }
 
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {

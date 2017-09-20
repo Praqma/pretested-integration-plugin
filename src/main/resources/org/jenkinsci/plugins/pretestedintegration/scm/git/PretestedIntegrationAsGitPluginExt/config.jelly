@@ -11,10 +11,10 @@
 
         <j:choose>
             <j:when test="${instance.gitIntegrationStrategy == null}">
-                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pre-tested integration strategy" varName="gitIntegrationStrategy" instance="${descriptor.getDefaultStrategy()}"/>
+                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pretested integration strategy" varName="gitIntegrationStrategy" instance="${descriptor.getDefaultStrategy()}"/>
             </j:when>
             <j:otherwise>
-                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pre-tested integration strategy" varName="gitIntegrationStrategy" instance="${instance.gitIntegrationStrategy}"/>
+                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pretested integration strategy" varName="gitIntegrationStrategy" instance="${instance.gitIntegrationStrategy}"/>
             </j:otherwise>
         </j:choose>
     </f:block>
