@@ -336,8 +336,8 @@ public class GitBridge extends AbstractSCMBridge {
             PretestedIntegrationAsGitPluginExt pretestedGitPluginExt = ((GitSCM)project.getScm()).getExtensions().get(PretestedIntegrationAsGitPluginExt.class) ;
             if ( pretestedGitPluginExt != null ) {
                  throw new UnsupportedConfigurationException(
-                         "You have configurated Git Phlow Integration as Git Plugin Extension already.\n" +
-                         "It does make sense to have both. Please remove it in the Build Environment section"
+                         "You have configurated the Pretested Integration plugin as Git Plugin Extension already.\n" +
+                         "It does not make sense to have both. Please remove it in the Build Environment section"
                  );
             }
             return;
