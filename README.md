@@ -231,6 +231,6 @@ _Create a volume_:
 
 _Re-use that volume mounting it into the Maven container_ (if you read the Dockerfile behind it you see the cache is in  `/root/.m2` and also where to mount in your source code):
 
-    docker run -it --rm --name dev-env-4-pretested-integration-plugin-container -v dev-env-4-pretested-integration-plugin-volume:root/.m2 -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8 mvn clean
+    docker run -it --rm --name dev-env-4-pretested-integration-plugin-container -v dev-env-4-pretested-integration-plugin-volume:/root/.m2 -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8 mvn clean
 
 (You should chose short names for container and volume, I just long names to describe the commands better).
