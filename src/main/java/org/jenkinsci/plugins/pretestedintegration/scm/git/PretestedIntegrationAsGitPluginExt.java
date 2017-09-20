@@ -197,7 +197,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
          * @return The default Integration Strategy
          */
         public IntegrationStrategy getDefaultStrategy() {
-            return new AccumulatedCommitStrategy();
+            return new SquashCommitStrategy();
         }
     }
 }
