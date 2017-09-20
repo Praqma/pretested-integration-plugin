@@ -1,9 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.580</version>
+        <version>1.642.4</version>
     </parent>
 
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin</url>
@@ -44,15 +45,15 @@
         </pluginRepository>
     </pluginRepositories>
 
-		<!-- Setting SCM to git. -->
-		<!-- Using Praqma's github repo as developer connection - this mean we must manual push tags and commits to the
-				 Jenkins CI github repo after an release. We do this to ensure no one sneaks code into our repo. -->
+    <!-- Setting SCM to git. -->
+    <!-- Using Praqma's github repo as developer connection - this mean we must manual push tags and commits to the
+             Jenkins CI github repo after an release. We do this to ensure no one sneaks code into our repo. -->
     <scm>
         <connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/Praqma/pretested-integration-plugin.git</developerConnection>
         <url>https://github.com/Praqma/pretested-integration-plugin</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
 
     <!--
@@ -335,7 +336,6 @@
             </plugin>
 
 
-
             <!--
             Also adding javadoc plugin to reporting section so it automatically runs a part of
             'mvn site' lifecycle.
@@ -389,7 +389,6 @@
             </plugin>
 
 
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>taglist-maven-plugin</artifactId>
@@ -439,7 +438,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>git-client</artifactId>
-            <version>1.19.1</version>
+            <version>2.5.0</version>
         </dependency>
 
         <dependency>
