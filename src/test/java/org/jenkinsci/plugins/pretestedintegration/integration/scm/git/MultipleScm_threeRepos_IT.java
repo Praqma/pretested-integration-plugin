@@ -449,7 +449,7 @@ public class MultipleScm_threeRepos_IT {
         assertTrue("Polling did not findnew changes as expected", poll.hasChanges());
 
         pollingLog = printAndReturnPollingLogOfBuild(build, "build1");
-        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one. Done."));
+        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one"));
 
         console = printAndReturnConsoleOfBuild(build, "build1");
         expectedResult = Result.FAILURE; //reuse common lines below                
@@ -485,7 +485,7 @@ public class MultipleScm_threeRepos_IT {
                 // Create a Pattern object
                 Pattern p1 = Pattern.compile(pattern1);
                 // [PREINT] Preparing to merge changes in commit a1b88be91358cf4cb184c645cfdb0920a765d872 on development branch origin/ready/twoCommitsBranch to integration branch master
-                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (on development branch repo3/ready/repo3_feature_1) (to integration branch master)(.*)";
+                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (on development branch repo3/ready/repo3_feature_2) (to integration branch master)(.*)";
                 // Create a Pattern object
                 Pattern p2 = Pattern.compile(pattern2);
 
