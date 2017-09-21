@@ -261,7 +261,7 @@ public class MultipleScm_threeRepos_IT {
                 null, null, gitSCMExtensionsRepo1AndRepo2);
 
         SCM gitSCMRepo3 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo3.getDirectory().getAbsolutePath(), "repo3", null, null)),
-                Collections.singletonList(new BranchSpec("**ready/**")),
+                Collections.singletonList(new BranchSpec("origin/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensionsRepo3);
 
@@ -459,7 +459,7 @@ public class MultipleScm_threeRepos_IT {
         assertTrue("Could not find error message from git plugin in console about FAILED build",
                 console.contains(GIT_PLUGIN_VERIFY_REPO_AND_BRANCH_ERROR));
 
-        new UniqueBranchGenerator(repo3, "repo3-commit1", "repo3-commit2").usingBranch("ready/repo3_feature_1").build();
+        new UniqueBranchGenerator(repo3, "repo3-commit1", "repo3-commit2").usingBranch("ready/repo3_feature_2").build();
 
         Boolean integratedRepo3 = false;
         Boolean failedOnOtherRepoChanges = false;
@@ -481,7 +481,7 @@ public class MultipleScm_threeRepos_IT {
                 // Tip: http://myregexp.com/
                 //String pattern = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo[1|2]/master\\)) (First time build\\.) (.*)";
                 //Checking out Revision 0ae5858942afa97b86770da779f91c80b39694e4 (repo3/ready/repo3_feature_1)
-                String pattern1 = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo3/ready/repo3_feature_1\\)) (.*)";
+                String pattern1 = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo3/ready/repo3_feature_2\\)) (.*)";
                 // Create a Pattern object
                 Pattern p1 = Pattern.compile(pattern1);
                 // [PREINT] Preparing to merge changes in commit a1b88be91358cf4cb184c645cfdb0920a765d872 on development branch origin/ready/twoCommitsBranch to integration branch master
@@ -496,9 +496,9 @@ public class MultipleScm_threeRepos_IT {
                 assertTrue("Revision found on branch head does not match revision being integrated", m1.group(3).equals(m2.group(3)));
 
                 assertTrue("Could not find message in console about ready branch in repo beeing integrated",
-                        console.contains("merge --squash repo3/ready/repo3_feature_1"));
+                        console.contains("merge --squash repo3/ready/repo3_feature_2"));
                 assertTrue("Integration of ready branch in repo started, but could not match push command in console.",
-                        console.contains("push repo3 :ready/repo3_feature_1"));
+                        console.contains("push repo3 :ready/repo3_feature_2"));
                 System.out.println("Verified successful build");
                 integratedRepo3 = true;
             } else if (build.getResult().equals(Result.FAILURE)) {
@@ -510,7 +510,7 @@ public class MultipleScm_threeRepos_IT {
                 // If we now also see this message, we have the situation and problem
                 // reported in JENKINS-25960
                 // and will fail with this message:
-                if (console.contains("The branch name (repo3/ready/repo3_feature_1) contained in the git build data object, did not match a remote branch name")) {
+                if (console.contains("The branch name (repo3/ready/repo3_feature_2) contained in the git build data object, did not match a remote branch name")) {
                     assertTrue("This test fails due to JENKINS-25960 - when fixed it will not fail", false);
                 } else {
                     assertTrue(String.format("Unexpected build result found: %s", build.getResult()), false);
