@@ -282,7 +282,7 @@ public class MultipleScm_threeRepos_IT {
         assertTrue("Polling did not findnew changes as expected", poll.hasChanges());
 
         pollingLog = printAndReturnPollingLogOfBuild(build, "build1");
-        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one. Done."));
+        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one."));
 
         console = printAndReturnConsoleOfBuild(build, "build1");
         expectedResult = Result.FAILURE; //reuse common lines below                
