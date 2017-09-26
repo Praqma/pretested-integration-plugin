@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.*;
-import hudson.matrix.*;
 import hudson.model.*;
 import hudson.plugins.git.*;
 import hudson.plugins.git.extensions.GitClientType;
@@ -20,16 +19,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.framework.io.WriterOutputStream;
 
 import static org.eclipse.jgit.lib.Constants.HEAD;
 

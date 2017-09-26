@@ -5,7 +5,6 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 
 import java.io.IOException;

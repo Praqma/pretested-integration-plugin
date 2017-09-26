@@ -6,21 +6,15 @@ import hudson.plugins.git.*;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.transport.RefSpec;
-import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
@@ -30,8 +24,6 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapp
 import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import javax.swing.text.html.HTMLDocument;
 
 /**
  * The Git SCM Bridge.
