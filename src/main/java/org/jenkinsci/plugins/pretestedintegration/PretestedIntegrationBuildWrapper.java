@@ -10,6 +10,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,7 +51,7 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
     }
 
     /**
-     * Jenkins hook that fires after the workspace has been initialized. 
+     * Jenkins hook that fires after the workspace has been initialized.
      * Calls the SCM specific function according to the chosen SCM.
      *
      * @param build - The build in progress for which an BuildWrapper.Environment object is created. Never null.
@@ -59,32 +60,36 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
      * @return non-null if the build can continue, null if there was an error and the build needs to be aborted.
      */
     @Override
-    public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener)throws IOException, InterruptedException {
         listener.getLogger().println(String.format("%s Pretested Integration Plugin v%s", LOG_PREFIX, getVersion()));
+
         boolean proceedToBuildStep = true;
         try {
             scmBridge.validateConfiguration(build.getProject());
             scmBridge.isApplicable(build, listener);
-            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedBranch(build.getEnvironment(listener)));
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
             scmBridge.prepareWorkspace(build, launcher, listener);
         } catch (NothingToDoException e) {
             build.setResult(Result.NOT_BUILT);
-            String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
+            String logMessage = LOG_PREFIX + String.format("%s ERROR - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
             proceedToBuildStep = false;
         } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
             build.setResult(Result.FAILURE);
-            String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
+            String logMessage = String.format("%s ERROR - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
             listener.getLogger().println(logMessage);
             LOGGER.log(Level.SEVERE, logMessage, e);
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
             proceedToBuildStep = false;
         } catch (IOException | InterruptedException e) {
             build.setResult(Result.FAILURE);
-            String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
+            String logMessage = String.format("%s - ERROR Unexpected. %n%s", LOG_PREFIX, e.getMessage());
             LOGGER.log(Level.SEVERE, logMessage, e);
             listener.getLogger().println(logMessage);
             e.printStackTrace(listener.getLogger());
+            scmBridge.ensureBranch(build, launcher, listener, scmBridge.getExpandedIntegrationBranch(build.getEnvironment(listener)));
             proceedToBuildStep = false;
         }
 
@@ -142,7 +147,9 @@ public class PretestedIntegrationBuildWrapper extends BuildWrapper {
          */
         @Override
         public boolean isApplicable(AbstractProject<?, ?> arg0) {
-            return arg0 instanceof FreeStyleProject;
+            if (arg0 instanceof FreeStyleProject)
+                return true;
+            return false;
         }
     }
 

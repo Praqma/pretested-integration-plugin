@@ -23,7 +23,7 @@ public class FastForwardSingleCommitsIT {
     public void tearDown() throws Exception {
         TestUtilsFactory.destroyRepo(repository);
     }
-    
+
     @Test
     public void squash_fastForwardsSingleCommit_PassWhenPossible() throws Exception {
         List<TestCommit> commits = new ArrayList<TestCommit>() {
@@ -83,10 +83,11 @@ public class FastForwardSingleCommitsIT {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         FreeStyleBuild build = project.getFirstBuild();
-        jenkinsRule.assertBuildStatus(Result.SUCCESS, build);
+        assertTrue("The result should be SUCCESS, but is : " + build.getResult(), build.getResult().isBetterOrEqualTo(Result.SUCCESS));
         String console = jenkinsRule.createWebClient().getPage(project.getLastBuild(), "console").asText();
         System.out.println(console);
-        assertTrue("FF merge should have failed.", console.contains("Not attempting fast forward."));
+        repository.close();
+        assertTrue("FF merge should have failed.", console.contains("Skip FF as there are several commits"));
     }
 
     @Test
@@ -148,10 +149,12 @@ public class FastForwardSingleCommitsIT {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         FreeStyleBuild build = project.getFirstBuild();
-        jenkinsRule.assertBuildStatus(Result.SUCCESS, build);
+        assertTrue("The result should be SUCCESS, but is : " + build.getResult(),build.getResult().isBetterOrEqualTo(Result.SUCCESS));
+
         String console = jenkinsRule.createWebClient().getPage(project.getLastBuild(), "console").asText();
         System.out.println(console);
-        assertTrue("FF merge should have failed.", console.contains("Not attempting fast forward."));
+        repository.close();
+        assertTrue("FF merge should have been skipped.", console.contains("Skip FF as there are several commits"));
     }
 
 }

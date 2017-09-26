@@ -104,7 +104,7 @@ public class TestUtilsFactory {
     }
 
     // Count commits on the branch with name branch.
-    // Jgit example code modified from here: 
+    // Jgit example code modified from here:
     // https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/api/WalkRev.java
     public static int countCommitsOnBranch(Git git, String branch) throws IOException {
 
@@ -316,7 +316,7 @@ public class TestUtilsFactory {
         if (type == STRATEGY_TYPE.SQUASH) {
             gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
         } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName);
+            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName );
         }
 
         project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
@@ -387,7 +387,19 @@ public class TestUtilsFactory {
         //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 objects
         //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 refs
         File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+
         File workDirForRepo = new File(repoFolderName);
+
+        System.out.format(workDirForRepo.getAbsolutePath());
+
+        if ( repo.exists() ) {
+            System.out.format("EXIST:" + repo.getAbsolutePath());
+            try {
+                TestUtilsFactory.destroyDirectory(repo);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
 
         Repository repository = new FileRepository(repo);
         repository.create(true);
@@ -422,6 +434,16 @@ public class TestUtilsFactory {
 
     public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {
         File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+
+        if ( repo.exists() ) {
+            System.out.format("EXIST:" + repo.getAbsolutePath());
+            try {
+                TestUtilsFactory.destroyDirectory(repo);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
+
         File workDirForRepo = new File(repoFolderName);
         Repository repository = new FileRepository(repo);
         repository.create(true);
@@ -488,6 +510,14 @@ public class TestUtilsFactory {
      */
     public static Repository createRepository(String repoDir, List<TestCommit> commits) throws IOException, GitAPIException {
         File repo = new File(repoDir + ".git");
+        if ( repo.exists() ){
+            System.out.println("The repository already exists: " + repo.getAbsolutePath() + " -> Destroy it" );
+            try {
+                destroyDirectory(repo);
+            } catch ( InterruptedException e ){
+                throw new IOException(e);
+            }
+        }
         File worktree = new File(repoDir);
         Repository repository = new FileRepository(repo);
         repository.create(true);
