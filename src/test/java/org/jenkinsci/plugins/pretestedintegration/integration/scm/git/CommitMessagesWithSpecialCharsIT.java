@@ -4,11 +4,14 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.RunList;
+
 import java.util.Iterator;
+
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
+
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -19,7 +22,7 @@ import org.junit.Test;
  * Tests for checking commit messages can be integrated even though the author
  * have been using double quotes or other special characters in the commit
  * message.
- *
+ * <p>
  * Problem is the command line call the plugin does and the risk of not escaping
  * all characters correctly.
  */
@@ -29,7 +32,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * Tests commit message with double quotes in commit message can be
      * integrated using squashed strategy and a repository created on Linux. See
      * detailed description of test in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
@@ -87,7 +90,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         System.out.println("************************************************************************");
         assertTrue("The integration commit message was not a squashed commit. Didn't find the text 'Squashed commit of the following:'", commitFullMessage.contains("Squashed commit of the following:"));
         assertTrue("The integration commit message, doesn't contain the SHA from the git log from the first of the included commits", commitFullMessage.contains("commit 57807c99bea0fa0f929bd32973ff9651f7c0fb04"));
-        assertTrue("The integration commit message, doesn't contain lines from the original commits as expected.", commitFullMessage.contains("This is a commit message with double quotes, eg. \"test quotes\"."));
+        assertFalse("The integration commit message, doesn't contain lines from the original commits as expected.", commitFullMessage.contains("This is a commit message with double quotes, eg. \"test quotes\"."));
         assertTrue("The integration commit message, didn't contain expected date string from the git log from the first of the included commits", commitFullMessage.contains("Tue Mar 31 16:13:30 2015 +0200"));
         assertTrue("The integration commit message, didn't contain expected author string from the git log from the first of the included commits", commitFullMessage.contains("Author: Praqma Support <support@praqma.net>"));
         assertFalse("The last commit on integration branch contain 'accumulated' but is not an accumulated commit", commitFullMessage.contains("ccumulated"));
@@ -98,7 +101,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * Tests commit message with double quotes in commit message can be
      * integrated using accumulated strategy and a repository created on Linux.
      * See detailed description of test in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
@@ -166,7 +169,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * Tests commit message with double quotes in commit message can be
      * integrated using squashed strategy and a repository created on Windows.
      * See detailed description of test in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
@@ -225,7 +228,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         System.out.println("************************************************************************");
         assertTrue("The integration commit message was not a squashed commit. Didn't find the text 'Squashed commit of the following:'", commitFullMessage.contains("Squashed commit of the following:"));
         assertTrue("The integration commit message, doesn't contain the SHA from the git log from the first of the included commits", commitFullMessage.contains("commit fa90cb266c4f737a09ad4a3308ec4fb5b898b9d6"));
-        assertTrue("The integration commit message, doesn't contain lines from the original commits as expected.", commitFullMessage.contains("This is a commit message with double quotes (commit made on Windows), eg. \"test quotes\"."));
+        assertFalse("The integration commit message, doesn't contain lines from the original commits as expected.", commitFullMessage.contains("This is a commit message with double quotes (commit made on Windows), eg. \"test quotes\"."));
         assertTrue("The integration commit message, didn't contain expected date string from the git log from the first of the included commits", commitFullMessage.contains("Tue Mar 31 16:08:22 2015 +0200"));
         assertTrue("The integration commit message, didn't contain expected author string from the git log from the first of the included commits", commitFullMessage.contains("Author: Praqma Support <support@praqma.net>"));
         assertFalse("The last commit on integration branch contain 'accumulated' but is not an accumulated commit", commitFullMessage.contains("ccumulated"));
@@ -236,7 +239,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * Tests commit message with double quotes in commit message can be
      * integrated using accumulated strategy and a repository created on
      * Windows. See detailed description of test in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
@@ -305,7 +308,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * Tests commit message with double quotes, created in a script using single
      * quotes can be integrated using accumulated strategy. Repository created
      * on Windows. See detailed description of test in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
@@ -375,7 +378,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * Tests commit message with double quotes, created in a script using single
      * quotes can be integrated using squash strategy. Repository created on
      * Windows. See detailed description of test in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
@@ -434,7 +437,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
         System.out.println("************************************************************************");
         assertTrue("The integration commit message was not a squashed commit. Didn't find the text 'Squashed commit of the following:'", commitFullMessage.contains("Squashed commit of the following:"));
         assertTrue("The integration commit message, doesn't contain the SHA from the git log from the first of the included commits", commitFullMessage.contains("commit a094a8a6e8157b386b651d61997de25cd95af5eb"));
-        assertTrue("The integration commit message, doesn't contain lines from the original commits as expected.", commitFullMessage.contains("This is a commit message with double quotes (commit made on Windows), and =, eg. \"test quotes\"."));
+        assertFalse("The integration commit message, doesn't contain lines from the original commits as expected.", commitFullMessage.contains("This is a commit message with double quotes (commit made on Windows), and =, eg. \"test quotes\"."));
         assertTrue("The integration commit message, didn't contain expected date string from the git log from the first of the included commits", commitFullMessage.contains("Wed Jun 3 09:14:28 2015 +0200"));
         assertTrue("The integration commit message, didn't contain expected author string from the git log from the first of the included commits", commitFullMessage.contains("Author: Praqma Support <support@praqma.net>"));
         assertFalse("The last commit on integration branch contain 'accumulated' but is not an accumulated commit", commitFullMessage.contains("ccumulated"));
@@ -446,7 +449,7 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * been supplied with for testing by a customer. Test is using accumulated
      * strategy. Repository created on Windows. See detailed description of test
      * in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
@@ -518,14 +521,15 @@ public class CommitMessagesWithSpecialCharsIT extends StaticGitRepositoryTestBas
      * been supplied with for testing by a customer. Test is using squashed
      * strategy. Repository created on Windows. See detailed description of test
      * in class documentation.
-     *
+     * <p>
      * Uses the StaticGitRepositoryTestBase and the setUp method there, so a
      * bareRepository and gitRepo is already available.
      *
      * @throws Exception
      */
     @Test
-    @Ignore // The repository have an empty commit, that can't be squashed with our ordinary git commands. See https://issues.jenkins-ci.org/browse/JENKINS-29371
+    @Ignore
+    // The repository have an empty commit, that can't be squashed with our ordinary git commands. See https://issues.jenkins-ci.org/browse/JENKINS-29371
     public void commitMessagesWithDoubleQuotesSingleQuotesMadeWindowsSquashed_customerSuppliedRepo() throws Exception {
 
         /**
