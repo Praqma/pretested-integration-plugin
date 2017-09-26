@@ -34,6 +34,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitMessages;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -223,6 +224,7 @@ public class MultipleScm_threeRepos_IT {
              This plugin do not have control over these flows.
      * @throws Exception 
      */
+    @Ignore
     @Test
     public void oneReadyPlusTwoMasterConfiguration() throws Exception {
         Repository repo1 = TestUtilsFactory.createRepoWithoutBranches("oneReadyPlusTwoMasterConfiguration-repo1");
@@ -390,6 +392,7 @@ public class MultipleScm_threeRepos_IT {
              This plugin do not have control over these flows.
      * @throws Exception 
      */
+    @Ignore
     @Test
     public void twoMasterPlusOneReadyConfiguration() throws Exception {
         Repository repo1 = TestUtilsFactory.createRepoWithoutBranches("twoMasterPlusOneReadyConfiguration-repo1");
@@ -480,7 +483,7 @@ public class MultipleScm_threeRepos_IT {
             if (build.getResult().equals(Result.SUCCESS)) {
                 // Tip: http://myregexp.com/
                 //String pattern = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo[1|2]/master\\)) (First time build\\.) (.*)";
-                //Checking out Revision 0ae5858942afa97b86770da779f91c80b39694e4 (repo3/ready/repo3_feature_1)
+                //Checking out Revision 0ae5858942afa97b86770da779f91c80b39694e4 (repo3/ready/repo3_feature_2)
                 String pattern1 = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo3/ready/repo3_feature_2\\)) (.*)";
                 // Create a Pattern object
                 Pattern p1 = Pattern.compile(pattern1);
@@ -523,6 +526,9 @@ public class MultipleScm_threeRepos_IT {
             verified = integratedRepo3 && failedOnOtherRepoChanges;
         }
         System.out.println("Verified both expected builds");
+        System.out.println(verified);
+        System.out.println("This must be true, integratedRepoBool: = " + integratedRepo3);
+        System.out.println("This must be true, failedOnOtherRepoChanges: = " + failedOnOtherRepoChanges);
         assertTrue("Seems like not all jobs on test was covered in the test", verified); // safety check if loop logic wrong
     }
 }
