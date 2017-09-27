@@ -19,6 +19,7 @@ import java.util.List;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import org.eclipse.jgit.lib.Repository;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -44,6 +45,7 @@ public class MultipleScmIT {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
+    @Ignore //We do not support multiSCM in the following versions so we just ignore the test
     @Test
     public void verifyOrderOfBuildDataObjects() throws Exception {
         Repository repo1 = TestUtilsFactory.createRepoWithoutBranches("multi-scm-1");
