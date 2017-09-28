@@ -8,6 +8,7 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import hudson.slaves.DumbSlave;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
@@ -23,7 +24,7 @@ import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 
-public class PipelineTest {
+public class PipAsGitExtensionIT {
 
 
     @Rule
@@ -31,7 +32,7 @@ public class PipelineTest {
     private Repository repo;
 
 
-    public PipelineTest() {
+    public PipAsGitExtensionIT() {
     }
 
     @Before
@@ -53,8 +54,8 @@ public class PipelineTest {
         repo = TestUtilsFactory.createValidRepository(repoName);
 
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
-        //DumbSlave slave = jenkinsRule.createOnlineSlave();
-        //project.setAssignedNode(slave);
+        DumbSlave slave = jenkinsRule.createOnlineSlave();
+        project.setAssignedNode(slave);
 
 
         List<GitSCMExtension> scmExtensions = new ArrayList<>();
