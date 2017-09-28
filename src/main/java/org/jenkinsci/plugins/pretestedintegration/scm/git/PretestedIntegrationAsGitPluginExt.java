@@ -41,14 +41,14 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * DataBound for use in the UI.
      * @param gitIntegrationStrategy The selected IntegrationStrategy
      * @param integrationBranch The Integration Branch name
-     * @param repoName The Integration Repository name
+     * @param remoteName The Integration Repository name
      */
     @DataBoundConstructor
-    public PretestedIntegrationAsGitPluginExt(IntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String repoName) {
+    public PretestedIntegrationAsGitPluginExt(IntegrationStrategy gitIntegrationStrategy, final String integrationBranch, final String remoteName) {
         this.gitBridge = new GitBridge(
                 gitIntegrationStrategy,
                 integrationBranch,
-                repoName
+                remoteName
         );
     }
 
@@ -116,7 +116,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             ChangelogCommand changelog = git.changelog();
             changelog.includes(triggeredRevision.getSha1());
             Writer out = new StringWriter();
-            listener.getLogger().println("Using 'Changelog to branch' strategy.");
+            listener.getLogger().println("Using 'Accumulated' strategy.");
             changelog.excludes(expandedRepo + "/" + expandedIntegrationBranch);
             changelog.to(out).execute();
             if (out.toString().contains("Jenkinsfile")){
