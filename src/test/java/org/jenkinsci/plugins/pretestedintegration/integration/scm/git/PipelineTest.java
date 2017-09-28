@@ -1,0 +1,87 @@
+package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
+
+import hudson.model.FreeStyleProject;
+import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.UserRemoteConfig;
+import hudson.plugins.git.extensions.GitSCMExtension;
+import hudson.plugins.git.extensions.impl.CleanCheckout;
+import hudson.plugins.git.extensions.impl.PruneStaleBranch;
+import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
+
+public class PipelineTest {
+
+
+    @Rule
+    public JenkinsRule jenkinsRule = new JenkinsRule();
+    private Repository repo;
+
+
+    public PipelineTest() {
+    }
+
+    @Before
+    public void setUp() {
+
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        //TestUtilsFactory.destroyRepo(repo);
+
+    }
+
+    @Test
+    public void gitSCMIntegrationTest() throws Exception {
+        String repoName = "service-desk";
+
+        repo = TestUtilsFactory.createValidRepository(repoName);
+
+        FreeStyleProject project = jenkinsRule.createFreeStyleProject();
+        //DumbSlave slave = jenkinsRule.createOnlineSlave();
+        //project.setAssignedNode(slave);
+
+
+        List<GitSCMExtension> scmExtensions = new ArrayList<>();
+        scmExtensions.add(new PretestedIntegrationAsGitPluginExt(new SquashCommitStrategy(), "master","origin"));
+        scmExtensions.add(new PruneStaleBranch());
+        scmExtensions.add(new CleanCheckout());
+
+        List<UserRemoteConfig> userConfigs = new ArrayList<>();
+        userConfigs.add(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), "origin", null, null));
+
+        GitSCM git = new GitSCM(userConfigs,
+                Collections.singletonList(new BranchSpec("ready/feature_1"))
+                , false
+                , Collections.emptyList()
+                , null, null, scmExtensions);
+
+        project.setScm(git);
+
+        TestUtilsFactory.triggerProject(project);
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+
+        String console = jenkinsRule.createWebClient().getPage(project.getFirstBuild(), "console").asText();
+        System.out.println(console);
+        Thread.sleep(20000);
+
+        assertEquals("hello", "hello");
+
+    }
+
+}
