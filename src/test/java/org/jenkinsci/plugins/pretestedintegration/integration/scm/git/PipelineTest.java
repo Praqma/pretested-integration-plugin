@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.UserRemoteConfig;
@@ -41,7 +42,7 @@ public class PipelineTest {
 
     @After
     public void tearDown() throws Exception {
-        //TestUtilsFactory.destroyRepo(repo);
+        TestUtilsFactory.destroyRepo(repo);
 
     }
 
@@ -57,7 +58,7 @@ public class PipelineTest {
 
 
         List<GitSCMExtension> scmExtensions = new ArrayList<>();
-        scmExtensions.add(new PretestedIntegrationAsGitPluginExt(new SquashCommitStrategy(), "master","origin"));
+        scmExtensions.add(new PretestedIntegrationAsGitPluginExt(new SquashCommitStrategy(), "master", "origin"));
         scmExtensions.add(new PruneStaleBranch());
         scmExtensions.add(new CleanCheckout());
 
@@ -65,7 +66,7 @@ public class PipelineTest {
         userConfigs.add(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), "origin", null, null));
 
         GitSCM git = new GitSCM(userConfigs,
-                Collections.singletonList(new BranchSpec("ready/feature_1"))
+                Collections.singletonList(new BranchSpec("*/ready/**"))
                 , false
                 , Collections.emptyList()
                 , null, null, scmExtensions);
@@ -75,12 +76,11 @@ public class PipelineTest {
         TestUtilsFactory.triggerProject(project);
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
-
         String console = jenkinsRule.createWebClient().getPage(project.getFirstBuild(), "console").asText();
         System.out.println(console);
-        Thread.sleep(20000);
 
-        assertEquals("hello", "hello");
+
+        assertEquals(Result.SUCCESS, project.getFirstBuild().getResult());
 
     }
 
