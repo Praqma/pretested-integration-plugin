@@ -10,14 +10,18 @@ import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.slaves.DumbSlave;
 import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
+import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,6 +58,7 @@ public class PipAsGitExtensionIT {
         repo = TestUtilsFactory.createValidRepository(repoName);
 
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
+
         DumbSlave slave = jenkinsRule.createOnlineSlave();
         project.setAssignedNode(slave);
 
@@ -66,13 +71,17 @@ public class PipAsGitExtensionIT {
         List<UserRemoteConfig> userConfigs = new ArrayList<>();
         userConfigs.add(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), "origin", null, null));
 
+
+        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
+
         GitSCM git = new GitSCM(userConfigs,
                 Collections.singletonList(new BranchSpec("*/ready/**"))
                 , false
-                , Collections.emptyList()
+                , null
                 , null, null, scmExtensions);
 
         project.setScm(git);
+        project.save();
 
         TestUtilsFactory.triggerProject(project);
         jenkinsRule.waitUntilNoActivityUpTo(60000);
@@ -80,9 +89,22 @@ public class PipAsGitExtensionIT {
         String console = jenkinsRule.createWebClient().getPage(project.getFirstBuild(), "console").asText();
         System.out.println(console);
 
-
+        int commits = TestUtilsFactory.countCommits(repo);
+        System.out.println(commits);
+        assertEquals(3, commits);
         assertEquals(Result.SUCCESS, project.getFirstBuild().getResult());
 
     }
+
+
+    @Test
+    public void pipelineScriptTest() throws IOException {
+
+        WorkflowJob job = jenkinsRule.createProject(WorkflowJob.class);
+        job.setDefinition(new FlowDefinition() {
+        });
+
+    }
+
 
 }
