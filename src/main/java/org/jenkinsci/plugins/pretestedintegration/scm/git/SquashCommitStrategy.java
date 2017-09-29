@@ -45,7 +45,6 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
     private void doTheIntegration (Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
         {
-            build.addAction(new PretestTriggerCommitAction(triggerBranch));
 
             int commitCount;
             try {

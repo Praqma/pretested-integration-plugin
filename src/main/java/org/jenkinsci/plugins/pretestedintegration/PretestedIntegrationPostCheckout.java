@@ -173,7 +173,17 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
         String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
         String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
 
+        //  assert triggeredBranch != null : "triggered branch must not be null";
+        //  assert integrationBranch != null : "integration branch must not be null";
+        //  assert integrationRepo != null : "integrationRepo must not be null";
+        //
 
+        listener.getLogger().println("Triggered branch: " + triggeredBranch);
+        listener.getLogger().println("integration branhc: " + integrationBranch);
+        listener.getLogger().println("repo: " + integrationRepo);
+        listener.getLogger().println("uccredentials: " + ucCredentialsId);
+
+        
         try {
             // The choice of 'jgit' or 'git'. It must be set though..
             GitClient client = Git.with(listener, run.getEnvironment(listener)).in(ws).using("git").getClient();

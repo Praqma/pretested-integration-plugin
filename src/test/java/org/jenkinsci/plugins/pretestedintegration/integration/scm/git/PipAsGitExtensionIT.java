@@ -107,9 +107,14 @@ public class PipAsGitExtensionIT {
         WorkflowJob job = jenkinsRule.createProject(WorkflowJob.class, "foo-project");
         CpsFlowDefinition flowDef = new CpsFlowDefinition(StringUtils.join(Arrays.asList(
                 "node {",
-                "checkout([$class: 'GitSCM', branches: [[name: '*/ready/**']], doGenerateSubmoduleConfigurations: false, extensions: [gitPhlowIntegration(gitIntegrationStrategy: squash(), integrationBranch: 'master', repoName: 'origin')], submoduleCfg: [], userRemoteConfigs: [[url: '" + "file://" + repo.getDirectory().getAbsolutePath() + "']]])",
+                "checkout([$class: 'GitSCM'," +
+                        " branches: [[name: '*/ready/**']]," +
+                        " doGenerateSubmoduleConfigurations: false," +
+                        " extensions: [gitPhlowIntegration(gitIntegrationStrategy: squash(), integrationBranch: 'master', repoName: 'origin')]," +
+                        " submoduleCfg: []," +
+                        " userRemoteConfigs: [[url: '" + "file://" + repo.getDirectory().getAbsolutePath() + "']]])",
                 "pretestedIntegration()",
-                "}"), "\n"), true);
+                "}"), "\n"), false);
 
         job.setDefinition(flowDef);
         job.save();
@@ -124,7 +129,7 @@ public class PipAsGitExtensionIT {
 
         int commits = TestUtilsFactory.countCommits(repo);
 
-        //assertEquals(3, commits);
+        assertEquals(3, commits);
         assertEquals(Result.SUCCESS, workflow.getResult());
     }
 
