@@ -9,20 +9,22 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.slaves.DumbSlave;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
-import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -98,12 +100,32 @@ public class PipAsGitExtensionIT {
 
 
     @Test
-    public void pipelineScriptTest() throws IOException {
+    public void pipelineScriptTest() throws Exception {
 
-        WorkflowJob job = jenkinsRule.createProject(WorkflowJob.class);
-        job.setDefinition(new FlowDefinition() {
-        });
+        repo = TestUtilsFactory.createValidRepository("script-desk");
 
+        WorkflowJob job = jenkinsRule.createProject(WorkflowJob.class, "foo-project");
+        CpsFlowDefinition flowDef = new CpsFlowDefinition(StringUtils.join(Arrays.asList(
+                "node {",
+                "checkout([$class: 'GitSCM', branches: [[name: '*/ready/**']], doGenerateSubmoduleConfigurations: false, extensions: [gitPhlowIntegration(gitIntegrationStrategy: squash(), integrationBranch: 'master', repoName: 'origin')], submoduleCfg: [], userRemoteConfigs: [[url: '" + "file://" + repo.getDirectory().getAbsolutePath() + "']]])",
+                "pretestedIntegration()",
+                "}"), "\n"), true);
+
+        job.setDefinition(flowDef);
+        job.save();
+
+        WorkflowRun workflow = job.scheduleBuild2(0).get();
+
+
+        jenkinsRule.waitUntilNoActivityUpTo(60000);
+
+        String console = jenkinsRule.createWebClient().getPage(job.getFirstBuild(), "console").asText();
+        System.out.println(console);
+
+        int commits = TestUtilsFactory.countCommits(repo);
+
+        //assertEquals(3, commits);
+        assertEquals(Result.SUCCESS, workflow.getResult());
     }
 
 

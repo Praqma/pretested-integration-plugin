@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -113,6 +114,7 @@ public class JENKINS_25546_IT {
      *
      * @throws Exception
      */
+    @Ignore
     @Test
     public void ambituigyInMultiSCMRemoteNotIntegrationTargetSuccess() throws Exception {
         jenkinsRule.setQuietPeriod(0);
@@ -242,6 +244,7 @@ public class JENKINS_25546_IT {
      *
      * @throws Exception
      */
+    @Ignore
     @Test
     public void matchingRemoteIntegrationTargetSuccess() throws Exception {
         Repository repo1 = TestUtilsFactory.createRepoWithoutBranches("scenario4-1");

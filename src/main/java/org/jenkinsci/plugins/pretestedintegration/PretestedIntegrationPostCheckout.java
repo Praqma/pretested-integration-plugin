@@ -2,27 +2,34 @@ package org.jenkinsci.plugins.pretestedintegration;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import hudson.*;
-import hudson.matrix.*;
+import hudson.AbortException;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixConfiguration;
 import hudson.model.*;
-import hudson.plugins.git.*;
+import hudson.plugins.git.GitSCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestTriggerCommitAction;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.gitclient.*;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestTriggerCommitAction;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * The publisher determines what will happen when the build has been run.
@@ -30,8 +37,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class PretestedIntegrationPostCheckout extends Recorder implements Serializable, MatrixAggregatable, SimpleBuildStep {
 
-    private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
     final static String LOG_PREFIX = "[PREINT] ";
+    private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 
     /**
      * Constructor for PretestedIntegrationPostCheckout
@@ -50,22 +57,22 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build, BuildListener listener) throws AbortException {
         AbstractProject<?, ?> proj = build.getProject();
 
-        if ( ! ( build.getProject().getScm() instanceof GitSCM ) ) {
+        if (!(build.getProject().getScm() instanceof GitSCM)) {
             throw new AbortException("Unsupported SCM type.");
         }
-        GitSCM client = (GitSCM)build.getProject().getScm();
+        GitSCM client = (GitSCM) build.getProject().getScm();
 
-        PretestedIntegrationAsGitPluginExt pretestedGitPluginExt = client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class) ;
-        if ( pretestedGitPluginExt != null ) {
+        PretestedIntegrationAsGitPluginExt pretestedGitPluginExt = client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class);
+        if (pretestedGitPluginExt != null) {
             GitBridge bridge = pretestedGitPluginExt.getGitBridge();
-            if ( bridge != null ) {
+            if (bridge != null) {
                 return bridge;
             } else {
                 throw new AbortException("The GitBridge is not defined.. Something weird happend..");
             }
         }
 
-        if (proj instanceof FreeStyleProject ) {
+        if (proj instanceof FreeStyleProject) {
             FreeStyleProject p = (FreeStyleProject) build.getProject();
             PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
             return wrapper.scmBridge;
@@ -77,31 +84,31 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     /**
      * Calls the SCM-specific function according to the chosen SCM.
      *
-     * @param build The Build
+     * @param build    The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @return boolean True on success.
      * @throws InterruptedException An foreseen issue
-     * @throws IOException An foreseen IO issue
+     * @throws IOException          An foreseen IO issue
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         AbstractProject<?, ?> proj = build.getProject();
-        if ( ! ( build.getProject().getScm() instanceof GitSCM) ) {
+        if (!(build.getProject().getScm() instanceof GitSCM)) {
             listener.getLogger().println(LOG_PREFIX + "Unsupported SCM type: expects Git");
             return false;
         }
-        GitSCM client = (GitSCM)build.getProject().getScm();
+        GitSCM client = (GitSCM) build.getProject().getScm();
 
-        GitBridge bridge = (GitBridge)getScmBridge(build, listener);
+        GitBridge bridge = (GitBridge) getScmBridge(build, listener);
 
-        if ( client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class ) != null ) {
+        if (client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class) != null) {
             if (proj instanceof MatrixConfiguration) {
                 listener.getLogger().println(LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
             } else {
                 listener.getLogger().println(LOG_PREFIX + "Performing pre-verified post build steps");
                 try {
-                    bridge.handlePostBuild(build, launcher, listener );
+                    bridge.handlePostBuild(build, launcher, listener);
                 } catch (NullPointerException | IllegalArgumentException e) {
                     listener.getLogger().println(String.format("Caught %s during post-checkout. Failing build.", e.getClass().getSimpleName()));
                     e.printStackTrace(listener.getLogger());
@@ -147,27 +154,29 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
      * For a matrix project, push should only happen once.
      */
     public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
-        return new MatrixAggregator(build,launcher,listener) {
+        return new MatrixAggregator(build, launcher, listener) {
 
             @Override
             public boolean endBuild() throws InterruptedException, IOException {
-                return PretestedIntegrationPostCheckout.this.perform(build,launcher,listener);
+                return PretestedIntegrationPostCheckout.this.perform(build, launcher, listener);
             }
         };
     }
 
+
     @Override
-    public void perform(Run<?,?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
+    public void perform(Run<?, ?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
         Result result = run.getResult();
 
         String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
         String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
-        String integrationRepo= run.getAction(PretestTriggerCommitAction.class).integrationRepo;
+        String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
         String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
+
 
         try {
             // The choice of 'jgit' or 'git'. It must be set though..
-            GitClient client = Git.with(listener,run.getEnvironment(listener)).in(ws).using("git").getClient();
+            GitClient client = Git.with(listener, run.getEnvironment(listener)).in(ws).using("git").getClient();
 
             if (ucCredentialsId != null) {
 /* TODO: What is this for? Copied from GitSCM..
@@ -186,9 +195,9 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 }
             }
 
-            if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult()) ) {
-                 GitBridge.pushToIntegrationBranchGit(run,listener,client,integrationRepo,integrationBranch);
-                 GitBridge.deleteBranch(run,listener,client,triggeredBranch,integrationRepo);
+            if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult())) {
+                GitBridge.pushToIntegrationBranchGit(run, listener, client, integrationRepo, integrationBranch);
+                GitBridge.deleteBranch(run, listener, client, triggeredBranch, integrationRepo);
             } else {
                 LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
                 listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
@@ -197,12 +206,13 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
             LOGGER.log(Level.SEVERE, "Cannot launch the Git Client.." + ex);
             listener.getLogger().println(LOG_PREFIX + "Cannot launch the Git Client.." + ex);
         }
-        GitBridge.updateBuildDescription(run, listener,integrationBranch,triggeredBranch.replace(integrationRepo + "/", ""));
+        GitBridge.updateBuildDescription(run, listener, integrationBranch, triggeredBranch.replace(integrationRepo + "/", ""));
 
     }
-        /**
-         * {@inheritDoc}
-         */
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
@@ -211,7 +221,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     /**
      * Descriptor Implementation for PretestedIntegrationPostCheckout
      */
-    @Symbol("PretestedIntegration")
+    @Symbol("pretestedIntegration")
     @Extension(ordinal = Integer.MIN_VALUE)
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
