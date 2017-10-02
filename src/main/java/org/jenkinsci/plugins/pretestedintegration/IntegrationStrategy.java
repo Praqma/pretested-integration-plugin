@@ -31,13 +31,13 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
     */
     @Override
     public Descriptor<IntegrationStrategy> getDescriptor() {
-        return (IntegrationStrategyDescriptor<?>) Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (IntegrationStrategyDescriptor<?>) Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
     }
 
     /**
      * @return All Integration Strategy descriptors
      */
     public static DescriptorExtensionList<IntegrationStrategy, IntegrationStrategyDescriptor<IntegrationStrategy>> all() {
-        return Jenkins.getInstance().<IntegrationStrategy, IntegrationStrategyDescriptor<IntegrationStrategy>>getDescriptorList(IntegrationStrategy.class);
+        return Jenkins.getActiveInstance().<IntegrationStrategy, IntegrationStrategyDescriptor<IntegrationStrategy>>getDescriptorList(IntegrationStrategy.class);
     }
 }

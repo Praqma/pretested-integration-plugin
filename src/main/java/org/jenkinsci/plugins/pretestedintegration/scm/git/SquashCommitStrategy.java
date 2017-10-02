@@ -185,6 +185,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         } catch (IOException | InterruptedException ex) {
             expandedIntegrationBranch = gitbridge.getIntegrationBranch();
         }
+        build.addAction(new PretestTriggerCommitAction(triggerBranch));
         doTheIntegration((Run)build, listener, gitbridge, commitId, client, expandedIntegrationBranch, triggerBranch);
     }
 

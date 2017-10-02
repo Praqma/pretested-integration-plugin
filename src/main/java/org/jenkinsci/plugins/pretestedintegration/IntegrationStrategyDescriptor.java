@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.model.Descriptor;
 import net.sf.json.JSONObject;
+import org.eclipse.jgit.annotations.NonNull;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
@@ -19,6 +20,7 @@ public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrateg
     /**
     * {@inheritDoc}
     */
+    @NonNull
     @Override
     public IntegrationStrategy newInstance(StaplerRequest staplerRequest, JSONObject formData) throws FormException {
         return staplerRequest.bindJSON(IntegrationStrategy.class, formData);

@@ -200,7 +200,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
          * @return all the SCM Bridge Descriptors
          */
     public static DescriptorExtensionList<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>> all() {
-        return Jenkins.getInstance().<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>>getDescriptorList(AbstractSCMBridge.class);
+        return Jenkins.getActiveInstance().<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>>getDescriptorList(AbstractSCMBridge.class);
     }
 
     /**
@@ -219,7 +219,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     */
     @Override
     public Descriptor<AbstractSCMBridge> getDescriptor() {
-        return (SCMBridgeDescriptor<?>) Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (SCMBridgeDescriptor<?>) Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
     }
 
     /**

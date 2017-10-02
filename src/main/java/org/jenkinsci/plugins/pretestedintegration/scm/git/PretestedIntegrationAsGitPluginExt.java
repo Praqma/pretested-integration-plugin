@@ -79,7 +79,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * @return the plugin version
      */
     public String getVersion() {
-        Plugin pretested = Jenkins.getInstance().getPlugin("pretested-integration");
+        Plugin pretested = Jenkins.getActiveInstance().getPlugin("pretested-integration");
         if (pretested != null) return pretested.getWrapper().getVersion();
         else return "unable to retrieve plugin version";
     }

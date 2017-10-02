@@ -17,10 +17,7 @@ import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
@@ -98,7 +95,7 @@ public class PipAsGitExtensionIT {
 
     }
 
-
+    @Ignore
     @Test
     public void pipelineScriptTest() throws Exception {
 
