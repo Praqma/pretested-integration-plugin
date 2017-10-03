@@ -24,12 +24,7 @@ public abstract interface IntegrationStrategyAsGitPluginExt{
      * @param listener The BuildListener
      * @param marked marked revision for use in GitExtensions
      * @param rev revision f
-     * @param bridge the gitbridge
-     * @throws IntegrationFailedException The integration failed ala merge
-     * @throws NothingToDoException The triggered revision is behind the integration
-     * @throws UnsupportedConfigurationException You have a combination that is not supported, like the type of job
-     * @throws IOException Unforeseen IO problems
-     * @throws InterruptedException Unforeseen problems
+     * @param bridge
      */
 
     public abstract void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge)

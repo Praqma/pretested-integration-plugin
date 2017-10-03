@@ -19,10 +19,9 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @param bridge The SCM Bridge
-     * @throws IntegrationFailedException When integration fails
-     * @throws NothingToDoException The triggered branch/commit is already a part of the integration branch
+     * @throws IntegrationFailedException when integration fails
+     * @throws NothingToDoException when there's nothing to do
      * @throws UnsupportedConfigurationException when part of the configuration isn't supported
-     * @throws IntegrationUnknownFailureException An unforeseen failure
      */
     public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException;
 

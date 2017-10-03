@@ -5,6 +5,7 @@
  */
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
+import com.tikal.jenkins.plugins.multijob.MultiJobBuild;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixProject;
@@ -40,8 +41,8 @@ public class GitProjectBuilder {
     public enum STRATEGY_TYPE {
 
         SQUASH, ACCUMULATED
-    }
-
+    };
+    
     private JenkinsRule rule;
     private String integrationBranchName = "master";
     private String repoName = "origin";
@@ -87,7 +88,7 @@ public class GitProjectBuilder {
     
     public AbstractProject<?,?> generateJenkinsJob() throws IOException, Exception {
         
-        assert jobType.equals(FreeStyleProject.class) : "We must use either MultiJob or free style job types";
+        assert jobType.equals(FreeStyleProject.class) || jobType.equals(MultiJobBuild.class) : "We must use either MultiJob or free style job types";
         
         AbstractProject<?,?> project = null;
         
@@ -102,12 +103,12 @@ public class GitProjectBuilder {
             project = rule.createFreeStyleProject();
             ((FreeStyleProject)project).getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
             project.getPublishersList().add(new PretestedIntegrationPostCheckout());
-/*        } else if(jobType.equals(MatrixProject.class)) {
+        } else if(jobType.equals(MatrixProject.class)) {
             project = rule.createMatrixProject();
             ((MatrixProject)project).getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
             project.getPublishersList().add(new PretestedIntegrationPostCheckout());            
             ((MatrixProject)project).setAxes(new AxisList(new Axis("X", Arrays.asList("X1","X2"))));
-*/        }
+        }        
           
         if (useSlave) {
             DumbSlave onlineSlave = rule.createOnlineSlave();
