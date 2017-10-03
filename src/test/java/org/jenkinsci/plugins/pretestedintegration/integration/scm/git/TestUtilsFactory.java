@@ -510,14 +510,6 @@ public class TestUtilsFactory {
      */
     public static Repository createRepository(String repoDir, List<TestCommit> commits) throws IOException, GitAPIException {
         File repo = new File(repoDir + ".git");
-        if ( repo.exists() ){
-            System.out.println("The repository already exists: " + repo.getAbsolutePath() + " -> Destroy it" );
-            try {
-                destroyDirectory(repo);
-            } catch ( InterruptedException e ){
-                throw new IOException(e);
-            }
-        }
         File worktree = new File(repoDir);
         Repository repository = new FileRepository(repo);
         repository.create(true);
