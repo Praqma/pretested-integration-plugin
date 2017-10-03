@@ -18,7 +18,7 @@ import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
  * ```
  * job{
  *   wrappers{
- *   	pretestedIntegration(String integrationStrategy, String integrationBranch, String repository)
+ *   	pretestedIntegration(String integrationStrategy, String branch, String repository)
  *   }
  *   publishers {
  *      pretestedIntegration()
@@ -65,10 +65,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
             case "SQUASHED":
                 integrationStrategy = new SquashCommitStrategy();
                 break;
-            default:
-                throw new IllegalArgumentException("Please state an integration strategy.. ");
         }
-
         return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository));
     }
 

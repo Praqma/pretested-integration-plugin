@@ -1,115 +1,84 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.*;
-import hudson.model.*;
-
+import hudson.DescriptorExtensionList;
+import hudson.EnvVars;
+import hudson.ExtensionPoint;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import hudson.model.Result;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.CommitFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 /**
  * Abstract class representing an SCM bridge.
  */
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
-    private static final Logger LOGGER = Logger.getLogger(AbstractSCMBridge.class.getName());
-
 
     /**
-     * Information about the result of the integration (Unknown, Conflict, Build, Push).
-     * @return the integration branch name
+     * The integration branch.
+     * This is the branch into which pretested commits will be merged.
      */
-    protected abstract String getIntegrationBranch();
+    protected String branch;
 
     /**
      * The integration strategy.
-     * This is the strategy applied to merge pretested commits into the integration integrationBranch.
+     * This is the strategy applied to merge pretested commits into the integration branch.
      */
     public final IntegrationStrategy integrationStrategy;
 
-    protected final static String LOG_PREFIX = "[PREINT] ";
+    final static String LOG_PREFIX = "[PREINT] ";
 
     /**
      * Constructor for the SCM bridge.
-     *
      * @param integrationStrategy The integration strategy to apply when merging commits.
      */
-    public AbstractSCMBridge(IntegrationStrategy integrationStrategy ) {
+    public AbstractSCMBridge(IntegrationStrategy integrationStrategy) {
         this.integrationStrategy = integrationStrategy;
     }
 
-    public void handleIntegrationExceptions(Run run, TaskListener listener, Exception e) throws IOException, InterruptedException {
-        if ( e instanceof NothingToDoException ) {
-            run.setResult(Result.NOT_BUILT);
-            String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
-            listener.getLogger().println(logMessage);
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            throw new AbortException(e.getMessage());
-        }
-        if ( e instanceof IntegrationFailedException  ) {
-            String logMessage = String.format(
-                    "%s - setUp() - %s%n%s",
-                    LOG_PREFIX,
-                    e.getClass().getSimpleName(),
-                    e.getMessage());
-            listener.getLogger().println(logMessage);
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            run.setResult(Result.FAILURE);
-            throw new AbortException(e.getMessage());
-        }
-        if ( e instanceof UnsupportedConfigurationException ||
-                e instanceof IntegrationUnknownFailureException ||
-                e instanceof EstablishingWorkspaceFailedException ) {
-            run.setResult(Result.FAILURE);
-            String logMessage = String.format("%s - Unforeseen error preparing preparing for integration. %n%s", LOG_PREFIX, e.getMessage());
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            listener.getLogger().println(logMessage);
-            e.printStackTrace(listener.getLogger());
-            throw new AbortException(e.getMessage());
-        }
-
-        // Any other exceptions (expected: IOException | InterruptedException)
-        run.setResult(Result.FAILURE);
-        String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
-        LOGGER.log(Level.SEVERE, logMessage, e);
-        listener.getLogger().println(logMessage);
-        e.printStackTrace(listener.getLogger());
-        throw new AbortException(e.getMessage());
-    }
-
-
     /**
-     * Pushes changes to the integration integrationBranch.
+     * Pushes changes to the integration branch.
      *
-     * @param build    The Build
+     * @param build The Build
+     * @param launcher The Launcher
      * @param listener The BuildListener
-     * @throws PushFailedException
+     * @throws CommitFailedException
      */
-    public void pushToIntegrationBranch(AbstractBuild<?, ?> build, BuildListener listener) throws PushFailedException {
+    public void commit(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws CommitFailedException {
     }
 
     /**
-     * Deletes the integrated integrationBranch.
+     * Deletes the integrated branch.
      *
-     * @param build
+     * @param build The Build
+     * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws BranchDeletionFailedException
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, TaskListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    public void deleteIntegratedBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws BranchDeletionFailedException, NothingToDoException, UnsupportedConfigurationException {
     }
 
     /**
-     * Make sure the SCM is checked out on the given integrationBranch.
+     * Make sure the SCM is checked out on the given branch.
      *
-     * @param build    The Build
+     * @param build The Build
+     * @param launcher The Launcher
      * @param listener The BuildListener
-     * @param branch   The integrationBranch to check out
+     * @param branch The branch to check out
      * @throws EstablishingWorkspaceFailedException
      */
     public abstract void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException;
@@ -118,9 +87,10 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Called after the build has run. If the build was successful, the
      * changes should be committed, otherwise the workspace is reset.
      *
-     * @param build    The Build
+     * @param build The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
+     *
      * @throws IOException A repository could not be reached.
      */
     public abstract void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException;
@@ -129,58 +99,56 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * Determines if we should prepare a workspace for integration. If not we
      * throw a NothingToDoException
      *
-     * @param build    The Build
+     * @param build The Build
      * @param listener The BuildListener
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
      */
-    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException { }
+    public void isApplicable(AbstractBuild<?, ?> build, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
+    }
 
     /**
-     * Integrates the commit into the integration integrationBranch.
+     * Integrates the commit into the integration branch.
      * Uses the selected IntegrationStrategy.
      *
-     * @param build    The Build
+     * @param build The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws NothingToDoException
      * @throws IntegrationFailedException
      * @throws UnsupportedConfigurationException
      */
-    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException, UnsupportedConfigurationException {
+    protected void mergeChanges(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException {
         integrationStrategy.integrate(build, launcher, listener, this);
     }
 
     /**
      * Called after the SCM plugin has updated the workspace with remote changes.
      * Afterwards, the workspace must be ready to perform builds and tests.
-     * The integration integrationBranch must be checked out, and the given commit must be merged in.
+     * The integration branch must be checked out, and the given commit must be merged in.
      *
-     * @param build    The Build
+     * @param build The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws IntegrationFailedException
      * @throws EstablishingWorkspaceFailedException
      * @throws NothingToDoException
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException
      * @throws UnsupportedConfigurationException
-     * @throws org.jenkinsci.plugins.pretestedintegration.exceptions
      */
-    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, IntegrationUnknownFailureException,UnsupportedConfigurationException {
+    public void prepareWorkspace(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws EstablishingWorkspaceFailedException, NothingToDoException, IntegrationFailedException, UnsupportedConfigurationException {
         mergeChanges(build, launcher, listener);
     }
 
     /**
      * Updates the description of the Jenkins build.
      *
-     * @param build    The Build
+     * @param build The Build
      * @param launcher The Launcher
      * @param listener The BuildListener
      * @throws NothingToDoException
      * @throws UnsupportedConfigurationException
-     * @throws java.lang.InterruptedException
      */
-    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
+    public void updateBuildDescription(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws NothingToDoException, UnsupportedConfigurationException {
     }
 
     /**
@@ -193,11 +161,9 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     public void validateConfiguration(AbstractProject<?, ?> project) throws UnsupportedConfigurationException {
     }
 
-
-
-        /**
-         * @return all the SCM Bridge Descriptors
-         */
+    /**
+     * @return all the SCM Bridge Descriptors
+     */
     public static DescriptorExtensionList<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>> all() {
         return Jenkins.getInstance().<AbstractSCMBridge, SCMBridgeDescriptor<AbstractSCMBridge>>getDescriptorList(AbstractSCMBridge.class);
     }
@@ -233,11 +199,18 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
     }
 
     /**
-     * @param environment environment
-     * @return The Integration Branch name as variable expanded if possible - otherwise return integrationBranch
+     * @return The Integration Branch name
      */
-    public String getExpandedIntegrationBranch(EnvVars environment) {
-        return environment.expand(getIntegrationBranch());
+    public String getBranch() {
+        return branch;
+    }
+
+    /**
+     * @param environment The environment to expand the branch in
+     * @return The Integration Branch name, expanded using given EnvVars.
+     */
+    public String getExpandedBranch(EnvVars environment) {
+        return environment.expand(branch);
     }
 
     /***

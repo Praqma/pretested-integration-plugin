@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -19,9 +20,11 @@ public class FindCommitAuthorCallback extends RepositoryListenerAwareCallback<St
 
     /**
      * Constructor for FindCommitAuthorCallback
+     * @param listener The TaskListener
      * @param id The Commit id of the commit of which to find the author.
      */
-    public FindCommitAuthorCallback(final ObjectId id) {
+    public FindCommitAuthorCallback(TaskListener listener, final ObjectId id) {
+        super(listener);
         this.id = id;
     }
 

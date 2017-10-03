@@ -24,9 +24,4 @@ public class DummyBridge extends AbstractSCMBridge {
 
     }
 
-    @Override
-    protected String getIntegrationBranch() {
-        return "master";
-    }
-
 }

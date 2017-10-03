@@ -32,8 +32,8 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * Pretested integration does not allow users to push 'master' or the integration
- * branch as 'ready' branches. as they would end up being deleted.
- * We don't allow this, even though it could be valid, to protect most people
+ * branch as 'ready' branches. as they would end up being deleted. 
+ * We don't allow this, even though it could be valid, to protect most people 
  * from wrongly configuring the plugin and destroying their branches.
  */
 public class IntegrationBranchNameRestrictions_IT {

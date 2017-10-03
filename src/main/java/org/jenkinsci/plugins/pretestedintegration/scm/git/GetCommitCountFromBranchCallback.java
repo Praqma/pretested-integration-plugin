@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.util.Iterator;
@@ -19,16 +20,18 @@ public class GetCommitCountFromBranchCallback extends RepositoryListenerAwareCal
     public final ObjectId startObjectId;
 
     /**
-     * The integrationBranch name of the destination.
+     * The branch name of the destination.
      */
     public final String targetBranchName;
 
     /**
      * Constructor for GetCommitCountFromBranchCallback
+     * @param listener The TaskListener
      * @param startObjectId The Id of the starting commit
-     * @param targetBranchName The name of the destination integrationBranch
+     * @param targetBranchName The name of the destination branch
      */
-    public GetCommitCountFromBranchCallback(final ObjectId startObjectId, final String targetBranchName) {
+    public GetCommitCountFromBranchCallback(TaskListener listener, final ObjectId startObjectId, final String targetBranchName) {
+        super(listener);
         this.startObjectId = startObjectId;
         this.targetBranchName = targetBranchName;
     }

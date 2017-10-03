@@ -3,17 +3,22 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 /**
- * Abstract class representing a strategy to apply when merging pretested commits into the integration integrationBranch.
+ * Abstract class representing a strategy to apply when merging pretested commits into the integration branch.
  */
 public abstract class IntegrationStrategy implements Describable<IntegrationStrategy>, ExtensionPoint {
 
     /**
-     * Integrates the commits into the integration integrationBranch.
+     * Integrates the commits into the integration branch.
      *
      * @param build The Build
      * @param launcher The Launcher
@@ -23,7 +28,7 @@ public abstract class IntegrationStrategy implements Describable<IntegrationStra
      * @throws NothingToDoException when there's nothing to do
      * @throws UnsupportedConfigurationException when part of the configuration isn't supported
      */
-    public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException;
+    public abstract void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException;
 
     /**
     * {@inheritDoc}
