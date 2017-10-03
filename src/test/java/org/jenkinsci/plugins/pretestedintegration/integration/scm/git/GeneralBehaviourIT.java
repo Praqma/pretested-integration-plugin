@@ -74,7 +74,7 @@ public class GeneralBehaviourIT {
             System.out.println("=====BUILD-LOG=====");
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
-            if (text.contains("push origin :ready/feature_1")) {
+            if (text.contains("push origin :origin/ready/feature_1")) {
                 assertEquals("Unexpected build result.", b.getResult(), Result.SUCCESS);
             } else {
                 assertEquals("Unexpected build result.", b.getResult(), Result.NOT_BUILT);
@@ -265,7 +265,7 @@ public class GeneralBehaviourIT {
             System.out.println("=====BUILD-LOG=====");
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
-            if (text.contains("push origin :ready/feature_1")) {
+            if (text.contains("push origin :origin/ready/feature_1")) {
                 assertEquals("Unexpected build result.", b.getResult(), Result.SUCCESS);
             } else {
                 assertEquals("Unexpected build result.", b.getResult(), Result.NOT_BUILT);
@@ -365,7 +365,7 @@ public class GeneralBehaviourIT {
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
 
-            if (text.contains("push origin :ready/feature_1")) {
+            if (text.contains("push origin :origin/ready/feature_1")) {
                 assertEquals("Unexpected build result.", build.getResult(), Result.SUCCESS);
             } else {
                 assertEquals("Unexpected build result.", build.getResult(), Result.NOT_BUILT);

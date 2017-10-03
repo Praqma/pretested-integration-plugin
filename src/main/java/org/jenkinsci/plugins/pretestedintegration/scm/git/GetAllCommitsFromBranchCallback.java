@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -15,7 +14,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 
 /**
- * Callback to get a list of all Git commits from a given commit to given branch
+ * Callback to get a list of all Git commits from a given commit to given integrationBranch
  */
 public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCallback<String> {
 
@@ -28,19 +27,17 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
     public final ObjectId id;
 
     /**
-     * The branch name.
+     * The integrationBranch name.
      * Destination.
      */
     public final String branch;
 
     /**
      * Constructor for GetAllCommitsFromBranchCallback
-     * @param listener The TaskListener
      * @param id The commit Id of the starting point
-     * @param branch The branch name of the destination.
+     * @param branch The integrationBranch name of the destination.
      */
-    public GetAllCommitsFromBranchCallback(TaskListener listener, final ObjectId id, final String branch) {
-        super(listener);
+    public GetAllCommitsFromBranchCallback(final ObjectId id, final String branch) {
         this.id = id;
         this.branch = branch;
     }
@@ -53,7 +50,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         StringBuilder sb = new StringBuilder();
         RevWalk walk = new RevWalk(repo);
 
-        // commit on our branch, resolved from the jGit object id
+        // commit on our integrationBranch, resolved from the jGit object id
         RevCommit commit = walk.parseCommit(id);
 
         // walk tree starting from the integration commit
@@ -78,7 +75,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             Integer secondsSinceUnixEpoch = rev.getCommitTime();
             // Note that the git log shows different date formats, depending on configuration.
             // The choices in the git commit message below matches the squashed commit message
-            // that git generates on a Ubuntu Linux 14.04 with default git installation. 
+            // that git generates on a Ubuntu Linux 14.04 with default git installation.
             // Locale if forced to enligsh to make it independent from operating system
             // and environment.
             // Note that it is not the standard ISO format.

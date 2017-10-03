@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.9">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <hudson.triggers.SCMTrigger>
+          <spec>* * * * *</spec>
+          <ignorePostCommitHooks>false</ignorePostCommitHooks>
+        </hudson.triggers.SCMTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.24">
+    <script>pipeline{
+  agent none
+  stages {
+    stage (&apos;Checkout&apos;) {
+      agent {
+        label &apos;master&apos;
+      }
+      steps {
+        checkout([
+          $class: &apos;GitSCM&apos;,
+          branches: [[name: &apos;*/readyPipeDeclSCM/*&apos;]],
+          userRemoteConfigs: [[
+            name: &apos;origin&apos;,
+            url: &apos;git@github.com:bicschneider/test-git-phlow-plugin.git&apos;
+          ]],
+          extensions: [
+            [ gitPhlowIntegration(
+              gitIntegrationStrategy: accumulated(),
+              integrationBranch: &apos;master&apos;,
+              repoName: &apos;origin&apos;)
+            ],
+            [ $class: &apos;ChangelogToBranch&apos;,
+              options: [compareRemote: &apos;origin&apos;, compareTarget: &apos;masterPipeDeclSCM&apos;]
+            ]
+          ]
+        ])
+      sh &apos;&apos;&apos;
+        if [ -e ./build_failed.md ]; then
+          exit 1
+        fi
+        &apos;&apos;&apos;
+      }
+      post {
+        always {
+          gitPhlowUpdateRemote()
+        }
+      }
+    }
+  }
+}
+</script>
+    <sandbox>false</sandbox>
+  </definition>
+</flow-definition>

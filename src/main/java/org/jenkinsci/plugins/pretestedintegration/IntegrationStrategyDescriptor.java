@@ -6,6 +6,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Abstract class representing a Descriptor of an Integration Strategy
+ *
  * @param <T> The Integration Strategy of this Descriptor
  */
 public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrategy> extends Descriptor<IntegrationStrategy> {
@@ -17,11 +18,16 @@ public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrateg
     public abstract boolean isApplicable(Class<? extends AbstractSCMBridge> bridge);
 
     /**
-    * {@inheritDoc}
-    */
+     * {@inheritDoc}
+     */
+
+
     @Override
     public IntegrationStrategy newInstance(StaplerRequest staplerRequest, JSONObject formData) throws FormException {
-        return staplerRequest.bindJSON(IntegrationStrategy.class, formData);
+        if (staplerRequest != null) {
+            staplerRequest.bindJSON(IntegrationStrategy.class, formData);
+        }
+        return null;
     }
 
 }

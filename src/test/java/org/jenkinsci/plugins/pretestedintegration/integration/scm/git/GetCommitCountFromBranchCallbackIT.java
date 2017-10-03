@@ -1,13 +1,16 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
 import hudson.model.TaskListener;
+
 import java.io.File;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GetCommitCountFromBranchCallback;
 import org.junit.After;
 import org.junit.Test;
+
 import static junit.framework.TestCase.assertEquals;
 
 public class GetCommitCountFromBranchCallbackIT {
@@ -17,7 +20,13 @@ public class GetCommitCountFromBranchCallbackIT {
 
     @After
     public void tearDown() throws Exception {
-        TestUtilsFactory.destroyDirectory(dir);
+        try {
+            TestUtilsFactory.destroyDirectory(dir);
+        } catch (Exception e) {
+            System.out.format("WARNING: Could not delete the dir: " + dir.getAbsolutePath());
+        }
+
+
     }
 
     @Test
@@ -43,7 +52,7 @@ public class GetCommitCountFromBranchCallbackIT {
         ObjectId startCommit = git.commit().setMessage("branch commit 2").call();
 
         // Counts two commits
-        GetCommitCountFromBranchCallback callback = new GetCommitCountFromBranchCallback(TaskListener.NULL, startCommit, "master");
+        GetCommitCountFromBranchCallback callback = new GetCommitCountFromBranchCallback(startCommit, "master");
         assertEquals("Commit count did not match expectations.", Integer.valueOf(2), callback.invoke(git.getRepository(), null));
 
         // Second commit to master
@@ -52,7 +61,7 @@ public class GetCommitCountFromBranchCallbackIT {
         git.commit().setMessage("master commit 2").call();
 
         // STILL counts two commits
-        callback = new GetCommitCountFromBranchCallback(TaskListener.NULL, startCommit, "master");
+        callback = new GetCommitCountFromBranchCallback(startCommit, "master");
         assertEquals("Commit count did not match expectations.", new Integer(2), callback.invoke(git.getRepository(), null));
     }
 }

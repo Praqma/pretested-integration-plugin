@@ -81,7 +81,7 @@ public class JENKINS_24754_IT {
             System.out.println("=====BUILD-LOG=====");
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
-            if (text.contains("push origin :ready/feature_1")) {
+            if (text.contains("push origin :origin/ready/feature_1")) {
                 assertEquals("Unexpected build result.", bitstuff.getResult(), Result.SUCCESS);
             } else {
                 assertEquals("Unexpected build result.", bitstuff.getResult(), Result.NOT_BUILT);
@@ -133,7 +133,7 @@ public class JENKINS_24754_IT {
                 assertEquals("Unexpected build result.", bitstuff.getResult(), Result.NOT_BUILT);
                 checkedFirst = true;
                 //Do not check for 'git' push because on my machine (windows it says git.exe push origin1..." So now it will match windows as well :)
-            } else if (text.contains("push origin1 :ready/feature_1")) {
+            } else if (text.contains("push origin1 :origin1/ready/feature_1")) {
                 System.out.println("Verified second build");
                 assertEquals("Unexpected build result.", bitstuff.getResult(), Result.SUCCESS);
                 checkedSecond = true;
@@ -186,7 +186,7 @@ public class JENKINS_24754_IT {
                 assertEquals("Unexpected build result.", bitstuff.getResult(), Result.NOT_BUILT);
                 System.out.println("checkCounter++");
                 checkCounter += 1;
-            } else if (text.contains("push origin1 :ready/feature_1")) {
+            } else if (text.contains("push origin1 :origin1/ready/feature_1")) {
                 System.out.println("Verified second build");
                 assertEquals("Unexpected build result.", bitstuff.getResult(), Result.SUCCESS);
                 System.out.println("checkCounter++");
@@ -228,7 +228,7 @@ public class JENKINS_24754_IT {
         System.out.println("=====BUILD-LOG=====");
 
         assertTrue(text.contains("Nothing to do. The reason is:"));
-        assertEquals("Unexpected build result.", build.getResult(), Result.NOT_BUILT);
+        assertEquals("Unexpected build result.", Result.FAILURE, build.getResult());
 
     }
 

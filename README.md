@@ -202,5 +202,35 @@ Code contributions were initially made by Computer Science students at Universit
 
 The plugin is primarily developed for our customer - see the [Pretested Integration Plugin wiki page](https://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin)
 
+
 ### CodeScene analysis data
 [![](https://codescene.io/projects/1346/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/1346/jobs/latest-successful/results)
+
+
+## Developer tips
+
+IntelliJ works fine for this project, you just need to open the `pom.xml` file and chosen open as project.
+
+Check the Jenkins community plugin page as well: https://wiki.jenkins.io/display/JENKINS/Plugin+tutorial#Plugintutorial-IntelliJIDEA
+
+I also installed the Stapler plugin, but [their guide](https://wiki.jenkins.io/display/JENKINS/IntelliJ+IDEA+plugin+for+Stapler) is slight wrong, when you're on the plugin page in settings, you need to go to `Browse repositories` to find the plugin.
+
+### Build environment - the right one
+
+Building with a container so you don't need neither Java or Maven on your computer, and you're sure that the environment is the one we use as well on our build systems.
+
+Find a suitable tagged image on https://hub.docker.com/_/maven/ chosing maven + java combo. Then you could run this command and it will do Maven stuff inside the container:
+
+    docker run -it --rm --name pretested-integration-plugin-maven-build-env -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8 mvn clean install
+
+**But every time you run that command, Maven will download the hole world again, so instead we would like to re-use the Maven cache using a docker volume**:
+
+_Create a volume_:
+
+    docker volume create --name dev-env-4-pretested-integration-plugin-volume
+
+_Re-use that volume mounting it into the Maven container_ (if you read the Dockerfile behind it you see the cache is in  `/root/.m2` and also where to mount in your source code):
+
+    docker run -it --rm --name dev-env-4-pretested-integration-plugin-container -v dev-env-4-pretested-integration-plugin-volume:/root/.m2 -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8 mvn clean
+
+(You should chose short names for container and volume, I just long names to describe the commands better).

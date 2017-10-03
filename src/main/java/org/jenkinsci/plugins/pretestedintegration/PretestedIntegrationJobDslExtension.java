@@ -1,39 +1,41 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.Extension;
-import java.util.Arrays;
-import java.util.List;
-import javaposse.jobdsl.dsl.helpers.wrapper.WrapperContext;
 import javaposse.jobdsl.dsl.RequiresPlugin;
+import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
+import javaposse.jobdsl.dsl.helpers.wrapper.WrapperContext;
 import javaposse.jobdsl.plugin.ContextExtensionPoint;
 import javaposse.jobdsl.plugin.DslExtensionMethod;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
+
+import java.util.Arrays;
+import java.util.List;
+
 import static javaposse.jobdsl.dsl.Preconditions.checkArgument;
-import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
 
 /**
  * ExtensionPoint used to support the Jenkins Job DSL.
  * ```
  * job{
- *   wrappers{
- *   	pretestedIntegration(String integrationStrategy, String branch, String repository)
- *   }
- *   publishers {
- *      pretestedIntegration()
- *   }
+ * wrappers{
+ * pretestedIntegration(String integrationStrategy, String branch, String repository)
+ * }
+ * publishers {
+ * pretestedIntegration()
+ * }
  * }
  * ```
  * Valid values for `integrationStrategy` are 'ACCUMULATED' and 'SQUASHED'.
  * ```
  * job('pi-job'){
- *   wrappers{
- *   	pretestedIntegration('SQUASHED','master','origin')
- *   }
- *   publishers {
- *      pretestedIntegration()
- *   }
+ * wrappers{
+ * pretestedIntegration('SQUASHED','master','origin')
+ * }
+ * publishers {
+ * pretestedIntegration()
+ * }
  * }
  * ```
  */
@@ -48,8 +50,8 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
     /**
      * Method to configure the Pretested Integration wrapper.
      *
-     * @param strategy the Integration Strategy to use
-     * @param branch the Integration Branch
+     * @param strategy   the Integration Strategy to use
+     * @param branch     the Integration Branch
      * @param repository the repository
      * @return a configured PretestedIntegrationBuildWrapper
      */
@@ -65,12 +67,15 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
             case "SQUASHED":
                 integrationStrategy = new SquashCommitStrategy();
                 break;
+            default:
+                integrationStrategy = new SquashCommitStrategy();
         }
         return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository));
     }
 
     /**
      * Method to configure the Pretested Integration publisher
+     *
      * @return a configured PretestedIntegrationPostCheckout
      */
     @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.3")

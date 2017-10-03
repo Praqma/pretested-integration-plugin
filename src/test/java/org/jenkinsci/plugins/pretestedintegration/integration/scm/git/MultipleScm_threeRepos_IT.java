@@ -17,6 +17,7 @@ import hudson.scm.SCM;
 import hudson.triggers.SCMTrigger;
 import hudson.util.RunList;
 import hudson.util.StreamTaskListener;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,56 +29,63 @@ import java.util.concurrent.Future;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
+
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitMessages;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.junit.*;
+
 import org.jvnet.hudson.test.JenkinsRule;
 import org.xml.sax.SAXException;
 
 /**
- * The following test scenarios are written to cover reported JENKINS-25960 issue: 
+ * The following test scenarios are written to cover reported JENKINS-25960 issue:
  * https://issues.jenkins-ci.org/browse/JENKINS-25960
  * When using a multiple scm setup, the order of the SCM sections mattered when
  * we tried to resolve the correct git executable (corresponds to which git SCM
  * we try to work on).
  * Problem was we always used the first found, thus if the integration repository
  * was not specified first the build found NOTHING TO DO.
- * 
+ * <p>
  * Reproduce with the following scenario:
- *  * 3 repositories in a MultiScm configuration - all git repositories
- *  * First MultiSCM configuration:
- *      * repo1, named `repo1`
- *      * repo2*, named `repo2`
- *      * branch specifier `master`
- *      * Checkout to sub-directory: `repos`
- *      * Prune stale remote-tracking branches
- *      * Wipe out repository & force clone
- *  * Second MultiSCM configuration:
- *      * repo3, named: `repo3`
- *      * branch specifier `**\/ready/*`
- *      * Checkout to sub-directory: `repos`
- *      * Prune stale remote-tracking branches
- *      * Wipe out repository & force clone
- *  * Pretested Integration configuration:
- *      * Integration branch: `master`
- *      * Integration repository: `repo3`
- *      * Squashed strategy (strategy doesn't really matter in the context)
- * 
+ * * 3 repositories in a MultiScm configuration - all git repositories
+ * * First MultiSCM configuration:
+ * * repo1, named `repo1`
+ * * repo2*, named `repo2`
+ * * branch specifier `master`
+ * * Checkout to sub-directory: `repos`
+ * * Prune stale remote-tracking branches
+ * * Wipe out repository & force clone
+ * * Second MultiSCM configuration:
+ * * repo3, named: `repo3`
+ * * branch specifier `**\/ready/*`
+ * * Checkout to sub-directory: `repos`
+ * * Prune stale remote-tracking branches
+ * * Wipe out repository & force clone
+ * * Pretested Integration configuration:
+ * * Integration branch: `master`
+ * * Integration repository: `repo3`
+ * * Squashed strategy (strategy doesn't really matter in the context)
+ * <p>
  * Observations:
-         * Pushing a ready branch to `repo3`, says nothing to do:
-            `Nothing to do. The reason is: The branch name (repo3/ready/dev_865487921) 
-             used by git, did not match a remote branch name. 
-             You might already have integrated the branch`
-         * MultiSCM and git SCM have some troubles in the beginning of a new job
-            to find changes and build properly (have nothing to do with this plugin.
+ * Pushing a ready branch to `repo3`, says nothing to do:
+ * `Nothing to do. The reason is: The branch name (repo3/ready/dev_865487921)
+ * used by git, did not match a remote branch name.
+ * You might already have integrated the branch`
+ * MultiSCM and git SCM have some troubles in the beginning of a new job
+ * to find changes and build properly (have nothing to do with this plugin.
  * {@link twoMasterPlusOneReadyConfiguration} related to this specific setup.
-   {@link oneReadyPlusTwoMasterConfiguration} show the other situation, where 
-         integration repository is configured first, thus it works.
+ * {@link oneReadyPlusTwoMasterConfiguration} show the other situation, where
+ * integration repository is configured first, thus it works.
  */
 public class MultipleScm_threeRepos_IT {
 
@@ -182,47 +190,49 @@ public class MultipleScm_threeRepos_IT {
     }
 
     /**
-     * The following test covers reported JENKINS-25960 issue: 
+     * The following test covers reported JENKINS-25960 issue:
      * https://issues.jenkins-ci.org/browse/JENKINS-25960
      * When using a multiple scm setup, the order of the SCM sections mattered when
      * we tried to resolve the correct git executable (corresponds to which git SCM
      * we try to work on).
      * Problem was we always used the first found, thus if the integration repository
      * was not specified first the build found NOTHING TO DO.
-     * 
+     * <p>
      * <b>This test is the configuration that works</b> - where the integration repository
      * is configured as first SCM. Added as reference.
-     * 
+     * <p>
      * Reproduce with the following scenario:
-     *  * 3 repositories in a MultiScm configuration - all git repositories
-     *  * First MultiSCM configuration:
-     *      * repo3, named: `repo3`
-     *      * branch specifier **\/ready/*
-     *      * Checkout to sub-directory: `repos`
-     *      * Prune stale remote-tracking branches
-     *      * Wipe out repository & force clone
-     *  * Second MultiSCM configuration:             
-     *      * repo1, named `repo1`
-     *      * repo2*, named `repo2`
-     *      * branch specifier `master`
-     *      * Checkout to sub-directory: `repos`
-     *      * Prune stale remote-tracking branches
-     *      * Wipe out repository & force clone
-     *  * Pretested Integration configuration:
-     *      * Integration branch: `master`
-     *      * Integration repository: `repo3`
-     *      * Squashed strategy (strategy doesn't really matter in the context)
-     * 
-     *  Test work flow:
-     *      * First we try to establish a working job setup, where repository
-             builds. MultiSCM have issues in finding changes in correct order to 
-             start with in a new job configuration.
-            * Then a ready branch is pushed to the integration repository
-             and the plugin should integrate it. Several builds start, as MultiSCM
-             is involved and some times find changes in the other repositories.
-             This plugin do not have control over these flows.
-     * @throws Exception 
+     * * 3 repositories in a MultiScm configuration - all git repositories
+     * * First MultiSCM configuration:
+     * * repo3, named: `repo3`
+     * * branch specifier **\/ready/*
+     * * Checkout to sub-directory: `repos`
+     * * Prune stale remote-tracking branches
+     * * Wipe out repository & force clone
+     * * Second MultiSCM configuration:
+     * * repo1, named `repo1`
+     * * repo2*, named `repo2`
+     * * branch specifier `master`
+     * * Checkout to sub-directory: `repos`
+     * * Prune stale remote-tracking branches
+     * * Wipe out repository & force clone
+     * * Pretested Integration configuration:
+     * * Integration branch: `master`
+     * * Integration repository: `repo3`
+     * * Squashed strategy (strategy doesn't really matter in the context)
+     * <p>
+     * Test work flow:
+     * * First we try to establish a working job setup, where repository
+     * builds. MultiSCM have issues in finding changes in correct order to
+     * start with in a new job configuration.
+     * Then a ready branch is pushed to the integration repository
+     * and the plugin should integrate it. Several builds start, as MultiSCM
+     * is involved and some times find changes in the other repositories.
+     * This plugin do not have control over these flows.
+     *
+     * @throws Exception
      */
+    @Ignore
     @Test
     public void oneReadyPlusTwoMasterConfiguration() throws Exception {
         Repository repo1 = TestUtilsFactory.createRepoWithoutBranches("oneReadyPlusTwoMasterConfiguration-repo1");
@@ -261,7 +271,7 @@ public class MultipleScm_threeRepos_IT {
                 null, null, gitSCMExtensionsRepo1AndRepo2);
 
         SCM gitSCMRepo3 = new GitSCM(Collections.singletonList(new UserRemoteConfig("file://" + repo3.getDirectory().getAbsolutePath(), "repo3", null, null)),
-                Collections.singletonList(new BranchSpec("**ready/**")),
+                Collections.singletonList(new BranchSpec("origin/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensionsRepo3);
 
@@ -282,7 +292,7 @@ public class MultipleScm_threeRepos_IT {
         assertTrue("Polling did not findnew changes as expected", poll.hasChanges());
 
         pollingLog = printAndReturnPollingLogOfBuild(build, "build1");
-        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one. Done."));
+        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one."));
 
         console = printAndReturnConsoleOfBuild(build, "build1");
         expectedResult = Result.FAILURE; //reuse common lines below                
@@ -349,47 +359,49 @@ public class MultipleScm_threeRepos_IT {
     }
 
     /**
-     * The following test covers reported JENKINS-25960 issue: 
+     * The following test covers reported JENKINS-25960 issue:
      * https://issues.jenkins-ci.org/browse/JENKINS-25960
      * When using a multiple scm setup, the order of the SCM sections mattered when
      * we tried to resolve the correct git executable (corresponds to which git SCM
      * we try to work on).
      * Problem was we always used the first found, thus if the integration repository
      * was not specified first the build found NOTHING TO DO.
-     * 
+     * <p>
      * <b>This test is the configuration that works</b> - where the integration repository
      * is configured as first SCM. Added as reference.
-     * 
+     * <p>
      * Reproduce with the following scenario:
-     *  * 3 repositories in a MultiScm configuration - all git repositories
-     *  * Second MultiSCM configuration:             
-     *      * repo1, named `repo1`
-     *      * repo2*, named `repo2`
-     *      * branch specifier `master`
-     *      * Checkout to sub-directory: `repos`
-     *      * Prune stale remote-tracking branches
-     *      * Wipe out repository & force clone
-     *  * First MultiSCM configuration:
-     *      * repo3, named: `repo3`
-     *      * branch specifier **\/ready/*
-     *      * Checkout to sub-directory: `repos`
-     *      * Prune stale remote-tracking branches
-     *      * Wipe out repository & force clone
-     *  * Pretested Integration configuration:
-     *      * Integration branch: `master`
-     *      * Integration repository: `repo3`
-     *      * Squashed strategy (stragey doesn't really matter in the context)
-     * 
-     *  Test work flow:
-     *      * First we try to establish a working job setup, where repository
-             builds. MultiSCM have issues in fiding changes in correct order to 
-             start with in a new job configuration.
-            * Then a ready branch is pushed to the integration repository
-             and the plugin should integrate it. Several builds start, as MultiSCM
-             is involved and some times find changes in the other repositories.
-             This plugin do not have control over these flows.
-     * @throws Exception 
+     * * 3 repositories in a MultiScm configuration - all git repositories
+     * * Second MultiSCM configuration:
+     * * repo1, named `repo1`
+     * * repo2*, named `repo2`
+     * * branch specifier `master`
+     * * Checkout to sub-directory: `repos`
+     * * Prune stale remote-tracking branches
+     * * Wipe out repository & force clone
+     * * First MultiSCM configuration:
+     * * repo3, named: `repo3`
+     * * branch specifier **\/ready/*
+     * * Checkout to sub-directory: `repos`
+     * * Prune stale remote-tracking branches
+     * * Wipe out repository & force clone
+     * * Pretested Integration configuration:
+     * * Integration branch: `master`
+     * * Integration repository: `repo3`
+     * * Squashed strategy (stragey doesn't really matter in the context)
+     * <p>
+     * Test work flow:
+     * * First we try to establish a working job setup, where repository
+     * builds. MultiSCM have issues in fiding changes in correct order to
+     * start with in a new job configuration.
+     * Then a ready branch is pushed to the integration repository
+     * and the plugin should integrate it. Several builds start, as MultiSCM
+     * is involved and some times find changes in the other repositories.
+     * This plugin do not have control over these flows.
+     *
+     * @throws Exception
      */
+    @Ignore
     @Test
     public void twoMasterPlusOneReadyConfiguration() throws Exception {
         Repository repo1 = TestUtilsFactory.createRepoWithoutBranches("twoMasterPlusOneReadyConfiguration-repo1");
@@ -449,7 +461,7 @@ public class MultipleScm_threeRepos_IT {
         assertTrue("Polling did not findnew changes as expected", poll.hasChanges());
 
         pollingLog = printAndReturnPollingLogOfBuild(build, "build1");
-        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one. Done."));
+        assertTrue("Polling log does not contain message about 'No existing build'", pollingLog.contains("No existing build. Scheduling a new one"));
 
         console = printAndReturnConsoleOfBuild(build, "build1");
         expectedResult = Result.FAILURE; //reuse common lines below                
@@ -459,7 +471,7 @@ public class MultipleScm_threeRepos_IT {
         assertTrue("Could not find error message from git plugin in console about FAILED build",
                 console.contains(GIT_PLUGIN_VERIFY_REPO_AND_BRANCH_ERROR));
 
-        new UniqueBranchGenerator(repo3, "repo3-commit1", "repo3-commit2").usingBranch("ready/repo3_feature_1").build();
+        new UniqueBranchGenerator(repo3, "repo3-commit1", "repo3-commit2").usingBranch("ready/repo3_feature_2").build();
 
         Boolean integratedRepo3 = false;
         Boolean failedOnOtherRepoChanges = false;
@@ -480,12 +492,12 @@ public class MultipleScm_threeRepos_IT {
             if (build.getResult().equals(Result.SUCCESS)) {
                 // Tip: http://myregexp.com/
                 //String pattern = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo[1|2]/master\\)) (First time build\\.) (.*)";
-                //Checking out Revision 0ae5858942afa97b86770da779f91c80b39694e4 (repo3/ready/repo3_feature_1)
-                String pattern1 = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo3/ready/repo3_feature_1\\)) (.*)";
+                //Checking out Revision 0ae5858942afa97b86770da779f91c80b39694e4 (repo3/ready/repo3_feature_2)
+                String pattern1 = "(.*) (Checking out Revision) ([a-f,0-9]+) (\\(repo3/ready/repo3_feature_2\\)) (.*)";
                 // Create a Pattern object
                 Pattern p1 = Pattern.compile(pattern1);
                 // [PREINT] Preparing to merge changes in commit a1b88be91358cf4cb184c645cfdb0920a765d872 on development branch origin/ready/twoCommitsBranch to integration branch master
-                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (on development branch repo3/ready/repo3_feature_1) (to integration branch master)(.*)";
+                String pattern2 = "(.*) (Preparing to merge changes in commit) ([a-f,0-9]+) (on development branch repo3/ready/repo3_feature_2) (to integration branch master)(.*)";
                 // Create a Pattern object
                 Pattern p2 = Pattern.compile(pattern2);
 
@@ -496,9 +508,9 @@ public class MultipleScm_threeRepos_IT {
                 assertTrue("Revision found on branch head does not match revision being integrated", m1.group(3).equals(m2.group(3)));
 
                 assertTrue("Could not find message in console about ready branch in repo beeing integrated",
-                        console.contains("merge --squash repo3/ready/repo3_feature_1"));
+                        console.contains("merge --squash repo3/ready/repo3_feature_2"));
                 assertTrue("Integration of ready branch in repo started, but could not match push command in console.",
-                        console.contains("push repo3 :ready/repo3_feature_1"));
+                        console.contains("push repo3 :ready/repo3_feature_2"));
                 System.out.println("Verified successful build");
                 integratedRepo3 = true;
             } else if (build.getResult().equals(Result.FAILURE)) {
@@ -510,7 +522,7 @@ public class MultipleScm_threeRepos_IT {
                 // If we now also see this message, we have the situation and problem
                 // reported in JENKINS-25960
                 // and will fail with this message:
-                if (console.contains("The branch name (repo3/ready/repo3_feature_1) contained in the git build data object, did not match a remote branch name")) {
+                if (console.contains("The branch name (repo3/ready/repo3_feature_2) contained in the git build data object, did not match a remote branch name")) {
                     assertTrue("This test fails due to JENKINS-25960 - when fixed it will not fail", false);
                 } else {
                     assertTrue(String.format("Unexpected build result found: %s", build.getResult()), false);
@@ -523,6 +535,9 @@ public class MultipleScm_threeRepos_IT {
             verified = integratedRepo3 && failedOnOtherRepoChanges;
         }
         System.out.println("Verified both expected builds");
+        System.out.println(verified);
+        System.out.println("This must be true, integratedRepoBool: = " + integratedRepo3);
+        System.out.println("This must be true, failedOnOtherRepoChanges: = " + failedOnOtherRepoChanges);
         assertTrue("Seems like not all jobs on test was covered in the test", verified); // safety check if loop logic wrong
     }
 }
