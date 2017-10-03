@@ -166,9 +166,10 @@ public class GitBridge extends AbstractSCMBridge {
                 // Returning the first match should be fine, as the origin name is part of the integrationBranch name
                 // and we require all MultiSCM Git configurations to be explicitly and uniquely named.
                 BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
+                BuildData data = gitscm.getBuildData(build);
                 Revision revision = null;
-                if (gitscm.getBuildData(build) != null) {
-                    revision = gitscm.getBuildData(build).lastBuild.revision;
+                if (data != null) {
+                    revision = data.lastBuild.revision;
                 }
 
                 for (Branch bdBranch : buildData.lastBuild.revision.getBranches()) { // More than one if several integrationBranch heads are in the same commit
