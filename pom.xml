@@ -41,10 +41,6 @@
             <id>repo.jenkins-ci.org</id>
             <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
-        <repository>
-            <id>jgit-repository</id>
-            <url>https://repo.eclipse.org/content/groups/releases/</url>
-        </repository>
     </repositories>
 
     <pluginRepositories>
@@ -418,19 +414,6 @@
     </reporting>
 
     <dependencies>
-        <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>4.5.3.201708160445-r</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.2</version>
-        </dependency>
-
-
 
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -488,7 +471,6 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-
 
         <dependency>
             <groupId>org.mockito</groupId>

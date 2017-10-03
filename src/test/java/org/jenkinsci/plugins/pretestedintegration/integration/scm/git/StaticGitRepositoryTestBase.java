@@ -140,13 +140,8 @@ public class StaticGitRepositoryTestBase {
         gitrepo.close();
         bareRepository.close();
         // Repos reside inside temporary folder pr. test, clean up
-        try {
-            TestUtilsFactory.destroyDirectory(tempFolder,300,5);
-            tempFolder.delete();
-        } catch ( Exception e ){
-            System.out.format("WARNING: Could not delete the directory: " + tempFolder.getAbsolutePath() );
-        }
-
+        TestUtilsFactory.destroyDirectory(tempFolder);
+        tempFolder.delete();
         // method name of the test method that uses this setUp method NOW!
         System.out.println(String.format("***** DONE tearDown for test %s", methodName));
         System.out.println(String.format("**********************************************************************"));

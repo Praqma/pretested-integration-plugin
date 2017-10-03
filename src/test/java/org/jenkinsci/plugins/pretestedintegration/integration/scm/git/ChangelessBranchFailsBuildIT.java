@@ -24,15 +24,11 @@ public class ChangelessBranchFailsBuildIT {
 
     private Repository repository;
 
-    private final String res = "Unable to commit changes. There are two known reasons:";
+    private final String res = "Unable to commit changes. Most likely you are trying to integrate a change that was already integrated";
 
     @After
     public void tearDown() throws Exception{
-        try {
-            TestUtilsFactory.destroyRepo(repository);
-        } catch ( Exception e ){
-            System.out.format("WARNING: Could not delete the repo: " + repository.getDirectory() );
-        }
+        TestUtilsFactory.destroyRepo(repository);
     }
 
     @Test
