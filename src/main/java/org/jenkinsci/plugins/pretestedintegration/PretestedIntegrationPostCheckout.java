@@ -1,47 +1,30 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import hudson.*;
+import hudson.AbortException;
+import hudson.Extension;
+import hudson.Launcher;
 import hudson.matrix.*;
 import hudson.model.*;
-import hudson.plugins.git.*;
+import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.io.Writer;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import jenkins.tasks.SimpleBuildStep;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.transport.RefSpec;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
-import org.jenkinsci.plugins.gitclient.*;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestTriggerCommitAction;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.CheckForNull;
 
 /**
  * The publisher determines what will happen when the build has been run.
  * Depending on the chosen SCM, a more specific function will be called.
  */
-public class PretestedIntegrationPostCheckout extends Recorder implements Serializable, MatrixAggregatable, SimpleBuildStep {
+public class PretestedIntegrationPostCheckout extends Recorder implements Serializable, MatrixAggregatable {
 
     private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 
@@ -168,35 +151,9 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
         };
     }
 
-    @Override
-    public void perform(Run<?,?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
-        Result result = run.getResult();
-
-        String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
-
-        GitBridge bridge = new GitBridge(new AccumulatedCommitStrategy(),"masterPipe","origin");
-
-        try {
-            // TODO: Credentials
-            GitClient client = new GitSCM("origin").createClient(listener,run.getEnvironment(listener),run,ws);
-
-             if (result == null || result.isBetterOrEqualTo(result.SUCCESS)) {
-                bridge.pushToIntegrationBranchGit(run,listener,client);
-                bridge.deleteBranch(run,listener,client,triggeredBranch,"origin");
-            } else {
-                LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
-            }
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Cannot launch the Git Client.." + ex);
-            listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Cannot launch the Git Client.." + ex);
-        }
-        bridge.updateBuildDescription(run, listener);
-
-    }
-        /**
-         * {@inheritDoc}
-         */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;

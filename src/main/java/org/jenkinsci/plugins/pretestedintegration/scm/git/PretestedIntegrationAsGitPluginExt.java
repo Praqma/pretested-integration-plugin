@@ -41,7 +41,7 @@ import static org.eclipse.jgit.lib.Constants.HEAD;
 public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationAsGitPluginExt.class.getName());
     private GitBridge gitBridge;
-    final static String LOG_PREFIX = "[PREINT-GitPluginExt] ";
+    final static String LOG_PREFIX = "[PREINT] ";
 
     /**
      * Constructor for GitBridge.

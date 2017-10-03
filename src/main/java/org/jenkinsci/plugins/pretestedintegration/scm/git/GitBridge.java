@@ -285,28 +285,6 @@ public class GitBridge extends AbstractSCMBridge {
                 LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */ }
         }
     }
-    public void updateBuildDescription(Run<?, ?> run, TaskListener listener) {
-        Branch triggerBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch;
-        if (triggerBranch != null) {
-            String postfixText = "";
-            Result result = run.getResult();
-            if ( result == null || result.isBetterOrEqualTo(getRequiredResult())) {
-                postfixText = " -> " + integrationBranch;
-            }
-            String finalDescription;
-            if (!StringUtils.isBlank(run.getDescription())) {
-                finalDescription = String.format("%s%n%s",
-                        run.getDescription(),
-                        triggerBranch.getName() + postfixText );
-            } else {
-                finalDescription = String.format("%s", triggerBranch.getName() + postfixText);
-            }
-            try {
-                run.setDescription(finalDescription);
-            } catch (Exception ex) {
-                LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */ }
-        }
-    }
 
     /**
      * Returns the workspace
