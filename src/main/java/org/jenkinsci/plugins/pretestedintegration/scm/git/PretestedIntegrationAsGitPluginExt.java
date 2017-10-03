@@ -34,7 +34,7 @@ import org.kohsuke.stapler.framework.io.WriterOutputStream;
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
 /**
- * The Pretested Integration Plugin - automating The Phlow for git in Jenkins - as a Git Plugin Extension
+ * The Praqma Git Phlow - Automated Git branching model - as a Git Plugin Extension
  *
  */
 public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
@@ -176,13 +176,13 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         return GitClientType.GITCLI;
     }
 
-    @Symbol("PretestedIntegration")
+    @Symbol("gitPhlowIntegration")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         @Override
         public String getDisplayName() {
-            return "Use pretested integration";
+            return "Praqma Git Phlow - Verification before merge to integration branch";
         }
 
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {
@@ -197,7 +197,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
          * @return The default Integration Strategy
          */
         public IntegrationStrategy getDefaultStrategy() {
-            return new SquashCommitStrategy();
+            return new AccumulatedCommitStrategy();
         }
     }
 }

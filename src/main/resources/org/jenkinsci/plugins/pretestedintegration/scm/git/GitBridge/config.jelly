@@ -11,10 +11,10 @@
 
         <j:choose>
             <j:when test="${instance.integrationStrategy == null}">
-                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pretested integration strategy" varName="integrationStrategy" instance="${descriptor.getDefaultStrategy()}"/>
+                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pre-tested integration strategy" varName="integrationStrategy" instance="${descriptor.getDefaultStrategy()}"/>
             </j:when>
             <j:otherwise>
-                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pretested integration strategy" varName="integrationStrategy" instance="${instance.integrationStrategy}"/>
+                <f:descriptorRadioList descriptors="${descriptor.getIntegrationStrategies()}" title="Pre-tested integration strategy" varName="integrationStrategy" instance="${instance.integrationStrategy}"/>
             </j:otherwise>
         </j:choose>
     </f:block>

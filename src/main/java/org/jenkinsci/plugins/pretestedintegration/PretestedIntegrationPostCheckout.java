@@ -211,7 +211,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     /**
      * Descriptor Implementation for PretestedIntegrationPostCheckout
      */
-    @Symbol("PretestedIntegration")
+    @Symbol("gitPhlowUpdateRemote")
     @Extension(ordinal = Integer.MIN_VALUE)
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
@@ -220,7 +220,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
          */
         @Override
         public String getDisplayName() {
-            return "Pretested Integration publisher to push to integration branch";
+            return "Praqma Git Phlow - Update remote repository";
         }
 
         /**
