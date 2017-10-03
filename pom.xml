@@ -246,6 +246,24 @@
             </plugin>
 
             <!--
+            Use findbugs:findbugs goal to produce xml report for Jenkins
+            build pipeline setup.
+            Requires compile goal in default phase to be executed prior to findbugs
+            goal - else findbugs produces no results.
+            It is by purpose not included in a phase, to avoid executing the analysis to often
+            Can't use version 3.x as it requires Java runtime 1.7 - we are using
+            1.6 on our build slaves.
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.4</version>
+                <configuration>
+                    <xmlOutput>true</xmlOutput>
+                </configuration>
+            </plugin>
+
+            <!--
             Enables checkstyle:checkstyle goal to be used manually
             but does not hook checkstyle up on any phases in the default
             lifecycle. We want to run it manually in specific part of the
