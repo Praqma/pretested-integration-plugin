@@ -12,7 +12,6 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pretestedintegration.*;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -205,7 +204,6 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     /**
      * Descriptor implementation for SquashCommitStrategy
      */
-    @Symbol("squash")
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<SquashCommitStrategy> {
 

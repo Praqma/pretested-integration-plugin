@@ -9,7 +9,6 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
@@ -58,13 +57,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         );
     }
 
-    public IntegrationStrategy getGitIntegrationStrategy(){
-        return gitBridge.integrationStrategy;
-    }
-
-    public String getRepoName(){
-        return gitBridge.getRepoName();
-    }
 
     public String getIntegrationBranch(){
         if ( gitBridge == null ) {
@@ -108,7 +100,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
         for (UserRemoteConfig uc : scm.getUserRemoteConfigs()) {
             String credentialsRepoName = uc.getName();
-            if ( credentialsRepoName != null && credentialsRepoName.equals(expandedRepo) ){
+            if ( credentialsRepoName == expandedRepo ){
                 String ucCred = uc.getCredentialsId();
                 if ( ucCred != null ){
                     ucCredentialsId = uc.getCredentialsId();
@@ -176,7 +168,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         return GitClientType.GITCLI;
     }
 
-    @Symbol("gitPhlowIntegration")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 

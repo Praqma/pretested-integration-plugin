@@ -17,7 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.*;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestTriggerCommitAction;
@@ -159,6 +158,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     @Override
     public void perform(Run<?,?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
         Result result = run.getResult();
+        Job project = run.getParent();
 
         String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
         String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
@@ -211,7 +211,6 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     /**
      * Descriptor Implementation for PretestedIntegrationPostCheckout
      */
-    @Symbol("gitPhlowUpdateRemote")
     @Extension(ordinal = Integer.MIN_VALUE)
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 

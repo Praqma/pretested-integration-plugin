@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
@@ -222,7 +221,6 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
     /**
      * Descriptor implementation for AccumulatedCommitStrategy
      */
-    @Symbol("accumulated")
     @Extension
     public static final class DescriptorImpl extends IntegrationStrategyDescriptor<AccumulatedCommitStrategy> {
 
