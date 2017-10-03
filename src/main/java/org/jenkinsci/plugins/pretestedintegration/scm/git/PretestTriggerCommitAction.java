@@ -15,23 +15,8 @@ import hudson.plugins.git.Branch;
 public class PretestTriggerCommitAction extends InvisibleAction {
 
     public final Branch triggerBranch;
-    public final String integrationBranch;
-    public final String integrationRepo;
-    public final String ucCredentialsId;
 
-    public PretestTriggerCommitAction( final Branch triggerBranch, final String integrationBranch, final String integrationRepo, final String ucCredentialsId ) {
+    public PretestTriggerCommitAction( final Branch triggerBranch) {
         this.triggerBranch = triggerBranch;
-        this.integrationBranch = integrationBranch;
-        this.integrationRepo = integrationRepo;
-        this.ucCredentialsId = ucCredentialsId;
-
-    }
-
-    public PretestTriggerCommitAction( final Branch triggerBranch ) {
-        this.triggerBranch = triggerBranch;
-        this.integrationBranch = null;
-        this.integrationRepo = null;
-        this.ucCredentialsId = null;
-
     }
 }

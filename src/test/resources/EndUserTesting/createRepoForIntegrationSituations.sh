@@ -14,13 +14,11 @@ git config --add branch.master.merge refs/heads/master
 
 git checkout -B master
 echo "# HEADER" >> README.md
-cp `pwd`/../`dirname $0`/Jenkinsfile .
 git add .
 git commit -m "init"
 git tag -a -m "init" init
 
-branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq PipeSCM PipeScript"
-#branch_prefixes="PipeSCM PipeScript"
+branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq Pipe"
 # TODO. Add test for pushing to integrationBranch
 
 function resetToInit(){
@@ -63,20 +61,12 @@ for branch_prefix in ${branch_prefixes} ; do
         git add . && git commit -m "commit 2"
 
   text="test-06-merge-empty-commit" && \
-        resetToInit && checkoutMyBranch ready${branch_prefix}/$text && \
+        resetToInit && checkoutMyBranch ready${branch_prefix}/test-06-merge-empty-commit && \
         echo "$text" && \
         git commit --allow-empty -m "$text"
-
-  text="test-07-change-Jenkinsfile" && \
-        resetToInit && checkoutMyBranch ready${branch_prefix}/$text && \
-        echo "println \"$text\"" >> Jenkinsfile && \
-        git add . && \
-        git commit -m "$text"
 done
 resetToInit && checkoutMyBranch master
 
 git push origin --mirror
-
 git log --graph --decorate --all --oneline
-
-
+exit

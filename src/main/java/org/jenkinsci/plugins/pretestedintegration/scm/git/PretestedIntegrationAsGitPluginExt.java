@@ -3,21 +3,24 @@ package org.jenkinsci.plugins.pretestedintegration.scm.git;
 import hudson.*;
 import hudson.matrix.*;
 import hudson.model.*;
-import hudson.plugins.git.*;
+import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Revision;
+import hudson.plugins.git.Branch;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,7 +31,6 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.framework.io.WriterOutputStream;
 
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
@@ -39,7 +41,7 @@ import static org.eclipse.jgit.lib.Constants.HEAD;
 public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationAsGitPluginExt.class.getName());
     private GitBridge gitBridge;
-    final static String LOG_PREFIX = "[PREINT] ";
+    final static String LOG_PREFIX = "[PREINT-GitPluginExt] ";
 
     /**
      * Constructor for GitBridge.
@@ -96,33 +98,11 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
-        String ucCredentialsId = "";
-
-        for (UserRemoteConfig uc : scm.getUserRemoteConfigs()) {
-            String credentialsRepoName = uc.getName();
-            if ( credentialsRepoName == expandedRepo ){
-                String ucCred = uc.getCredentialsId();
-                if ( ucCred != null ){
-                    ucCredentialsId = uc.getCredentialsId();
-                }
-            }
-        }
+        run.addAction(new PretestTriggerCommitAction(triggeredBranch));
 
         try {
             gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
-
-            ChangelogCommand changelog = git.changelog();
-            changelog.includes(triggeredRevision.getSha1());
-            Writer out = new StringWriter();
-            listener.getLogger().println("Using 'Changelog to branch' strategy.");
-            changelog.excludes(expandedRepo + "/" + expandedIntegrationBranch);
-            changelog.to(out).execute();
-            if (out.toString().contains("Jenkinsfile")){
-                listener.getLogger().println(String.format("%s You have changed Jenkinsfile", LOG_PREFIX));
-//                throw new IntegrationFailedException("You have changed Jenkinsfile");
-            }
-
-            listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
+            listener.getLogger().println(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
             ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
 
@@ -147,14 +127,14 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
         }
 
-        run.addAction(new PretestTriggerCommitAction( triggeredBranch, expandedIntegrationBranch, expandedRepo, ucCredentialsId));
         if ( run.getResult() == null || run.getResult() == Result.SUCCESS ) {
             Revision mergeRevision = new GitUtils(listener,git).getRevisionForSHA1(git.revParse(HEAD));
-
+            run.addAction(new PretestTriggerCommitAction(new Branch(triggeredBranch.getName(),triggeredBranch.getSHA1())));
             return mergeRevision;
         } else {
             // We could not integrate, but we must return a revision for recording it so it does not retrigger
             git.checkout().ref(triggeredBranch.getName()).execute();
+            run.addAction(new PretestTriggerCommitAction(new Branch(triggeredBranch.getName(),triggeredBranch.getSHA1())));
             return triggeredRevision;
         }
     }
