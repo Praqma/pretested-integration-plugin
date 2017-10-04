@@ -95,7 +95,7 @@ public class PipAsGitExtensionIT {
 
     }
 
-    @Ignore
+
     @Test
     public void pipelineScriptTest() throws Exception {
 

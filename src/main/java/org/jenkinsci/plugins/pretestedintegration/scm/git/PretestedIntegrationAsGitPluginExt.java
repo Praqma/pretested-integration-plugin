@@ -120,7 +120,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             ChangelogCommand changelog = git.changelog();
             changelog.includes(triggeredRevision.getSha1());
             Writer out = new StringWriter();
-            listener.getLogger().println("Using 'Accumulated' strategy.");
             changelog.excludes(expandedRepo + "/" + expandedIntegrationBranch);
             changelog.to(out).execute();
             if (out.toString().contains("Jenkinsfile")) {
@@ -131,6 +130,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
             ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
+
 
         } catch (NothingToDoException e) {
             run.setResult(Result.NOT_BUILT);
