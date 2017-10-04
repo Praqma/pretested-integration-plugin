@@ -25,7 +25,7 @@ public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrateg
     @Override
     public IntegrationStrategy newInstance(StaplerRequest staplerRequest, JSONObject formData) throws FormException {
         if (staplerRequest != null) {
-            staplerRequest.bindJSON(IntegrationStrategy.class, formData);
+            return staplerRequest.bindJSON(IntegrationStrategy.class, formData);
         }
         return null;
     }
