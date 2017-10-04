@@ -11,7 +11,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 
 /**
  * Callback to get a list of all Git commits from a given commit to given integrationBranch
@@ -56,7 +55,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
         // walk tree starting from the integration commit
         walk.markStart(commit);
 
-        LOGGER.info(String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting commit message until reaching branch %s", branch));
+        LOGGER.info(String.format(GitMessages.LOG_PREFIX+ "Collecting commit message until reaching branch %s", branch));
         // limit the tree walk to keep away from master commits
         // Reference for this idea is: https://wiki.eclipse.org/JGit/User_Guide#Restrict_the_walked_revision_graph
         ObjectId to = repo.resolve(branch);
