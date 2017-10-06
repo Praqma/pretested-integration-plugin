@@ -7,28 +7,32 @@
         <relativePath />
     </parent>
 
-    <properties>
-        <jenkins.version>1.642.4</jenkins.version>
-        <jenkins-test-harness.version>2.24</jenkins-test-harness.version>
-    </properties>
-
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin</url>
     <name>Pretested Integration Plugin</name>
     <artifactId>pretested-integration</artifactId>
+    <description>Enables pretested integration as Git SCM extension.</description>
+    <url>https://wiki.jenkins.io/display/JENKINS/Pretested+Integration+Plugin</url>
+
     <!--
     Using the buildnumber-maven-plugin and the maven-hpi-plugin configuration below
     the plugin will show up with at version number like:
     major.minor.patch-SNAPSHOT-gitSHA (dev builds)
     major.minor.patch-gitSHA (releases)
     -->
-    <version>2.4.2-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
+
+
+    <properties>
+        <jenkins.version>1.642.4</jenkins.version>
+        <jenkins-test-harness.version>2.24</jenkins-test-harness.version>
+    </properties>
+
 
     <developers>
         <developer>
-            <id>praqma_josra</id>
-            <name>Praqma Josra</name>
-            <email>josra@praqma.net</email>
+            <id>praqma</id>
+            <name>Praqma Support</name>
+            <email>support@praqma.net</email>
         </developer>
     </developers>
 
@@ -63,33 +67,6 @@
         <url>https://github.com/Praqma/pretested-integration-plugin</url>
       <tag>HEAD</tag>
   </scm>
-
-
-    <!--
-    * In general using latest version of plugins, so some mentioned only to
-        overwrite older version of plugin from parent.
-    * Listing some plugins without configuration only just to "tell"
-        which pluign we favor to use in our build pipeline.
-        Could omit for example the javadoc plugin in build/plugin section
-        and still use the goal javadoc:javadoc, but we like it explicitly listed
-
-    * Maven pom configuration for our build pipeline:
-        * mvn compile test-compile to compile project and tests
-        * mvn test will after compile run unit tests (surefire). Use test phase
-            for development to check tests run.
-        * mvn cobertura:cobertura will compile and run tests (again), instrument and
-            report converage. Use that goal for reporting coverage.
-        * mvn verify to run all the above and integration-tests, and report result
-
-        * mvn javadoc:javadoc to check your documentation and report warnings to console
-        * mvn compile findbugs:findbugs to use findbugs and get xml report
-        * mvn checkstyle:checkstyle to do checkstyle analysis and get xml report
-        * mvn pmd:pmd pmd:cpd to use PMD tool and get xml report for pmd and cpd
-        * mvn jdepend:generate will do yet another java code analysis and report
-
-        * mvn site will generate site report, including all the above results.
-
-    -->
 
 
     <build>
@@ -133,10 +110,9 @@
                 <artifactId>maven-hpi-plugin</artifactId>
                 <configuration>
                     <pluginVersionDescription>${buildNumber}</pluginVersionDescription>
-                    <compatibleSinceVersion>2.0</compatibleSinceVersion>
+                    <compatibleSinceVersion>3.0.0</compatibleSinceVersion>
                 </configuration>
             </plugin>
-
 
             <!--
                 Use java 1.8. We need this for our testing environment. Java 7 was EOL last year
@@ -206,216 +182,9 @@
                     <check/>
                 </configuration>
             </plugin>
-
-
-            <!--
-            Enables the site phase and site goal 'mvn site' to generate nice
-            project site documentation, including project summary and all reports from other
-            plugins that creates interesting reports (PMD, Findbugs, Checkstyle, test and coverage
-            Needs to be mentioned here in build/plugin due to a bug:
-            http://dougchang333.blogspot.dk/2013/11/hadoop-build-error-javalangnoclassdeffo.html
-            https://issues.apache.org/jira/browse/HADOOP-10092
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.4</version>
-            </plugin>
-
-
-            <!--
-            javadoc plugin is also added here (also found in reporting) to enable 'mvn javadoc:javadoc' as
-            individual goal for some build in the build pipeline
-            In the reporting section javadoc plugin is mentioned as well to enable javadoc as part of the 'mvn site'
-            lifecycle
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-            </plugin>
-
-
-            <!--
-            Run pmd:pmd and pmd:cpd goals directly without being part of 'mvn site' lifecycle
-            PMD and CPD scans java code for possible problems and copy-pasted code
-            The two goals create output for the Jenkins build pipeline jobs
-            It will not create output for the site lifecycle, so we add the plugin to reporting-section also.
-            -->
-            <plugin>
-
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.2</version>
-            </plugin>
-
-            <!--
-            Enables checkstyle:checkstyle goal to be used manually
-            but does not hook checkstyle up on any phases in the default
-            lifecycle. We want to run it manually in specific part of the
-            build pipeline.
-            Enables console output for developers to see, and xml for Jenkins
-            Plugin included in reporting section as well to hook it into the site
-            report
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.12.1</version>
-                <configuration>
-                        <format>xml</format>
-                </configuration>
-            </plugin>
-
-            <!--
-            Another Java code metric reporting tool. Included in the site report
-            as a plugin under reporting.
-            use  'mvn jdepend:generate' to generate jdepende report in xml (and html) reports
-            to also use in the build pipeline for trending.
-            -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jdepend-maven-plugin</artifactId>
-                <version>2.0</version>
-            </plugin>
         </plugins>
     </build>
 
-
-    <reporting>
-        <plugins>
-
-            <!--
-            Converts maven-surefire-plugin test reports to html reports, for the site report from 'mvn site'
-            lifecycle. The maven-surefire-plugin creates output for the Jenkins build pipeline
-            and don't need this reporting conversion.
-            The same goes for the fail-safe-pluing, for integration test reports.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.17</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.19.1</version>
-            </plugin>
-
-            <!-- Will include cobertura report in the site report -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.7</version>
-            </plugin>
-
-            <!--
-            To generate the FindBugs xdoc report as part of the Project Reports
-            and will be the format used by Jenkins.
-            Can't use version 3.x as it requires Java runtime 1.7 - we are using
-            1.6 on our build slaves.
-            -->
-
-            <!-- Include findbugs result in the site report -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>2.5.5</version>
-            </plugin>
-
-
-
-            <!--
-            Also adding javadoc plugin to reporting section so it automatically runs a part of
-            'mvn site' lifecycle.
-            javadoc plugin is also added in build/plugins-section to enable 'mvn javadoc:javadoc' as
-            individual goal for some build in the build pipeline
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
-            </plugin>
-
-
-            <!--
-            Includes the PMD/CPD reports in the mvn site reports
-            Plugin is also mentioned in build/plugin-section to enable to use the
-            individual goals for the build pipeline reporting, without running
-            the site lifecycle
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.2</version>
-            </plugin>
-
-            <!--
-            Includes checkstyle report into site report. Plugin is also enabled in build/plugin
-            for developers to use the checkstyle goal and use the goal isolated in specific build pipeline steps (not mvn site)
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.12.1</version>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>checkstyle</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-
-            <!--
-            Generates cross-reference of the project's source as part of project's reports which other
-            plugins default links to.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>2.1</version>
-            </plugin>
-
-
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>taglist-maven-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <tagListOptions>
-                        <tagClasses>
-                            <tagClass>
-                                <displayName>Todo Work</displayName>
-                                <tags>
-                                    <tag>
-                                        <matchString>todo</matchString>
-                                        <matchType>ignoreCase</matchType>
-                                    </tag>
-                                    <tag>
-                                        <matchString>fixme</matchString>
-                                        <matchType>ignoreCase</matchType>
-                                    </tag>
-                                </tags>
-                            </tagClass>
-                        </tagClasses>
-                    </tagListOptions>
-                </configuration>
-            </plugin>
-
-            <!--
-            Another Java code metric reporting tool, nice to have in the site report
-            as well. Included in build/plugin section as well.
-            -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jdepend-maven-plugin</artifactId>
-                <version>2.0</version>
-            </plugin>
-
-        </plugins>
-    </reporting>
 
     <dependencies>
         <dependency>
