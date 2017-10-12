@@ -2,6 +2,8 @@
 /target
 /work
 
+.DS_Store
+
 # Package Files #
 *.jar
 *.war

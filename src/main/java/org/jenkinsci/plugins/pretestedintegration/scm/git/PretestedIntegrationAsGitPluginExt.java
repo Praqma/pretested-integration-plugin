@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang.StringUtils;
 
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
@@ -104,8 +105,10 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         String expandedRepo = gitBridge.getExpandedRepository(environment);
         String ucCredentialsId = "";
 
+        
+        
         for (UserRemoteConfig uc : scm.getUserRemoteConfigs()) {
-            String credentialsRepoName = uc.getName();
+            String credentialsRepoName = StringUtils.isBlank(uc.getName()) ? "origin" : uc.getName();
             if (credentialsRepoName != null && credentialsRepoName.equals(expandedRepo)) {
                 String ucCred = uc.getCredentialsId();
                 if (ucCred != null) {
