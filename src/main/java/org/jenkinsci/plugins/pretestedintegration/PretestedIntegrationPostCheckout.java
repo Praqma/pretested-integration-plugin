@@ -172,32 +172,12 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
         String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
         String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
         String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
-
-        //  assert triggeredBranch != null : "triggered branch must not be null";
-        //  assert integrationBranch != null : "integration branch must not be null";
-        //  assert integrationRepo != null : "integrationRepo must not be null";
-        //
-
-        listener.getLogger().println("Triggered branch: " + triggeredBranch);
-        listener.getLogger().println("integration branhc: " + integrationBranch);
-        listener.getLogger().println("repo: " + integrationRepo);
-        listener.getLogger().println("uccredentials: " + ucCredentialsId);
-
         
         try {
             // The choice of 'jgit' or 'git'. It must be set though..
             GitClient client = Git.with(listener, run.getEnvironment(listener)).in(ws).using("git").getClient();
 
             if (ucCredentialsId != null) {
-/* TODO: What is this for? Copied from GitSCM..
-                String url = "origin"; // getParameterString(uc.getUrl(), environment);
-
-                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class,project,
-                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build());
-                CredentialsMatcher ucMatcher = CredentialsMatchers.withId(ucCredentialsId);
-                CredentialsMatcher idMatcher = CredentialsMatchers.allOf(ucMatcher, GitClient.CREDENTIALS_MATCHER);
-                StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
-                */
                 StandardUsernameCredentials credentials = CredentialsProvider.findCredentialById(ucCredentialsId, StandardUsernameCredentials.class, run, Collections.EMPTY_LIST);
                  
                 if (credentials != null) {
