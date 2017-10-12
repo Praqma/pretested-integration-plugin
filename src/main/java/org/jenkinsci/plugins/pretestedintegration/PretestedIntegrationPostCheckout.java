@@ -181,7 +181,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 StandardUsernameCredentials credentials = CredentialsProvider.findCredentialById(ucCredentialsId, StandardUsernameCredentials.class, run, Collections.EMPTY_LIST);
                  
                 if (credentials != null) {
-                    listener.getLogger().println("[PREINT] found credentials");
+                    listener.getLogger().println("[PREINT] Found credentials");
                     client.setCredentials(credentials);
                 }
             }
