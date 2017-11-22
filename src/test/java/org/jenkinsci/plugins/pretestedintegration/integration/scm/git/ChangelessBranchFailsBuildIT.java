@@ -24,7 +24,7 @@ public class ChangelessBranchFailsBuildIT {
 
     private Repository repository;
 
-    private final String res = "Unable to commit changes. There are two known reasons:";
+    private final String res = "there was nothing to merge";
 
     @After
     public void tearDown() throws Exception{
@@ -39,7 +39,7 @@ public class ChangelessBranchFailsBuildIT {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String console = jenkins.createWebClient().getPage(build, "console").asText();
         System.out.println(console);
-        jenkins.assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.NOT_BUILT, build);
         assertTrue(console.contains(res));
     }
 
@@ -51,7 +51,7 @@ public class ChangelessBranchFailsBuildIT {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String console = jenkins.createWebClient().getPage(build, "console").asText();
         System.out.println(console);
-        jenkins.assertBuildStatus(Result.FAILURE, build);
+        jenkins.assertBuildStatus(Result.NOT_BUILT, build);
         assertTrue(console.contains(res));
     }
 }

@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import hudson.AbortException;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -11,12 +13,16 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pretestedintegration.*;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
@@ -43,9 +49,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     public SquashCommitStrategy() {
     }
 
-    private void doTheIntegration (Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
+    private void doTheIntegration(Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
         {
-
             int commitCount;
             try {
                 commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, expandedIntegrationBranch);
@@ -83,7 +88,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 throw new NothingToDoException(logMessage);
             }
 
-            String commitAuthor  = null; //leaving un-assigned, want to fail later if not assigned;
+            String commitAuthor = null; //leaving un-assigned, want to fail later if not assigned;
             try {
                 // Collect author
                 logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch";
@@ -118,28 +123,24 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
                 PersonIdent author = getPersonIdent(commitAuthor);
-                String message_commits = client.getWorkTree().child(".git/SQUASH_MSG").readToString().replaceAll("\"", "'");
+
+                //relying on git default behaviour to create a SQUAH_MSG file
+                // if there is no squash merge message, then there were no changes, and we will therefore do nothing
+                FilePath p = new FilePath(client.getWorkTree(), ".git/SQUASH_MSG");
+                if (!p.exists()) {
+                    throw new NothingToDoException("No SQUASH_MSG found in .git, there was nothing to merge");
+                }
+
+                String message_commits = p.readToString().replaceAll("\"", "'");
                 String message = String.format("Squashed commit of branch '%s'%n%n%s", triggerBranch.getName(), message_commits);
                 client.setAuthor(author);
                 client.commit(message);
                 logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of squashed merge done";
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
+            } catch (NothingToDoException ex) {
+                throw ex;
             } catch (IOException | GitException | InterruptedException ex) {
-                // If ".git/SQUASH_MSG" wasn't found the most likely culrprit is that the merge was an empty
-                // one (No changes) for some reason the merge() command does not complain or throw exception when that happens
-                if (    ex.getMessage().contains("Cannot commit") ||
-                        ex.getMessage().contains("SQUASH_MSG (No such file or directory)") ||
-                        ex.getMessage().contains("SQUASH_MSG (The system cannot find the file specified)") ) {
-                    logMessage = String.format("%sUnable to commit changes. There are two known reasons:%n" +
-                            "A) You are trying to integrate a change that was already integrated.%n" +
-                            "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a merge. %n" +
-                            "   If you REALLY want the empty commit to be accepted, you can rebase your empty commit(s) on top %n" +
-                            "   of the integration branch and it will be fast-forwarded. %n" +
-                            "Message was:%n%s", PretestedIntegrationBuildWrapper.LOG_PREFIX, ex.getMessage());
-                } else {
-                    logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while committing. Logging exception msg: %s", ex.getMessage());
-                }
                 LOGGER.log(Level.SEVERE, logMessage, ex);
                 listener.getLogger().println(logMessage);
                 throw new IntegrationUnknownFailureException(ex);
@@ -149,6 +150,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
         }
     }
+
     /**
      * {@inheritDoc}
      */
@@ -157,6 +159,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
         GitBridge gitbridge = (GitBridge) bridge;
         GitClient client;
+
         try {
             client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
         } catch (InterruptedException | IOException ex) {
@@ -170,6 +173,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         } catch (IOException | InterruptedException ex) {
             expandedRepoName = gitbridge.getRepoName();
         }
+
+
         BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), expandedRepoName);
 
         //TODO: Implement robustness, in which situations does this one contain
@@ -186,13 +191,23 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             expandedIntegrationBranch = gitbridge.getIntegrationBranch();
         }
         build.addAction(new PretestTriggerCommitAction(triggerBranch));
-        doTheIntegration((Run)build, listener, gitbridge, commitId, client, expandedIntegrationBranch, triggerBranch);
+        doTheIntegration((Run) build, listener, gitbridge, commitId, client, expandedIntegrationBranch, triggerBranch);
     }
-
 
 
     @Override
     public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
+
+        String expandedRepoName;
+        try {
+            expandedRepoName = gitbridge.getExpandedRepository(build.getEnvironment(listener));
+        } catch (IOException | InterruptedException ex) {
+            expandedRepoName = gitbridge.getRepoName();
+        }
+
+        if (!PretestedIntegrationGitUtils.isRelevant(rev, expandedRepoName)) {
+            throw new NothingToDoException("No revision matches configuration in 'Integration repository'");
+        }
 
         String expandedIntegrationBranch;
         try {
@@ -200,13 +215,15 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         } catch (IOException | InterruptedException ex) {
             expandedIntegrationBranch = gitbridge.getIntegrationBranch();
         }
+
+
         //TODO: Implement robustness, in which situations does this one contain
         // multiple revisons, when two branches point to the same commit?
         // (JENKINS-24909). Check integrationBranch spec before doing anything
         // It could be the last rather than the first that is the wanted
         Branch triggerBranch = rev.getBranches().iterator().next();
 
-        doTheIntegration((Run)build, listener, gitbridge, rev.getSha1(), client, expandedIntegrationBranch, triggerBranch);
+        doTheIntegration((Run) build, listener, gitbridge, rev.getSha1(), client, expandedIntegrationBranch, triggerBranch);
     }
 
     /**

@@ -13,6 +13,7 @@ import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.scm.SCM;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -40,6 +42,7 @@ import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapp
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.xml.sax.SAXException;
@@ -49,7 +52,9 @@ public class TestUtilsFactory {
     public enum STRATEGY_TYPE {
 
         SQUASH, ACCUMULATED
-    };
+    }
+
+    ;
 
     public static final String AUTHOR_NAME = "john Doe";
     public static final String AUTHOR_EMAIL = "Joh@praqma.net";
@@ -130,8 +135,8 @@ public class TestUtilsFactory {
      * creating a lot of temporary folders and files during functional tests.
      *
      * @param directoryToDelete Full path to directory
-     * @param sleepms milliseconds to sleep between each attempt
-     * @param attempts number of attempt to try to delete the directory
+     * @param sleepms           milliseconds to sleep between each attempt
+     * @param attempts          number of attempt to try to delete the directory
      * @throws IOException
      * @throws InterruptedException
      */
@@ -265,7 +270,7 @@ public class TestUtilsFactory {
         return configurePretestedIntegrationPlugin(rule, type, Collections.singletonList(new UserRemoteConfig("file://" + repo.getDirectory().getAbsolutePath(), null, null, null)), null, runOnSlave);
     }
 
-    public static void triggerProject(AbstractProject<?,?> project) throws Exception {
+    public static void triggerProject(AbstractProject<?, ?> project) throws Exception {
         project.getTriggers().clear();
         SCMTrigger scmTrigger = new SCMTrigger("@daily", true);
         project.addTrigger(scmTrigger);
@@ -285,26 +290,22 @@ public class TestUtilsFactory {
             project.setAssignedNode(onlineSlave);
         }
 
-        GitBridge gitBridge;
-        if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), integrationBranch, repoName);
-        } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), integrationBranch, repoName);
-        }
-
-        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
-        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
+        gitSCMExtensions.add(new PretestedIntegrationAsGitPluginExt(type == STRATEGY_TYPE.SQUASH ? new SquashCommitStrategy() : new AccumulatedCommitStrategy(), integrationBranch, repoName));
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
+
+        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 
         GitSCM gitSCM = new GitSCM(repoList,
                 Collections.singletonList(new BranchSpec("*/ready/**")),
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
 
+
         project.setScm(gitSCM);
+        project.save();
 
         return project;
     }
@@ -312,17 +313,9 @@ public class TestUtilsFactory {
     //TODO: Create a realistic setup with multi SCM pluging...this seems boiler platey
     public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(JenkinsRule rule, TestUtilsFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, Repository repo) throws Exception {
         FreeStyleProject project = rule.createFreeStyleProject();
-        GitBridge gitBridge;
-        if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoName);
-        } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoName );
-        }
-
-        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
-        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
+        gitSCMExtensions.add(new PretestedIntegrationAsGitPluginExt(type == STRATEGY_TYPE.SQUASH ? new SquashCommitStrategy() : new AccumulatedCommitStrategy(), "master", repoName));
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
@@ -392,7 +385,7 @@ public class TestUtilsFactory {
 
         System.out.format(workDirForRepo.getAbsolutePath());
 
-        if ( repo.exists() ) {
+        if (repo.exists()) {
             System.out.format("EXIST:" + repo.getAbsolutePath());
             try {
                 TestUtilsFactory.destroyDirectory(repo);
@@ -435,7 +428,7 @@ public class TestUtilsFactory {
     public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {
         File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
 
-        if ( repo.exists() ) {
+        if (repo.exists()) {
             System.out.format("EXIST:" + repo.getAbsolutePath());
             try {
                 TestUtilsFactory.destroyDirectory(repo);
@@ -510,11 +503,11 @@ public class TestUtilsFactory {
      */
     public static Repository createRepository(String repoDir, List<TestCommit> commits) throws IOException, GitAPIException {
         File repo = new File(repoDir + ".git");
-        if ( repo.exists() ){
-            System.out.println("The repository already exists: " + repo.getAbsolutePath() + " -> Destroy it" );
+        if (repo.exists()) {
+            System.out.println("The repository already exists: " + repo.getAbsolutePath() + " -> Destroy it");
             try {
                 destroyDirectory(repo);
-            } catch ( InterruptedException e ){
+            } catch (InterruptedException e) {
                 throw new IOException(e);
             }
         }
@@ -796,7 +789,7 @@ public class TestUtilsFactory {
      * file} Useful for verifying lines are merged in files when testing
      * integrations.
      *
-     * @param file File name
+     * @param file          File name
      * @param stringToCheck String, representing a complete line in the file.
      * @return true if line is found, false if not found or exception thrown
      * @throws IOException
@@ -830,7 +823,7 @@ public class TestUtilsFactory {
      * Helper function to unzip our git repositories we have created for tests.
      *
      * @param destinationFolder Fully qualified path
-     * @param zipFile Fully qualified filename
+     * @param zipFile           Fully qualified filename
      */
     public static void unzipFunction(String destinationFolder, String zipFile) {
         File directory = new File(destinationFolder);
