@@ -58,6 +58,7 @@ public class JENKINS_24754_IT {
      * * job should be a success the default plugin configuration matches 
      * @throws java.lang.Exception
      */
+    // This test should also be working, and should integrate repository 'repo1' as this should default be given the name 'origin' by the git scm and this is also our default name we use in the plugin when nothing else stated.
     @Test
     public void succesWithDefaultConfiguration2RepositoriesWithoutNames() throws Exception {
         repository = TestUtilsFactory.createValidRepository("repo1");
@@ -103,6 +104,8 @@ public class JENKINS_24754_IT {
      * * job should be a success, as a change there is named repository ('origin1') that matched the pretest config
      * @throws java.lang.Exception
      */
+    // Here the problem can be that git scm is not any more using the default names 'origin', 'origin1', 'origin2'...
+    // The description above is valid.
     @Test
     public void succesWithDefaultConfiguration2RepositoriesWithName() throws Exception {
         repository = TestUtilsFactory.createValidRepository("repo1");
@@ -205,6 +208,10 @@ public class JENKINS_24754_IT {
      *
      * @throws java.lang.Exception
      */
+    // FIXME this test should still be working, any of the triggered jobs should report a fail back
+    // as the pretested plugin is configured to only integrate a repository named 'origin' and not the one
+    // being configured and called 'repo1' and 'repo2' so this means no matter how many builds we get
+    // the plugin should refuse to integrate and throw a nothing to do exception
     @Test
     public void nothingToDo2RepositoriesWithNoMatchingName() throws Exception {
         repository = TestUtilsFactory.createValidRepository("repo1");
@@ -220,6 +227,7 @@ public class JENKINS_24754_IT {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
         TestUtilsFactory.destroyRepo(repo2);
 
+        // FIXME when this test works with first build, we should loop over all builds and improve the test
         FreeStyleBuild build = project.getBuilds().getFirstBuild();
 
         String text = jenkinsRule.createWebClient().getPage(build, "console").asText();
@@ -244,6 +252,11 @@ public class JENKINS_24754_IT {
      *
      * @throws java.lang.Exception
      */
+
+    //FIXME this test fails in as the plugin tries to merge changes from repository 2 into repository 1.
+    // So a bug in the plugin allows for trying to run integration, without checking that we're started with the correct
+    // repository, which is the one we configure in our pretested integration part of the job.
+    // The configuration below should only allow us to integrate things on repo1.
     @Test
     public void successWithMatchingRepositoryNames() throws Exception {
         Repository repo1 = TestUtilsFactory.createValidRepository("repo1");
