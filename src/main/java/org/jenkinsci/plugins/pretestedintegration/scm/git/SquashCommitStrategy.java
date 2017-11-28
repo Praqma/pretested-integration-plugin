@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -118,7 +119,10 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
                 PersonIdent author = getPersonIdent(commitAuthor);
-                String message_commits = client.getWorkTree().child(".git/SQUASH_MSG").readToString().replaceAll("\"", "'");
+                //relying on git default behaviour to create a SQUAH_MSG file
+
+                FilePath p = client.getWorkTree().child(".git/SQUASH_MSG");
+                String message_commits = p.readToString().replaceAll("\"", "'");
                 String message = String.format("Squashed commit of branch '%s'%n%n%s", triggerBranch.getName(), message_commits);
                 client.setAuthor(author);
                 client.commit(message);
@@ -126,6 +130,10 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
             } catch (IOException | GitException | InterruptedException ex) {
+
+                //FIXME: test should not fail if there is nothing to do
+                //FIXME:
+
                 // If ".git/SQUASH_MSG" wasn't found the most likely culrprit is that the merge was an empty
                 // one (No changes) for some reason the merge() command does not complain or throw exception when that happens
                 if (    ex.getMessage().contains("Cannot commit") ||
