@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -150,7 +151,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 }
                 LOGGER.log(Level.SEVERE, logMessage, ex);
                 listener.getLogger().println(logMessage);
-                throw new IntegrationUnknownFailureException(ex);
+                //throw new IntegrationUnknownFailureException(ex);
+                throw new NothingToDoException();
             }
             logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit was successful";
             LOGGER.log(Level.INFO, logMessage);
