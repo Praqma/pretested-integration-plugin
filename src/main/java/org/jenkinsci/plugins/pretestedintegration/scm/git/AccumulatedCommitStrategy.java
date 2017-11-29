@@ -144,7 +144,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             // if there is no squash merge message, then there were no changes, and we will therefore do nothing
             FilePath p = new FilePath(client.getWorkTree(), ".git/MERGE_MSG");
             if (!p.exists()) {
-                throw new NothingToDoException("No SQUASH_MSG found in .git, there was nothing to merge");
+                throw new NothingToDoException("No MERGE_MSG found in .git, there was nothing to merge");
             }
             message = p.readToString();
             PersonIdent author = getPersonIdent(commitAuthor);
