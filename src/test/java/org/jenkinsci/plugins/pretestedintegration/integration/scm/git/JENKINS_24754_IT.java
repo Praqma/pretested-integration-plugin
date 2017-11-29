@@ -11,14 +11,17 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
 import hudson.scm.SCM;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
+
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.junit.After;
@@ -28,11 +31,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * General theme of this test is:
- *
- * 1)Test that the introduction of additional configuration (repository name) works with the default configurations. 
- * 2)Establish a set of rules for when we fail. 
+ * <p>
+ * 1)Test that the introduction of additional configuration (repository name) works with the default configurations.
+ * 2)Establish a set of rules for when we fail.
  * 3)Operation with multiple git repositories. More specifically, the operation with the MultiSCM plugin
- *
  */
 public class JENKINS_24754_IT {
 
@@ -48,14 +50,15 @@ public class JENKINS_24754_IT {
 
     /**
      * Test case 1-1:
-     *
+     * <p>
      * * Two git repositories is configured in the git scm plugin
      * * repo1 will default be named 'origin' by the git scm plugin
      * * repo2 will default be named 'origin1' by the git scm plugin
      * * pretested integration plugin is not configured, so default to:
-     *      * integration branch: master
-     *      * integration repo: origin
-     * * job should be a success the default plugin configuration matches 
+     * * integration branch: master
+     * * integration repo: origin
+     * * job should be a success the default plugin configuration matches
+     *
      * @throws java.lang.Exception
      */
     // This test should also be working, and should integrate repository 'repo1' as this should default be given the name 'origin' by the git scm and this is also our default name we use in the plugin when nothing else stated.
@@ -94,14 +97,15 @@ public class JENKINS_24754_IT {
 
     /**
      * Test case 1-2:
-     *
-    * * Two git repositories is configured in the git scm plugin
+     * <p>
+     * * Two git repositories is configured in the git scm plugin
      * * repo1 will default be named 'origin' by the git scm plugin
      * * repo2 will default be named 'origin1' by the git scm plugin
      * * pretested integration plugin is configured, to match the second default git scm repo
-     *      * integration branch: master
-     *      * integration repo: origin1
+     * * integration branch: master
+     * * integration repo: origin1
      * * job should be a success, as a change there is named repository ('origin1') that matched the pretest config
+     *
      * @throws java.lang.Exception
      */
     // Here the problem can be that git scm is not any more using the default names 'origin', 'origin1', 'origin2'...
@@ -150,14 +154,15 @@ public class JENKINS_24754_IT {
 
     /**
      * Test case 1-3:
-     *
-    * * Two git repositories is configured in the git scm plugin
+     * <p>
+     * * Two git repositories is configured in the git scm plugin
      * * repo1 will default be named 'origin' by the git scm plugin
      * * repo2 is explicitly named 'origin1' by the git scm plugin
      * * pretested integration plugin is configured, to match the second default git scm repo
-     *      * integration branch: master
-     *      * integration repo: origin1
+     * * integration branch: master
+     * * integration repo: origin1
      * * job should be a success, as a change there is named repository ('origin1') that matched the pretest config
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -235,16 +240,16 @@ public class JENKINS_24754_IT {
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
 
+        
         assertTrue(text.contains("Nothing to do. The reason is:"));
         assertEquals("Unexpected build result.", Result.FAILURE, build.getResult());
 
     }
 
     /**
-     *
      * TODO: isn't this a copy of
      * {@link GeneralBehaviourIT#remoteOrigin1WithMoreThan1RepoShouldBeSuccessfulFirstRepo()}
-     *
+     * <p>
      * When more than 1 git repository is chosen, and the user has specified
      * repository names which do match what is configured in the pretested
      * integration plugin. We should get 2 builds, one of which should be
@@ -282,9 +287,9 @@ public class JENKINS_24754_IT {
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
             if (text.contains("No revision matches configuration in 'Integration repository'")) {
-                assertEquals("Unexpected build result.", bitstuff.getResult(), Result.NOT_BUILT);
+                assertEquals("Unexpected build result.", Result.NOT_BUILT, bitstuff.getResult());
             } else {
-                assertEquals("Unexpected build result.", bitstuff.getResult(), Result.SUCCESS);
+                assertEquals("Unexpected build result.", Result.SUCCESS, bitstuff.getResult());
             }
 
         }
@@ -294,10 +299,10 @@ public class JENKINS_24754_IT {
     /**
      * TODO: This one is very much redundant. We've covered the case multiple
      * times
-     *
+     * <p>
      * We should work with out of the box default configuration. This one should
      * finish successfully with the merge going well.
-     *
+     * <p>
      * Expect: Build success.
      *
      * @throws Exception
@@ -331,26 +336,27 @@ public class JENKINS_24754_IT {
 
     /**
      * Test scenario: Check that ambiguous name across MultiScm git configuration is detected
-     *
+     * <p>
      * * Using two MultiScm configurations
-     *      * MultiScm configuration 1 - two git repositories (same name)
-     *          * 'repo1_1' with 'Name': 'test-repo'
-     *          * 'repo1_2' with 'Name': 'test-repo'
-     *      * MultiScm configuration 2 - one git repositories
-     *          * 'repo2' with 'Name': 'test-repo2'
+     * * MultiScm configuration 1 - two git repositories (same name)
+     * * 'repo1_1' with 'Name': 'test-repo'
+     * * 'repo1_2' with 'Name': 'test-repo'
+     * * MultiScm configuration 2 - one git repositories
+     * * 'repo2' with 'Name': 'test-repo2'
      * * Using Pretested Integration plugin configured:
-     *      * 'Integration branch': 'master'
-     *      * 'Integration repository': 'test-repo1'
-     *
+     * * 'Integration branch': 'master'
+     * * 'Integration repository': 'test-repo1'
+     * <p>
      * Expected results:
      * * The Git plugin will automatically assign unique names for the git configuration
-     *   with two remotes, so 'repo1_2' automatically is named 'test-repo1' 
-     *   (which is the one we try to integrate to)
-     *
+     * with two remotes, so 'repo1_2' automatically is named 'test-repo1'
+     * (which is the one we try to integrate to)
+     * <p>
      * * The Pretested Integration Plugin will never try to integrate as the
-     *   configuration check will fail the job, as we require all git repositories
-     *   in any combination in a MultScm setup to be explicity named differently!
-     *      * There are two repositories named 'test-repo' (in same git config)
+     * configuration check will fail the job, as we require all git repositories
+     * in any combination in a MultScm setup to be explicity named differently!
+     * * There are two repositories named 'test-repo' (in same git config)
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -407,22 +413,23 @@ public class JENKINS_24754_IT {
     /**
      * Test scenario: Check that ambiguous name across MultiScm git
      * configuration is detected
-     *
+     * <p>
      * * Using two MultiScm configurations
-     *      * MultiScm configuration 1 - two git repositories (same name)
-     *          * 'repo1_1' with 'Name': 'test-repo'
-     *          * 'repo1_2' with 'Name': 'test-repo1'
-     *      * MultiScm configuration 2 - one git repositories
-     *          * 'repo2' with 'Name': 'test-repo'
+     * * MultiScm configuration 1 - two git repositories (same name)
+     * * 'repo1_1' with 'Name': 'test-repo'
+     * * 'repo1_2' with 'Name': 'test-repo1'
+     * * MultiScm configuration 2 - one git repositories
+     * * 'repo2' with 'Name': 'test-repo'
      * * Using Pretested Integration plugin configured:
-     *      * 'Integration branch': 'master'
-     *      * 'Integration repository': 'test-repo1'
-     *
+     * * 'Integration branch': 'master'
+     * * 'Integration repository': 'test-repo1'
+     * <p>
      * Expected results:
      * * The Pretested Integration Plugin will never try to integrate as the
-     *   configuration check will fail the job, as we require all git repositories
-     *   in any combination in a MultScm setup to be explicity named differently!
-     *      * There are two repositories named 'test-repo1' (across MultiScm)
+     * configuration check will fail the job, as we require all git repositories
+     * in any combination in a MultScm setup to be explicity named differently!
+     * * There are two repositories named 'test-repo1' (across MultiScm)
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -473,28 +480,28 @@ public class JENKINS_24754_IT {
 
     /**
      * Multiple SCM Plugin
-     *
+     * <p>
      * Test that we operate using a default configuration, with two repositories
      * in a single Git Plugin configuration.
-     *
+     * <p>
      * Pretested integration:
-     *  - 'Integration branch' : master (default)
-     *  - 'Repository name' : origin (default)
-     *  - 'Strategy' : Squashed commit
-     *
-     * Multiple SCM: 
-     *   - GitSCM:
-     *      - 'Name' : (default)
-     *   - GitSCM:
-     *      - 'Name' : (default)
-     *
+     * - 'Integration branch' : master (default)
+     * - 'Repository name' : origin (default)
+     * - 'Strategy' : Squashed commit
+     * <p>
+     * Multiple SCM:
+     * - GitSCM:
+     * - 'Name' : (default)
+     * - GitSCM:
+     * - 'Name' : (default)
+     * <p>
      * Workflow
-     *  - Create two repositories each containing a 'ready' branch.
-     *  - The build is triggered.
-     *
+     * - Create two repositories each containing a 'ready' branch.
+     * - The build is triggered.
+     * <p>
      * Results
-     *  - We fail. The user has not specified a repository name for all git
-     *    repositories
+     * - We fail. The user has not specified a repository name for all git
+     * repositories
      *
      * @throws Exception
      */
