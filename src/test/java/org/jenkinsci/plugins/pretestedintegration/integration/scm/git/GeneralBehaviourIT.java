@@ -12,13 +12,16 @@ import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
+
 import org.eclipse.jgit.lib.Repository;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,25 +35,25 @@ public class GeneralBehaviourIT {
 
     /**
      * Git Plugin
-     *
+     * <p>
      * Test that we operate using a default configuration, with two repositories
      * in a single Git Plugin configuration.
-     *
+     * <p>
      * Pretested integration:
-     *  - 'Integration branch' : master (default)
-     *  - 'Repository name' : origin (default) 
-     *  - 'Strategy' : Accumulated commit
-     *
+     * - 'Integration branch' : master (default)
+     * - 'Repository name' : origin (default)
+     * - 'Strategy' : Accumulated commit
+     * <p>
      * GitSCM:
-     *  - 'Name' : (empty)
-     *  - 'Name' : (empty)
-     *
+     * - 'Name' : (empty)
+     * - 'Name' : (empty)
+     * <p>
      * Workflow
-     *  - Create two repositories each containing a 'ready' branch.
-     *  - The build is triggered.
-     *
+     * - Create two repositories each containing a 'ready' branch.
+     * - The build is triggered.
+     * <p>
      * Results
-     *  - Two builds. One NOT_BUILT and one SUCCESS.
+     * - Two builds. One NOT_BUILT and one SUCCESS.
      *
      * @throws Exception
      */
@@ -75,9 +78,9 @@ public class GeneralBehaviourIT {
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
             if (text.contains("push origin :origin/ready/feature_1")) {
-                assertEquals("Unexpected build result.", b.getResult(), Result.SUCCESS);
+                assertEquals("Unexpected build result.", Result.SUCCESS, b.getResult());
             } else {
-                assertEquals("Unexpected build result.", b.getResult(), Result.NOT_BUILT);
+                assertEquals("Unexpected build result.", Result.NOT_BUILT, b.getResult());
             }
         }
 
@@ -85,25 +88,25 @@ public class GeneralBehaviourIT {
 
     /**
      * Git Plugin
-     *
+     * <p>
      * Test that we operate using a default configuration, with two repositories
      * in a single Git Plugin configuration.
-     *
+     * <p>
      * Pretested integration:
-     *  - 'Integration branch' : master (default)
-     *  - 'Repository name' : origin1
-     *  - 'Strategy' : Accumulated commit
-     *
+     * - 'Integration branch' : master (default)
+     * - 'Repository name' : origin1
+     * - 'Strategy' : Accumulated commit
+     * <p>
      * GitSCM:
-     *  - 'Name' : origin1
-     *  - 'Name' : magic
-     *
+     * - 'Name' : origin1
+     * - 'Name' : magic
+     * <p>
      * Workflow
-     *  - Create two repositories each containing a 'ready' branch.
-     *  - The build is triggered.
-     *
+     * - Create two repositories each containing a 'ready' branch.
+     * - The build is triggered.
+     * <p>
      * Results
-     *  - One Build. That should be successful.
+     * - One Build. That should be successful.
      *
      * @throws Exception
      */
@@ -146,26 +149,26 @@ public class GeneralBehaviourIT {
 
     /**
      * Git Plugin
-     *
+     * <p>
      * Test that we operate using a default configuration, with two repositories
      * in a single Git Plugin configuration.
-     *
+     * <p>
      * Pretested integration:
-     *  - 'Integration branch' : master (default)
-     *  - 'Repository name' : origin1
-     *  - 'Strategy' : Accumulated commit
-     *
+     * - 'Integration branch' : master (default)
+     * - 'Repository name' : origin1
+     * - 'Strategy' : Accumulated commit
+     * <p>
      * GitSCM:
-     *  - 'Name' : magic
-     *  - 'Name' : origin1
-     *
+     * - 'Name' : magic
+     * - 'Name' : origin1
+     * <p>
      * Workflow
-     *  - Create two repositories each containing a 'ready' branch.
-     *  - The build is triggered.
-     *
+     * - Create two repositories each containing a 'ready' branch.
+     * - The build is triggered.
+     * <p>
      * Results
-     *  - One Build. That should be successful. We merge feature_1 from origin1 into
-     *    master.
+     * - One Build. That should be successful. We merge feature_1 from origin1 into
+     * master.
      *
      * @throws Exception
      */
@@ -208,31 +211,30 @@ public class GeneralBehaviourIT {
     }
 
     /**
-     *
      * TODO: isn't this a copy of
      * {@link #defaultGitConfigurationTwoRemotes1_NOT_BUILT_1_SUCCESS()}
-     *
+     * <p>
      * Git Plugin
-     *
+     * <p>
      * Test that we operate using a default configuration, with two repositories
      * in a single Git Plugin configuration.
-     *
+     * <p>
      * Pretested integration:
-     *  - 'Integration branch' : master (default)
-     *  - 'Repository name' : origin1
-     *  - 'Strategy' : Accumulated commit
-     *
+     * - 'Integration branch' : master (default)
+     * - 'Repository name' : origin1
+     * - 'Strategy' : Accumulated commit
+     * <p>
      * GitSCM:
-     *  - 'Name' : (default)
-     *  - 'Name' : (default)
-     *
+     * - 'Name' : (default)
+     * - 'Name' : (default)
+     * <p>
      * Workflow
-     *  - Create two repositories each containing a 'ready' branch.
-     *  - The build is triggered.
-     *
+     * - Create two repositories each containing a 'ready' branch.
+     * - The build is triggered.
+     * <p>
      * Results
-     *  - One Build. That should be successful. We merge feature_1 from origin1 into
-     *    master.
+     * - One Build. That should be successful. We merge feature_1 from origin1 into
+     * master.
      *
      * @throws Exception
      */
@@ -243,17 +245,9 @@ public class GeneralBehaviourIT {
 
         List<UserRemoteConfig> config = Arrays.asList(new UserRemoteConfig("file://" + repository.getDirectory().getAbsolutePath(), null, null, null), new UserRemoteConfig("file://" + repository2.getDirectory().getAbsolutePath(), null, null, null));
 
-        List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
-        gitSCMExtensions.add(new PruneStaleBranch());
-        gitSCMExtensions.add(new CleanCheckout());
-
-        GitSCM gitSCM = new GitSCM(config,
-                Collections.singletonList(new BranchSpec("*/ready/**")),
-                false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, gitSCMExtensions);
 
         FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPlugin(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.ACCUMULATED, config, null, true);
-        project.setScm(gitSCM);
+
         TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
@@ -266,9 +260,9 @@ public class GeneralBehaviourIT {
             System.out.println(text);
             System.out.println("=====BUILD-LOG=====");
             if (text.contains("push origin :origin/ready/feature_1")) {
-                assertEquals("Unexpected build result.", b.getResult(), Result.SUCCESS);
+                assertEquals("Unexpected build result.", Result.SUCCESS, b.getResult());
             } else {
-                assertEquals("Unexpected build result.", b.getResult(), Result.NOT_BUILT);
+                assertEquals("Unexpected build result.", Result.NOT_BUILT, b.getResult());
             }
         }
 
@@ -304,7 +298,6 @@ public class GeneralBehaviourIT {
     }
 
     /**
-     *
      * Basically we need to verify that the plugin works when you checkout to a
      * subdirectory. Using accumulated strategy.
      *

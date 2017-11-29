@@ -240,9 +240,9 @@ public class JENKINS_24754_IT {
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
 
-        
+
         assertTrue(text.contains("Nothing to do. The reason is:"));
-        assertEquals("Unexpected build result.", Result.FAILURE, build.getResult());
+        assertEquals("Unexpected build result.", Result.NOT_BUILT, build.getResult());
 
     }
 
