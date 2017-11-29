@@ -213,12 +213,8 @@ public class JENKINS_24754_IT {
      *
      * @throws java.lang.Exception
      */
-    // FIXME this test should still be working, any of the triggered jobs should report a fail back
-    // as the pretested plugin is configured to only integrate a repository named 'origin' and not the one
-    // being configured and called 'repo1' and 'repo2' so this means no matter how many builds we get
-    // the plugin should refuse to integrate and throw a nothing to do exception
     @Test
-    public void nothingToDo2RepositoriesWithNoMatchingName() throws Exception {
+    public void failWith2RepositoriesWithNoMatchingName() throws Exception {
         repository = TestUtilsFactory.createValidRepository("repo1");
         Repository repo2 = TestUtilsFactory.createValidRepository("repo2");
 
@@ -240,9 +236,7 @@ public class JENKINS_24754_IT {
         System.out.println(text);
         System.out.println("=====BUILD-LOG=====");
 
-
-        assertTrue(text.contains("Nothing to do. The reason is:"));
-        assertEquals("Unexpected build result.", Result.NOT_BUILT, build.getResult());
+        assertEquals("Unexpected build result.", Result.FAILURE, build.getResult());
 
     }
 

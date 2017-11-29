@@ -119,17 +119,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
         try {
             gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
-
-            ChangelogCommand changelog = git.changelog();
-            changelog.includes(triggeredRevision.getSha1());
-            Writer out = new StringWriter();
-            changelog.excludes(expandedRepo + "/" + expandedIntegrationBranch);
-            changelog.to(out).execute();
-            if (out.toString().contains("Jenkinsfile")) {
-                listener.getLogger().println(String.format("%s You have changed Jenkinsfile", LOG_PREFIX));
-//                throw new IntegrationFailedException("You have changed Jenkinsfile");
-            }
-
             listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
             ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
