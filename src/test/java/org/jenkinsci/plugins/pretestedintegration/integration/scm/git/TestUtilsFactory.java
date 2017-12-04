@@ -38,7 +38,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
@@ -333,6 +332,9 @@ public class TestUtilsFactory {
         return project;
     }
 
+    //This method need to be removed, and exchanged with the method above. A lot of tests fail when this method is removed in various classes
+    //This will be done in a separate commit
+    @Deprecated
     public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(JenkinsRule rule, TestUtilsFactory.STRATEGY_TYPE type, List<SCM> scms, String repoNamePluginConfig) throws Exception {
         FreeStyleProject project = rule.createFreeStyleProject();
         GitBridge gitBridge;
@@ -342,7 +344,9 @@ public class TestUtilsFactory {
             gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoNamePluginConfig);
         }
 
-        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
+        //project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
+
+
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 
         MultiSCM scm = new MultiSCM(scms);

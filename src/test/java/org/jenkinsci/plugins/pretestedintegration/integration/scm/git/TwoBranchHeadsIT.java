@@ -11,11 +11,13 @@ import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.UserRemoteConfig;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -24,10 +26,10 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
 import org.junit.Ignore;
@@ -35,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.JenkinsRule;
+
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
@@ -183,16 +186,11 @@ public class TwoBranchHeadsIT {
     private FreeStyleProject configurePretestedIntegrationPlugin(IntegrationStrategy integrationStrategy, String repositoryUrl) throws IOException, ANTLRException, InterruptedException {
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
 
-        GitBridge gitBridge = new GitBridge(integrationStrategy, "master", "origin");
-
-        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
-        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
-
         List<UserRemoteConfig> repoList = new ArrayList<>();
-
         repoList.add(new UserRemoteConfig(repositoryUrl, null, null, null));
 
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
+        gitSCMExtensions.add(new PretestedIntegrationAsGitPluginExt(integrationStrategy, "master", "origin"));
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
@@ -202,7 +200,7 @@ public class TwoBranchHeadsIT {
                 null, null, gitSCMExtensions);
 
         project.setScm(gitSCM);
-
+        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
         return project;
     }
 

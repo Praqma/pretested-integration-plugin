@@ -21,9 +21,9 @@ import static junit.framework.TestCase.assertTrue;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.After;
 import org.junit.Ignore;
@@ -58,6 +58,7 @@ public class IntegrationBranchNameRestrictions_IT {
         repository = TestUtilsFactory.createRepoWithoutBranches("master");
 
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
+        gitSCMExtensions.add(new PretestedIntegrationAsGitPluginExt(new SquashCommitStrategy(), "master", "origin"));
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
@@ -68,9 +69,7 @@ public class IntegrationBranchNameRestrictions_IT {
 
         FreeStyleProject project = jenkinsRule.createFreeStyleProject();
         project.setScm(gitSCM1);
-        GitBridge gitBridge = new GitBridge(new SquashCommitStrategy(), "master", "origin");
 
-        project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
         project.getPublishersList().add(new PretestedIntegrationPostCheckout());
 
         TestUtilsFactory.triggerProject(project);

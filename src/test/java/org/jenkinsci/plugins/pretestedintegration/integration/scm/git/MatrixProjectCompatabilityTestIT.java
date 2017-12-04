@@ -30,7 +30,9 @@ import org.jvnet.hudson.test.JenkinsRule;
  *
  * @author Mads
  */
+
 public class MatrixProjectCompatabilityTestIT {
+    /*
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
@@ -66,6 +68,7 @@ public class MatrixProjectCompatabilityTestIT {
      *
      * @throws Exception
      */
+    /*
     @Ignore //This test fails due to some changes in accumulatedStrategy, but exactly what is unknown. but the repo only contains 2 commits and not 5 - The errors does not come from version bumps
     @Test
     public void oneBuildBasicSmokeTest() throws Exception {
@@ -122,6 +125,7 @@ public class MatrixProjectCompatabilityTestIT {
      * We need to test and make our plugin not spawn 2 failed runs if the parent job fails with a merge conflict
      * @throws Exception
      */
+    /*
     @Test
     @Ignore
     public void oneBuildBasicMergeFailure() throws Exception {
@@ -148,4 +152,5 @@ public class MatrixProjectCompatabilityTestIT {
 
         assertEquals("Since merge failed...we should get no child jobs to spawn", 0, project.getLastBuild().getRuns().size());
     }
+    */
 }

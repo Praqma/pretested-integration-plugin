@@ -8,6 +8,7 @@ import javaposse.jobdsl.plugin.ContextExtensionPoint;
 import javaposse.jobdsl.plugin.DslExtensionMethod;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 
 import java.util.Arrays;
@@ -70,7 +71,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
             default:
                 integrationStrategy = new SquashCommitStrategy();
         }
-        return new PretestedIntegrationBuildWrapper(new GitBridge(integrationStrategy, branch, repository));
+        return new PretestedIntegrationAsGitPluginExt(integrationStrategy, branch, repository);
     }
 
     /**
