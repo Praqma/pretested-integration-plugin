@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
+
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;

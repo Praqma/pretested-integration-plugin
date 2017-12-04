@@ -6,6 +6,8 @@ package org.jenkinsci.plugins.pretestedintegration.scm.git;
  */
 public class GitMessages {
 
+    public static final String LOG_PREFIX = "[PREINT] ";
+
     /**
      * Message for merge strategies to show when they don't find a match between
      * remote branches and relevant SCM change.

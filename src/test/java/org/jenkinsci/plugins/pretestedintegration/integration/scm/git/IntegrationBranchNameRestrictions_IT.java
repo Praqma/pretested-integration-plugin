@@ -21,7 +21,6 @@ import static junit.framework.TestCase.assertTrue;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationBuildWrapper;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;

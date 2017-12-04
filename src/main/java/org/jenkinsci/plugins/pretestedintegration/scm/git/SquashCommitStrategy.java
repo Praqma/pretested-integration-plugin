@@ -55,8 +55,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             try {
                 commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, expandedIntegrationBranch);
                 String text = "Branch commit count: " + commitCount;
-                LOGGER.log(Level.INFO, PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
-                listener.getLogger().println(PretestedIntegrationBuildWrapper.LOG_PREFIX + text);
+                LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + text);
+                listener.getLogger().println(GitMessages.LOG_PREFIX + text);
             } catch (IOException | InterruptedException ex) {
                 throw new IntegrationFailedException("Failed to count commits.", ex);
             }
@@ -71,7 +71,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 expandedBranchName = gitbridge.getIntegrationBranch();
             }
 
-            String logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Preparing to squash changes in commit %s on development branch %s to integration branch %s", triggerBranch.getSHA1String(), triggerBranch.getName(), expandedBranchName);
+            String logMessage = String.format(GitMessages.LOG_PREFIX + "Preparing to squash changes in commit %s on development branch %s to integration branch %s", triggerBranch.getSHA1String(), triggerBranch.getName(), expandedBranchName);
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
             if (!containsRemoteBranch(client, triggerBranch)) {
@@ -91,35 +91,35 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             String commitAuthor = null; //leaving un-assigned, want to fail later if not assigned;
             try {
                 // Collect author
-                logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Collecting author of last commit on development branch";
+                logMessage = GitMessages.LOG_PREFIX + "Collecting author of last commit on development branch";
                 LOGGER.log(Level.INFO, logMessage);
                 listener.getLogger().println(logMessage);
                 commitAuthor = client.withRepository(new FindCommitAuthorCallback(triggerBranch.getSHA1()));
-                logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Done collecting last commit author: %s", commitAuthor);
+                logMessage = String.format(GitMessages.LOG_PREFIX + "Done collecting last commit author: %s", commitAuthor);
                 LOGGER.log(Level.INFO, logMessage);
                 listener.getLogger().println(logMessage);
 
-                logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting squash merge - without commit:";
+                logMessage = GitMessages.LOG_PREFIX + "Starting squash merge - without commit:";
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
-                listener.getLogger().println(String.format("%s merge --squash %s", PretestedIntegrationBuildWrapper.LOG_PREFIX, triggerBranch.getName())); // Output asserted in tests.
+                listener.getLogger().println(String.format("%s merge --squash %s", GitMessages.LOG_PREFIX, triggerBranch.getName())); // Output asserted in tests.
                 client.merge().setSquash(true).setRevisionToMerge(triggerBranch.getSHA1()).execute();
-                logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Squash merge done";
+                logMessage = GitMessages.LOG_PREFIX + "Squash merge done";
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
             } catch (IOException | InterruptedException | GitException ex) {
-                logMessage = String.format(PretestedIntegrationBuildWrapper.LOG_PREFIX + "Exception while merging. Logging exception msg: %s", ex.getMessage());
+                logMessage = String.format(GitMessages.LOG_PREFIX + "Exception while merging. Logging exception msg: %s", ex.getMessage());
                 LOGGER.log(Level.SEVERE, logMessage, ex);
                 listener.getLogger().println(logMessage);
                 throw new IntegrationFailedException(ex);
             }
 
-            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Merge was successful";
+            logMessage = GitMessages.LOG_PREFIX + "Merge was successful";
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
 
             try {
-                logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Starting to commit squash merge changes:";
+                logMessage = GitMessages.LOG_PREFIX + "Starting to commit squash merge changes:";
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
                 PersonIdent author = getPersonIdent(commitAuthor);
@@ -135,7 +135,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 String message = String.format("Squashed commit of branch '%s'%n%n%s", triggerBranch.getName(), message_commits);
                 client.setAuthor(author);
                 client.commit(message);
-                logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit of squashed merge done";
+                logMessage = GitMessages.LOG_PREFIX + "Commit of squashed merge done";
                 LOGGER.info(logMessage);
                 listener.getLogger().println(logMessage);
             } catch (NothingToDoException ex) {
@@ -145,7 +145,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
                 listener.getLogger().println(logMessage);
                 throw new IntegrationUnknownFailureException(ex);
             }
-            logMessage = PretestedIntegrationBuildWrapper.LOG_PREFIX + "Commit was successful";
+            logMessage = GitMessages.LOG_PREFIX + "Commit was successful";
             LOGGER.log(Level.INFO, logMessage);
             listener.getLogger().println(logMessage);
         }
