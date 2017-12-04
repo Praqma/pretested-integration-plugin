@@ -47,13 +47,13 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     public PretestedIntegrationPostCheckout() {
     }
 
-    /**
-     * Gets the SCM Bridge of the BuildWrapper of this project.
-     *
-     * @param build the Build whose project to get the SCM Bridge of.
-     * @return the SCM Bridge of the BuildWrapper of this project.
-     * @throws AbortException When used outside of FreeStyle projects.
-     */
+    ///**
+    // * Gets the SCM Bridge of the BuildWrapper of this project.
+    // *
+    // * @param build the Build whose project to get the SCM Bridge of.
+    // * @return the SCM Bridge of the BuildWrapper of this project.
+    // * @throws AbortException When used outside of FreeStyle projects.
+    // */
     /*
     private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build, BuildListener listener) throws AbortException {
         AbstractProject<?, ?> proj = build.getProject();
@@ -91,7 +91,6 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
      * @param listener The BuildListener
      * @return boolean True on success.
      * @throws InterruptedException An foreseen issue
-     * @throws IOException          An foreseen IO issue
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
