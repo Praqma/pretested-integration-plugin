@@ -17,6 +17,9 @@ import java.util.Collections;
 import java.util.List;
 import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
+import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,6 +57,7 @@ public class JENKINS_25546_IT {
         Repository repo2 = TestUtilsFactory.createValidRepository("scenario1-2");
 
         List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
+        gitSCMExtensions.add(new PretestedIntegrationAsGitPluginExt(new SquashCommitStrategy(), "master", "origin"));
         gitSCMExtensions.add(new PruneStaleBranch());
         gitSCMExtensions.add(new CleanCheckout());
 
@@ -67,7 +71,8 @@ public class JENKINS_25546_IT {
                 false, Collections.<SubmoduleConfig>emptyList(),
                 null, null, gitSCMExtensions);
 
-        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPluginWithMultiSCM(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, Arrays.asList(gitSCM1, gitSCM2), "origin");
+        FreeStyleProject project = TestUtilsFactory.configurePretestedIntegrationPluginWithMultiSCM(jenkinsRule, TestUtilsFactory.STRATEGY_TYPE.SQUASH, Arrays.asList(gitSCM1, gitSCM2), "stable");
+
         TestUtilsFactory.triggerProject(project);
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
