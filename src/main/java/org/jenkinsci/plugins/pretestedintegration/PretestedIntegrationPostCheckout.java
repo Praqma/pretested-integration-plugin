@@ -94,7 +94,12 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
      */
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
-        perform((Run)build, build.getWorkspace(), launcher, listener);
+        AbstractProject<?, ?> proj = build.getProject();
+        if (proj instanceof MatrixConfiguration) {
+            listener.getLogger().println(LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
+        } else {
+            perform((Run) build, build.getWorkspace(), launcher, listener);
+        }
         return true;
     }
 

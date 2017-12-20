@@ -21,7 +21,7 @@ git add .
 git commit -m "init"
 git tag -a -m "init" init
 
-branch_prefixes="FsExtSq FsExtAcc FsBwAcc FsBwSq FsExtBwAcc MxExtAcc MxExtSq MuExtAcc MuExtSq MvnExtAcc  PipeScriptedSCM PipeScriptedScript PipeDeclSCM PipeDeclScript"
+branch_prefixes="FsExtSq FsExtAcc MxExtAcc MxExtSq MuExtAcc MuExtSq MvnExtAcc PipeScriptedSCM PipeScriptedScript PipeDeclSCM PipeDeclScript"
 #branch_prefixes="MvnExtAcc"
 
 function resetToInit(){
@@ -69,10 +69,8 @@ done
 git push --mirror
 checkoutMyBranch "master" && resetToInit
 for branch_prefix in ${branch_prefixes} ; do
-  git branch -D master${branch_prefix}
   git branch -D ready${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
 done
-
 
 #read -n 1 -p "Enter to continue" enter
 
@@ -105,4 +103,4 @@ checkoutMyBranch "master" && resetToInit
 
 git push origin --mirror
 
-git log --graph --decorate --all --oneline
+git branch -r

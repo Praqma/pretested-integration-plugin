@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.11.2">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <hudson.triggers.SCMTrigger>
+          <spec>* * * * *</spec>
+          <ignorePostCommitHooks>false</ignorePostCommitHooks>
+        </hudson.triggers.SCMTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.39">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@3.5.1">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>git@github.com:bicschneider/test-git-phlow-plugin.git</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/readyPipeScriptedSCM/*</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="list"/>
+      <extensions>
+        <org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt plugin="pretested-integration@3.0.0-SNAPSHOT">
+          <integrationBranch>masterPipeScriptedSCM</integrationBranch>
+          <repoName>origin</repoName>
+          <gitIntegrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
+        </org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt>
+      </extensions>
+    </scm>
+    <scriptPath>JenkinsfileScripted</scriptPath>
+    <lightweight>false</lightweight>
+  </definition>
+  <disabled>false</disabled>
+</flow-definition>

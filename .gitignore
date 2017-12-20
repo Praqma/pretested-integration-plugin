@@ -2,8 +2,6 @@
 /target
 /work
 
-.DS_Store
-
 # Package Files #
 *.jar
 *.war
@@ -20,5 +18,7 @@
 .idea/
 *.iml
 
-# keys for testing #
+# testing #
 /src/test/resources/keys/*
+**/*.git
+/test-*/
