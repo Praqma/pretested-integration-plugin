@@ -27,6 +27,6 @@ node {
     } catch(Exception e) {
       currentBuild.result = 'UNSTABLE'
     }
-    gitPhlowUpdateRemote()
+    pretestedIntegration()
   }
 }
