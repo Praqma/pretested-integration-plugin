@@ -12,6 +12,7 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -98,7 +99,15 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
         if (proj instanceof MatrixConfiguration) {
             listener.getLogger().println(LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
         } else {
-            perform((Run) build, build.getWorkspace(), launcher, listener);
+            GitSCM scm = (GitSCM)proj.getScm();
+            RelativeTargetDirectory rtd = scm.getExtensions().get(RelativeTargetDirectory.class);
+            try {
+                FilePath wsForUs = rtd != null ? rtd.getWorkingDirectory(scm, proj, build.getWorkspace(), build.getEnvironment(listener), listener) : build.getWorkspace();
+                perform((Run) build, wsForUs, launcher, listener);
+            } catch (IOException ex) {
+                listener.getLogger().println("[PREINT] FATAL: Unable to determine workspace");
+                throw new InterruptedException("[PREINT] FATAL: Unable to determine workspace");
+            }
         }
         return true;
     }
