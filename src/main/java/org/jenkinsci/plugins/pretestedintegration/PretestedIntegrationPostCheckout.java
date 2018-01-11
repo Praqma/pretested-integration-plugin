@@ -2,14 +2,10 @@ package org.jenkinsci.plugins.pretestedintegration;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.matrix.MatrixAggregatable;
-import hudson.matrix.MatrixAggregator;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.*;
 import hudson.model.*;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
@@ -23,12 +19,13 @@ import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestTriggerCommitAction;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,8 +42,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
      * Constructor for PretestedIntegrationPostCheckout
      */
     @DataBoundConstructor
-    public PretestedIntegrationPostCheckout() {
-    }
+    public PretestedIntegrationPostCheckout() { }
 
     ///**
     // * Gets the SCM Bridge of the BuildWrapper of this project.
@@ -85,7 +81,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     */
 
     /**
-     * Calls the SCM-specific function according to the chosen SCM.
+     * Calls the SCM-specific function according to the chosen SCM. Only called for Non pipeline jobs
      *
      * @param build    The Build
      * @param launcher The Launcher
@@ -103,6 +99,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
             RelativeTargetDirectory rtd = scm.getExtensions().get(RelativeTargetDirectory.class);
             try {
                 FilePath wsForUs = rtd != null ? rtd.getWorkingDirectory(scm, proj, build.getWorkspace(), build.getEnvironment(listener), listener) : build.getWorkspace();
+                printWarningIfUnsupported(proj.getClass(), listener);
                 perform((Run) build, wsForUs, launcher, listener);
             } catch (IOException ex) {
                 listener.getLogger().println("[PREINT] FATAL: Unable to determine workspace");
@@ -110,6 +107,35 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
             }
         }
         return true;
+    }
+
+    /**
+     * For #97. Whitelist certain job types. We include only those we support. We need not include pipeline jobs since
+     * they do not call the perform method.
+     */
+    private static final List<String> WHITELIST = new ArrayList<>();
+    static {
+        WHITELIST.add(FreeStyleProject.class.getName());
+        WHITELIST.add(MatrixProject.class.getName());
+        //Maven job type. Several kinds here. We can with 100% certainty say that we match everything with maven here
+        WHITELIST.add("hudson.maven");
+    }
+
+    public boolean isSupported(Class classname) {
+        for(String whiteListed : WHITELIST) {
+            if (classname.getName().contains(whiteListed)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void printWarningIfUnsupported(Class classname, BuildListener listener) {
+        if(!isSupported(classname)) {
+            String message = LOG_PREFIX+"Warning: Unsupported job type "+classname.getSimpleName()+" "+"plugin might not work as expected";
+            listener.getLogger().println(message);
+            LOGGER.log(Level.WARNING, message);
+        }
     }
 
     /**
@@ -176,7 +202,6 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     @Symbol("pretestedIntegration")
     @Extension(ordinal = Integer.MIN_VALUE)
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-
         /**
          * {@inheritDoc}
          */
