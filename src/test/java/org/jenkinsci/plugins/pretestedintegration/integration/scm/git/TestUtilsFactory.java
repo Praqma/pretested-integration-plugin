@@ -49,11 +49,8 @@ import org.xml.sax.SAXException;
 public class TestUtilsFactory {
 
     public enum STRATEGY_TYPE {
-
         SQUASH, ACCUMULATED
     }
-
-    ;
 
     public static final String AUTHOR_NAME = "john Doe";
     public static final String AUTHOR_EMAIL = "Joh@praqma.net";
