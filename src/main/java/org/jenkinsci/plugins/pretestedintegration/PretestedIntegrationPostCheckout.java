@@ -44,42 +44,6 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     @DataBoundConstructor
     public PretestedIntegrationPostCheckout() { }
 
-    ///**
-    // * Gets the SCM Bridge of the BuildWrapper of this project.
-    // *
-    // * @param build the Build whose project to get the SCM Bridge of.
-    // * @return the SCM Bridge of the BuildWrapper of this project.
-    // * @throws AbortException When used outside of FreeStyle projects.
-    // */
-    /*
-    private AbstractSCMBridge getScmBridge(AbstractBuild<?, ?> build, BuildListener listener) throws AbortException {
-        AbstractProject<?, ?> proj = build.getProject();
-
-        if (!(build.getProject().getScm() instanceof GitSCM)) {
-            throw new AbortException("Unsupported SCM type.");
-        }
-        GitSCM client = (GitSCM) build.getProject().getScm();
-
-        PretestedIntegrationAsGitPluginExt pretestedGitPluginExt = client.getExtensions().get(PretestedIntegrationAsGitPluginExt.class);
-        if (pretestedGitPluginExt != null) {
-            GitBridge bridge = pretestedGitPluginExt.getGitBridge();
-            if (bridge != null) {
-                return bridge;
-            } else {
-                throw new AbortException("The GitBridge is not defined.. Something weird happend..");
-            }
-        }
-
-        if (proj instanceof FreeStyleProject) {
-            FreeStyleProject p = (FreeStyleProject) build.getProject();
-            PretestedIntegrationBuildWrapper wrapper = p.getBuildWrappersList().get(PretestedIntegrationBuildWrapper.class);
-            return wrapper.scmBridge;
-        } else {
-            throw new AbortException("Unsupported job type.");
-        }
-    }
-    */
-
     /**
      * Calls the SCM-specific function according to the chosen SCM. Only called for Non pipeline jobs
      *
@@ -132,7 +96,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
 
     public void printWarningIfUnsupported(Class classname, BuildListener listener) {
         if(!isSupported(classname)) {
-            String message = LOG_PREFIX+"Warning: Unsupported job type "+classname.getSimpleName()+" "+"plugin might not work as expected";
+            String message = LOG_PREFIX+"Warning: Unsupported job of type '"+classname.getSimpleName()+"'. "+"Pretested Integration Plugin might not work as expected";
             listener.getLogger().println(message);
             LOGGER.log(Level.WARNING, message);
         }
