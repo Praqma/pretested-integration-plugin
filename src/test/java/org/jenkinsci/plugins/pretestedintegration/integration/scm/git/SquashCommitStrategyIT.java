@@ -13,6 +13,9 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
+
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,6 +51,33 @@ public class SquashCommitStrategyIT {
         for (Repository repo : repositories) {
             TestUtilsFactory.destroyRepo(repo);
         }
+    }
+
+    @Test
+    public void happyDayPipelineDeclarativeSQUASH() throws Exception {
+        String script = "pipeline {\n" +
+                "    agent any\n" +
+                "    stages {\n" +
+                "        stage(\"checkout\") {\n" +
+                "            steps {\n" +
+                "                checkout([$class: 'GitSCM', branches: [[name: '*/ready/**']], doGenerateSubmoduleConfigurations: false, extensions: [gitPhlowIntegration(gitIntegrationStrategy: squash(), integrationBranch: 'master', repoName: 'origin')], submoduleCfg: [], userRemoteConfigs: [[url: '%URL']]])\n" +
+                "            }\n" +
+                "        }\n" +
+                "        stage(\"publish\") {\n" +
+                "            steps {\n" +
+                "                pretestedIntegration()    \n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        String repoName = "test-repo";
+        Repository repository = TestUtilsFactory.createValidRepository(repoName);
+        repositories.add(repository);
+
+        WorkflowJob wfj = jenkinsRule.createProject(WorkflowJob.class, "declarativePipe");
+        wfj.setDefinition(new CpsFlowDefinition(script.replace("%URL","file://"+repository.getDirectory().getAbsolutePath()), true));
+        jenkinsRule.buildAndAssertSuccess(wfj);
     }
 
     @Test

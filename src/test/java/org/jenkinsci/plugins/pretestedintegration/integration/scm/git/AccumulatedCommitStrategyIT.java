@@ -8,6 +8,8 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -246,6 +248,32 @@ public class AccumulatedCommitStrategyIT {
         FreeStyleBuild b = project.getFirstBuild();
         jenkinsRule.assertBuildStatus(Result.FAILURE, b);
 
+    }
+
+    @Test
+    public void happyDayPipelineDeclarativeACCUMULATED() throws Exception {
+        String script = "pipeline {\n" +
+                "    agent any\n" +
+                "    stages {\n" +
+                "        stage(\"checkout\") {\n" +
+                "            steps {\n" +
+                "                checkout([$class: 'GitSCM', branches: [[name: '*/ready/**']], doGenerateSubmoduleConfigurations: false, extensions: [gitPhlowIntegration(gitIntegrationStrategy: accumulated(), integrationBranch: 'master', repoName: 'origin')], submoduleCfg: [], userRemoteConfigs: [[url: '%URL']]])\n" +
+                "            }\n" +
+                "        }\n" +
+                "        stage(\"publish\") {\n" +
+                "            steps {\n" +
+                "                pretestedIntegration()    \n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        String repoName = "test-repo";
+        repository = TestUtilsFactory.createValidRepository(repoName);
+
+        WorkflowJob wfj = jenkinsRule.createProject(WorkflowJob.class, "declarativePipe");
+        wfj.setDefinition(new CpsFlowDefinition(script.replace("%URL","file://"+repository.getDirectory().getAbsolutePath()), true));
+        jenkinsRule.buildAndAssertSuccess(wfj);
     }
 
 }
