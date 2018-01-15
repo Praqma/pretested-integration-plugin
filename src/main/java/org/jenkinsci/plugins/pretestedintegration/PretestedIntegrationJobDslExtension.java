@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pretestedintegration;
 import hudson.Extension;
 import javaposse.jobdsl.dsl.RequiresPlugin;
 import javaposse.jobdsl.dsl.helpers.publisher.PublisherContext;
+import javaposse.jobdsl.dsl.helpers.scm.GitExtensionContext;
 import javaposse.jobdsl.dsl.helpers.wrapper.WrapperContext;
 import javaposse.jobdsl.plugin.ContextExtensionPoint;
 import javaposse.jobdsl.plugin.DslExtensionMethod;
@@ -17,28 +18,22 @@ import java.util.List;
 import static javaposse.jobdsl.dsl.Preconditions.checkArgument;
 
 /**
- * ExtensionPoint used to support the Jenkins Job DSL.
- * ```
- * job{
- * wrappers{
- * pretestedIntegration(String integrationStrategy, String branch, String repository)
- * }
- * publishers {
- * pretestedIntegration()
- * }
- * }
- * ```
- * Valid values for `integrationStrategy` are 'ACCUMULATED' and 'SQUASHED'.
- * ```
- * job('pi-job'){
- * wrappers{
- * pretestedIntegration('SQUASHED','master','origin')
- * }
- * publishers {
- * pretestedIntegration()
- * }
- * }
- * ```
+ *ExtensionPoint used to support the Jenkins Job DSL
+ *
+ *Example:
+ *job("generated") {
+ *   scm {
+ *       git {
+ *           remote {
+ *               name("origin")
+ *               url("some.repo.somewhere.git")
+ *           }
+ *           extensions {
+ *               pretestedIntegration("ACCUMULATED","master","origin")
+ *           }
+ *       }
+ *    }
+ *}
  */
 @Extension(optional = true)
 public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
@@ -56,8 +51,8 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
      * @param repository the repository
      * @return a configured PretestedIntegrationBuildWrapper
      */
-    @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.0")
-    @DslExtensionMethod(context = WrapperContext.class)
+    @RequiresPlugin(id = "pretested-integration", minimumVersion = "3.0.0")
+    @DslExtensionMethod(context = GitExtensionContext.class)
     public Object pretestedIntegration(String strategy, String branch, String repository) {
         checkArgument(strategies.contains(strategy), "Strategy must be one of " + strategies);
         IntegrationStrategy integrationStrategy = null;
@@ -79,7 +74,7 @@ public class PretestedIntegrationJobDslExtension extends ContextExtensionPoint {
      *
      * @return a configured PretestedIntegrationPostCheckout
      */
-    @RequiresPlugin(id = "pretested-integration", minimumVersion = "2.3.3")
+    @RequiresPlugin(id = "pretested-integration", minimumVersion = "3.0.0")
     @DslExtensionMethod(context = PublisherContext.class)
     public Object pretestedIntegration() {
         return new PretestedIntegrationPostCheckout();
