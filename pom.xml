@@ -240,12 +240,6 @@
             <artifactId>parameterized-trigger</artifactId>
             <version>2.35.1</version>
             <optional>true</optional>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jenkins-ci.plugins</groupId>
-                    <artifactId>conditional-buildstep</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -260,14 +254,6 @@
             <artifactId>job-dsl</artifactId>
             <version>1.64</version>
             <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>jenkins-multijob-plugin</artifactId>
-            <scope>test</scope>
-            <optional>true</optional>
-            <version>1.28</version>
         </dependency>
 
         <dependency>

@@ -85,13 +85,17 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
         WHITELIST.add("hudson.maven");
     }
 
-    public boolean isSupported(Class classname) {
+    public boolean isSupported(String fullClassName) {
         for(String whiteListed : WHITELIST) {
-            if (classname.getName().contains(whiteListed)) {
+            if (fullClassName.contains(whiteListed)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public boolean isSupported(Class classname) {
+        return isSupported(classname.getName());
     }
 
     public void printWarningIfUnsupported(Class classname, BuildListener listener) {

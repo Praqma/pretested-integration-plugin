@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
-import com.tikal.jenkins.plugins.multijob.MultiJobProject;
 import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleProject;
 import hudson.model.ItemGroup;
@@ -18,10 +17,9 @@ public class GHI97_SupportChecksIT {
     @Test
     public void validateReturnsFromSupportedChecks_ValidatesGHI97()  {
         PretestedIntegrationPostCheckout pipPost = new PretestedIntegrationPostCheckout();
-        MultiJobProject multiJobProject = new MultiJobProject(null, "MultiJobMustNotBeSupported");
         FreeStyleProject freeStyleProject = new FreeStyleProject((ItemGroup)null, "FreeStyleProjectMustBeSupported");
         MatrixProject matrix = new MatrixProject(null,"MatrixJobsMustBeSupported");
-        assertFalse(pipPost.isSupported(multiJobProject.getClass()));
+        assertFalse(pipPost.isSupported("com.tikal.jenkins.plugins.multijob.MultiJobProject"));
         assertTrue(pipPost.isSupported(freeStyleProject.getClass()));
         assertTrue(pipPost.isSupported(matrix.getClass()));
     }
