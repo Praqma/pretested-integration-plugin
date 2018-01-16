@@ -13,20 +13,6 @@ import hudson.plugins.git.extensions.impl.PruneStaleBranch;
 import hudson.scm.SCM;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -37,14 +23,19 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.PretestedIntegrationPostCheckout;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy;
-import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.SquashCommitStrategy;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.xml.sax.SAXException;
+
+import java.io.*;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class TestUtilsFactory {
 
@@ -305,53 +296,7 @@ public class TestUtilsFactory {
 
         return project;
     }
-
-    //TODO: Create a realistic setup with multi SCM pluging...this seems boiler platey
-    public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(JenkinsRule rule, TestUtilsFactory.STRATEGY_TYPE type, List<UserRemoteConfig> repoList, String repoName, Repository repo) throws Exception {
-        FreeStyleProject project = rule.createFreeStyleProject();
-
-        List<GitSCMExtension> gitSCMExtensions = new ArrayList<>();
-        gitSCMExtensions.add(new PretestedIntegrationAsGitPluginExt(type == STRATEGY_TYPE.SQUASH ? new SquashCommitStrategy() : new AccumulatedCommitStrategy(), "master", repoName));
-        gitSCMExtensions.add(new PruneStaleBranch());
-        gitSCMExtensions.add(new CleanCheckout());
-
-        SCM gitSCM1 = new GitSCM(repoList,
-                Collections.singletonList(new BranchSpec("*/ready/**")),
-                false, Collections.<SubmoduleConfig>emptyList(),
-                null, null, gitSCMExtensions);
-
-        List<SCM> scms = new ArrayList<>();
-        scms.add(gitSCM1);
-
-        MultiSCM scm = new MultiSCM(scms);
-        project.setScm(scm);
-
-        return project;
-    }
-
-    //This method need to be removed, and exchanged with the method above. A lot of tests fail when this method is removed in various classes
-    //This will be done in a separate commit
-    @Deprecated
-    public static FreeStyleProject configurePretestedIntegrationPluginWithMultiSCM(JenkinsRule rule, TestUtilsFactory.STRATEGY_TYPE type, List<SCM> scms, String repoNamePluginConfig) throws Exception {
-        FreeStyleProject project = rule.createFreeStyleProject();
-        GitBridge gitBridge;
-        if (type == STRATEGY_TYPE.SQUASH) {
-            gitBridge = new GitBridge(new SquashCommitStrategy(), "master", repoNamePluginConfig);
-        } else {
-            gitBridge = new GitBridge(new AccumulatedCommitStrategy(), "master", repoNamePluginConfig);
-        }
-
-        //project.getBuildWrappersList().add(new PretestedIntegrationBuildWrapper(gitBridge));
-
-
-        project.getPublishersList().add(new PretestedIntegrationPostCheckout());
-
-        MultiSCM scm = new MultiSCM(scms);
-        project.setScm(scm);
-
-        return project;
-    }
-
+    
     private static String createCommitMessageForRepo(String repositoryRootFolder, String branch, String message) {
         return String.format("%s-%s-%s", message, branch, repositoryRootFolder);
     }

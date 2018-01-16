@@ -2,25 +2,26 @@ package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.*;
 import hudson.model.*;
-import hudson.plugins.git.*;
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitException;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
-import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
-import org.jenkinsci.plugins.pretestedintegration.*;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -137,53 +138,17 @@ public class GitBridge extends AbstractSCMBridge {
      * @throws UnsupportedConfigurationException
      * When multiple, ambiguous relevant BuildDatas are found.
      */
-    protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) throws InterruptedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-
+    protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
         SCM scm = build.getProject().getScm();
         if (scm instanceof GitSCM) {
             GitSCM gitScm = (GitSCM) scm;
             LOGGER.fine(String.format("Found GitSCM"));
             return gitScm;
         }
-
-        if (Jenkins.getActiveInstance().getPlugin("multiple-scms") == null) {
-            throw new InterruptedException("The selected SCM isn't Git and the MultiSCM plugin was not found.");
+        if (scm instanceof MultiSCM) {
+            throw new InterruptedException("[PREINT] MultiSCM is no longer supported");
         }
-
-        if (!(scm instanceof MultiSCM)) {
-            throw new InterruptedException("The selected SCM is neither Git nor MultiSCM.");
-        }
-
-        MultiSCM multiScm = (MultiSCM) scm;
-        LOGGER.fine(String.format("Found MultiSCM"));
-        for (SCM subScm : multiScm.getConfiguredSCMs()) {
-            if (subScm instanceof GitSCM) {
-                LOGGER.fine(String.format("Detected Git under MultiSCM"));
-                GitSCM gitscm = (GitSCM) subScm;
-
-                // ASSUMPTION:
-                // There's only one Git SCM that matches the integration branch in our build data.
-                // Returning the first match should be fine, as the origin name is part of the integrationBranch name
-                // and we require all MultiSCM Git configurations to be explicitly and uniquely named.
-                BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), getExpandedRepository(build.getEnvironment(listener)));
-                BuildData data = gitscm.getBuildData(build);
-                Revision revision = null;
-                if (data != null) {
-                    revision = data.lastBuild.revision;
-                }
-
-                for (Branch bdBranch : buildData.lastBuild.revision.getBranches()) { // More than one if several integrationBranch heads are in the same commit
-
-                    if (revision != null && revision.containsBranchName(bdBranch.getName())) {
-                        LOGGER.fine(String.format("Git SCM matches relevant integration branch."));
-                        return gitscm;
-                    } else {
-                        LOGGER.fine(String.format("Git SCM doesn't match relevant branch."));
-                    }
-                }
-            }
-        }
-        throw new InterruptedException("No Git repository configured in MultiSCM that matches the build data branch.");
+        return null;
     }
 
     /**
@@ -346,40 +311,9 @@ public class GitBridge extends AbstractSCMBridge {
                 );
             }
             return;
-        }
-
-        if (Jenkins.getActiveInstance().getPlugin("multiple-scms") != null && project.getScm() instanceof MultiSCM) {
-            MultiSCM multiscm = (MultiSCM) project.getScm();
-            validateMultiScm(multiscm.getConfiguredSCMs());
         } else {
-            throw new UnsupportedConfigurationException("We only support 'Git' and 'Multiple SCMs' plugins");
+            throw new UnsupportedConfigurationException("We only support 'Git' plugin");
         }
-    }
-
-    /**
-     * Validate the Git configurations in MultiSCM.
-     * JENKINS-24754
-     *
-     * @param scms The list of the configured SCMs
-     * @return boolean indicating if the MultiSCM is ok
-     * @throws UnsupportedConfigurationException Mismatch combination in job configuration
-     */
-    public boolean validateMultiScm(List<SCM> scms) throws UnsupportedConfigurationException {
-        Set<String> remoteNames = new HashSet<>();
-        for (SCM scm : scms) {
-            if (scm instanceof GitSCM) {
-                List<UserRemoteConfig> configs = ((GitSCM) scm).getUserRemoteConfigs();
-                for (UserRemoteConfig config : configs) {
-                    if (StringUtils.isBlank(config.getName())) {
-                        throw new UnsupportedConfigurationException(UnsupportedConfigurationException.MULTISCM_REQUIRE_EXPLICIT_NAMING);
-                    }
-                    if (!remoteNames.add(config.getName())) {
-                        throw new UnsupportedConfigurationException(UnsupportedConfigurationException.AMBIGUITY_IN_REMOTE_NAMES);
-                    }
-                }
-            }
-        }
-        return true;
     }
 
     /**

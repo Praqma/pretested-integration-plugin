@@ -21,12 +21,6 @@ public class UnsupportedConfigurationException extends IOException {
 
     /**
      * Predefined message.
-     * Used when repositories aren't explicitely named while using MultiSCM.
-     */
-    public static final String MULTISCM_REQUIRE_EXPLICIT_NAMING = "You have not explicitly named all your repositories. When using Multiple SCM with Git SCM, we require that all repositories are named. Fill out the 'Name' field for all your repositories";
-
-    /**
-     * Predefined message.
      * Used when multiple revisions using the same remote were found.
      */
     public static final String AMBIGUITY_IN_BUILD_DATA = "Multiple revisions with same remote detected. Cannot determine which one to use.";
