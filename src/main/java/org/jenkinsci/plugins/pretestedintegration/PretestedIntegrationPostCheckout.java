@@ -56,19 +56,15 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
         AbstractProject<?, ?> proj = build.getProject();
-        if (proj instanceof MatrixConfiguration) {
-            listener.getLogger().println(LOG_PREFIX + "MatrixConfiguration/sub - skipping publisher - leaving it to root job");
-        } else {
-            GitSCM scm = (GitSCM)proj.getScm();
-            RelativeTargetDirectory rtd = scm.getExtensions().get(RelativeTargetDirectory.class);
-            try {
-                FilePath wsForUs = rtd != null ? rtd.getWorkingDirectory(scm, proj, build.getWorkspace(), build.getEnvironment(listener), listener) : build.getWorkspace();
-                printWarningIfUnsupported(proj.getClass(), listener);
-                perform((Run) build, wsForUs, launcher, listener);
-            } catch (IOException ex) {
-                listener.getLogger().println("[PREINT] FATAL: Unable to determine workspace");
-                throw new InterruptedException("[PREINT] FATAL: Unable to determine workspace");
-            }
+        GitSCM scm = (GitSCM)proj.getScm();
+        RelativeTargetDirectory rtd = scm.getExtensions().get(RelativeTargetDirectory.class);
+        try {
+            FilePath wsForUs = rtd != null ? rtd.getWorkingDirectory(scm, proj, build.getWorkspace(), build.getEnvironment(listener), listener) : build.getWorkspace();
+            printWarningIfUnsupported(proj.getClass(), listener);
+            perform((Run) build, wsForUs, launcher, listener);
+        } catch (IOException ex) {
+            listener.getLogger().println("[PREINT] FATAL: Unable to determine workspace");
+            throw new InterruptedException("[PREINT] FATAL: Unable to determine workspace");
         }
         return true;
     }
@@ -122,37 +118,42 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     @Override
     public void perform(Run<?, ?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
         Result result = run.getResult();
-
         String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
         String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
         String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
-        String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
-        
-        try {
-            // The choice of 'jgit' or 'git'. It must be set though..
-            GitClient client = Git.with(listener, run.getEnvironment(listener)).in(ws).using("git").getClient();
 
-            if (ucCredentialsId != null) {
-                StandardUsernameCredentials credentials = CredentialsProvider.findCredentialById(ucCredentialsId, StandardUsernameCredentials.class, run, Collections.EMPTY_LIST);
-                 
-                if (credentials != null) {
-                    listener.getLogger().println("[PREINT] Found credentials");
-                    client.setCredentials(credentials);
-                }
-            }
-
-            if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult())) {
-                GitBridge.pushToIntegrationBranchGit(run, listener, client, integrationRepo, integrationBranch);
-                GitBridge.deleteBranch(run, listener, client, triggeredBranch, integrationRepo);
-            } else {
-                LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
-                listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
-            }
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Cannot launch the Git Client.." + ex);
-            listener.getLogger().println(LOG_PREFIX + "Cannot launch the Git Client.." + ex);
-        }
         GitBridge.updateBuildDescription(run, listener, integrationBranch, triggeredBranch.replace(integrationRepo + "/", ""));
+
+        String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
+
+        if (run.getParent() instanceof MatrixConfiguration) {
+            listener.getLogger().println(LOG_PREFIX + "MatrixConfiguration/sub - skip updating the remote - leaving it to root job");
+        } else {
+            try {
+                // The choice of 'jgit' or 'git'. It must be set though..
+                GitClient client = Git.with(listener, run.getEnvironment(listener)).in(ws).using("git").getClient();
+
+                if (ucCredentialsId != null) {
+                    StandardUsernameCredentials credentials = CredentialsProvider.findCredentialById(ucCredentialsId, StandardUsernameCredentials.class, run, Collections.EMPTY_LIST);
+
+                    if (credentials != null) {
+                        listener.getLogger().println("[PREINT] Found credentials");
+                        client.setCredentials(credentials);
+                    }
+                }
+
+                if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult())) {
+                    GitBridge.pushToIntegrationBranchGit(run, listener, client, integrationRepo, integrationBranch);
+                    GitBridge.deleteBranch(run, listener, client, triggeredBranch, integrationRepo);
+                } else {
+                    LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
+                    listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
+                }
+            } catch (IOException ex) {
+                LOGGER.log(Level.SEVERE, "Cannot launch the Git Client.." + ex);
+                listener.getLogger().println(LOG_PREFIX + "Cannot launch the Git Client.." + ex);
+            }
+        }
 
     }
 
