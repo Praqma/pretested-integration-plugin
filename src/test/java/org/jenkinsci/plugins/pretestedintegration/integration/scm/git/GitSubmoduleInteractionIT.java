@@ -150,6 +150,23 @@ public class GitSubmoduleInteractionIT {
         return createdRepositories;
     }
 
+
+    /**
+     * Will test the plugin with happy day scenario using the squash strategy
+     * and submodule behavior.
+     *
+     * We trying to integrate a change in a main repository, where the change introduces both change in the main repo
+     * but also a new version of the git submodule.
+     *
+     * We want to verify two things:
+     *
+     * 1. The workspace in the job is established correct during the build phase where one typically verify the change.
+     *    In this test this means that the submodule must be updated and contain the change that came with the ready-
+     *    branch.
+     * 2. The commit pushed to the integration branch contain also the same change where submodule is part of it.
+     *
+     * @throws Exception
+     */
     @Test
     public void testSubmoduleBehaviourSQUASH() throws Exception {
         repos = createRepoWithSubmodules("main","sub1");
@@ -163,6 +180,10 @@ public class GitSubmoduleInteractionIT {
         assertTrue(readmeInWorkspace.readToString().contains("Change in subrepo"));
     }
 
+    /**
+     * See above description for testSubmoduleBehaviourSQUASH()
+     * @throws Exception
+     */
     @Test
     public void testSubmoduleBehaviourACCUMULATED() throws Exception {
         repos = createRepoWithSubmodules("main","sub1");
