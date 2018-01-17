@@ -110,6 +110,10 @@
                 <artifactId>maven-hpi-plugin</artifactId>
                 <configuration>
                     <pluginVersionDescription>${buildNumber}</pluginVersionDescription>
+                    <!-- Compatible since is used to warn the user that this new version of the plugin is not compatible
+                     with earlier version than the one we mention below.
+                     https://wiki.jenkins.io/display/JENKINS/Marking+a+new+plugin+version+as+incompatible+with+older+versions
+                     -->
                     <compatibleSinceVersion>3.0.0</compatibleSinceVersion>
                 </configuration>
             </plugin>
