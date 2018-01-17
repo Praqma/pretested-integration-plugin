@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import javaposse.jobdsl.plugin.ExecuteDslScripts;
 import org.eclipse.jgit.api.Git;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by mads on 1/15/18.
@@ -30,6 +32,9 @@ import static org.junit.Assert.assertNotNull;
             }
         }
      }
+    publishers {
+        pretestedIntegration()
+    }
  }
  */
 public class JobDSLIT {
@@ -38,17 +43,20 @@ public class JobDSLIT {
 
     String script = "job(\"generated\") {\n" +
             "    scm {\n" +
-            "       git {\n" +
+            "        git {\n" +
             "            remote {\n" +
             "                name(\"origin\")\n" +
             "                url(\"%REPO_URL\")\n" +
             "            }\n" +
             "            extensions {\n" +
-            "                pretestedIntegration(\"SQUASHED\",\"master\",\"origin\")\n" +
+            "                pretestedIntegration(\"ACCUMULATED\",\"master\",\"origin\")\n" +
             "            }\n" +
             "        }\n" +
-            "     }\n" +
-            " }";
+            "    }\n" +
+            "  \tpublishers {\n" +
+            "    \tpretestedIntegration()  \n" +
+            "  \t}\n" +
+            "}";
 
     @Rule
     public JenkinsRule jr = new JenkinsRule();
@@ -88,7 +96,8 @@ public class JobDSLIT {
          * Step 3
          * Create and execute the seed job assert success
          */
-        jr.buildAndAssertSuccess(jr.getInstance().getItemByFullName("generated", FreeStyleProject.class));
+        FreeStyleBuild fb = jr.buildAndAssertSuccess(jr.getInstance().getItemByFullName("generated", FreeStyleProject.class));
+        assertTrue(fb.getLog().contains("[PREINT] Done pushing changes"));
     }
 
     @Before
