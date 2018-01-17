@@ -68,7 +68,7 @@ public class AccumulatedCommitStrategyIT {
     public void oneValidFeatureBranch_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         repository = TestUtilsFactory.createValidRepository("test-repo");
 
-        File workDir = new File("test-repo");
+        File workDir = new File(TestUtilsFactory.WORKDIR,"test-repo");
 
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
@@ -80,7 +80,7 @@ public class AccumulatedCommitStrategyIT {
 
         System.out.println("Opening git repository in: " + workDir.getAbsolutePath());
 
-        String readmeFromIntegration = FileUtils.readFileToString(new File("test-repo/readme"));
+        String readmeFromIntegration = FileUtils.readFileToString(new File(workDir,"readme"));
 
         git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(SetupUpstreamMode.TRACK).setCreateBranch(true).call();
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
@@ -98,7 +98,7 @@ public class AccumulatedCommitStrategyIT {
             System.out.println(console);
         }
 
-        String readmeFileContents = FileUtils.readFileToString(new File("test-repo/readme"));
+        String readmeFileContents = FileUtils.readFileToString(new File(workDir,"readme"));
         assertEquals(readmeFromIntegration, readmeFileContents);
 
         git.pull().call();
@@ -175,7 +175,7 @@ public class AccumulatedCommitStrategyIT {
     public void oneValidFeatureBranchRunningOnSlave_1BuildIsTriggeredTheBranchGetsIntegratedBuildMarkedAsSUCCESS() throws Exception {
         repository = TestUtilsFactory.createValidRepository("test-repo");
 
-        File workDir = new File("test-repo");
+        File workDir = new File(TestUtilsFactory.WORKDIR,"test-repo");
 
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
@@ -185,7 +185,7 @@ public class AccumulatedCommitStrategyIT {
 
         Git git = Git.open(workDir);
 
-        String fromIntegration = FileUtils.readFileToString(new File(workDir, "/readme"));
+        String fromIntegration = FileUtils.readFileToString(new File(workDir, "readme"));
 
         git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(SetupUpstreamMode.TRACK).setCreateBranch(true).call();
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
@@ -202,7 +202,7 @@ public class AccumulatedCommitStrategyIT {
         Result result = build.getResult();
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
-        String readmeFileContents = FileUtils.readFileToString(new File("test-repo/readme"));
+        String readmeFileContents = FileUtils.readFileToString(new File(workDir, "readme"));
         assertEquals(fromIntegration, readmeFileContents);
 
         git.pull().call();

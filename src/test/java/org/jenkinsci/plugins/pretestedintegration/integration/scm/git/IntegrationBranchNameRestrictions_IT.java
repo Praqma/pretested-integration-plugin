@@ -108,7 +108,7 @@ public class IntegrationBranchNameRestrictions_IT {
         });
 
         // Clone test repo
-        File workDir = new File(repoName);
+        File workDir = new File(TestUtilsFactory.WORKDIR, repoName);
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
                 .setCloneAllBranches(true)
@@ -146,7 +146,7 @@ public class IntegrationBranchNameRestrictions_IT {
         });
 
         // Clone test repo
-        File workDir = new File(repoName);
+        File workDir = new File(TestUtilsFactory.WORKDIR, repoName);
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
                 .setCloneAllBranches(true)

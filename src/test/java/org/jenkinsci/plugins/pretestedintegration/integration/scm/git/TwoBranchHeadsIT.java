@@ -77,8 +77,8 @@ public class TwoBranchHeadsIT {
     }
 
     public void createValidRepositories() throws IOException, GitAPIException {
-        File GitRepo1 = new File(String.format("test-repo-%s-1/.git", this.getClass().getName()));
-        File GitRepo2 = new File(String.format("test-repo-%s-2/.git", this.getClass().getName()));
+        File GitRepo1 = new File(TestUtilsFactory.WORKDIR, String.format("test-repo-%s-1/.git", this.getClass().getName()));
+        File GitRepo2 = new File(TestUtilsFactory.WORKDIR, String.format("test-repo-%s-2/.git", this.getClass().getName()));
 
         if (GitRepo1.getAbsoluteFile().exists()) {
             FileUtils.deleteDirectory(GitRepo1.getParentFile());

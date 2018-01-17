@@ -86,7 +86,7 @@ public class BuildResultValidator implements AutoCloseable {
 
     private boolean validateHeadCommitMessage() throws ValidationException, Exception {
 
-        File workDirForRepo = new File("work-" + repo.getDirectory().getPath().replace(".git", ""));
+        File workDirForRepo = new File(TestUtilsFactory.WORKDIR,"work-" + repo.getDirectory().getPath().replace(".git", ""));
         Git.cloneRepository().setURI("file:///" + repo.getDirectory().getAbsolutePath()).setDirectory(workDirForRepo)
                 .setBare(false)
                 .setCloneAllBranches(true)

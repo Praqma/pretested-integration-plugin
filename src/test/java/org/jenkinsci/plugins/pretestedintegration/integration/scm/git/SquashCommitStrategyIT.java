@@ -86,14 +86,14 @@ public class SquashCommitStrategyIT {
         Repository repository = TestUtilsFactory.createValidRepository(repoName);
         repositories.add(repository);
 
-        File workDir = new File(repoName);
+        File workDir = new File(TestUtilsFactory.WORKDIR, repoName);
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
                 .setCloneAllBranches(true)
                 .setNoCheckout(false)
                 .call().close();
 
-        String readmeFromDev = FileUtils.readFileToString(new File(repoName + "/readme"));
+        String readmeFromDev = FileUtils.readFileToString(new File(workDir,"readme"));
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(workDir);
 
@@ -109,7 +109,7 @@ public class SquashCommitStrategyIT {
         assertTrue(result.isCompleteBuild());
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
-        String readmeFileContents = FileUtils.readFileToString(new File(repoName + "/readme"));
+        String readmeFileContents = FileUtils.readFileToString(new File(workDir,"readme"));
         assertEquals(readmeFromDev, readmeFileContents);
 
         final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
@@ -200,14 +200,14 @@ public class SquashCommitStrategyIT {
         Repository repository = TestUtilsFactory.createValidRepository(repoName);
         repositories.add(repository);
 
-        File workDir = new File(repoName);
+        File workDir = new File(TestUtilsFactory.WORKDIR, repoName);
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
                 .setCloneAllBranches(true)
                 .setNoCheckout(false)
                 .call().close();
 
-        String readmeFromDev = FileUtils.readFileToString(new File(repoName + "/readme"));
+        String readmeFromDev = FileUtils.readFileToString(new File(TestUtilsFactory.WORKDIR,repoName + "/readme"));
 
         final int COMMIT_COUNT_BEFORE_EXECUTION = TestUtilsFactory.countCommits(workDir);
 
@@ -222,7 +222,7 @@ public class SquashCommitStrategyIT {
         Result result = build.getResult();
         assertTrue(result.isBetterOrEqualTo(Result.SUCCESS));
 
-        String readmeFileContents = FileUtils.readFileToString(new File(repoName + "/readme"));
+        String readmeFileContents = FileUtils.readFileToString(new File(workDir, "readme"));
         assertEquals(readmeFromDev, readmeFileContents);
 
         final int COMMIT_COUNT_AFTER_EXECUTION = TestUtilsFactory.countCommits(repository);
@@ -237,7 +237,7 @@ public class SquashCommitStrategyIT {
         Repository repository = TestUtilsFactory.createRepositoryWithMergeConflict(repoName);
         repositories.add(repository);
 
-        File workDir = new File(repoName);
+        File workDir = new File(TestUtilsFactory.WORKDIR, repoName);
 
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
@@ -272,7 +272,7 @@ public class SquashCommitStrategyIT {
     @Test
     public void twoFeatureBranchesBothValidRunningOnSlave_2BuildsAreTriggeredBothBranchesGetIntegratedBuildMarkedAsSUCCESS() throws Exception {
         String repoBaseName = "twoBranches2Builds";
-        File workDir = new File("twoBranches2Builds");
+        File workDir = new File(TestUtilsFactory.WORKDIR, "twoBranches2Builds");
 
         Repository repository = TestUtilsFactory.createValidRepositoryWith2FeatureBranches(repoBaseName);
         repositories.add(repository);
@@ -315,7 +315,7 @@ public class SquashCommitStrategyIT {
         Repository repository = TestUtilsFactory.createRepositoryWith2FeatureBranches1Valid1Invalid("test-repo");
         repositories.add(repository);
 
-        File workDir = new File("test-repo");
+        File workDir = new File(TestUtilsFactory.WORKDIR, "test-repo");
 
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
@@ -370,7 +370,7 @@ public class SquashCommitStrategyIT {
         repositories.add(repository);
 
         // Clone test repo
-        File workDir = new File(repoName);
+        File workDir = new File(TestUtilsFactory.WORKDIR, repoName);
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
                 .setCloneAllBranches(true)

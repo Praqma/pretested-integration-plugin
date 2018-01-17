@@ -25,13 +25,11 @@ public class GetCommitCountFromBranchCallbackIT {
         } catch (Exception e) {
             System.out.format("WARNING: Could not delete the dir: " + dir.getAbsolutePath());
         }
-
-
     }
 
     @Test
     public void counts_two_commits() throws Exception {
-        dir = new File(FOLDER_PREFIX + "count2");
+        dir = new File(TestUtilsFactory.WORKDIR,FOLDER_PREFIX + "count2");
         Git git = Git.init().setDirectory(dir).call();
         File testFile = new File(dir + "/file");
 

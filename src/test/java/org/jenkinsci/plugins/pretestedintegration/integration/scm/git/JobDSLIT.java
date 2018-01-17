@@ -63,7 +63,7 @@ public class JobDSLIT {
         Repository repository = TestUtilsFactory.createValidRepository(repoName);
         repositories.add(repository);
 
-        File workDir = new File(repoName);
+        File workDir = new File(TestUtilsFactory.WORKDIR, repoName);
 
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)

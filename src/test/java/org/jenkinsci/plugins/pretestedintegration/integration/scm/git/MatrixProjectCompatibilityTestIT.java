@@ -68,9 +68,7 @@ public class MatrixProjectCompatibilityTestIT {
     @Test
     public void oneBuildBasicSmokeTest() throws Exception {
         repository = TestUtilsFactory.createValidRepository("test-repo");
-
-        File workDir = new File("test-repo");
-
+        File workDir = new File(TestUtilsFactory.WORKDIR,"test-repo");
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
                 .setCloneAllBranches(true)
@@ -81,7 +79,7 @@ public class MatrixProjectCompatibilityTestIT {
 
         System.out.println("Opening git repository in: " + workDir.getAbsolutePath());
 
-        String readmeFromIntegration = FileUtils.readFileToString(new File("test-repo/readme"));
+        String readmeFromIntegration = FileUtils.readFileToString(new File(workDir,"readme"));
 
         git.checkout().setName(FEATURE_BRANCH_NAME).setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK).setCreateBranch(true).call();
         final int COMMIT_COUNT_ON_FEATURE_BEFORE_EXECUTION = TestUtilsFactory.countCommits(git);
@@ -98,7 +96,7 @@ public class MatrixProjectCompatibilityTestIT {
 
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
-        String readmeFileContents = FileUtils.readFileToString(new File("test-repo/readme"));
+        String readmeFileContents = FileUtils.readFileToString(new File(workDir,"readme"));
         assertEquals(readmeFromIntegration, readmeFileContents);
         git.pull().call();
 
@@ -113,7 +111,7 @@ public class MatrixProjectCompatibilityTestIT {
     @Test
     public void oneBuildBasicMergeFailure() throws Exception {
         repository = TestUtilsFactory.createRepositoryWithMergeConflict("test-repo");
-        File workDir = new File("test-repo");
+        File workDir = new File(TestUtilsFactory.WORKDIR,"test-repo");
         Git.cloneRepository().setURI("file:///" + repository.getDirectory().getAbsolutePath()).setDirectory(workDir)
                 .setBare(false)
                 .setCloneAllBranches(true)

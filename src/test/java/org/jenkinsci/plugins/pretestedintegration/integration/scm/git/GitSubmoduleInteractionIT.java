@@ -63,8 +63,8 @@ public class GitSubmoduleInteractionIT {
         Map<String, Repository> createdRepositories = new HashMap<>();
 
         // Create sub repository
-        File subRepoGitFile = new File(subRepoName+".git"); // bare repo should have suffix .git, and contain what normally in .git
-        File workDirForSubRepo = new File(subRepoName);
+        File subRepoGitFile = new File(TestUtilsFactory.WORKDIR, subRepoName+".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForSubRepo = new File(TestUtilsFactory.WORKDIR, subRepoName);
         Repository subRepo = new FileRepository(subRepoGitFile);
         subRepo.create(true);
         // Adding to our list as we need to clean up after test
@@ -86,8 +86,8 @@ public class GitSubmoduleInteractionIT {
 
 
         // Create the main repository
-        File repo = new File(mainRepoName + ".git");
-        File workDirForRepo = new File(mainRepoName);
+        File repo = new File(TestUtilsFactory.WORKDIR, mainRepoName + ".git");
+        File workDirForRepo = new File(TestUtilsFactory.WORKDIR, mainRepoName);
         Repository mainRepo = new FileRepository(repo);
         mainRepo.create(true);
         // Adding to our list as we need to clean up after test

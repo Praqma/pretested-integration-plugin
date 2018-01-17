@@ -10,7 +10,6 @@ import hudson.plugins.git.UserRemoteConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CleanCheckout;
 import hudson.plugins.git.extensions.impl.PruneStaleBranch;
-import hudson.scm.SCM;
 import hudson.slaves.DumbSlave;
 import hudson.triggers.SCMTrigger;
 import org.apache.commons.io.FileUtils;
@@ -42,6 +41,8 @@ public class TestUtilsFactory {
     public enum STRATEGY_TYPE {
         SQUASH, ACCUMULATED
     }
+
+    public static final File WORKDIR = new File("target/integration-test");
 
     public static final String AUTHOR_NAME = "john Doe";
     public static final String AUTHOR_EMAIL = "Joh@praqma.net";
@@ -325,9 +326,9 @@ public class TestUtilsFactory {
         //drwxrwxr-x  2 doe usr 4096 dec 11 00:23 info
         //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 objects
         //drwxrwxr-x  4 doe usr 4096 dec 11 00:23 refs
-        File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File repo = new File(WORKDIR,repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
 
-        File workDirForRepo = new File(repoFolderName);
+        File workDirForRepo = new File(WORKDIR, repoFolderName);
 
         System.out.format(workDirForRepo.getAbsolutePath());
 
@@ -372,7 +373,7 @@ public class TestUtilsFactory {
     }
 
     public static Repository createValidRepository(String repoFolderName) throws IOException, GitAPIException {
-        File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File repo = new File(WORKDIR,repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
 
         if (repo.exists()) {
             System.out.format("EXIST:" + repo.getAbsolutePath());
@@ -383,7 +384,7 @@ public class TestUtilsFactory {
             }
         }
 
-        File workDirForRepo = new File(repoFolderName);
+        File workDirForRepo = new File(WORKDIR, repoFolderName);
         Repository repository = new FileRepository(repo);
         repository.create(true);
 
@@ -448,7 +449,7 @@ public class TestUtilsFactory {
      * @throws org.eclipse.jgit.api.errors.GitAPIException
      */
     public static Repository createRepository(String repoDir, List<TestCommit> commits) throws IOException, GitAPIException {
-        File repo = new File(repoDir + ".git");
+        File repo = new File(WORKDIR, repoDir + ".git");
         if (repo.exists()) {
             System.out.println("The repository already exists: " + repo.getAbsolutePath() + " -> Destroy it");
             try {
@@ -457,7 +458,7 @@ public class TestUtilsFactory {
                 throw new IOException(e);
             }
         }
-        File worktree = new File(repoDir);
+        File worktree = new File(WORKDIR, repoDir);
         Repository repository = new FileRepository(repo);
         repository.create(true);
 
@@ -495,8 +496,8 @@ public class TestUtilsFactory {
     public static Repository createRepositoryWithMergeConflict(String repoFolderName) throws IOException, GitAPIException {
         String FEATURE_BRANCH_NAME = "ready/feature_1";
 
-        File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
-        File workDirForRepo = new File(repoFolderName);
+        File repo = new File(WORKDIR,repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(WORKDIR, repoFolderName);
         Repository repository = new FileRepository(repo);
         repository.create(true);
 
@@ -564,8 +565,8 @@ public class TestUtilsFactory {
         final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
         final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
 
-        File repo = new File(repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
-        File workDirForRepo = new File(repoFolderName);
+        File repo = new File(WORKDIR,repoFolderName + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(WORKDIR, repoFolderName);
         Repository repository = new FileRepository(repo);
         repository.create(true);
 
@@ -648,8 +649,8 @@ public class TestUtilsFactory {
         final String FEATURE_BRANCH_1_NAME = "ready/feature_1";
         final String FEATURE_BRANCH_2_NAME = "ready/feature_2";
 
-        File repo = new File(repoDir + ".git"); // bare repo should have suffix .git, and contain what normally in .git
-        File workDirForRepo = new File(repoDir);
+        File repo = new File(WORKDIR, repoDir + ".git"); // bare repo should have suffix .git, and contain what normally in .git
+        File workDirForRepo = new File(WORKDIR, repoDir);
 
         Repository repository = new FileRepository(repo);
         repository.create(true);
@@ -772,7 +773,7 @@ public class TestUtilsFactory {
      * @param zipFile           Fully qualified filename
      */
     public static void unzipFunction(String destinationFolder, String zipFile) {
-        File directory = new File(destinationFolder);
+        File directory = new File(WORKDIR, destinationFolder);
 
         // if the output directory doesn't exist, create it
         if (!directory.exists()) {

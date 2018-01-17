@@ -81,7 +81,7 @@ public class EnvVarsIT {
     }
 
     private void createRepository() throws IOException, GitAPIException {
-        File repo = new File("EnvVar - " + UUID.randomUUID().toString().substring(0, 6) + "/.git");
+        File repo = new File(TestUtilsFactory.WORKDIR,"EnvVar - " + UUID.randomUUID().toString().substring(0, 6) + "/.git");
         if (repo.getAbsoluteFile().exists()) {
             FileUtils.deleteDirectory(repo.getParentFile());
         }

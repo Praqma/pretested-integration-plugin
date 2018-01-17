@@ -77,7 +77,7 @@ public class GHI98_SupportForCredentialsIT {
     }
 
     private void cloneTestRepositoryAndPrepareABranch() throws Exception {
-        File f = new File("target/testRepo");
+        File f = new File(TestUtilsFactory.WORKDIR,"testRepo");
         if(f.exists()) FileUtils.deleteDirectory(f);
         Git g = Git.cloneRepository().setURI(repo).setDirectory(f).call();
         Date d = new Date();

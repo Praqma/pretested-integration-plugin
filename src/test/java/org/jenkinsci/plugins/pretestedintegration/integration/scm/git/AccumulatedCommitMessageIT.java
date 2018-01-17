@@ -161,11 +161,11 @@ public class AccumulatedCommitMessageIT {
         String REPO_FOLDER_NAME = "mergeCommitContainsAllMessagesFromTheFeatureBranch";
         String FEATURE_BRANCH_NAME = "ready/myfeature";
 
-        File bareRepoPath = new File(REPO_FOLDER_NAME + ".git");
+        File bareRepoPath = new File(TestUtilsFactory.WORKDIR, REPO_FOLDER_NAME + ".git");
         bareRepository = new FileRepository(bareRepoPath);
         bareRepository.create(true);
 
-        File workingRepoPath = new File(REPO_FOLDER_NAME);
+        File workingRepoPath = new File(TestUtilsFactory.WORKDIR, REPO_FOLDER_NAME);
 
         // clone bare repository
         Git.cloneRepository().setURI("file:///" + bareRepoPath.getAbsolutePath()).setDirectory(workingRepoPath)
@@ -716,11 +716,11 @@ public class AccumulatedCommitMessageIT {
         String REPO_FOLDER_NAME = "mergeCommitContainsOnlyMessagesFromCorrectBranch";
         String FEATURE_BRANCH_NAME = "ready/teamFeature";
 
-        File bareRepoPath = new File(REPO_FOLDER_NAME + ".git");
+        File bareRepoPath = new File(TestUtilsFactory.WORKDIR,REPO_FOLDER_NAME + ".git");
         bareRepository = new FileRepository(bareRepoPath);
         bareRepository.create(true);
 
-        File workingRepoPath = new File(REPO_FOLDER_NAME);
+        File workingRepoPath = new File(TestUtilsFactory.WORKDIR, REPO_FOLDER_NAME);
 
         // clone bare repository
         Git.cloneRepository().setURI("file:///" + bareRepoPath.getAbsolutePath()).setDirectory(workingRepoPath)
@@ -1012,11 +1012,11 @@ public class AccumulatedCommitMessageIT {
         String FEATURE_BRANCH_NAME = "ready/feature42";
         String FEATURE_BRANCH_NAME2 = "ready/feature1337";
 
-        File bareRepoPath = new File(REPO_FOLDER_NAME + ".git");
+        File bareRepoPath = new File(TestUtilsFactory.WORKDIR,REPO_FOLDER_NAME + ".git");
         bareRepository = new FileRepository(bareRepoPath);
         bareRepository.create(true);
 
-        File workingRepoPath = new File(REPO_FOLDER_NAME);
+        File workingRepoPath = new File(TestUtilsFactory.WORKDIR, REPO_FOLDER_NAME);
 
         // clone bare repository
         Git.cloneRepository().setURI("file:///" + bareRepoPath.getAbsolutePath()).setDirectory(workingRepoPath)
@@ -1299,11 +1299,11 @@ public class AccumulatedCommitMessageIT {
         String FEATURE_BRANCH_NAME = "ready/mergeableFeature";
         String FEATURE_BRANCH_NAME2 = "dev/disconnectedFeature";
 
-        File bareRepoPath = new File(REPO_FOLDER_NAME + ".git");
+        File bareRepoPath = new File(TestUtilsFactory.WORKDIR,REPO_FOLDER_NAME + ".git");
         bareRepository = new FileRepository(bareRepoPath);
         bareRepository.create(true);
 
-        File workingRepoPath = new File(REPO_FOLDER_NAME);
+        File workingRepoPath = new File(TestUtilsFactory.WORKDIR, REPO_FOLDER_NAME);
 
         // clone bare repository
         Git.cloneRepository().setURI("file:///" + bareRepoPath.getAbsolutePath()).setDirectory(workingRepoPath)
