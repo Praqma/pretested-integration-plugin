@@ -123,6 +123,16 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     public void perform(Run<?, ?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
         Result result = run.getResult();
 
+        /**
+         * This was added because we want to fail if the plugin performed more than 1 merge during run.
+         * This can only happen with the Pipeline job types.
+         * The action is only added when Pretested Integration merges.
+         * We do not support this scenario with more than 1 merge.
+         */
+        if(run.getActions(PretestTriggerCommitAction.class).size() > 1) {
+            throw new InterruptedException("[PREINT] Error: More than 1 integration performed with Pretested Integration Plugin");
+        }
+
         String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
         String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
         String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
