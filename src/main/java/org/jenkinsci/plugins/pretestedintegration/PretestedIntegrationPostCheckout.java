@@ -66,6 +66,8 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 printWarningIfUnsupported(proj.getClass(), listener);
                 if(wsForUs != null) {
                     perform((Run) build, wsForUs, launcher, listener);
+                } else {
+                    throw new InterruptedException("[PREINT] Fatal: Workspace is null");
                 }
             } catch (IOException ex) {
                 listener.getLogger().println("[PREINT] FATAL: Unable to determine workspace");
