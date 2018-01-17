@@ -64,7 +64,9 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
             try {
                 FilePath wsForUs = rtd != null ? rtd.getWorkingDirectory(scm, proj, build.getWorkspace(), build.getEnvironment(listener), listener) : build.getWorkspace();
                 printWarningIfUnsupported(proj.getClass(), listener);
-                perform((Run) build, wsForUs, launcher, listener);
+                if(wsForUs != null) {
+                    perform((Run) build, wsForUs, launcher, listener);
+                }
             } catch (IOException ex) {
                 listener.getLogger().println("[PREINT] FATAL: Unable to determine workspace");
                 throw new InterruptedException("[PREINT] FATAL: Unable to determine workspace");
