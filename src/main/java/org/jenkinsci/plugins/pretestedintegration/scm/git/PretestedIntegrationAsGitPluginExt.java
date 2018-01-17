@@ -166,7 +166,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         return GitClientType.GITCLI;
     }
 
-    @Symbol("gitPhlowIntegration")
+    @Symbol("pretestedIntegration")
     @Extension
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 

@@ -24,7 +24,7 @@
         url: &apos;git@github.com:bicschneider/test-git-phlow-plugin.git&apos;
       ]],
       extensions: [
-        gitPhlowIntegration(
+      pretestedIntegration(
           gitIntegrationStrategy: accumulated(),
           integrationBranch: &apos;masterPipeScriptedScript&apos;,
           repoName: &apos;origin&apos;)
@@ -43,7 +43,7 @@
     } catch(Exception e) {
       currentBuild.result = &apos;UNSTABLE&apos;
     }
-    gitPhlowUpdateRemote()
+      pretestedIntegration()
   }
 }
 </script>

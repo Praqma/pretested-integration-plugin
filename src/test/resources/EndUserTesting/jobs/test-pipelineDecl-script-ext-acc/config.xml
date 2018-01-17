@@ -30,7 +30,7 @@
             url: &apos;git@github.com:bicschneider/test-git-phlow-plugin.git&apos;
           ]],
           extensions: [
-            gitPhlowIntegration(
+            pretestedIntegration(
               gitIntegrationStrategy: accumulated(),
               integrationBranch: &apos;masterPipeDeclScript&apos;,
               repoName: &apos;origin&apos;)
@@ -48,7 +48,7 @@
       }
       post {
         always {
-          gitPhlowUpdateRemote()
+          pretestedIntegration()
         }
       }
     }

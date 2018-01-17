@@ -21,8 +21,8 @@ This is an example of a pipeline script with a single pipeline job that does Pre
 
 ``` groovy
 node {
-   checkout([$class: 'GitSCM', branches: [[name: '*/ready/**']], doGenerateSubmoduleConfigurations: false, extensions: [gitPhlowIntegration(gitIntegrationStrategy: squash(), integrationBranch: 'master', repoName: 'origin')], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'GitHub', url: 'https://github.com/Praqma/phlow-test.git']]])   
+   checkout([$class: 'GitSCM', branches: [[name: '*/ready/**']], doGenerateSubmoduleConfigurations: false, extensions: [pretestedIntegration(pretestedIntegration: squash(), integrationBranch: 'master', repoName: 'origin')], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'GitHub', url: 'https://github.com/Praqma/phlow-test.git']]])
    sh 'mvn install'
-   pretestedIntegration()
+   pretestedIntegrationPublisher()
 }
 ```

@@ -181,7 +181,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     /**
      * Descriptor Implementation for PretestedIntegrationPostCheckout
      */
-    @Symbol("pretestedIntegration")
+    @Symbol("pretestedIntegrationPublisher")
     @Extension(ordinal = Integer.MIN_VALUE)
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         /**

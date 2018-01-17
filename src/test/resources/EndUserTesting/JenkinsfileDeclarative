@@ -14,7 +14,7 @@ pipeline{
             url: 'git@github.com:bicschneider/test-git-phlow-plugin.git'
           ]],
           extensions: [
-            gitPhlowIntegration(
+            pretestedIntegration(
               gitIntegrationStrategy: accumulated(),
               integrationBranch: 'master',
               repoName: 'origin')
@@ -32,7 +32,7 @@ pipeline{
       }
       post {
         always {
-          pretestedIntegration()
+          pretestedIntegrationPublisher()
         }
       }
     }
