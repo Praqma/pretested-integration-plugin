@@ -18,7 +18,7 @@
     major.minor.patch-SNAPSHOT-gitSHA (dev builds)
     major.minor.patch-gitSHA (releases)
     -->
-    <version>3.0.0-beta.2</version>
+    <version>3.0.1-beta.2-SNAPSHOT</version>
     <packaging>hpi</packaging>
 
 
@@ -65,7 +65,7 @@
         <connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/Praqma/pretested-integration-plugin.git</developerConnection>
         <url>https://github.com/Praqma/pretested-integration-plugin</url>
-      <tag>pretested-integration-3.0.0-beta.2</tag>
+      <tag>HEAD</tag>
   </scm>
 
 
