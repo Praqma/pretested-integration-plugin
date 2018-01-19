@@ -17,6 +17,11 @@
     the plugin will show up with at version number like:
     major.minor.patch-SNAPSHOT-gitSHA (dev builds)
     major.minor.patch-gitSHA (releases)
+
+    You can make a beta or alpha release by putting in beta or alpha in the pom according to
+    https://jenkins.io/blog/2013/09/23/experimental-plugins-update-center/
+    Those updates will only be visible to people who have enabled the experimental update center.
+    Example of a beta: 3.0.0-beta.1-SNAPSHOT
     -->
     <version>3.0.1-beta.2-SNAPSHOT</version>
     <packaging>hpi</packaging>
