@@ -17,6 +17,9 @@ def descriptionForPipJob = """<h3>Pretested Integration Plugin</h3>
 """
 job(pipJobName) {
     description("Runs pretested integration for Pretested Integration ")
+    parameters {
+        stringParam("BRANCH")
+    }
     scm {
         git {
             branch("\${BRANCH}") //TODO: Switch to ready when done
@@ -55,6 +58,7 @@ job("pretested-integration-plugin-release-beta") {
         }
     }
     wrappers {
+
         maskPasswords()
         injectPasswords {
             injectGlobalPasswords()
@@ -64,7 +68,7 @@ job("pretested-integration-plugin-release-beta") {
     steps {
         //run -v ~/.m2:/var/maven/.m2 -v $(pwd):/usr/app -w /usr/app -t --rm -u 1000:1000 -e MAVEN_CONFIG=/var/maven/.m2
         //shell("docker run -w /usr/src/mymaven --rm -t -v \$(pwd):/usr/src/mymaven -v pretested-integration-plugin-volume:/root/.m2 -e PWFORPRAQMAMVNUSER=${PWFORPRAQMAMVNUSER} maven:3.5.2-jdk-8 /bin/bash -c \"git config --global user.email \\\"release@praqma.net\\\" && git config --global user.name \\\"Praqma Release User\\\" && mvn -s settings.xml -B -Dusername=ReleasePraqma -Dpassword=${PW_HTTPS_RELEASE_PRAQMA} clean release:clean release:prepare release:perform\"")
-        shell("docker run -w /usr/src/app -u 1000:1000 --rm -t -v \$(pwd):/usr/src/app -v ~/.m2:/var/maven/.m2 -e PWFORPRAQMAMVNUSER=${PWFORPRAQMAMVNUSER} -e MAVEN_CONFIG=/var/maven/.m2 maven:3.5.2-jdk-8 /bin/bash -c \"git config --global user.email \\\"release@praqma.net\\\" && git config --global user.name \\\"Praqma Release User\\\" && mvn -s settings.xml -B -Dusername=ReleasePraqma -Dpassword=${PW_HTTPS_RELEASE_PRAQMA} -Duser.home=/var/maven clean release:clean release:prepare release:perform\"")
+        //shell("docker run -w /usr/src/app -u 1000:1000 --rm -t -v \$(pwd):/usr/src/app -v ~/.m2:/var/maven/.m2 -e PWFORPRAQMAMVNUSER=${PWFORPRAQMAMVNUSER} -e MAVEN_CONFIG=/var/maven/.m2 maven:3.5.2-jdk-8 /bin/bash -c \"git config --global user.email \\\"release@praqma.net\\\" && git config --global user.name \\\"Praqma Release User\\\" && mvn -s settings.xml -B -Dusername=ReleasePraqma -Dpassword=${PW_HTTPS_RELEASE_PRAQMA} -Duser.home=/var/maven clean release:clean release:prepare release:perform\"")
     }
 }
 
