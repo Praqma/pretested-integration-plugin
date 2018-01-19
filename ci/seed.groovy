@@ -17,22 +17,14 @@ def descriptionForPipJob = """<h3>Pretested Integration Plugin</h3>
 """
 job(pipJobName) {
     description("Runs pretested integration for Pretested Integration ")
-    triggers {
-        scm("* * * * *")
-    }
     scm {
         git {
-            branch(devBranchPattern) //TODO: Switch to ready when done
+            branch("\${BRANCH}") //TODO: Switch to ready when done
             remote {
                 name("origin")
                 url(pretestedGitUrl)
                 credentials(credentialsId)
             }
-            /*
-            extensions {
-              pretestedIntegration("SQUASH", integrationBranchName, "origin")
-            }
-            */
         }
     }
 
@@ -41,7 +33,6 @@ job(pipJobName) {
     }
 
     publishers {
-        /* pretestedIntegrationPublisher() */
         archiveJunit('**/target/failsafe-reports/TEST*.xml')
         /* pretestedIntegrationPublisher() */
         buildPipelineTrigger('pretested-integration-plugin-release, pretested-integration-plugin-release-beta') {
