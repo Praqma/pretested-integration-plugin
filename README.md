@@ -31,6 +31,7 @@ The plugin is designed to automate the **[CoDE:U Git Flow](http://www.praqma.com
 
 * [Jenkins CI on Github](https://github.com/jenkinsci/pretested-integration-plugin) (used as final archive for released version)
 * [Praqma's on github](https://github.com/Praqma/pretested-integration-plugin)  (used to release from and accept pull requests)
+* [Migration guide 2.X -> 3.X](https://wiki.jenkins.io/display/JENKINS/Pretested+Integration+Plugin) (Migration guide from wiki)
 
 
 ## Automated builds
