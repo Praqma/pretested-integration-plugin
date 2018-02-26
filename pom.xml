@@ -23,7 +23,7 @@
     Those updates will only be visible to people who have enabled the experimental update center.
     Example of a beta: 3.0.0-beta.1-SNAPSHOT
     -->
-    <version>3.0.1</version>
+    <version>3.0.2-SNAPSHOT</version>
     <packaging>hpi</packaging>
 
 
@@ -70,7 +70,7 @@
         <connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/Praqma/pretested-integration-plugin.git</developerConnection>
         <url>https://github.com/Praqma/pretested-integration-plugin</url>
-      <tag>pretested-integration-3.0.1</tag>
+      <tag>HEAD</tag>
   </scm>
 
 
