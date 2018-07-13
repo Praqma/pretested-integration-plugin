@@ -11,7 +11,8 @@ multibranchPipelineJob("Pretested Integration Jenkins Plugin") {
     }
 
     configure {
-        it / 'sources' / 'data' / 'jenkins.branch.BranchSource' / 'source' / 'traits' << 'jenkins.plugins.git.traits.CloneOptionTrait' {
+        def traitBlock = it / 'sources' / 'data' / 'jenkins.branch.BranchSource' / 'source' / 'traits'
+        traitBlock << 'jenkins.plugins.git.traits.CloneOptionTrait' {
             extension(class: 'hudson.plugins.git.extensions.impl.CloneOption') {
                 shallow(false)
                 noTag(false)
@@ -20,5 +21,8 @@ multibranchPipelineJob("Pretested Integration Jenkins Plugin") {
                 honorRefspec(false)
             }
         }
+
+        traitBlock << 'jenkins.plugins.git.traits.BranchDiscoveryTrait' { }
     }
+
 }
