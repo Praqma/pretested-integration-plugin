@@ -1,4 +1,11 @@
 multibranchPipelineJob("Pretested Integration Jenkins Plugin") {
+
+    factory {
+        workflowBranchProjectFactory {
+            scriptPath('jenkins-pipeline/Jenkinsfile')
+        }
+    }
+
     branchSources {
         git {
             credentialsId("github")
