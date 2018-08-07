@@ -1,6 +1,6 @@
 ---
 maintainer:
- - buep
+ - MadsNielsen
 ---
 # Jenkins Pretested Integration Plugin
 
