@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Plugin;
@@ -10,6 +11,8 @@ import hudson.plugins.git.*;
 import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
+import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
@@ -59,7 +62,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         this.integrationBranch = integrationBranch;
         this.repoName = repoName;
         this.gitIntegrationStrategy = gitIntegrationStrategy;
-
     }
 
     public IntegrationStrategy getGitIntegrationStrategy() {
@@ -104,8 +106,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
         String ucCredentialsId = "";
-
-        
         
         for (UserRemoteConfig uc : scm.getUserRemoteConfigs()) {
             String credentialsRepoName = StringUtils.isBlank(uc.getName()) ? "origin" : uc.getName();
@@ -148,12 +148,12 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         run.addAction(new PretestTriggerCommitAction(triggeredBranch, expandedIntegrationBranch, expandedRepo, ucCredentialsId));
         if (run.getResult() == null || run.getResult() == Result.SUCCESS) {
             Revision mergeRevision = new GitUtils(listener, git).getRevisionForSHA1(git.revParse(HEAD));
-
             return mergeRevision;
         } else {
             // We could not integrate, but we must return a revision for recording it so it does not retrigger
             git.checkout().ref(triggeredBranch.getName()).execute();
-            return triggeredRevision;
+            scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), Result.FAILURE));
+            throw new AbortException(String.format("%s Unable to integrate revision: %s", LOG_PREFIX, triggeredRevision.getSha1String()));
         }
     }
 
