@@ -1,3 +1,5 @@
+def triggerBranchPattern = '*/readyPipeDeclSCM/*'
+def integrationBranch = 'masterPipeDeclSCM'
 pipeline{
   agent none
   stages {
@@ -8,7 +10,7 @@ pipeline{
       steps {
         checkout([
           $class: 'GitSCM',
-          branches: [[name: '*/readyPipeDeclSCM/*']],
+          branches: [[name: triggerBranchPattern ]],
           userRemoteConfigs: [[
             name: 'origin',
             url: 'git@github.com:bicschneider/test-git-phlow-plugin.git'
@@ -16,19 +18,19 @@ pipeline{
           extensions: [
             pretestedIntegration(
               gitIntegrationStrategy: accumulated(),
-              integrationBranch: 'master',
+              integrationBranch: integrationBranch,
               repoName: 'origin')
             ,
             [ $class: 'ChangelogToBranch',
-              options: [compareRemote: 'origin', compareTarget: 'masterPipeDeclSCM']
+              options: [compareRemote: 'origin', compareTarget: integrationBranch]
             ]
           ]
         ])
-      sh '''
-        if [ -e ./build_failed.md ]; then
-          exit 1
-        fi
-        '''
+//      sh '''
+//       if [ -e ./build_failed.md ]; then
+//          exit 1
+//        fi
+//        '''
       }
       post {
         always {

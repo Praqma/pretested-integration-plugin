@@ -133,14 +133,19 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
          * The action is only added when Pretested Integration merges.
          * We do not support this scenario with more than 1 merge.
          */
+        /**
         if(run.getActions(PretestTriggerCommitAction.class).size() > 1) {
             throw new InterruptedException("[PREINT] Error: More than 1 integration configured with the Pretested Integration Plugin. Did you use the Pretested Integration Plugin git scm extension on more than one repository? It is not supported.");
         }
-
-        String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
-        String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
-        String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
-        String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
+*/
+        String triggeredBranch = run.getActions(PretestTriggerCommitAction.class).get(
+                run.getActions(PretestTriggerCommitAction.class).size()-1).triggerBranch.getName();
+        String integrationBranch = run.getActions(PretestTriggerCommitAction.class).get(
+                run.getActions(PretestTriggerCommitAction.class).size()-1).integrationBranch;
+        String integrationRepo = run.getActions(PretestTriggerCommitAction.class).get(
+                run.getActions(PretestTriggerCommitAction.class).size()-1).integrationRepo;
+        String ucCredentialsId = run.getActions(PretestTriggerCommitAction.class).get(
+                run.getActions(PretestTriggerCommitAction.class).size()-1).ucCredentialsId;
         
         try {
             // The choice of 'jgit' or 'git'. It must be set though..

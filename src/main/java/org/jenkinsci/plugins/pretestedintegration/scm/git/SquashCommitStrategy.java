@@ -60,6 +60,9 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             } catch (IOException | InterruptedException ex) {
                 throw new IntegrationFailedException("Failed to count commits.", ex);
             }
+            if ( commitCount == 0 ){
+                throw new NothingToDoException("Commit count is 0. Already integrated/part of integration branch: " + expandedIntegrationBranch);
+            }
 
             if (tryFastForward(commitId, listener.getLogger(), client, commitCount)) return;
             if (tryRebase(commitId, client, listener.getLogger(), expandedIntegrationBranch)) return;
