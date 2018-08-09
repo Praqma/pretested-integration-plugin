@@ -48,6 +48,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     public String repoName;
     public IntegrationStrategy gitIntegrationStrategy;
 
+    public PretestedIntegrationAsGitPluginExt() { }
 
     /**
      * Constructor for GitBridge.
