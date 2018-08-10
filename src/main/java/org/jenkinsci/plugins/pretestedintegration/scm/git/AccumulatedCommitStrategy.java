@@ -26,6 +26,7 @@ import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Integration strategy for merging multiple commits.
@@ -86,13 +87,17 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
 
             String headerLine = String.format("Accumulated commit of the following from branch '%s':%n", triggerBranch.getName());
+            String commitMessage = "Merge of " + triggerBranch.getName() + " into "+ expandedIntegrationBranch;
             // Collect commits
-
-            String commits = client.withRepository(new GetAllCommitsFromBranchCallback( triggerBranch.getSHA1(), expandedIntegrationBranch));
-            logMessage = String.format(GitMessages.LOG_PREFIX+ "Done collecting commit messages");
-            LOGGER.log(Level.INFO, logMessage);
-            listener.getLogger().println(logMessage);
-            LOGGER.log(Level.INFO, String.format(GitMessages.LOG_PREFIX+ "Collecting author of last commit on development branch"));
+            if(!isShortCommitMessage()) {
+                String commits = client.withRepository(new GetAllCommitsFromBranchCallback( triggerBranch.getSHA1(), expandedIntegrationBranch));
+                logMessage = String.format(GitMessages.LOG_PREFIX+ "Done collecting commit messages");
+                LOGGER.log(Level.INFO, logMessage);
+                listener.getLogger().println(logMessage);
+                LOGGER.log(Level.INFO, String.format(GitMessages.LOG_PREFIX+ "Collecting author of last commit on development branch"));
+                String commitMsg = String.format("%s%n%s", headerLine, commits);
+                commitMessage = commitMsg.replaceAll("\"", "'");
+            }
 
             // Collect author
             listener.getLogger().println(String.format(GitMessages.LOG_PREFIX+ "Collecting author of last commit on development branch"));
@@ -104,11 +109,9 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             logMessage = GitMessages.LOG_PREFIX+ "Starting accumulated merge (no-ff) - without commit:";
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
-            String commitMsg = String.format("%s%n%s", headerLine, commits);
-            String modifiedCommitMsg = commitMsg.replaceAll("\"", "'");
             try {
                 client.merge()
-                        .setMessage(modifiedCommitMsg)
+                        .setMessage(commitMessage)
                         .setCommit(false)
                         .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.NO_FF)
                         .setRevisionToMerge(commitId).execute();
@@ -167,6 +170,8 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         LOGGER.log(Level.INFO, logMessage);
         listener.getLogger().println(logMessage);
     }
+
+    private boolean shortCommitMessage = false;
 
     /**
      * Constructor for AccumulatedCommitStrategy.
@@ -233,6 +238,15 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         Branch triggerBranch = rev.getBranches().iterator().next();
         String expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
         doTheIntegration((Run) build, listener, gitbridge, triggerBranch.getSHA1(), git, expandedIntegrationBranch, triggerBranch);
+    }
+
+    public boolean isShortCommitMessage() {
+        return shortCommitMessage;
+    }
+
+    @DataBoundSetter
+    public void setShortCommitMessage(boolean shortCommitMessage) {
+        this.shortCommitMessage = shortCommitMessage;
     }
 
     /**
