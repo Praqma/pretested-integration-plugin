@@ -79,6 +79,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         }
 
         String commitAuthor; //leaving un-assigned, want to fail later if not assigned
+        String commitMessage = "Merge of " + triggerBranch.getName() + " into "+ expandedIntegrationBranch;
         try {
             // FIXME I don't like this call back design.
             // We build the commit message based on a series of commits which aren't guaranteed to match we end up merging.
@@ -90,7 +91,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
 
             String headerLine = String.format("Accumulated commit of the following from branch '%s':%n", triggerBranch.getName());
-            String commitMessage = "Merge of " + triggerBranch.getName() + " into "+ expandedIntegrationBranch;
+
             // Collect commits
             if(!isShortCommitMessage()) {
                 String commits = client.withRepository(new GetAllCommitsFromBranchCallback( triggerBranch.getSHA1(), expandedIntegrationBranch));
@@ -114,7 +115,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
             try {
                 client.merge()
-                        .setMessage(commitMessage)
+                        .setMessage("Merge of " + triggerBranch.getName() + " into "+ expandedIntegrationBranch + " (temporary)")
                         .setCommit(false)
                         .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.NO_FF)
                         .setRevisionToMerge(commitId).execute();
@@ -146,21 +147,19 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
 
-
             //relying on git default behaviour to create a SQUAH_MSG file
             // if there is no squash merge message, then there were no changes, and we will therefore do nothing
             FilePath p = new FilePath(client.getWorkTree(), ".git/MERGE_MSG");
             if (!p.exists()) {
                 throw new NothingToDoException("No MERGE_MSG found in .git, there was nothing to merge");
             }
-            message = p.readToString();
+
             PersonIdent author = getPersonIdent(commitAuthor);
             client.setAuthor(author);
-            client.commit(message);
+            client.commit(commitMessage);
             logMessage = String.format(GitMessages.LOG_PREFIX+ "Commit of accumulated merge done");
             LOGGER.info(logMessage);
             listener.getLogger().println(logMessage);
-
         } catch (NothingToDoException ex) {
             throw ex;
         } catch (IOException | GitException | InterruptedException ex) {
