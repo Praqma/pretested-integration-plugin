@@ -2,6 +2,8 @@ def triggerBranchPattern = '*/readyPipeScriptedSCM/*'
 def integrationBranch = 'masterPipeScriptedSCM'
 node {
   stage ('Checkout'){
+  checkout scm // just reference SCM in the job executing the Pipeline script.
+/**
   checkout([
     $class: 'GitSCM',
       branches: [[name: triggerBranchPattern ]],
@@ -17,9 +19,11 @@ node {
         ,
         [ $class: 'ChangelogToBranch',
           options: [compareRemote: 'origin', compareTarget: integrationBranch]
-        ]
+        ],
+        [$class: 'PruneStaleBranch']
       ]
     ])
+*/
 //    try {
 //      sh '''
 //      if [ -e ./build_failed.md ]; then

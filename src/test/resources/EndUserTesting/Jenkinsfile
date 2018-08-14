@@ -1,5 +1,7 @@
 node {
   stage ('Checkout'){
+  checkout scm
+/**
   checkout([
     $class: 'GitSCM',
       branches: [[name: '*/readyMultiBranchPipe/*']],
@@ -15,9 +17,11 @@ node {
         ,
         [ $class: 'ChangelogToBranch',
           options: [compareRemote: 'origin', compareTarget: 'masterMultiBranchPipe']
-        ]
+        ],
+        [$class: 'PruneStaleBranch']
       ]
     ])
+    */
 //    try {
 //      sh '''
 //      if [ -e ./build_failed.md ]; then

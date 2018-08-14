@@ -8,6 +8,8 @@ pipeline{
         label 'master'
       }
       steps {
+        checkout scm // just reference SCM in the job executing the Pipeline script.
+/**
         checkout([
           $class: 'GitSCM',
           branches: [[name: triggerBranchPattern ]],
@@ -23,9 +25,11 @@ pipeline{
             ,
             [ $class: 'ChangelogToBranch',
               options: [compareRemote: 'origin', compareTarget: integrationBranch]
-            ]
+            ],
+            [$class: 'PruneStaleBranch']
           ]
         ])
+*/
 //      sh '''
 //       if [ -e ./build_failed.md ]; then
 //          exit 1
