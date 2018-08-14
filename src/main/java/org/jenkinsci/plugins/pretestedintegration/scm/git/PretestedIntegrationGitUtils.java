@@ -114,10 +114,8 @@ public class PretestedIntegrationGitUtils {
         return relevantBuildData;
     }
 
-    public static boolean isRelevant(Revision r, String repoName) {
-        Branch br = r.getBranches().iterator().next();
-
-        return br.getName().startsWith(repoName + "/");
+    public static boolean isRelevant(Branch triggeredBranch, String repoName) {
+        return triggeredBranch.getName().startsWith(repoName + "/") || triggeredBranch.getName().startsWith("refs/remotes/" + repoName + "/");
     }
 
     /***

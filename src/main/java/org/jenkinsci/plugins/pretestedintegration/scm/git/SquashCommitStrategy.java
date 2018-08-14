@@ -199,7 +199,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
 
 
     @Override
-    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
+    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
 
         String expandedRepoName;
         try {
@@ -208,7 +208,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             expandedRepoName = gitbridge.getRepoName();
         }
 
-        if (!PretestedIntegrationGitUtils.isRelevant(rev, expandedRepoName)) {
+        if (!PretestedIntegrationGitUtils.isRelevant(triggeredBranch, expandedRepoName)) {
             throw new NothingToDoException("No revision matches configuration in 'Integration repository'");
         }
 
@@ -224,9 +224,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         // multiple revisons, when two branches point to the same commit?
         // (JENKINS-24909). Check integrationBranch spec before doing anything
         // It could be the last rather than the first that is the wanted
-        Branch triggerBranch = rev.getBranches().iterator().next();
-
-        doTheIntegration((Run) build, listener, gitbridge, rev.getSha1(), client, expandedIntegrationBranch, triggerBranch);
+        doTheIntegration((Run) build, listener, gitbridge, triggeredBranch.getSHA1(), client, expandedIntegrationBranch, triggeredBranch);
     }
 
     /**

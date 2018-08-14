@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
 import hudson.model.*;
+import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -23,7 +24,7 @@ public abstract interface IntegrationStrategyAsGitPluginExt{
      * @param git current git client
      * @param listener The BuildListener
      * @param marked marked revision for use in GitExtensions
-     * @param rev revision f
+     * @param triggeredBranch the triggered branch
      * @param bridge the gitbridge
      * @throws IntegrationFailedException The integration failed ala merge
      * @throws NothingToDoException The triggered revision is behind the integration
@@ -32,7 +33,7 @@ public abstract interface IntegrationStrategyAsGitPluginExt{
      * @throws InterruptedException Unforeseen problems
      */
 
-    public abstract void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge)
+    public abstract void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge bridge)
         throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException;
 
 

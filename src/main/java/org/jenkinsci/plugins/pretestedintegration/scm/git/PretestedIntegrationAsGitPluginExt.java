@@ -103,7 +103,8 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         EnvVars environment = run.getEnvironment(listener);
 
         // TODO: Should this be last branch in stead of?
-        Branch triggeredBranch = triggeredRevision.getBranches().iterator().next();
+        Branch triggeredBranchDraft = triggeredRevision.getBranches().iterator().next();
+        Branch triggeredBranch = new Branch(triggeredBranchDraft.getName().replaceFirst("refs/remotes/", ""), triggeredBranchDraft.getSHA1());
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
         String ucCredentialsId = "";
@@ -122,7 +123,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
             listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-            ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredRevision, gitBridge);
+            ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredBranch, gitBridge);
 
 
         } catch (NothingToDoException e) {

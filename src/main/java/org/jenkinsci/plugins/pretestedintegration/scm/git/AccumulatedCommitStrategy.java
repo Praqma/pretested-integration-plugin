@@ -224,7 +224,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
     }
 
     @Override
-    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge gitbridge) throws NothingToDoException, IntegrationFailedException, IOException, InterruptedException {
+    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws NothingToDoException, IntegrationFailedException, IOException, InterruptedException {
 
 
         String expandedRepoName;
@@ -234,13 +234,12 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             expandedRepoName = gitbridge.getRepoName();
         }
 
-        if (!PretestedIntegrationGitUtils.isRelevant(rev, expandedRepoName)) {
+        if (!PretestedIntegrationGitUtils.isRelevant(triggeredBranch, expandedRepoName)) {
             throw new NothingToDoException("No revision matches configuration in 'Integration repository'");
         }
 
-        Branch triggerBranch = rev.getBranches().iterator().next();
         String expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
-        doTheIntegration((Run) build, listener, gitbridge, triggerBranch.getSHA1(), git, expandedIntegrationBranch, triggerBranch);
+        doTheIntegration((Run) build, listener, gitbridge, triggeredBranch.getSHA1(), git, expandedIntegrationBranch, triggeredBranch);
     }
 
     public boolean isShortCommitMessage() {
