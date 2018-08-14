@@ -8,6 +8,7 @@ import static junit.framework.TestCase.assertNotNull;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -19,6 +20,8 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigur
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitBridge;
 import org.jenkinsci.plugins.pretestedintegration.scm.git.GitIntegrationStrategy;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class GitIntegrationStrategyTest {
     @Test
@@ -33,11 +36,12 @@ public class GitIntegrationStrategyTest {
     private GitIntegrationStrategy getDummyStrategy() {
         return new GitIntegrationStrategy() {
             @Override
-            public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
+            public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
                 throw new UnsupportedOperationException("Dummies can't integrate.");
             }
+
             @Override
-            public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Revision rev, GitBridge bridge) throws NothingToDoException, IntegrationFailedException {
+            public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
                 throw new UnsupportedOperationException("Dummies can't integrate.");
             }
         };
