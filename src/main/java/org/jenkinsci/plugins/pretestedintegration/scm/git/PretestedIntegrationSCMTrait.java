@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.plugins.git.traits.GitSCMExtensionTrait;
 import jenkins.plugins.git.traits.GitSCMExtensionTraitDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
@@ -11,8 +12,8 @@ import javax.annotation.Nonnull;
 public class PretestedIntegrationSCMTrait extends GitSCMExtensionTrait<PretestedIntegrationAsGitPluginExt> {
 
     @DataBoundConstructor
-    public PretestedIntegrationSCMTrait() {
-        super(new PretestedIntegrationAsGitPluginExt());
+    public PretestedIntegrationSCMTrait(PretestedIntegrationAsGitPluginExt extension) {
+        super(extension);
     }
 
     @Extension
