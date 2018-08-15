@@ -132,8 +132,8 @@ done
 read -n 1 -p "Enter to continue" enter
 
 for branch_prefix in ${branch_prefixes} ; do
-#    git push origin refs/tags/${branch_prefix}_NOT_BUILT:refs/heads/ready${branch_prefix}/test-05.1-NOT_BUILT
-    publishAndBuild refs/tags/${branch_prefix}_NOT_BUILT ${branch_prefix} test-05.1-NOT_BUILT
+    git push origin refs/tags/${branch_prefix}_NOT_BUILT:refs/heads/ready${branch_prefix}/test-05.1-NOT_BUILT
+#    publishAndBuild refs/tags/${branch_prefix}_NOT_BUILT ${branch_prefix} test-05.1-NOT_BUILT
 done
 read -n 1 -p "Enter to continue" enter
 
@@ -156,7 +156,10 @@ for branch_prefix in ${branch_prefixes} ; do
     publishAndBuild HEAD ${branch_prefix} ${text}
 
 done
-read -n 1 -p "Enter to continue" enter
+read -n 1 -p "Enter to continue and fetch and prune branches" enter
 
 checkoutMyBranch "master" && resetToInit
+
+git fetch -ap
+
 git branch -r

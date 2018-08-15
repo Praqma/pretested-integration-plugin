@@ -69,9 +69,9 @@ public class GitBridge extends AbstractSCMBridge {
         try {
             pushToBranch(listener, client, expandedBranch, expandedBranch, expandedRepo, 0);
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
-            listener.getLogger().println(GitMessages.LOG_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
-            throw new PushFailedException(String.format("Failed to push changes to integration branch, message was:%n%s", ex));
+            LOGGER.log(Level.SEVERE, "Failed to push changes to branch: " + expandedBranch +". Exception:", ex);
+            listener.getLogger().println(GitMessages.LOG_PREFIX + String.format("Failed to push changes to branch: \" + expandedBranch +\". Exception: %s", ex));
+            throw new PushFailedException(String.format("Failed to push changes to branch: " + expandedBranch + ", message was:%n%s", ex));
         }
     }
 
@@ -239,7 +239,6 @@ public class GitBridge extends AbstractSCMBridge {
             EnvVars environment = build.getEnvironment(listener);
             String expandedRepo = getExpandedRepository(environment);
             String expandedBranch = getExpandedIntegrationBranch(environment);
-
             GitSCM gitSCM = findScm(build, listener);
             GitClient client = gitSCM.createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
             pushToBranch(listener, client, expandedBranch, expandedBranch, expandedRepo, 0);

@@ -72,6 +72,7 @@ public class GetAllCommitsFromBranchCallback extends RepositoryListenerAwareCall
             sb.append(String.format("%n"));
 
             Integer secondsSinceUnixEpoch = rev.getCommitTime();
+
             // Note that the git log shows different date formats, depending on configuration.
             // The choices in the git commit message below matches the squashed commit message
             // that git generates on a Ubuntu Linux 14.04 with default git installation.

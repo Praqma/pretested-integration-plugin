@@ -15,6 +15,8 @@ import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
@@ -24,9 +26,11 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspa
 import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -118,10 +122,30 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         try {
             gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
             listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
+            try {
+                List<RefSpec> list = new ArrayList<>();
+                list.add(new RefSpec(":refs/heads" + triggeredBranch.getName().replace(expandedRepo, "")));
+                git.fetch_().from(new URIish(expandedRepo), list);
+            } catch (URISyntaxException ex) {
+                String logMessage = LOG_PREFIX + "Fetch failed";
+                listener.getLogger().println(logMessage);
+                LOGGER.log(Level.SEVERE, logMessage, ex );
+            }
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-            ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredBranch, gitBridge);
+            if(run.getActions(PretestTriggerCommitAction.class).isEmpty() ) {
+                GitIntegrationStrategy gitStrategy = (GitIntegrationStrategy)gitBridge.integrationStrategy;
+                gitStrategy.integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredBranch, gitBridge);
 
-
+                //For AccumulatedCommit and in pipeline, immediately push back the merge result
+                if(gitStrategy instanceof AccumulatedCommitStrategy && run instanceof WorkflowRun) {
+                    GitBridge.pushToBranch(listener, git, expandedIntegrationBranch, triggeredBranch.getName(), repoName);
+                }
+                run.addAction(new PretestTriggerCommitAction(triggeredBranch, expandedIntegrationBranch, expandedRepo, ucCredentialsId));
+            } else {
+                String logMessage = LOG_PREFIX + "Checking out SHA1 from first integration";
+                listener.getLogger().println(logMessage);
+                git.checkout().branch(expandedIntegrationBranch).ref(triggeredBranch.getSHA1String()).deleteBranchIfExist(true).execute();
+            }
         } catch (NothingToDoException e) {
             run.setResult(Result.NOT_BUILT);
             String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
@@ -143,7 +167,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
         }
 
-        run.addAction(new PretestTriggerCommitAction(triggeredBranch, expandedIntegrationBranch, expandedRepo, ucCredentialsId));
         if (run.getResult() == null || run.getResult() == Result.SUCCESS) {
             Revision mergeRevision = new GitUtils(listener, git).getRevisionForSHA1(git.revParse(HEAD));
             return mergeRevision;
