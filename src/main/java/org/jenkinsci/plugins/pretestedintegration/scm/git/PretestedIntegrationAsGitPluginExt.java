@@ -12,11 +12,10 @@ import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.Build;
-import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.gitclient.ChangelogCommand;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
@@ -28,13 +27,10 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigur
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.StringUtils;
 
 import static org.eclipse.jgit.lib.Constants.HEAD;
 
