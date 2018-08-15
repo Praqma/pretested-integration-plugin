@@ -11,10 +11,6 @@ multibranchPipelineJob("Pretested Integration Jenkins Plugin") {
             credentialsId("github")
             remote("https://github.com/Praqma/pretested-integration-plugin.git")
         }
-
-        triggers {
-            periodic(20)
-        }
     }
 
     configure {
