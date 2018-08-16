@@ -67,7 +67,7 @@ public class GitBridge extends AbstractSCMBridge {
 
     public static void pushToIntegrationBranchGit(Run<?, ?> run, TaskListener listener, GitClient client, String expandedRepo, String expandedBranch) throws PushFailedException {
         try {
-            pushToBranch(listener, client, expandedBranch, expandedBranch, expandedRepo, 0);
+            pushToBranch(listener, client, expandedBranch, expandedRepo, 0);
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
             listener.getLogger().println(GitMessages.LOG_PREFIX + String.format("Failed to push changes to integration branch. Exception %s", ex));
@@ -90,14 +90,14 @@ public class GitBridge extends AbstractSCMBridge {
     }
 
     public static void pushToBranch(TaskListener listener, GitClient client, String sourceLocalBranch, String targetRemoteBranch, String expandedRepo) throws PushFailedException {
-        pushToBranch(listener, client, sourceLocalBranch, targetRemoteBranch, expandedRepo, 0);
+        pushToBranch(listener, client, targetRemoteBranch, expandedRepo, 3);
     }
 
-    public static void pushToBranch(TaskListener listener, GitClient client, String sourceLocalBranch, String targetRemoteBranch, String expandedRepo, int retries) throws PushFailedException {
+    public static void pushToBranch(TaskListener listener, GitClient client, String targetRemoteBranch, String expandedRepo, int retries) throws PushFailedException {
         try {
-            LOGGER.log(Level.INFO, "Pushing changes from local branch: " + sourceLocalBranch + " to remote branch: " + targetRemoteBranch);
+            LOGGER.log(Level.INFO, "Pushing changes from HEAD to remote branch: " + targetRemoteBranch);
             listener.getLogger().println(GitMessages.LOG_PREFIX + "Pushing changes to branch:");
-            client.push(expandedRepo, "refs/heads/" + sourceLocalBranch + ":refs/heads/" + targetRemoteBranch.replace(expandedRepo + "/", ""));
+            client.push(expandedRepo, "HEAD:refs/heads/" + targetRemoteBranch.replace(expandedRepo + "/", ""));
             LOGGER.log(Level.INFO, "Done pushing changes");
             listener.getLogger().println(GitMessages.LOG_PREFIX + "Done pushing changes");
         } catch (InterruptedException ex) {
@@ -113,7 +113,7 @@ public class GitBridge extends AbstractSCMBridge {
                 try {
                     Thread.sleep(5000); //Wait 5 seconds
                 } catch (InterruptedException e) { /* NOOP */ }
-                GitBridge.pushToBranch(listener, client, sourceLocalBranch, targetRemoteBranch, expandedRepo, --retries);
+                GitBridge.pushToBranch(listener, client, targetRemoteBranch, expandedRepo, --retries);
             } else {
                 throw gex;
             }
@@ -239,10 +239,9 @@ public class GitBridge extends AbstractSCMBridge {
             EnvVars environment = build.getEnvironment(listener);
             String expandedRepo = getExpandedRepository(environment);
             String expandedBranch = getExpandedIntegrationBranch(environment);
-
             GitSCM gitSCM = findScm(build, listener);
             GitClient client = gitSCM.createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-            pushToBranch(listener, client, expandedBranch, expandedBranch, expandedRepo, 0);
+            pushToBranch(listener, client, expandedBranch, expandedRepo);
         } catch (IOException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Failed to push changes to integration branch. Exception:", ex);
             listener.getLogger().println(GitMessages.LOG_PREFIX+ String.format("Failed to push changes to integration branch. Exception %s", ex));
