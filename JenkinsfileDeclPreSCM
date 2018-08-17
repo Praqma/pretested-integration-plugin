@@ -1,0 +1,28 @@
+
+def pattern = 'PipeDeclPreSCM'
+
+def triggerBranchPattern = '*/ready' + pattern + '/*'
+def integrationBranch = 'master' + pattern
+pipeline{
+  agent none
+  stages {
+    stage ('Checkout') {
+      agent {
+        label 'master'
+      }
+      steps {
+        checkout scm // just reference SCM in the job executing the Pipeline script.
+//      sh '''
+//       if [ -e ./build_failed.md ]; then
+//          exit 1
+//        fi
+//        '''
+      }
+      post {
+        always {
+          pretestedIntegrationPublisher()
+        }
+      }
+    }
+  }
+}
