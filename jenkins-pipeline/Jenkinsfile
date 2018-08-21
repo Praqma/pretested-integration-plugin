@@ -8,7 +8,7 @@ node("dockerhost1") {
        
     stage("build") {
         buildMaven()
-	archiveArtifacts '**/*.hpi'
+	archiveArtifacts 'target/*.hpi'
     }
 
     stage("changelog") {
