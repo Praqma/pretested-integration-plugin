@@ -1,5 +1,8 @@
-def triggerBranchPattern = '*/readyPipeDeclSCM/*'
-def integrationBranch = 'masterPipeDeclSCM'
+
+def pattern = 'PipeDeclCheckoutSCM'
+
+def triggerBranchPattern = '*/ready' + pattern + '/*'
+def integrationBranch = 'master' + pattern
 pipeline{
   agent none
   stages {
@@ -8,8 +11,6 @@ pipeline{
         label 'master'
       }
       steps {
-        checkout scm // just reference SCM in the job executing the Pipeline script.
-/**
         checkout([
           $class: 'GitSCM',
           branches: [[name: triggerBranchPattern ]],
@@ -29,7 +30,6 @@ pipeline{
             [$class: 'PruneStaleBranch']
           ]
         ])
-*/
 //      sh '''
 //       if [ -e ./build_failed.md ]; then
 //          exit 1

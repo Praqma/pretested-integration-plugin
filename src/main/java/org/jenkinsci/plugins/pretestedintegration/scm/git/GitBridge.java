@@ -139,18 +139,18 @@ public class GitBridge extends AbstractSCMBridge {
         if (triggeredBranch != null) {
             String postfixText = "";
             Result result = run.getResult();
+
             if (result == null || result.isBetterOrEqualTo(getRequiredResult())) {
                 postfixText = " -> " + integrationBranch;
             }
             String finalDescription;
             if (!StringUtils.isBlank(run.getDescription())) {
-                finalDescription = String.format("%s%n%s",
-                        run.getDescription(),
-                        triggeredBranch + postfixText);
+                finalDescription = String.format("%s%n%s",run.getDescription(),triggeredBranch + postfixText);
             } else {
                 finalDescription = String.format("%s", triggeredBranch + postfixText);
             }
             try {
+                listener.getLogger().println(LOG_PREFIX + "Updating build description");
                 run.setDescription(finalDescription);
             } catch (Exception ex) {
                 LOGGER.log(Level.FINE, "Failed to update description", ex); /* Dont care */

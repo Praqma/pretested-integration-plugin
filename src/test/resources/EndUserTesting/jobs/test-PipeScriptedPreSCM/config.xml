@@ -19,32 +19,24 @@
       <userRemoteConfigs>
         <hudson.plugins.git.UserRemoteConfig>
           <url>git@github.com:bicschneider/test-git-phlow-plugin.git</url>
-          <credentialsId>d1fbf0b2-2804-4bf9-b9b8-70ce3e94f952</credentialsId>
         </hudson.plugins.git.UserRemoteConfig>
       </userRemoteConfigs>
       <branches>
         <hudson.plugins.git.BranchSpec>
-          <name>*/readyPipeDeclSCM/*</name>
+          <name>*/readyPipeScriptedPreSCM/*</name>
         </hudson.plugins.git.BranchSpec>
       </branches>
       <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
       <submoduleCfg class="list"/>
       <extensions>
         <org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt plugin="pretested-integration@3.0.0-SNAPSHOT">
-          <integrationBranch>masterPipeDeclSCM</integrationBranch>
+          <integrationBranch>masterPipeScriptedPreSCM</integrationBranch>
           <repoName>origin</repoName>
           <gitIntegrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
         </org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt>
-        <hudson.plugins.git.extensions.impl.ChangelogToBranch>
-          <options>
-            <compareRemote>origin</compareRemote>
-            <compareTarget>masterPipeDeclSCM</compareTarget>
-          </options>
-        </hudson.plugins.git.extensions.impl.ChangelogToBranch>
-        <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
       </extensions>
     </scm>
-    <scriptPath>JenkinsfileDeclarative</scriptPath>
+    <scriptPath>JenkinsfileScriptedPreSCM</scriptPath>
     <lightweight>false</lightweight>
   </definition>
   <disabled>false</disabled>

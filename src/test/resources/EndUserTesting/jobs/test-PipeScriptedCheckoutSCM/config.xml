@@ -23,20 +23,16 @@
       </userRemoteConfigs>
       <branches>
         <hudson.plugins.git.BranchSpec>
-          <name>*/readyPipeScriptedSCM/*</name>
+          <name>*/readyPipeScriptedCheckoutSCM/*</name>
         </hudson.plugins.git.BranchSpec>
       </branches>
       <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
       <submoduleCfg class="list"/>
       <extensions>
-        <org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt plugin="pretested-integration@3.0.0-SNAPSHOT">
-          <integrationBranch>masterPipeScriptedSCM</integrationBranch>
-          <repoName>origin</repoName>
-          <gitIntegrationStrategy class="org.jenkinsci.plugins.pretestedintegration.scm.git.AccumulatedCommitStrategy"/>
-        </org.jenkinsci.plugins.pretestedintegration.scm.git.PretestedIntegrationAsGitPluginExt>
+        <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
       </extensions>
     </scm>
-    <scriptPath>JenkinsfileScripted</scriptPath>
+    <scriptPath>JenkinsfileScriptedCheckoutSCM</scriptPath>
     <lightweight>false</lightweight>
   </definition>
   <disabled>false</disabled>

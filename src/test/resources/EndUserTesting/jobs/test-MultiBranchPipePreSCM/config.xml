@@ -38,7 +38,7 @@
           <traits>
             <jenkins.plugins.git.traits.BranchDiscoveryTrait/>
             <jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait plugin="scm-api@2.2.0">
-              <includes>origin/readyMultiBranchPipe/*</includes>
+              <includes>*/readyMultiBranchPipePreSCM/*</includes>
               <excludes></excludes>
             </jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait>
           </traits>

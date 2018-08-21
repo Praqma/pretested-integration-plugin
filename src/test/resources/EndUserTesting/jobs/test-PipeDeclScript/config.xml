@@ -14,7 +14,12 @@
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.24">
-    <script>pipeline{
+    <script>
+def pattern = &apos;PipeDeclScript&apos;
+
+def triggerBranchPattern = &apos;*/ready&apos; + pattern + &apos;/*&apos;
+def integrationBranch = &apos;master&apos; + pattern
+pipeline{
   agent none
   stages {
     stage (&apos;Checkout&apos;) {
@@ -24,7 +29,7 @@
       steps {
         checkout([
           $class: &apos;GitSCM&apos;,
-          branches: [[name: &apos;*/readyPipeDeclScript/*&apos;]],
+          branches: [[name: triggerBranchPattern ]],
           userRemoteConfigs: [[
             name: &apos;origin&apos;,
             url: &apos;git@github.com:bicschneider/test-git-phlow-plugin.git&apos;
@@ -32,14 +37,21 @@
           extensions: [
             pretestedIntegration(
               gitIntegrationStrategy: accumulated(),
-              integrationBranch: &apos;masterPipeDeclScript&apos;,
+              integrationBranch: integrationBranch,
               repoName: &apos;origin&apos;)
             ,
             [ $class: &apos;ChangelogToBranch&apos;,
-              options: [compareRemote: &apos;origin&apos;, compareTarget: &apos;masterPipeDeclScript&apos;]
-            ]
+              options: [compareRemote: &apos;origin&apos;, compareTarget: integrationBranch]
+            ],
+            [$class: &apos;PruneStaleBranch&apos;]
           ]
         ])
+//      sh &apos;&apos;&apos;
+//       if [ -e ./build_failed.md ]; then
+//          exit 1
+//        fi
+//        &apos;&apos;&apos;
+      }
       post {
         always {
           pretestedIntegrationPublisher()

@@ -115,7 +115,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             listener.getLogger().println(logMessage);
             try {
                 client.merge()
-                        .setMessage("Merge of " + triggerBranch.getName() + " into "+ expandedIntegrationBranch + " (temporary)")
+                        .setMessage("Merge of " + triggerBranch.getName() + " into "+ expandedIntegrationBranch + " (temporary message)")
                         .setCommit(false)
                         .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.NO_FF)
                         .setRevisionToMerge(commitId).execute();

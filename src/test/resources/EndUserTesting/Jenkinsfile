@@ -1,10 +1,17 @@
+
+def pattern = 'MultiBranchPipePreSCM'
+
+def triggerBranchPattern = '*/ready' + pattern + '/*'
+def integrationBranch = 'master' + pattern
+
+
 node {
   stage ('Checkout'){
-  checkout scm
+    checkout scm
 /**
-  checkout([
-    $class: 'GitSCM',
-      branches: [[name: '*/readyMultiBranchPipe/*']],
+    checkout([
+      $class: 'GitSCM',
+      branches: [[name: triggerBranchPattern ]],
       userRemoteConfigs: [[
         name: 'origin',
         url: 'git@github.com:bicschneider/test-git-phlow-plugin.git'
@@ -12,11 +19,11 @@ node {
       extensions: [
         pretestedIntegration(
           gitIntegrationStrategy: accumulated(),
-          integrationBranch: 'masterMultiBranchPipe',
+          integrationBranch: integrationBranch,
           repoName: 'origin')
         ,
         [ $class: 'ChangelogToBranch',
-          options: [compareRemote: 'origin', compareTarget: 'masterMultiBranchPipe']
+          options: [compareRemote: 'origin', compareTarget: integrationBranch]
         ],
         [$class: 'PruneStaleBranch']
       ]

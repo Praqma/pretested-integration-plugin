@@ -98,13 +98,10 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
         EnvVars environment = run.getEnvironment(listener);
 
-        // TODO: Should this be last branch in stead of?
-        Branch triggeredBranchDraft = triggeredRevision.getBranches().iterator().next();
-        Branch triggeredBranch = new Branch(triggeredBranchDraft.getName().replaceFirst("refs/remotes/", ""), triggeredBranchDraft.getSHA1());
         String expandedIntegrationBranch = gitBridge.getExpandedIntegrationBranch(environment);
         String expandedRepo = gitBridge.getExpandedRepository(environment);
         String ucCredentialsId = "";
-        
+
         for (UserRemoteConfig uc : scm.getUserRemoteConfigs()) {
             String credentialsRepoName = StringUtils.isBlank(uc.getName()) ? "origin" : uc.getName();
             if (credentialsRepoName != null && credentialsRepoName.equals(expandedRepo)) {
@@ -115,42 +112,64 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             }
         }
 
-        try {
-            gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
-            listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
-            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-            ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredBranch, gitBridge);
-
-
-        } catch (NothingToDoException e) {
+        Branch triggeredBranch = null;
+        if ( triggeredRevision.getBranches().isEmpty() ) {
             run.setResult(Result.NOT_BUILT);
-            String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
+            String logMessage = String.format("%s - No branch on revision hence we cannot built - leaving workspace: %s but dont build", LOG_PREFIX, expandedIntegrationBranch);
             listener.getLogger().println(logMessage);
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-        } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
+        } else {
+            // TODO: Should this be last branch in stead of?
+            Branch triggeredBranchDraft = triggeredRevision.getBranches().iterator().next();
+            triggeredBranch = new Branch(triggeredBranchDraft.getName().replaceFirst("refs/remotes/", ""), triggeredBranchDraft.getSHA1());
+        }
+
+        if( ! run.getActions(PretestTriggerCommitAction.class).isEmpty() ) {
             run.setResult(Result.FAILURE);
-            String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
+            String logMessage = String.format("%s ERROR Likely misconfigered. Currently it is not supported to integrate twice in a build. It is likely because of Pipeline preSCM step or multiSCM. Please see https://github.com/Praqma/pretested-integration-plugin/issues/133 for details about Pipeline preSCM support. If it is neither scenarios, please report it", LOG_PREFIX );
             listener.getLogger().println(logMessage);
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-        } catch (IOException | InterruptedException e) {
-            run.setResult(Result.FAILURE);
-            String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
-            LOGGER.log(Level.SEVERE, logMessage, e);
-            listener.getLogger().println(logMessage);
-            e.printStackTrace(listener.getLogger());
-            git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+        }
+
+        if (run.getResult() == null || run.getResult() == Result.SUCCESS ) {
+
+            try {
+                gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
+                listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
+                git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+                ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredBranch, gitBridge);
+            } catch (NothingToDoException e) {
+                run.setResult(Result.NOT_BUILT);
+                String logMessage = String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
+                listener.getLogger().println(logMessage);
+                LOGGER.log(Level.SEVERE, logMessage, e);
+                // Leave the workspace as we were triggered, so postbuild step can report the correct branch
+                scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
+                git.checkout().ref(triggeredBranch.getName()).execute();
+            } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
+                run.setResult(Result.FAILURE);
+                String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
+                listener.getLogger().println(logMessage);
+                LOGGER.log(Level.SEVERE, logMessage, e);
+                git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+            } catch (IOException | InterruptedException e) {
+                run.setResult(Result.FAILURE);
+                String logMessage = String.format("%s - Unexpected error. %n%s", LOG_PREFIX, e.getMessage());
+                LOGGER.log(Level.SEVERE, logMessage, e);
+                listener.getLogger().println(logMessage);
+                e.printStackTrace(listener.getLogger());
+                git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+            }
         }
 
         run.addAction(new PretestTriggerCommitAction(triggeredBranch, expandedIntegrationBranch, expandedRepo, ucCredentialsId));
-        if (run.getResult() == null || run.getResult() == Result.SUCCESS) {
+        if (run.getResult() == null || run.getResult() == Result.SUCCESS || run.getResult() == Result.NOT_BUILT) {
             Revision mergeRevision = new GitUtils(listener, git).getRevisionForSHA1(git.revParse(HEAD));
             return mergeRevision;
         } else {
-            // We could not integrate, but we must return a revision for recording it so it does not retrigger
+            // reset the workspace to the triggered revision
             git.checkout().ref(triggeredBranch.getName()).execute();
+            // We could not integrate, but we must return a revision for recording it so it does not retrigger
             scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), Result.FAILURE));
+            // throwing the AbortException will result in a status=FAILURE
             throw new AbortException(String.format("%s Unable to integrate revision: %s", LOG_PREFIX, triggeredRevision.getSha1String()));
         }
     }

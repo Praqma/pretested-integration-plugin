@@ -1,5 +1,8 @@
-def triggerBranchPattern = '*/readyPipeScriptedSCM/*'
-def integrationBranch = 'masterPipeScriptedSCM'
+
+def pattern = 'PipeScriptedSCM'
+
+def triggerBranchPattern = '*/ready' + pattern + '/*'
+def integrationBranch = 'master' + pattern
 node {
   stage ('Checkout'){
   checkout scm // just reference SCM in the job executing the Pipeline script.
