@@ -115,7 +115,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         Branch triggeredBranch = null;
         if ( triggeredRevision.getBranches().isEmpty() ) {
             run.setResult(Result.NOT_BUILT);
-            String logMessage = String.format("%s - No branch on revision hence we cannot built - leaving workspace: %s but dont build", LOG_PREFIX, expandedIntegrationBranch);
+            String logMessage = String.format("%s - No branch on revision which we cannot handle - leaving workspace: %s  and set result to NOT_BUILT", LOG_PREFIX, expandedIntegrationBranch);
             listener.getLogger().println(logMessage);
         } else {
             // TODO: Should this be last branch in stead of?
@@ -123,14 +123,13 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             triggeredBranch = new Branch(triggeredBranchDraft.getName().replaceFirst("refs/remotes/", ""), triggeredBranchDraft.getSHA1());
         }
 
-        if( ! run.getActions(PretestTriggerCommitAction.class).isEmpty() ) {
+        if(!run.getActions(PretestTriggerCommitAction.class).isEmpty() ) {
             run.setResult(Result.FAILURE);
             String logMessage = String.format("%s ERROR Likely misconfigered. Currently it is not supported to integrate twice in a build. It is likely because of Pipeline preSCM step or multiSCM. Please see https://github.com/Praqma/pretested-integration-plugin/issues/133 for details about Pipeline preSCM support. If it is neither scenarios, please report it", LOG_PREFIX );
             listener.getLogger().println(logMessage);
         }
 
         if (run.getResult() == null || run.getResult() == Result.SUCCESS ) {
-
             try {
                 gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
                 listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
@@ -141,8 +140,11 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 String logMessage = String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);
+                //Only do this when polling and we have an object
+                if(scm.getBuildData(run) != null) {
+                    scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
+                }
                 // Leave the workspace as we were triggered, so postbuild step can report the correct branch
-                scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
                 git.checkout().ref(triggeredBranch.getName()).execute();
             } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
                 run.setResult(Result.FAILURE);

@@ -129,7 +129,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
         String triggeredBranch = "n/a";
         String integrationBranch = "n/a";
         String integrationRepo = null;
-        if( ! run.getActions(PretestTriggerCommitAction.class).isEmpty()) {
+        if(!run.getActions(PretestTriggerCommitAction.class).isEmpty()) {
             triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
             integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
             integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;

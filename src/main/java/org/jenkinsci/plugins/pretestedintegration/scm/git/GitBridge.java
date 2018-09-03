@@ -10,7 +10,6 @@ import hudson.scm.SCM;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
@@ -19,6 +18,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -163,22 +163,14 @@ public class GitBridge extends AbstractSCMBridge {
      * @param build The Build
      * @param listener The BuildListener
      * @return the Git SCM for the relevant build data.
-     * @throws InterruptedException
-     * When no matching SCMs are found
-     * @throws NothingToDoException
-     * When no relevant BuildData is found.
-     * @throws UnsupportedConfigurationException
-     * When multiple, ambiguous relevant BuildDatas are found.
      */
-    protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) throws IOException, InterruptedException {
+    @CheckForNull
+    protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) {
         SCM scm = build.getProject().getScm();
         if (scm instanceof GitSCM) {
             GitSCM gitScm = (GitSCM) scm;
             LOGGER.fine(String.format("Found GitSCM"));
             return gitScm;
-        }
-        if (scm instanceof MultiSCM) {
-            throw new InterruptedException("[PREINT] MultiSCM is no longer supported");
         }
         return null;
     }

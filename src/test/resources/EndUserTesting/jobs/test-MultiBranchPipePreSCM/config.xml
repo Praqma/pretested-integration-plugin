@@ -27,7 +27,12 @@
     <daysToKeep>-1</daysToKeep>
     <numToKeep>-1</numToKeep>
   </orphanedItemStrategy>
-  <triggers/>
+  <triggers>
+    <com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger plugin="cloudbees-folder@5.12">
+      <spec>* * * * *</spec>
+      <interval>60000</interval>
+    </com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger>
+  </triggers>
   <sources class="jenkins.branch.MultiBranchProject$BranchSourceList" plugin="branch-api@1.11">
     <data>
       <jenkins.branch.BranchSource>
@@ -38,7 +43,7 @@
           <traits>
             <jenkins.plugins.git.traits.BranchDiscoveryTrait/>
             <jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait plugin="scm-api@2.2.0">
-              <includes>*/readyMultiBranchPipePreSCM/*</includes>
+              <includes>readyMultiBranchPipePreSCM/*</includes>
               <excludes></excludes>
             </jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait>
           </traits>
