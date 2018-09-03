@@ -126,7 +126,7 @@ public class MatrixProjectCompatibilityTestIT {
         TestUtilsFactory.triggerProject(project);
         jenkinsRule.waitUntilNoActivityUpTo(60000);
         jenkinsRule.assertBuildStatus(Result.FAILURE, project.getLastBuild());
-        assertEquals("3 runs for this particular matrix build", 3, project.getLastBuild().getRuns().size());
+        assertEquals("0 runs for this particular matrix build. We never go to any of the actual subruns", 0, project.getLastBuild().getRuns().size());
     }
 
 }

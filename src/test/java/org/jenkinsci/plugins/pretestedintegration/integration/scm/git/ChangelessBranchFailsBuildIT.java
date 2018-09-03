@@ -24,8 +24,6 @@ public class ChangelessBranchFailsBuildIT {
 
     private Repository repository;
 
-    private final String res = "there was nothing to merge";
-
     @After
     public void tearDown() throws Exception{
         TestUtilsFactory.destroyRepo(repository);
@@ -40,7 +38,6 @@ public class ChangelessBranchFailsBuildIT {
         String console = jenkins.createWebClient().getPage(build, "console").asText();
         System.out.println(console);
         jenkins.assertBuildStatus(Result.NOT_BUILT, build);
-        assertTrue(console.contains(res));
     }
 
     @Test
@@ -52,6 +49,5 @@ public class ChangelessBranchFailsBuildIT {
         String console = jenkins.createWebClient().getPage(build, "console").asText();
         System.out.println(console);
         jenkins.assertBuildStatus(Result.NOT_BUILT, build);
-        assertTrue(console.contains(res));
     }
 }

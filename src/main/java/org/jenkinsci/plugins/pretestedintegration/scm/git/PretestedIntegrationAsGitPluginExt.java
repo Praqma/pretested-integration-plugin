@@ -142,8 +142,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);
                 // Leave the workspace as we were triggered, so postbuild step can report the correct branch
-                scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
-                git.checkout().ref(triggeredBranch.getName()).execute();
+                git.checkout().ref(triggeredRevision.getSha1String()).execute();
             } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
                 run.setResult(Result.FAILURE);
                 String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());
