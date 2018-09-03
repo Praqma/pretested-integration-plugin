@@ -23,7 +23,7 @@
     Those updates will only be visible to people who have enabled the experimental update center.
     Example of a beta: 3.0.0-beta.1-SNAPSHOT
     -->
-    <version>3.0.2-SNAPSHOT</version>
+    <version>3.1.0-beta-1-SNAPSHOT</version>
     <packaging>hpi</packaging>
 
 
@@ -67,11 +67,11 @@
 		<!-- Using Praqma's github repo as developer connection - this mean we must manual push tags and commits to the
 				 Jenkins CI github repo after an release. We do this to ensure no one sneaks code into our repo. -->
     <scm>
-        <connection>scm:git:ssh://github.com/Praqma/pretested-integration-plugin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/Praqma/pretested-integration-plugin.git</developerConnection>
+        <connection>scm:git:https://github.com/Praqma/pretested-integration-plugin</connection>
+        <developerConnection>scm:git:https://github.com/Praqma/pretested-integration-plugin</developerConnection>
         <url>https://github.com/Praqma/pretested-integration-plugin</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
 
     <build>
