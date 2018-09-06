@@ -7,9 +7,10 @@ def integrationBranch = 'master' + pattern
 
 node {
   stage ('Checkout'){
-    checkout scm
-/**
-    checkout([
+//    checkout scm
+///**
+    try {
+      checkout([
       $class: 'GitSCM',
       branches: [[name: triggerBranchPattern ]],
       userRemoteConfigs: [[
@@ -28,7 +29,11 @@ node {
         [$class: 'PruneStaleBranch']
       ]
     ])
-    */
+    } catch(Exception e) {
+      echo "Leave further processing to publisher"
+    }
+
+//    */
 //    try {
 //      sh '''
 //      if [ -e ./build_failed.md ]; then

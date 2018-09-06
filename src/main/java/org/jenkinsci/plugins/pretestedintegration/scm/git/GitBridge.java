@@ -163,12 +163,6 @@ public class GitBridge extends AbstractSCMBridge {
      * @param build The Build
      * @param listener The BuildListener
      * @return the Git SCM for the relevant build data.
-     * @throws InterruptedException
-     * When no matching SCMs are found
-     * @throws NothingToDoException
-     * When no relevant BuildData is found.
-     * @throws UnsupportedConfigurationException
-     * When multiple, ambiguous relevant BuildDatas are found.
      */
     @CheckForNull
     protected GitSCM findScm(AbstractBuild<?, ?> build, TaskListener listener) {

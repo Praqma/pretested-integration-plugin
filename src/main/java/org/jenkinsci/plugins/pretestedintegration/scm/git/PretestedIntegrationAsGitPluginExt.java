@@ -28,7 +28,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -115,7 +117,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         Branch triggeredBranch = null;
         if ( triggeredRevision.getBranches().isEmpty() ) {
             run.setResult(Result.NOT_BUILT);
-            String logMessage = String.format("%s - No branch on revision hence we cannot built - leaving workspace: %s but dont build", LOG_PREFIX, expandedIntegrationBranch);
+            String logMessage = String.format("%s - No branch on revision which we cannot handle - leaving workspace: %s  and set result to NOT_BUILT", LOG_PREFIX, expandedIntegrationBranch);
             listener.getLogger().println(logMessage);
         } else {
             // TODO: Should this be last branch in stead of?
@@ -142,7 +144,8 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);
                 // Leave the workspace as we were triggered, so postbuild step can report the correct branch
-                git.checkout().ref(triggeredRevision.getSha1String()).execute();
+                scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
+                git.checkout().ref(triggeredBranch.getName()).execute();
             } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
                 run.setResult(Result.FAILURE);
                 String logMessage = String.format("%s - setUp() - %s - %s", LOG_PREFIX, e.getClass().getSimpleName(), e.getMessage());

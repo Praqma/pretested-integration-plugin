@@ -101,6 +101,10 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
                 LOGGER.log(Level.INFO, String.format(GitMessages.LOG_PREFIX+ "Collecting author of last commit on development branch"));
                 String commitMsg = String.format("%s%n%s", headerLine, commits);
                 commitMessage = commitMsg.replaceAll("\"", "'");
+            } else {
+                logMessage = String.format(GitMessages.LOG_PREFIX+ "Using short commit message");
+                LOGGER.log(Level.INFO, logMessage);
+                listener.getLogger().println(logMessage);
             }
 
             // Collect author
