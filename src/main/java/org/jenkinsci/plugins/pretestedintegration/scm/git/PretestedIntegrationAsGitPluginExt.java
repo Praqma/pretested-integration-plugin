@@ -4,6 +4,7 @@ import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Plugin;
+import hudson.model.Cause;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -12,6 +13,7 @@ import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.Build;
+import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
@@ -125,7 +127,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
             triggeredBranch = new Branch(triggeredBranchDraft.getName().replaceFirst("refs/remotes/", ""), triggeredBranchDraft.getSHA1());
         }
 
-        if( ! run.getActions(PretestTriggerCommitAction.class).isEmpty() ) {
+        if(!run.getActions(PretestTriggerCommitAction.class).isEmpty() ) {
             run.setResult(Result.FAILURE);
             String logMessage = String.format("%s ERROR Likely misconfigered. Currently it is not supported to integrate twice in a build. It is likely because of Pipeline preSCM step or multiSCM. Please see https://github.com/Praqma/pretested-integration-plugin/issues/133 for details about Pipeline preSCM support. If it is neither scenarios, please report it", LOG_PREFIX );
             listener.getLogger().println(logMessage);
@@ -143,8 +145,12 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 String logMessage = String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);
+                Cause c = run.getCause(Cause.UserIdCause.class);
+                //Only do this when polling and we have an object
+                if(scm.getBuildData(run) != null) {
+                    scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
+                }
                 // Leave the workspace as we were triggered, so postbuild step can report the correct branch
-                scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
                 git.checkout().ref(triggeredBranch.getName()).execute();
             } catch (IntegrationFailedException | EstablishingWorkspaceFailedException | UnsupportedConfigurationException e) {
                 run.setResult(Result.FAILURE);
