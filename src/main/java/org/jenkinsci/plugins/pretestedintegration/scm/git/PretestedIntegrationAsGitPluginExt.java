@@ -4,7 +4,6 @@ import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Plugin;
-import hudson.model.Cause;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -13,7 +12,6 @@ import hudson.plugins.git.extensions.GitClientType;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.Build;
-import hudson.plugins.git.util.BuildData;
 import hudson.plugins.git.util.GitUtils;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
@@ -30,9 +28,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -134,7 +130,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         }
 
         if (run.getResult() == null || run.getResult() == Result.SUCCESS ) {
-
             try {
                 gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
                 listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
@@ -145,7 +140,6 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 String logMessage = String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());
                 listener.getLogger().println(logMessage);
                 LOGGER.log(Level.SEVERE, logMessage, e);
-                Cause c = run.getCause(Cause.UserIdCause.class);
                 //Only do this when polling and we have an object
                 if(scm.getBuildData(run) != null) {
                     scm.getBuildData(run).saveBuild(new Build(marked, triggeredRevision, run.getNumber(), run.getResult()));
