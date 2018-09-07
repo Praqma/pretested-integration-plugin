@@ -506,7 +506,7 @@ public class GitBridge extends AbstractSCMBridge {
          * @return The default Integration Strategy
          */
         public IntegrationStrategy getDefaultStrategy() {
-            return new SquashCommitStrategy();
+            return new AccumulatedCommitStrategy();
         }
     }
 }
