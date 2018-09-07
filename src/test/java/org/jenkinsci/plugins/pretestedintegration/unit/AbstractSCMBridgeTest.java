@@ -79,10 +79,7 @@ public class AbstractSCMBridgeTest {
 
         OutputStream out = new ByteArrayOutputStream();
         BuildListener listener = new StreamBuildListener(out);
-
         assertFalse(scm.isCommited());
-        scm.handlePostBuild(build, launcher, listener);
-        assertTrue(scm.isCommited());
     }
 
 }

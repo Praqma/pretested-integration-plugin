@@ -1,32 +1,28 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.Revision;
-import hudson.plugins.git.util.BuildData;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pretestedintegration.*;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.eclipse.jgit.lib.PersonIdent;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Commit Strategy that squashes multiple commits into a single commit.
@@ -154,52 +150,8 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
-
-        GitBridge gitbridge = (GitBridge) bridge;
-        GitClient client;
-
-        try {
-            client = gitbridge.findScm(build, listener).createClient(listener, build.getEnvironment(listener), build, build.getWorkspace());
-        } catch (InterruptedException | IOException ex) {
-            LOGGER.log(Level.SEVERE, "Failed to initialize GitClient", ex);
-            throw new IntegrationUnknownFailureException(ex);
-        }
-
-        String expandedRepoName;
-        try {
-            expandedRepoName = gitbridge.getExpandedRepository(build.getEnvironment(listener));
-        } catch (IOException | InterruptedException ex) {
-            expandedRepoName = gitbridge.getRepoName();
-        }
-
-
-        BuildData buildData = PretestedIntegrationGitUtils.findRelevantBuildData(build, listener.getLogger(), expandedRepoName);
-
-        //TODO: Implement robustness, in which situations does this one contain
-        // multiple revisons, when two branches point to the same commit?
-        // (JENKINS-24909). Check integrationBranch spec before doing anything
-        // It could be the last rather than the first that is the wanted
-        Branch triggerBranch = buildData.lastBuild.revision.getBranches().iterator().next();
-        ObjectId commitId = buildData.lastBuild.revision.getSha1();
-
-        String expandedIntegrationBranch;
-        try {
-            expandedIntegrationBranch = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
-        } catch (IOException | InterruptedException ex) {
-            expandedIntegrationBranch = gitbridge.getIntegrationBranch();
-        }
-        build.addAction(new PretestTriggerCommitAction(triggerBranch));
-        doTheIntegration((Run) build, listener, gitbridge, commitId, client, expandedIntegrationBranch, triggerBranch);
-    }
-
-
-    @Override
-    public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
+    public void integrate(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
 
         String expandedRepoName;
         try {

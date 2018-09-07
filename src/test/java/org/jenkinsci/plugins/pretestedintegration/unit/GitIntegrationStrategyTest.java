@@ -36,12 +36,7 @@ public class GitIntegrationStrategyTest {
     private GitIntegrationStrategy getDummyStrategy() {
         return new GitIntegrationStrategy() {
             @Override
-            public void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
-                throw new UnsupportedOperationException("Dummies can't integrate.");
-            }
-
-            @Override
-            public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
+            public void integrate(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException {
                 throw new UnsupportedOperationException("Dummies can't integrate.");
             }
         };

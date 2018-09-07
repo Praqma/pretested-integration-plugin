@@ -16,9 +16,4 @@ public class DummyIntegrationStrategy extends IntegrationStrategy {
     public DummyIntegrationStrategy() {
     }
 
-    @Override
-    public void integrate(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, AbstractSCMBridge bridge) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException {
-
-    }
-
 }

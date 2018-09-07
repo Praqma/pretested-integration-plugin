@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * Abstract class representing a strategy to apply when merging pretested commits into the integration integrationBranch.
  */
-public abstract interface IntegrationStrategyAsGitPluginExt{
+public interface IntegrationStrategyAsGitPluginExt{
 
     /**
      * Integrates the commits into the integration integrationBranch.
@@ -33,8 +33,6 @@ public abstract interface IntegrationStrategyAsGitPluginExt{
      * @throws InterruptedException Unforeseen problems
      */
 
-    public abstract void integrateAsGitPluginExt(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge bridge)
+    void integrate(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge bridge)
         throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IOException, InterruptedException;
-
-
 }

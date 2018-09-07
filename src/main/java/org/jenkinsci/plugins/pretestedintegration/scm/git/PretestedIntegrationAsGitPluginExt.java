@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -85,6 +86,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     }
 
     @Override
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public Revision decorateRevisionToBuild(
             GitSCM scm,
             Run<?, ?> run,
@@ -134,7 +136,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
                 listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
                 git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
-                ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrateAsGitPluginExt(scm, run, git, listener, marked, triggeredBranch, gitBridge);
+                ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrate(scm, run, git, listener, marked, triggeredBranch, gitBridge);
             } catch (NothingToDoException e) {
                 run.setResult(Result.NOT_BUILT);
                 String logMessage = String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());

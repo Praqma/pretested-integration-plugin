@@ -26,29 +26,12 @@ public class DummySCM extends AbstractSCMBridge {
         super(behaves);
     }
 
-    @Override
-    public void pushToIntegrationBranch(AbstractBuild<?, ?> build, BuildListener listener) throws PushFailedException {
-        commited = true;
-    }
-
     public boolean isCommited() {
         return commited;
     }
 
     public boolean isRolledBack() {
         return rolledBack;
-    }
-
-    @Override
-    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException {
-
-    }
-
-    @Override
-    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-        if (build.getResult().isBetterOrEqualTo(Result.SUCCESS)) {
-            pushToIntegrationBranch(build, listener);
-        }
     }
 
     @Override

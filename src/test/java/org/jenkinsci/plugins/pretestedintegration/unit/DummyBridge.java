@@ -15,16 +15,6 @@ public class DummyBridge extends AbstractSCMBridge {
     }
 
     @Override
-    public void ensureBranch(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, String branch) throws EstablishingWorkspaceFailedException {
-
-    }
-
-    @Override
-    public void handlePostBuild(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException {
-
-    }
-
-    @Override
     protected String getIntegrationBranch() {
         return "master";
     }
