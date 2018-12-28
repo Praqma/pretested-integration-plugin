@@ -101,7 +101,7 @@ public class TestUtilsFactory {
     // https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/api/WalkRev.java
     public static int countCommitsOnBranch(Git git, String branch) throws IOException {
 
-        Ref head = git.getRepository().getRef(branch);
+        Ref head = git.getRepository().findRef(branch);
         RevWalk walk = new RevWalk(git.getRepository());
         RevCommit commit = walk.parseCommit(head.getObjectId());
         walk.markStart(commit);
@@ -472,7 +472,7 @@ public class TestUtilsFactory {
         boolean firstCommit = true;
         for (TestCommit commit : commits) {
             if (!commit.branch.equals("master")) {
-                boolean branchExists = git.getRepository().getRef(commit.branch) != null;
+                boolean branchExists = git.getRepository().findRef(commit.branch) != null;
                 if (!branchExists) {
                     git.branchCreate().setName(commit.branch).call();
                 }
