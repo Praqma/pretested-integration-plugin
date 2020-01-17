@@ -13,7 +13,7 @@ The [_roadmap_](https://trello.com/b/tOQL6crl/pretested-integration-plugin) is a
 Current development efforts are also maintained Kanban-style on the Trello board.
 
 
-The plugin is maintained in the scope of [Joint Open Source Roadmap Alliance (JOSRA)](http://www.josra.org/) by [Praqma](http://www.praqma.net). We happily accept pull request - see section about contributing below.
+The plugin is maintained in the scope of [Joint Open Source Roadmap Alliance (JOSRA)](https://www.josra.org/) by [Praqma](httpss://www.praqma.com). We happily accept pull requests - see section about contributing below.
 
 # Introduction
 The Jenkins Pretested Integration Plugin offers a branchy approach to pretested integration (also known as pretested commits), which upholds the invariant; that for a specific branch, known as the _integration branch_, all commits have been verified.
@@ -22,7 +22,7 @@ The plugin delivers an API that makes it possible to easily provide pretested in
 
 The plugin is currently shipped with support for only Git.
 
-The plugin is designed to automate the **[CoDE:U Git Flow](http://www.praqma.com/resources/papers/git-flow)**, but is not bound to a specific SCM work flow.
+The plugin is designed to automate the **[CoDE:U Git Flow](https://www.praqma.com/stories/git-phlow/)**, but is not bound to a specific SCM work flow.
 
 
 # References
@@ -30,18 +30,14 @@ The plugin is designed to automate the **[CoDE:U Git Flow](http://www.praqma.com
 ## Plugin repositories
 
 * [Jenkins CI on Github](https://github.com/jenkinsci/pretested-integration-plugin) (used as final archive for released version)
-* [Praqma's on github](https://github.com/Praqma/pretested-integration-plugin)  (used to release from and accept pull requests)
+* [Praqma's on github](https://github.com/Praqma/pretested-integration-plugin) (used to release from and accept pull requests)
 * [Migration guide 2.X -> 3.X](https://wiki.jenkins.io/display/JENKINS/Pretested+Integration+Plugin) (Migration guide from wiki)
 
 
 ## Automated builds
 
-* **Praqma's build server** (used for daily development builds)
- * [Pretested integration plugin build view](http://code.praqma.net/ci/view/Open%20Source/view/Pretested%20Integration%20Plugin/)
- * [Pretested integration delivery pipeline](http://code.praqma.net/ci/view/Open%20Source%20Pipelines/view/Pretested%20Integration%20Plugin%20-%20build%20pipeline/)
 * **Jenkins CI community build** (automated setup for all plugins, not used in our daily workflows)
  *  [Maven project pretested-integration-plugin]((https://jenkins.ci.cloudbees.com/job/plugins/job/pretested-integration-plugin/)
-
 
 
 ## Roadmap
@@ -57,26 +53,26 @@ The user oriented documentation is found on the Jenkins community plugin wiki pa
 
 Issues are tracked in the Jenkins JIRA issue tracker:
 
-* [Pretested Integration Plugin - open issues filter]( https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27pretested-integration-plugin%27)
+* [Pretested Integration Plugin - open issues filter](https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?mode=hide&reset=true&jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27pretested-integration-plugin%27)
 
 
 # The Pretested Integration Plugin workflows
 
 The Jenkins community have an [article about designing pretested commits](https://wiki.jenkins-ci.org/display/JENKINS/Designing+pre-tested+commit). The original work on this plugin was inspired from the [personal branch version of the branchy approach](https://wiki.jenkins-ci.org/display/JENKINS/Designing+pre-tested+commit#Designingpre-testedcommit-%22BranchySCM%22approach).
 
-The plugin is designed to automate the **[CoDe:U Git Flow](http://www.praqma.com/resources/papers/git-flow)**, but is not bound to a specific SCM work flow as long as you uses branches.
+The plugin is designed to automate the **[CoDe:U Git Flow](https://www.praqma.com/stories/git-phlow/)**, but is not bound to a specific SCM work flow as long as you uses branches.
 
 The recommended workflow are described in our user documentation on the [Pretested Integration Plugin wiki page](https://wiki.jenkins-ci.org/display/JENKINS/Pretested+Integration+Plugin)
 
 Concepts:
 
-* The **ready branch** the developer branch with changes, that should be integrated. It is called ready, because of our recommended naming conventions in the [CoDe:U Git Flow](http://www.praqma.com/resources/papers/git-flow).
+* The **ready branch** the developer branch with changes, that should be integrated. It is called ready, because of our recommended naming conventions in the [CoDe:U Git Flow](https://www.praqma.com/stories/git-phlow/).
 * **Ready** branches are specified by configuring the SCM plugin (not the prestested integration plugin) to pic up changes on those specific branches. For the Git plugin, it is the `Branch Specifier`.
 * The **integration branch** is the target branch for integration. This is where changes from the ready-branches comes in.
 
 Merge strategies:
 
-**Accumulated** and **Squashed**. These are explained, together with more background information, and a discussion on the different merge strategies in [JOSRA](http://www.josra.org) as a blog post: " [Pretested Integration Plugin](http://www.josra.org/blog/2014/06/23/Pretested%2Bintegration%2Bplugin.html)".
+**Accumulated** and **Squashed**. These are explained, together with more background information, and a discussion on the different merge strategies in [JOSRA](https://www.josra.org) as a blog post: " [Pretested Integration Plugin](https://www.josra.org/blog/Pretested+integration+plugin.html)".
 
 # Architecture
 
@@ -192,12 +188,12 @@ To define a new SCM interface, create a public class which extends "org.jenkinsc
 
 ## Acknowledgement
 
-Code contributions were initially made by Computer Science students at University of Copenhagen [DIKU](http://www.diku.dk) as part of a study project.
+Code contributions were initially made by Computer Science students at University of Copenhagen [DIKU](https://www.diku.dk) as part of a study project.
 
-* Ronni Elken Lindsgaard
+* [Ronni Elken Lindsgaard](https://github.com/rlindsgaard)
 * Alexander Winther Uldall
-* Esben Skaarup
-* Andreas Frisch
+* [Esben Skaarup](https://github.com/sben)
+* [Andreas Frisch](https://github.com/andreasfrisch)
 
 ### Sponsors
 
