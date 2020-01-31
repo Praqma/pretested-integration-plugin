@@ -67,12 +67,11 @@
 		<!-- Using Praqma's github repo as developer connection - this mean we must manual push tags and commits to the
 				 Jenkins CI github repo after an release. We do this to ensure no one sneaks code into our repo. -->
     <scm>
-        <connection>scm:git:https://github.com/Praqma/pretested-integration-plugin.git</connection>
-        <developerConnection>scm:git:https://github.com/Praqma/pretested-integration-plugin.git</developerConnection>
-        <url>https://github.com/Praqma/pretested-integration-plugin</url>
-      <tag>pretested-integration-3.1.1</tag>
-  </scm>
-
+        <connection>scm:git:git@github.com/Praqma/${project.artifactId}-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com/Praqma/${project.artifactId}-plugin.git</developerConnection>
+        <url>https://github.com/Praqma/${project.artifactId}-plugin</url>
+        <tag>${scmTag}</tag>
+   </scm>
 
     <build>
         <plugins>
