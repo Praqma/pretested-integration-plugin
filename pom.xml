@@ -29,7 +29,7 @@
 
     <properties>
         <jenkins.version>2.19.4</jenkins.version>
-        <jenkins-test-harness.version>2.24</jenkins-test-harness.version>
+        <jenkins-test-harness.version>2.60</jenkins-test-harness.version>
         <java.level>8</java.level>
     </properties>
 
@@ -189,13 +189,6 @@
             <artifactId>matrix-project</artifactId>
             <version>1.13</version>
             <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
