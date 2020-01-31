@@ -167,6 +167,9 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
         run.addAction(new PretestTriggerCommitAction(triggeredBranch, expandedIntegrationBranch, expandedRepo, ucCredentialsId));
         if (run.getResult() == null || run.getResult() == Result.SUCCESS || run.getResult() == Result.NOT_BUILT) {
             Revision mergeRevision = new GitUtils(listener, git).getRevisionForSHA1(git.revParse(HEAD));
+            if ( triggeredBranch != null ) {
+                mergeRevision.getBranches().add(triggeredBranch);
+            }
             return mergeRevision;
         } else {
             // reset the workspace to the triggered revision

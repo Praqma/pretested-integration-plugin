@@ -126,28 +126,25 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
     @Override
     public void perform(Run<?, ?> run, FilePath ws, Launcher launcher, TaskListener listener) throws InterruptedException {
         Result result = run.getResult();
-        String triggeredBranch = "n/a";
-        String integrationBranch = "n/a";
-        String integrationRepo = null;
-        if(!run.getActions(PretestTriggerCommitAction.class).isEmpty()) {
-            triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
-            integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
-            integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
-            String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
-            try {
-                // The choice of 'jgit' or 'git'. It must be set though..
-                GitClient client = Git.with(listener, run.getEnvironment(listener)).in(ws).using("git").getClient();
+        if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult())) {
+            if(!run.getActions(PretestTriggerCommitAction.class).isEmpty()) {
+                String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
+                String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
+                String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
+                String ucCredentialsId = run.getAction(PretestTriggerCommitAction.class).ucCredentialsId;
+                try {
+                    // The choice of 'jgit' or 'git'. It must be set though..
+                    GitClient client = Git.with(listener, run.getEnvironment(listener)).in(ws).using("git").getClient();
 
-                if (ucCredentialsId != null) {
-                    StandardUsernameCredentials credentials = CredentialsProvider.findCredentialById(ucCredentialsId, StandardUsernameCredentials.class, run, Collections.EMPTY_LIST);
+                    if (ucCredentialsId != null) {
+                        StandardUsernameCredentials credentials = CredentialsProvider.findCredentialById(ucCredentialsId, StandardUsernameCredentials.class, run, Collections.EMPTY_LIST);
 
-                    if (credentials != null) {
-                        listener.getLogger().println("[PREINT] Found credentials");
-                        client.setCredentials(credentials);
+                        if (credentials != null) {
+                            listener.getLogger().println("[PREINT] Found credentials");
+                            client.setCredentials(credentials);
+                        }
                     }
-                }
 
-                if (result == null || result.isBetterOrEqualTo(GitBridge.getRequiredResult())) {
                     // Make sure we accidently do not try to delete the integration branch - nor push when not needed. Consider moving this to the two functions
                     if (triggeredBranch.replaceFirst(integrationRepo + "/" , "").equals(integrationBranch)) {
                         LOGGER.log(Level.WARNING, LOG_PREFIX + "The development/triggered branch: " +  triggeredBranch.replaceFirst(integrationRepo + "/" , "") + " equals the integration branch: " + integrationBranch + " SKIP the push to integration branch and deletion of the development branch");
@@ -156,17 +153,17 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                         GitBridge.pushToIntegrationBranchGit(run, listener, client, integrationRepo, integrationBranch);
                         GitBridge.deleteBranch(run, listener, client, triggeredBranch, integrationRepo);
                     }
-                } else {
-                    LOGGER.log(Level.WARNING, "Build result not satisfied - skipped post-build step.");
-                    listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
+                } catch (IOException ex) {
+                    LOGGER.log(Level.SEVERE, "Cannot launch the Git Client.." + ex);
+                    listener.getLogger().println(LOG_PREFIX + "Cannot launch the Git Client.." + ex);
                 }
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, "Cannot launch the Git Client.." + ex);
-                listener.getLogger().println(LOG_PREFIX + "Cannot launch the Git Client.." + ex);
+                GitBridge.updateBuildDescription(run, listener, integrationBranch, triggeredBranch.replace(integrationRepo + "/", ""));
+            } else {
+                listener.getLogger().println(LOG_PREFIX + "Pretested Post Build step enabled, but Pretested Integration Git Plugin extension is not enabled");
             }
+        } else {
+            listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
         }
-        GitBridge.updateBuildDescription(run, listener, integrationBranch, triggeredBranch.replace(integrationRepo + "/", ""));
-
     }
 
     /**

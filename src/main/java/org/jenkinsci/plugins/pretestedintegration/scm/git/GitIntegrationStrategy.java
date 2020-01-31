@@ -98,7 +98,10 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
                 return true;
             }
         } catch (GitException | InterruptedException ex) {
-            throw new IntegrationFailedException("Failed to rebase commit.", ex);
+            String logMessage = String.format(GitMessages.LOG_PREFIX+ "Exception while rebasing commit. Logging exception msg: %s", ex.getMessage());
+            LOGGER.log(Level.SEVERE, logMessage, ex);
+            logger.println(logMessage);
+            throw new IntegrationFailedException(ex);
         }
     }
 
