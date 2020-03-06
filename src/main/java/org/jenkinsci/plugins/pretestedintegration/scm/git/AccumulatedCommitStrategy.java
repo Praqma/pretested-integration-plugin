@@ -41,7 +41,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
      */
     private static final String B_NAME = "Accumulated commit";
 
-    private void doTheIntegration(Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
+    private void doTheIntegration(Run<?,?> build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
         //Get the commit count
         int commitCount;
         try {

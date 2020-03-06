@@ -13,6 +13,10 @@ import org.eclipse.jgit.revwalk.RevWalk;
 public class FindCommitMessageCallback extends RepositoryListenerAwareCallback<String> {
 
     /**
+     *
+     */
+    private static final long serialVersionUID = 1504512748198377240L;
+    /**
      * The commit Id
      */
     public final ObjectId id;
@@ -30,9 +34,9 @@ public class FindCommitMessageCallback extends RepositoryListenerAwareCallback<S
      */
     @Override
     public String invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-        RevWalk walk = new RevWalk(repo);
-        RevCommit commit = walk.parseCommit(id);
-        walk.dispose();
-        return commit.getFullMessage();
+        try(RevWalk walk = new RevWalk(repo)) {
+            RevCommit commit = walk.parseCommit(id);
+            return commit.getFullMessage();
+        }
     }
 }

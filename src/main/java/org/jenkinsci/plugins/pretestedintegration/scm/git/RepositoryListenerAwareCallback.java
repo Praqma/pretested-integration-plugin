@@ -10,11 +10,10 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
  * @param <T> Return type of the Callback
  */
 public abstract class RepositoryListenerAwareCallback<T> implements RepositoryCallback<T> {
-
     /**
-     * The TaskListener for use in invoke
+     *
      */
-//    public final TaskListener listener;
+    private static final long serialVersionUID = 1L;
 
     /**
      * Constructor for a RepositoryListenerAwareCallback

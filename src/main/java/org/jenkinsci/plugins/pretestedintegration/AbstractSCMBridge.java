@@ -1,28 +1,24 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.DescriptorExtensionList;
-import hudson.EnvVars;
-import hudson.ExtensionPoint;
-import hudson.Launcher;
-import hudson.model.*;
-import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+
+import hudson.DescriptorExtensionList;
+import hudson.EnvVars;
+import hudson.ExtensionPoint;
+import hudson.model.AbstractProject;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import hudson.model.Result;
+import jenkins.model.Jenkins;
 
 /**
  * Abstract class representing an SCM bridge.
  */
 public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge>, ExtensionPoint {
-    private static final Logger LOGGER = Logger.getLogger(AbstractSCMBridge.class.getName());
-
-
     /**
      * Information about the result of the integration (Unknown, Conflict, Build, Push).
      * @return the integration branch name

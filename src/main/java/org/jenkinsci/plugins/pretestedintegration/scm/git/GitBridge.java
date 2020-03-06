@@ -1,30 +1,37 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.*;
-import hudson.model.*;
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.scm.SCM;
-import org.apache.commons.lang.StringUtils;
-import org.eclipse.jgit.lib.ObjectId;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
-import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
-import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
-import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-
-import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
+import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategyDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.SCMBridgeDescriptor;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.BranchDeletionFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.EstablishingWorkspaceFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownFailureException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.PushFailedException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.Branch;
+import hudson.plugins.git.GitException;
 
 /**
  * The Git SCM Bridge.
@@ -62,7 +69,7 @@ public class GitBridge extends AbstractSCMBridge {
     public GitBridge(IntegrationStrategy integrationStrategy, final String integrationBranch, final String repoName) {
         super(integrationStrategy);
         this.integrationBranch = integrationBranch;
-        this.repoName = repoName;
+        this.repoName = repoName;        
     }
 
     public static void pushToIntegrationBranchGit(Run<?, ?> run, TaskListener listener, GitClient client, String expandedRepo, String expandedBranch) throws PushFailedException {

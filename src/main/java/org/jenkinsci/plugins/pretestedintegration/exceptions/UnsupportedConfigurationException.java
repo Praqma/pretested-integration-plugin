@@ -8,8 +8,13 @@ import java.io.IOException;
 public class UnsupportedConfigurationException extends IOException {
 
     /**
-     * Predefined message.
-     * Used when there's multiple repositories defined that don't match the Pretested Integration repository.
+     *
+     */
+    private static final long serialVersionUID = -4147359435378682321L;
+
+    /**
+     * Predefined message. Used when there's multiple repositories defined that
+     * don't match the Pretested Integration repository.
      */
     public static final String ILLEGAL_CONFIG_NO_REPO_NAME_DEFINED = String.format("You have multiple git repositories defined, but none of them match your pretested integration repostiory. When using more than 1 repository, remotes must be explicitly named in the Git configuration");
 

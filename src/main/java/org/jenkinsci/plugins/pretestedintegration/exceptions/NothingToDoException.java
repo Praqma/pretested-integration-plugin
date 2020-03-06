@@ -8,6 +8,11 @@ import java.io.IOException;
 public class NothingToDoException extends IOException {
 
     /**
+     *
+     */
+    private static final long serialVersionUID = 9047266663078025643L;
+
+    /**
      * Constructor for NothingToDoException
      */
     public NothingToDoException() {

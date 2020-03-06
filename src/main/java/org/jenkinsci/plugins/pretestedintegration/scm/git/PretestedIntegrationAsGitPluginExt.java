@@ -29,7 +29,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -80,9 +82,18 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
      * @return the plugin version
      */
     public String getVersion() {
-        Plugin pretested = Jenkins.getActiveInstance().getPlugin("pretested-integration");
+        Plugin pretested = Jenkins.getInstance().getPlugin("pretested-integration");
         if (pretested != null) return pretested.getWrapper().getVersion();
         else return "unable to retrieve plugin version";
+    }
+
+    private Branch _getIntegrationBranchFromName(String remote, String branchName, Set<Branch> remotes) {
+        for(Branch b : remotes) {
+            if(b.getName().equals("remotes/"+ remote + "/" + branchName)) {
+                return b;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -116,9 +127,11 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
         Branch triggeredBranch = null;
         if ( triggeredRevision.getBranches().isEmpty() ) {
-            run.setResult(Result.NOT_BUILT);
-            String logMessage = String.format("%s - No branch on revision which we cannot handle - leaving workspace: %s  and set result to NOT_BUILT", LOG_PREFIX, expandedIntegrationBranch);
+            //run.setResult(Result.NOT_BUILT);
+            String logMessage = String.format("%s - No branch on revision - using integration branch  %s", LOG_PREFIX, expandedIntegrationBranch);
             listener.getLogger().println(logMessage);
+            triggeredBranch = _getIntegrationBranchFromName(expandedRepo, expandedIntegrationBranch, git.getRemoteBranches());
+
         } else {
             // TODO: Should this be last branch in stead of?
             Branch triggeredBranchDraft = triggeredRevision.getBranches().iterator().next();
@@ -133,7 +146,7 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
 
         if (run.getResult() == null || run.getResult() == Result.SUCCESS ) {
             try {
-                gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
+                //gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
                 listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
                 git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
                 ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrate(scm, run, git, listener, marked, triggeredBranch, gitBridge);

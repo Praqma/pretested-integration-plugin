@@ -13,6 +13,10 @@ import org.eclipse.jgit.revwalk.RevWalk;
 public class FindCommitAuthorCallback extends RepositoryListenerAwareCallback<String> {
 
     /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    /**
      * The commit Id
      */
     public final ObjectId id;
@@ -29,10 +33,11 @@ public class FindCommitAuthorCallback extends RepositoryListenerAwareCallback<St
      * {@inheritDoc}
      */
     @Override
-    public String invoke(Repository repository, VirtualChannel channel) throws IOException, InterruptedException {
-        RevWalk walk = new RevWalk(repository);
-        RevCommit commit = walk.parseCommit(id);
-        walk.dispose();
-        return commit.getAuthorIdent().toExternalString();
+    public String invoke(Repository repository, VirtualChannel channel) throws IOException, InterruptedException {        
+        try(RevWalk rw = new RevWalk(repository)) {
+            RevCommit commit; = rw.parseCommit(id);
+            return commit.getAuthorIdent().toExternalString();
+        }
+        
     }
 }

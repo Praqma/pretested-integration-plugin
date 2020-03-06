@@ -21,7 +21,6 @@ public abstract class IntegrationStrategyDescriptor<T extends IntegrationStrateg
      * {@inheritDoc}
      */
 
-
     @Override
     public IntegrationStrategy newInstance(StaplerRequest staplerRequest, JSONObject formData) throws FormException {
         if (staplerRequest != null) {

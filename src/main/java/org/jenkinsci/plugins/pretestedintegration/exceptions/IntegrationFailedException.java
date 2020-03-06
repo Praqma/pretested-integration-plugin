@@ -8,6 +8,11 @@ import java.io.IOException;
 public class IntegrationFailedException extends IOException {
 
     /**
+     *
+     */
+    private static final long serialVersionUID = -2763978252100716350L;
+
+    /**
      * Constructor for IntegrationFailedException
      */
     public IntegrationFailedException() {

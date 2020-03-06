@@ -8,6 +8,11 @@ import java.io.IOException;
 public class IntegrationUnknownFailureException extends IOException {
 
     /**
+     *
+     */
+    private static final long serialVersionUID = -834234954000244615L;
+
+    /**
      * Constructor for IntegrationFailedException
      */
     public IntegrationUnknownFailureException() {

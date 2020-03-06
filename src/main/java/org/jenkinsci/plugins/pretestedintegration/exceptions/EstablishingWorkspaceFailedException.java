@@ -8,7 +8,13 @@ import java.io.IOException;
 public class EstablishingWorkspaceFailedException extends IOException {
 
     /**
+     *
+     */
+    private static final long serialVersionUID = 3415461276177623060L;
+
+    /**
      * Constructor for EstablishingWorkspaceFailedException
+     * 
      * @param cause The causal Exception.
      */
     public EstablishingWorkspaceFailedException(Exception cause) {

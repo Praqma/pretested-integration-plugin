@@ -8,6 +8,11 @@ import java.io.IOException;
 public class BranchDeletionFailedException extends IOException {
 
     /**
+     *
+     */
+    private static final long serialVersionUID = 8367153982104936614L;
+
+    /**
      * Constructor for BranchDeletionFailedException
      */
     public BranchDeletionFailedException() {

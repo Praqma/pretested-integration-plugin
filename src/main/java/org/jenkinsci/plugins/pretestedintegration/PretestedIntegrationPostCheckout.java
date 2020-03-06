@@ -35,6 +35,7 @@ import java.util.logging.Logger;
  */
 public class PretestedIntegrationPostCheckout extends Recorder implements Serializable, MatrixAggregatable, SimpleBuildStep {
 
+    private static final long serialVersionUID = 1L;
     final static String LOG_PREFIX = "[PREINT] ";
     private static final Logger LOGGER = Logger.getLogger(PretestedIntegrationPostCheckout.class.getName());
 
@@ -98,11 +99,11 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
         return false;
     }
 
-    public boolean isSupported(Class classname) {
+    public boolean isSupported(Class<?> classname) {
         return isSupported(classname.getName());
     }
 
-    public void printWarningIfUnsupported(Class classname, BuildListener listener) {
+    public void printWarningIfUnsupported(Class<?> classname, BuildListener listener) {
         if(!isSupported(classname)) {
             String message = LOG_PREFIX+"Warning: Unsupported job of type '"+classname.getSimpleName()+"'. "+"Pretested Integration Plugin might not work as expected";
             listener.getLogger().println(message);

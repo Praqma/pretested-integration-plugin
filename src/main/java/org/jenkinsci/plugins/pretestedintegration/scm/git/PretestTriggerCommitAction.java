@@ -24,7 +24,6 @@ public class PretestTriggerCommitAction extends InvisibleAction {
         this.integrationBranch = integrationBranch;
         this.integrationRepo = integrationRepo;
         this.ucCredentialsId = ucCredentialsId;
-
     }
 
     public PretestTriggerCommitAction( final Branch triggerBranch ) {
@@ -32,6 +31,5 @@ public class PretestTriggerCommitAction extends InvisibleAction {
         this.integrationBranch = null;
         this.integrationRepo = null;
         this.ucCredentialsId = null;
-
     }
 }
