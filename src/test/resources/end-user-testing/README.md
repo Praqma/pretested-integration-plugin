@@ -4,7 +4,7 @@ should be chagned to JobDSL etc and later also Pipeline with the support is ther
 
 ## HowTo run the EndUser test scenarios
  * Create the test repo
-   * Run the script `./src/test/resources/EndUserTesting/createRepoForIntegrationSituations.sh`
+   * Run the script `./src/test/resources/end-user-testing/createRepoForIntegrationSituations.sh`
    * TODO: parameterize the script to take a `repo-url`
  * Setup the jobs in Jenkins
    * cp the jobs from `jobs` to `<root>/works/jobs`
