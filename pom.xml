@@ -93,6 +93,34 @@
                     <compatibleSinceVersion>3.0.0</compatibleSinceVersion>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/jacoco-report</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!--
             Allows integration tests to clean test environment before build fails
             use 'mvn verify' to run integration tests to allow 'post-integration-test' phase
