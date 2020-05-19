@@ -27,6 +27,7 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoExceptio
 import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,16 +196,12 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
     public static class DescriptorImpl extends GitSCMExtensionDescriptor {
 
         @Override
-        public String getDisplayName() {
+        public @Nonnull String getDisplayName() {
             return "Use pretested integration";
         }
 
         public List<IntegrationStrategyDescriptor<?>> getIntegrationStrategies() {
-            List<IntegrationStrategyDescriptor<?>> list = new ArrayList<>();
-            for (IntegrationStrategyDescriptor<?> descr : IntegrationStrategy.all()) {
-                list.add(descr);
-            }
-            return list;
+            return new ArrayList<>(IntegrationStrategy.all());
         }
 
         /**
