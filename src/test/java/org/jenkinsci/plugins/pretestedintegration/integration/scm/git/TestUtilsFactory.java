@@ -297,7 +297,7 @@ public class TestUtilsFactory {
 
         return project;
     }
-    
+
     private static String createCommitMessageForRepo(String repositoryRootFolder, String branch, String message) {
         return String.format("%s-%s-%s", message, branch, repositoryRootFolder);
     }
@@ -757,11 +757,8 @@ public class TestUtilsFactory {
             inputReader.close();
 
             return result;
-        } catch (FileNotFoundException e1) {
-            System.out.println(String.format("TestUtilsFactory.checkForLineInFile throwed an exception: %s", e1.toString()));
-            return false;
-        } catch (IOException ep) {
-            System.out.println(String.format("TestUtilsFactory.checkForLineInFile throwed an exception: %s", ep.toString()));
+        } catch (IOException e1) {
+            System.out.println(String.format("TestUtilsFactory.checkForLineInFile threw an exception: %s", e1.toString()));
             return false;
         }
     }
