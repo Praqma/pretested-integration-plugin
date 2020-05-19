@@ -16,16 +16,6 @@ jobs:
         java: [ 8, 11, 12, 13 ]
     name: Java ${{ matrix.java }} compile
     steps:
-      - name: Cache maven dependencies
-        uses: actions/cache@v1
-        env:
-          cache-name: cache-maven-dependencies
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-
       - uses: actions/checkout@master
       - name: Setup java
         uses: actions/setup-java@v1
