@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration;
 
-import hudson.model.Descriptor.FormException;
 import hudson.model.Descriptor;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;

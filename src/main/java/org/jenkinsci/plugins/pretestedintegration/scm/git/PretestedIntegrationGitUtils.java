@@ -1,17 +1,19 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.plugins.git.Branch;
-import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
+import org.jenkinsci.plugins.pretestedintegration.exceptions.UnsupportedConfigurationException;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

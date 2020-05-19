@@ -1,14 +1,15 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import hudson.*;
-import hudson.model.*;
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.impl.RelativeTargetDirectory;
-import hudson.scm.SCM;
 import org.apache.commons.lang.StringUtils;
-import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.pretestedintegration.AbstractSCMBridge;
 import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
@@ -18,7 +19,6 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
