@@ -2,10 +2,8 @@ package org.jenkinsci.plugins.pretestedintegration;
 
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
-import hudson.Launcher;
 import hudson.model.*;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.pretestedintegration.exceptions.*;
 
 /**
  * Abstract class representing a strategy to apply when merging pretested commits into the integration integrationBranch.

@@ -1,7 +1,5 @@
 package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 
-import hudson.model.TaskListener;
-
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;

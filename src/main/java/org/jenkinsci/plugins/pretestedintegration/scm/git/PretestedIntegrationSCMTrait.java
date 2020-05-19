@@ -1,10 +1,8 @@
 package org.jenkinsci.plugins.pretestedintegration.scm.git;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.plugins.git.traits.GitSCMExtensionTrait;
 import jenkins.plugins.git.traits.GitSCMExtensionTraitDescriptor;
-import org.jenkinsci.plugins.pretestedintegration.IntegrationStrategy;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
