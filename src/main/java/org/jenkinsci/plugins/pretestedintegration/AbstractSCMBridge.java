@@ -65,11 +65,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @return all the Integration Strategy Descriptors
      */
     public static List<IntegrationStrategyDescriptor<?>> getBehaviours() {
-        List<IntegrationStrategyDescriptor<?>> behaviours = new ArrayList<>();
-        for (IntegrationStrategyDescriptor<?> behaviour : IntegrationStrategy.all()) {
-            behaviours.add(behaviour);
-        }
-        return behaviours;
+        return new ArrayList<>(IntegrationStrategy.all());
     }
 
     /**
@@ -84,11 +80,7 @@ public abstract class AbstractSCMBridge implements Describable<AbstractSCMBridge
      * @return all the SCM Bridge Descriptors
      */
     public static List<SCMBridgeDescriptor<?>> getDescriptors() {
-        List<SCMBridgeDescriptor<?>> descriptors = new ArrayList<>();
-        for (SCMBridgeDescriptor<?> descriptor : all()) {
-            descriptors.add(descriptor);
-        }
-        return descriptors;
+        return new ArrayList<>(all());
     }
 
     /**
