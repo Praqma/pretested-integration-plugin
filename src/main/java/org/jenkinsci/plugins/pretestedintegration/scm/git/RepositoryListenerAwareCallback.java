@@ -12,11 +12,6 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 public abstract class RepositoryListenerAwareCallback<T> implements RepositoryCallback<T> {
 
     /**
-     * The TaskListener for use in invoke
-     */
-//    public final TaskListener listener;
-
-    /**
      * Constructor for a RepositoryListenerAwareCallback
      */
     public RepositoryListenerAwareCallback() {}
