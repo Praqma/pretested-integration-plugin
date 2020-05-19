@@ -231,7 +231,7 @@ public class GitBridge extends AbstractSCMBridge {
         }
     }
 
-    public void handleIntegrationExceptionsGit(Run run, TaskListener listener, Exception e, GitClient client) throws IOException, InterruptedException {
+    public void handleIntegrationExceptionsGit(Run<?, ?> run, TaskListener listener, Exception e, GitClient client) throws IOException, InterruptedException {
         if (e instanceof NothingToDoException) {
             run.setResult(Result.NOT_BUILT);
             String logMessage = LOG_PREFIX + String.format("%s - setUp() - NothingToDoException - %s", LOG_PREFIX, e.getMessage());

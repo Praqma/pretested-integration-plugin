@@ -65,7 +65,7 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 FilePath wsForUs = rtd != null ? rtd.getWorkingDirectory(scm, proj, build.getWorkspace(), build.getEnvironment(listener), listener) : build.getWorkspace();
                 printWarningIfUnsupported(proj.getClass(), listener);
                 if(wsForUs != null) {
-                    perform((Run) build, wsForUs, launcher, listener);
+                    perform((Run<?, ?>) build, wsForUs, launcher, listener);
                 } else {
                     throw new InterruptedException("[PREINT] Fatal: Workspace is null");
                 }
