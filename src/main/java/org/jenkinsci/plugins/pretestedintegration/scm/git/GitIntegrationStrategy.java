@@ -53,24 +53,6 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
     protected boolean tryRebase(ObjectId commitId, GitClient client, PrintStream logger, String integrationBranch ) throws IntegrationFailedException, IntegrationUnknownFailureException {
         LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Entering tryRebase");
         logger.println(GitMessages.LOG_PREFIX+ "Entering tryRebase");
-
-        //Get the commit count
-        int commitCount;
-        try {
-            commitCount = PretestedIntegrationGitUtils.countCommits(commitId, client, integrationBranch);
-            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Branch commit count: " + commitCount);
-            logger.println(GitMessages.LOG_PREFIX+ "Branch commit count: " + commitCount);
-        } catch (IOException | InterruptedException ex) {
-            throw new IntegrationUnknownFailureException("Failed to count commits.", ex);
-        }
-
-        //Only rebase if it's a single commit
-        if (commitCount != 1) {
-            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Not attempting rebase. Exiting tryRebase.");
-            logger.println(GitMessages.LOG_PREFIX+ "Not attempting rebase. Exiting tryRebase.");
-            return false;
-        }
-
         //Rebase the commit
         try {
             LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Attempting rebase.");
@@ -118,17 +100,8 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
      * @throws IntegrationFailedException When commit counting fails
      * @throws NothingToDoException In case there is no commit to integrate/FF
      */
-    protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client, int commitCount ) throws IntegrationFailedException, NothingToDoException {
-        LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Entering tryFastForward");
-
-        if ( commitCount == 1) {
-            logger.println(GitMessages.LOG_PREFIX+ "Try FF as there is only one commit");
-        } else {
-            logger.println(GitMessages.LOG_PREFIX+ "Skip FF as there are several commits");
-            return false;
-        }
-
-        //FF merge the commit
+    protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client ) throws IntegrationFailedException, NothingToDoException {
+        LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Entering tryFastForward");        //FF merge the commit
         try {
             LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Attempting merge with FF.");
             client.merge().setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).setRevisionToMerge(commitId).execute();
