@@ -45,7 +45,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     public SquashCommitStrategy() {
     }
 
-    private void doTheIntegration(Run<?, ?> build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
+    private void doTheIntegration(Run<?, ?> build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws InterruptedException,IOException,IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
         {
             int commitCount;
             try {
@@ -147,7 +147,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     }
 
     @Override
-    public void integrate(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
+    public void integrate(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws IOException, InterruptedException, IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
 
         String expandedRepoName;
         try {

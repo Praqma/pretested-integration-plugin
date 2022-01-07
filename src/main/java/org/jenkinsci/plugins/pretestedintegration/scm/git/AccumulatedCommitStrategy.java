@@ -56,7 +56,7 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
             throw new NothingToDoException("Commit count is 0. Already integrated/part of integration branch: " + expandedIntegrationBranch);
         }
 
-        if (tryFastForward(commitId, listener.getLogger(), client, commitCount)) {
+        if (tryFastForward(commitId, listener.getLogger(), client )) {
             return;
         }
 
