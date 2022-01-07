@@ -86,7 +86,7 @@
                 <groupId>org.jenkins-ci.tools</groupId>
                 <artifactId>maven-hpi-plugin</artifactId>
                 <configuration>
-                    <minimumJavaVersion>1.8.0</minimumJavaVersion>
+                    <minimumJavaVersion>8</minimumJavaVersion>
                     <!-- Compatible since is used to warn the user that this new version of the plugin is not compatible
                      with earlier version than the one we mention below.
                      https://wiki.jenkins.io/display/JENKINS/Marking+a+new+plugin+version+as+incompatible+with+older+versions
