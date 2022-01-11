@@ -6,17 +6,22 @@ pwd
 rm -rf work/jobs/*
 
 # getting Maven build job
-curl http://repo.jenkins-ci.org/releases/org/jenkins-ci/main/maven-plugin/2.16/maven-plugin-2.16.hpi --output work/plugins/maven-plugin.hpi
+curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/main/maven-plugin/2.16/maven-plugin-2.16.hpi --output work/plugins/maven-plugin.hpi
 
 # Getting MultiJob
-rm -rf work/plugins/jenkins-multijob-plugin && curl http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/jenkins-multijob-plugin/1.31/jenkins-multijob-plugin-1.31.hpi --output work/plugins/jenkins-multijob-plugin.hpi
-curl http://repo.spring.io/plugins-release/org/jenkins-ci/plugins/built-on-column/1.1/built-on-column-1.1.hpi -o work/plugins/built-on-column.hpi
+rm -rf work/plugins/jenkins-multijob-plugin && \
+    curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/jenkins-multijob-plugin/1.31/jenkins-multijob-plugin-1.31.hpi --output work/plugins/jenkins-multijob-plugin.hpi
 
-rm -rf work/plugins/conditional-buildstep.hpi work/plugins/conditional-buildstep && curl http://repo.spring.io/plugins-release/org/jenkins-ci/plugins/conditional-buildstep/1.3.3/conditional-buildstep-1.3.3.hpi -o work/plugins/conditional-buildstep.jpi
-curl http://repo.spring.io/plugins-release/org/jenkins-ci/plugins/envinject/1.90/envinject-1.90.hpi -o work/plugins/envinject.hpi
+curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/built-on-column/1.1/built-on-column-1.1.hpi -o work/plugins/built-on-column.hpi
 
-rm -rf  work/plugins/run-condition  work/plugins/run-condition.* && curl http://repo.spring.io/plugins-release/org/jenkins-ci/plugins/run-condition/1.0/run-condition-1.0.hpi -o work/plugins/run-condition.hpi
+rm -rf work/plugins/conditional-buildstep.hpi work/plugins/conditional-buildstep && \
+    curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/conditional-buildstep/1.3.3/conditional-buildstep-1.3.3.hpi -o work/plugins/conditional-buildstep.jpi
 
+curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/envinject/1.90/envinject-1.90.hpi -o work/plugins/envinject.hpi
+
+rm -rf  work/plugins/run-condition  work/plugins/run-condition.* && \
+    curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/run-condition/1.0/run-condition-1.0.hpi -o work/plugins/run-condition.hpi
+ls -la work/plugins/
 
 #git clone git@github.com:bicschneider/test-git-phlow-plugin.git refs/tags/init --shallow
 rm -rf test-git-phlow-plugin 
@@ -79,6 +84,14 @@ function createSimpleTestScenario(){
     git commit -m "$text"
 }
 
+function createSimpleCommit(){
+    local text=$1
+    local file=$2
+    echo $text >> $file
+    git add $file
+    git commit -m "$text"
+}
+
 function publishAndBuild(){
     git push origin $1:refs/heads/ready${branch_prefix}/${3}
 #    curl -X POST http://${url}:8080/jenkins/job/test-${2}/build
@@ -94,7 +107,8 @@ function nextTest(){
 for branch_prefix in ${branch_prefixes} ; do
     cp -rf `pwd`/../`dirname $0`/jobs/test-${branch_prefix} `pwd`/../work/jobs/
 done
-url=`ipconfig | grep IPv4 | head -1 | awk -F ": " '{print $2}'`
+#url=`ipconfig | grep IPv4 | head -1 | awk -F ": " '{print $2}' || echo localhost`
+url=localhost
 curl -X POST ${url}:8080/jenkins/reload || ( sleep 60 &&  curl -X POST ${url}:8080/jenkins/reload || ( sleep 20 &&  curl -X POST ${url}:8080/jenkins/reload ))
 
 
@@ -143,6 +157,8 @@ for branch_prefix in ${branch_prefixes} ; do
     git add README.md
     git commit -m "$text"
     publishAndBuild HEAD ${branch_prefix} ${text}
+    git tag -m "${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff" ${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
+    git push origin ${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff:refs/tags/${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
 done
 
 #for branch_prefix in ${branch_prefixes} ; do
@@ -150,6 +166,14 @@ done
 #done
 
 nextTest
+
+for branch_prefix in ${branch_prefixes} ; do
+    checkoutMyBranch ready${branch_prefix}/$text
+    git reset --hard ${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
+    createSimpleCommit "test-01.1-multicommitsFF" README.md
+    createSimpleCommit "test-01.2-multicommitsFF" README.md
+    publishAndBuild HEAD ${branch_prefix} test-01.X-multicommitsFF
+done
 
 for branch_prefix in ${branch_prefixes} ; do
     createSimpleTestScenario "test-02-merge-conflicts" README.md
@@ -218,4 +242,3 @@ checkoutMyBranch "master" && resetToInit
 git log --graph --oneline --all > git_graph.txt
 
 git branch -r
-                              

@@ -19,7 +19,8 @@ import org.jenkinsci.plugins.pretestedintegration.exceptions.IntegrationUnknownF
 import org.jenkinsci.plugins.pretestedintegration.exceptions.NothingToDoException;
 
 /**
- * Abstract IntegrationStrategy containing common logic for Git integration strategies.
+ * Abstract IntegrationStrategy containing common logic for Git integration
+ * strategies.
  */
 public abstract class GitIntegrationStrategy extends IntegrationStrategy implements IntegrationStrategyAsGitPluginExt {
 
@@ -27,60 +28,74 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
 
     /**
      * Creates a PersonIdent object from a full Git identity string.
-     * @param identity The Git identity string to parse. ex.: 'john Doe Joh@praqma.net 1442321765 +0200'
+     * 
+     * @param identity The Git identity string to parse. ex.: 'john Doe
+     *                 Joh@praqma.net 1442321765 +0200'
      * @return A PersonIdent object representing given Git author/committer
      */
     public PersonIdent getPersonIdent(String identity) {
         Pattern regex = Pattern.compile("^([^<(]*?)[ \\t]?<([^<>]*?)>.*$");
         Matcher match = regex.matcher(identity);
-        if(!match.matches()) return null;
+        if (!match.matches())
+            return null;
         return new PersonIdent(match.group(1), match.group(2));
     }
 
     /**
-     * Attempts to rebase the ready integrationBranch onto the integration integrationBranch.
+     * Attempts to rebase the ready integrationBranch onto the integration
+     * integrationBranch.
      * Only when the ready integrationBranch consists of a single commit.
      *
-     * @param commitId The sha1 from the polled integrationBranch
-     * @param client The GitClient
-     * @param integrationBranch The integrationBranch which the commitId need to be merged to
-     * @param logger The Printstream
-     * @return true if the rebase was a success, false if the integrationBranch isn't
-     * suitable for a rebase
-     * @throws IntegrationFailedException When commit counting or rebasing fails
+     * @param commitId          The sha1 from the polled integrationBranch
+     * @param client            The GitClient
+     * @param integrationBranch The integrationBranch which the commitId need to be
+     *                          merged to
+     * @param logger            The Printstream
+     * @return true if the rebase was a success, false if the integrationBranch
+     *         isn't
+     *         suitable for a rebase
+     * @throws IntegrationFailedException         When commit counting or rebasing
+     *                                            fails
      * @throws IntegrationUnknownFailureException An unforseen failure
      */
-    protected boolean tryRebase(ObjectId commitId, GitClient client, PrintStream logger, String integrationBranch ) throws IntegrationFailedException, IntegrationUnknownFailureException {
-        LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Entering tryRebase");
-        logger.println(GitMessages.LOG_PREFIX+ "Entering tryRebase");
-        //Rebase the commit
+    protected boolean tryRebase(ObjectId commitId, GitClient client, PrintStream logger, String integrationBranch)
+            throws IntegrationFailedException, IntegrationUnknownFailureException {
+        LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + "Entering tryRebase");
+        logger.println(GitMessages.LOG_PREFIX + "Entering tryRebase");
+        // Rebase the commit
         try {
-            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Attempting rebase.");
-            logger.println(GitMessages.LOG_PREFIX+ "Attempting rebase.");
-            //Rebase the commit, then checkout master for a fast-forward merge.
+            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + "Attempting rebase.");
+            logger.println(GitMessages.LOG_PREFIX + "Attempting rebase.");
+            // Rebase the commit, then checkout master for a fast-forward merge.
             client.checkout().ref(commitId.getName()).execute();
             client.rebase().setUpstream(integrationBranch).execute();
             ObjectId rebasedCommit = client.revParse("HEAD");
-            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Rebase successful. Attempting fast-forward merge.");
-            logger.println(GitMessages.LOG_PREFIX+ "Rebase successful. Attempting fast-forward merge.");
+            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + "Rebase successful. Attempting fast-forward merge.");
+            logger.println(GitMessages.LOG_PREFIX + "Rebase successful. Attempting fast-forward merge.");
 
             client.checkout().ref(integrationBranch).execute();
             ObjectId integrationBranchCommitBefore = client.revParse("HEAD");
-            client.merge().setRevisionToMerge(rebasedCommit).setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).execute();
-            if ( integrationBranchCommitBefore.equals(rebasedCommit) ){
-                String logMessage = String.format("%sThe integration branch did not change during the rebase of development branch on top of it.%n" +
-                        "There are two known reasons:%n" +
-                        "A) You are trying to integrate a change that was already integrated.%n" +
-                        "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a rebase. If you REALLY want the empty commit to me accepted, you can rebase your single empty commit on top of the integration branch.%n", GitMessages.LOG_PREFIX);
+            client.merge().setRevisionToMerge(rebasedCommit)
+                    .setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).execute();
+            if (integrationBranchCommitBefore.equals(rebasedCommit)) {
+                String logMessage = String.format(
+                        "%sThe integration branch did not change during the rebase of development branch on top of it.%n"
+                                +
+                                "There are two known reasons:%n" +
+                                "A) You are trying to integrate a change that was already integrated.%n" +
+                                "B) You have pushed an empty commit( presumably used --allow-empty ) that needed a rebase. If you REALLY want the empty commit to me accepted, you can rebase your single empty commit on top of the integration branch.%n",
+                        GitMessages.LOG_PREFIX);
                 LOGGER.log(Level.SEVERE, logMessage);
                 throw new IntegrationFailedException(logMessage);
             } else {
-                LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Rebasing successful.");
-                logger.println(GitMessages.LOG_PREFIX+ "Rebasing successful.");
+                LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + "Rebasing successful.");
+                logger.println(GitMessages.LOG_PREFIX + "Rebasing successful.");
                 return true;
             }
         } catch (GitException | InterruptedException ex) {
-            String logMessage = String.format(GitMessages.LOG_PREFIX+ "Exception while rebasing commit. Logging exception msg: %s", ex.getMessage());
+            String logMessage = String.format(
+                    GitMessages.LOG_PREFIX + "Exception while rebasing commit. Logging exception msg: %s",
+                    ex.getMessage());
             LOGGER.log(Level.SEVERE, logMessage, ex);
             logger.println(logMessage);
             throw new IntegrationFailedException(ex);
@@ -88,35 +103,37 @@ public abstract class GitIntegrationStrategy extends IntegrationStrategy impleme
     }
 
     /**
-     * Attempts to fast-forward merge the integration integrationBranch to the ready integrationBranch.
+     * Attempts to fast-forward merge the integration integrationBranch to the ready
+     * integrationBranch.
      * Only when the ready integrationBranch consists of a single commit.
      *
-     * @param commitId The commit
+     * @param commitId    The commit
      * @param commitCount The amount of commits
-     * @param logger The logger for console logging
-     * @param client The GitClient
-     * @return true if the FF merge was a success, false if the integrationBranch isn't
-     * suitable for a FF merge.
-     * @throws IntegrationFailedException When commit counting fails
-     * @throws NothingToDoException In case there is no commit to integrate/FF
+     * @param logger      The logger for console logging
+     * @param client      The GitClient
+     * @return true if the FF merge was a success, false if the integrationBranch
+     *         isn't
+     *         suitable for a FF merge.
      */
-    protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client ) throws IntegrationFailedException, NothingToDoException {
-        LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Entering tryFastForward");        //FF merge the commit
+    protected boolean tryFastForward(ObjectId commitId, PrintStream logger, GitClient client) {
+        LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + "Entering tryFastForward"); // FF merge the commit
         try {
-            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ "Attempting merge with FF.");
-            client.merge().setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY).setRevisionToMerge(commitId).execute();
-            logger.println(GitMessages.LOG_PREFIX+ "FF merge successful.");
-            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ " Exiting tryFastForward.");
+            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + "Attempting merge with FF.");
+            client.merge().setGitPluginFastForwardMode(MergeCommand.GitPluginFastForwardMode.FF_ONLY)
+                    .setRevisionToMerge(commitId).execute();
+            logger.println(GitMessages.LOG_PREFIX + "FF merge successful.");
+            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + " Exiting tryFastForward.");
             return true;
         } catch (GitException | InterruptedException ex) {
-            logger.println(GitMessages.LOG_PREFIX+ "FF merge failed.");
-            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX+ " Exiting tryFastForward.");
+            logger.println(GitMessages.LOG_PREFIX + "FF merge failed.");
+            LOGGER.log(Level.INFO, GitMessages.LOG_PREFIX + " Exiting tryFastForward.");
             return false;
         }
     }
 
     /**
      * Checks whether or not we can find the given remote integrationBranch.
+     * 
      * @param client the Git Client
      * @param branch the integrationBranch to look for
      * @return True if the integrationBranch was found, otherwise False.
