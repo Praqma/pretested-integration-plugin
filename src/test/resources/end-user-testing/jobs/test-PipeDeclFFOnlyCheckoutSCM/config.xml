@@ -33,7 +33,7 @@
         <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
       </extensions>
     </scm>
-    <scriptPath>JenkinsfileDeclCheckoutSCM</scriptPath>
+    <scriptPath>JenkinsfileDeclFFOnlyCheckoutSCM</scriptPath>
     <lightweight>false</lightweight>
   </definition>
   <disabled>false</disabled>

@@ -35,7 +35,7 @@ public class FFOnlyStrategy extends GitIntegrationStrategy {
      * Strategy name. Used in UI.
      * Strategies used to be called Behaviors, hence the field name.
      */
-    private static final String B_NAME = "FF Only";
+    private static final String B_NAME = "Fast forward only";
 
     private void doTheIntegration(Run build, TaskListener listener, GitBridge gitbridge, ObjectId commitId,
             GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException,
@@ -58,7 +58,7 @@ public class FFOnlyStrategy extends GitIntegrationStrategy {
         if (tryFastForward(commitId, listener.getLogger(), client)) {
             return;
         } else {
-            throw new IntegrationFailedException(new Exception("FF fails"));
+            throw new IntegrationFailedException("FastForward --ff-only failed");
         }
     }
 

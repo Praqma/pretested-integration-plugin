@@ -47,15 +47,15 @@ git tag -a -m "init" init
 git push origin --mirror
 
 branch_prefixes=""
-#branch_prefixes="${branch_prefixes} FsExtSq"
-#branch_prefixes="${branch_prefixes} FsExtAcc"
+branch_prefixes="${branch_prefixes} FsExtSq"
+branch_prefixes="${branch_prefixes} FsExtAcc"
 branch_prefixes="${branch_prefixes} FsExtFFOnly"
-#branch_prefixes="${branch_prefixes} MxExtAcc MxExtSq"
+branch_prefixes="${branch_prefixes} MxExtAcc MxExtSq"
 #branch_prefixes="${branch_prefixes} MuExtAcc MuExtSq" // TODO: Not supported - plugin not installed
 #branch_prefixes="${branch_prefixes} MvnExtAcc" // TODO: Not supported hence the plugin is not installed
-#branch_prefixes="${branch_prefixes} PipeDeclCheckoutSCM"
-#branch_prefixes="${branch_prefixes} PipeScriptedCheckoutSCM"
-#branch_prefixes="${branch_prefixes} PipeDeclFFOnlyCheckoutSCM"
+branch_prefixes="${branch_prefixes} PipeDeclCheckoutSCM"
+branch_prefixes="${branch_prefixes} PipeScriptedCheckoutSCM"
+branch_prefixes="${branch_prefixes} PipeDeclFFOnlyCheckoutSCM"
 #branch_prefixes="${branch_prefixes} PipeDeclPreSCM PipeScriptedPreSCM" // TODO: MultiBranchPipePreSCM - Not Supported Fix
 #branch_prefixes="${branch_prefixes} PipeDeclScript"
 #branch_prefixes="${branch_prefixes} MultiBranchPipePreSCM" // TODO: MultiBranchPipePreSCM - Not Supported Fix
