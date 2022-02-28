@@ -61,7 +61,7 @@ branch_prefixes="${branch_prefixes} PipeDeclFFOnlyCheckoutSCM"
 #branch_prefixes="${branch_prefixes} MultiBranchPipePreSCM" // TODO: MultiBranchPipePreSCM - Not Supported Fix
 
 # FORCE A SINGLE/FEW
-branch_prefixes="FsExtFFOnly FsExtAcc"
+branch_prefixes="FsExtAcc FsExtFFOnly"
 
 function resetToInit(){
     if [ "${1}x" == "x" ]; then
@@ -98,6 +98,7 @@ function createSimpleCommit(){
 function publishAndBuild(){
     git push origin $1:refs/heads/ready${branch_prefix}/${3}
 #    curl -X POST http://${url}:8080/jenkins/job/test-${2}/build
+if false ; then
     curl -X POST ${url}:8080/jenkins/job/test-${2}/build \
                  --data-urlencode \
                  json='\
@@ -110,13 +111,14 @@ function publishAndBuild(){
                         ] \
                     }'
 
+fi
 }
 
 function nextTest(){
 #    read -n 1 -p "Enter to continue" enter
-#   sleep 70
+   sleep 70
 #    sleep 30
-echo
+#echo
 }
 
 
@@ -251,13 +253,17 @@ done
 
 checkoutMyBranch "master" && resetToInit
 
-git fetch origin -ap
+git fetch origin -ap -f
 branches=$(git branch -r | wc -l)
 branches_changed=true
 while $branches_changed == true ; do
   branches_before=$branches
   sleep 120
-  git fetch origin -ap
+  git fetch origin -ap -f || {
+    sleep 60
+    git fetch origin -ap -f
+  }
+
   branches=$(git branch -r | wc -l)
   [[ $branches -eq $branches_before ]] && branches_changed=false
 done
@@ -270,10 +276,12 @@ for branch_prefix in ${branch_prefixes} ; do
   if [[ -s $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log ]]; then
      references=$( git branch -r --list *${branch_prefix}* )
      git log --graph --oneline --format="%s" $references > git_log_${branch_prefix}.log
-     diff -y git_log_${branch_prefix}.log $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log > git_log_${branch_prefix}_diff.log || {
+     if diff -y git_log_${branch_prefix}.log $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log > git_log_${branch_prefix}_diff.log; then
+        echo "TEST ok: $branch_prefix"
+     else
         echo "TEST failed: $branch_prefix"
         [[ ${test_exit_code} -eq 0 ]] && test_exit_code=1
-     }
+     fi
   else
     echo "TEST skip: no reference file: $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log"
   fi
@@ -282,6 +290,7 @@ done
 if [[ ${test_exit_code} -eq 0 ]]; then
  echo "All tests went well .."
 else
+ echo "Some tests failed.. "
  exit $test_exit_code
 fi
 
