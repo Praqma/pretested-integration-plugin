@@ -1,0 +1,12 @@
+* test-07-change-Jenkinsfile
+* test-06-merge-empty-commit
+* Squashed commit of branch 'origin/readyMxExtSq/test-05-multiple_commits'
+* test-03-merge-ok
+* Squashed commit of branch 'origin/readyMxExtSq/test-01.X-multicommitsFF'
+| * commit 1
+|/  
+| * test-02-merge-conflicts
+|/  
+| * test-01-change-Jenkinsfile_README.dk-ff
+|/  
+* init

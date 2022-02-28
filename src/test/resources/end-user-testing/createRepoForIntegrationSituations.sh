@@ -61,7 +61,7 @@ branch_prefixes="${branch_prefixes} PipeDeclFFOnlyCheckoutSCM"
 #branch_prefixes="${branch_prefixes} MultiBranchPipePreSCM" // TODO: MultiBranchPipePreSCM - Not Supported Fix
 
 # FORCE A SINGLE/FEW
-#branch_prefixes="FsExtAcc"
+branch_prefixes="FsExtFFOnly FsExtAcc"
 
 function resetToInit(){
     if [ "${1}x" == "x" ]; then
@@ -98,12 +98,25 @@ function createSimpleCommit(){
 function publishAndBuild(){
     git push origin $1:refs/heads/ready${branch_prefix}/${3}
 #    curl -X POST http://${url}:8080/jenkins/job/test-${2}/build
+    curl -X POST ${url}:8080/jenkins/job/test-${2}/build \
+                 --data-urlencode \
+                 json='\
+                    {\
+                        "parameter": [\
+                            { \
+                                "name":"git_branch_pattern", \
+                                "value":"refs/heads/ready${branch_prefix}/${3}" \
+                            } \
+                        ] \
+                    }'
+
 }
 
 function nextTest(){
 #    read -n 1 -p "Enter to continue" enter
-   sleep 70
+#   sleep 70
 #    sleep 30
+echo
 }
 
 
@@ -114,17 +127,14 @@ done
 url=localhost
 curl -X POST ${url}:8080/jenkins/reload || ( sleep 60 &&  curl -X POST ${url}:8080/jenkins/reload || ( sleep 20 &&  curl -X POST ${url}:8080/jenkins/reload ))
 
-
 for branch_prefix in ${branch_prefixes} ; do
     resetToInit && checkoutMyBranch master${branch_prefix}
     git push origin master${branch_prefix}:refs/heads/master${branch_prefix}
     # Test the triggering of "no workspace"
-    curl -X POST http://${url}:8080/jenkins/job/test-${branch_prefix}/build
+#    curl -X POST http://${url}:8080/jenkins/job/test-${branch_prefix}/build
 done
 
 checkoutMyBranch "master" && resetToInit
-
-read -n 1 -p "Enter to continue" enter
 
 for branch_prefix in ${branch_prefixes} ; do
     # Place it on to top of
@@ -163,6 +173,8 @@ for branch_prefix in ${branch_prefixes} ; do
     git tag -m "${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff" ${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
     git push origin ${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff:refs/tags/${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
 done
+
+read -n 1 -p "Master and first ready branches created"  enter
 
 #for branch_prefix in ${branch_prefixes} ; do
 #  git branch -D ready${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
@@ -236,12 +248,44 @@ for branch_prefix in ${branch_prefixes} ; do
     git add . && git commit -m "$text"
     publishAndBuild HEAD ${branch_prefix} ${text}
 done
-read -n 1 -p "Enter to continue" enter
-
-git fetch -ap
 
 checkoutMyBranch "master" && resetToInit
 
+git fetch origin -ap
+branches=$(git branch -r | wc -l)
+branches_changed=true
+while $branches_changed == true ; do
+  branches_before=$branches
+  sleep 120
+  git fetch origin -ap
+  branches=$(git branch -r | wc -l)
+  [[ $branches -eq $branches_before ]] && branches_changed=false
+done
+
 git log --graph --oneline --all > git_graph.txt
 
-git branch -r
+test_exit_code=0
+for branch_prefix in ${branch_prefixes} ; do
+  git branch -r --list *${branch_prefix}*
+  if [[ -s $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log ]]; then
+     references=$( git branch -r --list *${branch_prefix}* )
+     git log --graph --oneline --format="%s" $references > git_log_${branch_prefix}.log
+     diff -y git_log_${branch_prefix}.log $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log > git_log_${branch_prefix}_diff.log || {
+        echo "TEST failed: $branch_prefix"
+        [[ ${test_exit_code} -eq 0 ]] && test_exit_code=1
+     }
+  else
+    echo "TEST skip: no reference file: $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log"
+  fi
+done
+
+if [[ ${test_exit_code} -eq 0 ]]; then
+ echo "All tests went well .."
+else
+ exit $test_exit_code
+fi
+
+
+
+
+

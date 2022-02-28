@@ -1,0 +1,13 @@
+* test-07-change-Jenkinsfile
+| * test-06-merge-empty-commit
+|/  
+| * commit 2
+| * commit 1
+|/  
+| * test-03-merge-ok
+|/  
+| * test-02-merge-conflicts
+|/  
+| * test-01-change-Jenkinsfile_README.dk-ff
+|/  
+* init
