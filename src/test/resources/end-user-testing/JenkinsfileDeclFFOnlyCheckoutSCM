@@ -1,5 +1,5 @@
 
-def pattern = 'PipeDeclCheckoutSCM'
+def pattern = 'PipeDeclFFOnlyCheckoutSCM'
 
 def triggerBranchPattern = '*/ready' + pattern + '/*'
 def integrationBranch = 'master' + pattern

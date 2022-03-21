@@ -14,9 +14,12 @@
 |\ \  
 | * | test-03-merge-ok
 | |/  
-* | test-01.2-multicommitsFF
-* | test-01.1-multicommitsFF
-* | test-01-change-Jenkinsfile_README.dk-ff
+* |   Accumulated commit of the following from branch 'origin/readyMxExtAcc/test-01.X-multicommitsFF':
+|\ \  
+| * | test-01.2-multicommitsFF
+| * | test-01.1-multicommitsFF
+|/ /  
+* / test-01-change-Jenkinsfile_README.dk-ff
 |/  
 | * test-02-merge-conflicts
 |/  

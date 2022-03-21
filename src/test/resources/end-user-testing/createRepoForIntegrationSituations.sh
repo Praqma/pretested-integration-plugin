@@ -2,8 +2,16 @@
 set -x
 set -e
 
-pwd
 rm -rf work/jobs/*
+#url=`ipconfig | grep IPv4 | head -1 | awk -F ": " '{print $2}' || echo localhost`
+url=localhost
+curl -X POST ${url}:8080/jenkins/reload || {
+    sleep 60
+    curl -X POST ${url}:8080/jenkins/reload || {
+        sleep 20
+        curl -X POST ${url}:8080/jenkins/reload
+    }
+}
 
 # getting Maven build job
 curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/main/maven-plugin/2.16/maven-plugin-2.16.hpi --output work/plugins/maven-plugin.hpi
@@ -23,6 +31,8 @@ rm -rf  work/plugins/run-condition  work/plugins/run-condition.* && \
     curl -L http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/run-condition/1.0/run-condition-1.0.hpi -o work/plugins/run-condition.hpi
 ls -la work/plugins/
 
+
+
 #git clone git@github.com:bicschneider/test-git-phlow-plugin.git refs/tags/init --shallow
 rm -rf test-git-phlow-plugin 
 mkdir test-git-phlow-plugin
@@ -41,6 +51,8 @@ cp `pwd`/../`dirname $0`/JenkinsfileDeclCheckoutSCM .
 cp `pwd`/../`dirname $0`/JenkinsfileDeclPreSCM .
 cp `pwd`/../`dirname $0`/JenkinsfileScriptedCheckoutSCM .
 cp `pwd`/../`dirname $0`/JenkinsfileScriptedPreSCM .
+cp `pwd`/../`dirname $0`/JenkinsfileDeclFFOnlyCheckoutSCM .
+
 git add .
 git commit -m "init"
 git tag -a -m "init" init
@@ -61,7 +73,7 @@ branch_prefixes="${branch_prefixes} PipeDeclFFOnlyCheckoutSCM"
 #branch_prefixes="${branch_prefixes} MultiBranchPipePreSCM" // TODO: MultiBranchPipePreSCM - Not Supported Fix
 
 # FORCE A SINGLE/FEW
-branch_prefixes="FsExtAcc FsExtFFOnly"
+#branch_prefixes="PipeDeclFFOnlyCheckoutSCM"
 
 function resetToInit(){
     if [ "${1}x" == "x" ]; then
@@ -98,7 +110,7 @@ function createSimpleCommit(){
 function publishAndBuild(){
     git push origin $1:refs/heads/ready${branch_prefix}/${3}
 #    curl -X POST http://${url}:8080/jenkins/job/test-${2}/build
-if false ; then
+if [[ ${use_direct_build_call:-} == true ]] ; then
     curl -X POST ${url}:8080/jenkins/job/test-${2}/build \
                  --data-urlencode \
                  json='\
@@ -115,19 +127,25 @@ fi
 }
 
 function nextTest(){
+
+    sleep_init=60
+    sleep=10
+    queue="x"
+    echo "sleep initially: $sleep_init"
+    sleep $sleep_init
+    while [[ ${queue} != "" ]] ; do
+        echo "sleep: $sleep"
+        sleep $sleep
+        queue=$(curl --silent http://localhost:8080/jenkins/queue/api/json?pretty=true | jq .items[] )
+        echo $queue
+    done
+
 #    read -n 1 -p "Enter to continue" enter
-   sleep 70
+#   sleep 150
 #    sleep 30
 #echo
 }
 
-
-for branch_prefix in ${branch_prefixes} ; do
-    cp -rf `pwd`/../`dirname $0`/jobs/test-${branch_prefix} `pwd`/../work/jobs/
-done
-#url=`ipconfig | grep IPv4 | head -1 | awk -F ": " '{print $2}' || echo localhost`
-url=localhost
-curl -X POST ${url}:8080/jenkins/reload || ( sleep 60 &&  curl -X POST ${url}:8080/jenkins/reload || ( sleep 20 &&  curl -X POST ${url}:8080/jenkins/reload ))
 
 for branch_prefix in ${branch_prefixes} ; do
     resetToInit && checkoutMyBranch master${branch_prefix}
@@ -176,7 +194,18 @@ for branch_prefix in ${branch_prefixes} ; do
     git push origin ${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff:refs/tags/${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
 done
 
-read -n 1 -p "Master and first ready branches created"  enter
+for branch_prefix in ${branch_prefixes} ; do
+    cp -rf `pwd`/../`dirname $0`/jobs/test-${branch_prefix} `pwd`/../work/jobs/
+done
+curl -X POST ${url}:8080/jenkins/reload || {
+    sleep 60
+    curl -X POST ${url}:8080/jenkins/reload || {
+        sleep 20
+        curl -X POST ${url}:8080/jenkins/reload
+    }
+}
+
+#read -n 1 -p "Master and first ready branches created"  enter
 
 #for branch_prefix in ${branch_prefixes} ; do
 #  git branch -D ready${branch_prefix}/test-01-change-Jenkinsfile_README.dk-ff
@@ -257,12 +286,22 @@ git fetch origin -ap -f
 branches=$(git branch -r | wc -l)
 branches_changed=true
 while $branches_changed == true ; do
-  branches_before=$branches
-  sleep 120
-  git fetch origin -ap -f || {
-    sleep 60
-    git fetch origin -ap -f
-  }
+    branches_before=$branches
+    sleep_init=60
+    sleep=10
+    busy_executors="x"
+    echo "sleep initially: $sleep_init"
+    sleep $sleep_init
+    while [[ ${busy_executors} != "" ]] ; do
+        echo "sleep: $sleep"
+        sleep $sleep
+        busy_executors=$(curl --silent http://localhost:8080/jenkins/overallLoad/api/json?pretty=true | jq  .busyExecutors[] )
+        echo $busy_executors
+    done
+    git fetch origin -ap -f || {
+        sleep 60
+        git fetch origin -ap -f
+    }
 
   branches=$(git branch -r | wc -l)
   [[ $branches -eq $branches_before ]] && branches_changed=false
@@ -271,22 +310,26 @@ done
 git log --graph --oneline --all > git_graph.txt
 
 test_exit_code=0
+set +x
 for branch_prefix in ${branch_prefixes} ; do
   git branch -r --list *${branch_prefix}*
-  if [[ -s $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log ]]; then
+  if [[ -s $(pwd)/../$(dirname $0)/test_references/git_log_${branch_prefix}.log ]]; then
      references=$( git branch -r --list *${branch_prefix}* )
-     git log --graph --oneline --format="%s" $references > git_log_${branch_prefix}.log
-     if diff -y git_log_${branch_prefix}.log $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log > git_log_${branch_prefix}_diff.log; then
+     git log --graph --oneline --format="%s" $references > $(pwd)/git_log_${branch_prefix}.log
+     dos2unix git_log_${branch_prefix}.log
+     if diff -y $(pwd)/git_log_${branch_prefix}.log $(pwd)/../$(dirname $0)/test_references/git_log_${branch_prefix}.log > $(pwd)/git_log_${branch_prefix}_diff.log; then
         echo "TEST ok: $branch_prefix"
+        echo "$(pwd)/git_log_${branch_prefix}.log $(pwd)/../$(dirname $0)/test_references/git_log_${branch_prefix}.log > $(pwd)/git_log_${branch_prefix}_diff.log"
      else
         echo "TEST failed: $branch_prefix"
+        echo "$(pwd)/git_log_${branch_prefix}.log $(pwd)/../$(dirname $0)/test_references/git_log_${branch_prefix}.log > $(pwd)/git_log_${branch_prefix}_diff.log"
         [[ ${test_exit_code} -eq 0 ]] && test_exit_code=1
      fi
   else
-    echo "TEST skip: no reference file: $(pwd)/../$(dirname $0)/test_references/${branch_prefix}.log"
+    echo "TEST skip: no reference file: $(pwd)/../$(dirname $0)/test_references/git_log_${branch_prefix}.log"
   fi
 done
-
+set -x
 if [[ ${test_exit_code} -eq 0 ]]; then
  echo "All tests went well .."
 else

@@ -55,9 +55,10 @@ public class AccumulatedCommitStrategy extends GitIntegrationStrategy {
         if ( commitCount == 0 ){
             throw new NothingToDoException("Commit count is 0. Already integrated/part of integration branch: " + expandedIntegrationBranch);
         }
-
-        if (tryFastForward(commitId, listener.getLogger(), client)) {
-            return;
+        if ( commitCount == 1 ){
+            if (tryFastForward(commitId, listener.getLogger(), client)) {
+                return;
+            }
         }
 
         String logMessage = String.format(GitMessages.LOG_PREFIX+ "Preparing to merge changes in commit %s on development branch %s to integration branch %s", commitId.getName(), triggerBranch.getName(), expandedIntegrationBranch);

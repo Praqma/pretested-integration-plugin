@@ -19,7 +19,6 @@
       <userRemoteConfigs>
         <hudson.plugins.git.UserRemoteConfig>
           <url>git@github.com:bicschneider/test-git-phlow-plugin.git</url>
-          <credentialsId>d1fbf0b2-2804-4bf9-b9b8-70ce3e94f952</credentialsId>
         </hudson.plugins.git.UserRemoteConfig>
       </userRemoteConfigs>
       <branches>

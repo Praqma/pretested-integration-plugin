@@ -1,0 +1,26 @@
+*   Accumulated commit of the following from branch 'origin/readyPipeScriptedCheckoutSCM/test-07-change-Jenkinsfile':
+|\  
+| * test-07-change-Jenkinsfile
+* |   Accumulated commit of the following from branch 'origin/readyPipeScriptedCheckoutSCM/test-06-merge-empty-commit':
+|\ \  
+| * | test-06-merge-empty-commit
+| |/  
+* |   Accumulated commit of the following from branch 'origin/readyPipeScriptedCheckoutSCM/test-05-multiple_commits':
+|\ \  
+| * | commit 2
+| * | commit 1
+| |/  
+* |   Accumulated commit of the following from branch 'origin/readyPipeScriptedCheckoutSCM/test-03-merge-ok':
+|\ \  
+| * | test-03-merge-ok
+| |/  
+* |   Accumulated commit of the following from branch 'origin/readyPipeScriptedCheckoutSCM/test-01.X-multicommitsFF':
+|\ \  
+| * | test-01.2-multicommitsFF
+| * | test-01.1-multicommitsFF
+|/ /  
+* / test-01-change-Jenkinsfile_README.dk-ff
+|/  
+| * test-02-merge-conflicts
+|/  
+* init
