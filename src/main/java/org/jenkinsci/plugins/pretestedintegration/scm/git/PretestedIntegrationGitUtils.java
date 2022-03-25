@@ -26,13 +26,13 @@ public class PretestedIntegrationGitUtils {
      *
      * @param commitId  The BuildData from the build
      * @param client    The GitClient
-     * @param devBranch the development branch we want to count commits one
+     * @param expandedIntegrationBranch the development branch we want to count commits on
      * @return the amount of commits
      * @throws IOException          Unforseen IO issues
      * @throws InterruptedException Unforseen other issues
      */
-    public static int countCommits(ObjectId commitId, GitClient client, String devBranch) throws IOException, InterruptedException {
-        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(commitId, devBranch);
+    public static int countCommits(ObjectId commitId, GitClient client, String expandedIntegrationBranch) throws IOException, InterruptedException {
+        GetCommitCountFromBranchCallback commitCountCallback = new GetCommitCountFromBranchCallback(commitId, expandedIntegrationBranch);
         int commitCount = client.withRepository(commitCountCallback);
         return commitCount;
     }

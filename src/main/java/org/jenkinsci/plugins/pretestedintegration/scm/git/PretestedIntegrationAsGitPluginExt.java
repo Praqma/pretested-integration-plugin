@@ -137,6 +137,8 @@ public class PretestedIntegrationAsGitPluginExt extends GitSCMExtension {
                 gitBridge.evalBranchConfigurations(triggeredBranch, expandedIntegrationBranch, expandedRepo);
                 listener.getLogger().println(String.format(LOG_PREFIX + "Checking out integration branch %s:", expandedIntegrationBranch));
                 git.checkout().branch(expandedIntegrationBranch).ref(expandedRepo + "/" + expandedIntegrationBranch).deleteBranchIfExist(true).execute();
+                String logMessage = String.format("%s : HEAD sha1 after checkout of integration branch: %s", LOG_PREFIX, git.revParse("HEAD").getName());
+                listener.getLogger().println(logMessage);
                 ((GitIntegrationStrategy) gitBridge.integrationStrategy).integrate(scm, run, git, listener, marked, triggeredBranch, gitBridge);
             } catch (NothingToDoException e) {
                 run.setResult(Result.NOT_BUILT);

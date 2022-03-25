@@ -45,7 +45,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     public SquashCommitStrategy() {
     }
 
-    private void doTheIntegration(Run<?, ?> build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
+    private void doTheIntegration(Run<?, ?> build, TaskListener listener, GitBridge gitbridge, ObjectId commitId, GitClient client, String expandedIntegrationBranch, Branch triggerBranch) throws InterruptedException,IOException,IntegrationFailedException, NothingToDoException, UnsupportedConfigurationException, IntegrationUnknownFailureException {
         {
             int commitCount;
             try {
@@ -58,17 +58,13 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
             }
             if ( commitCount == 0 ){
                 throw new NothingToDoException("Commit count is 0. Already integrated/part of integration branch: " + expandedIntegrationBranch);
+            } else if( commitCount == 1 ) {
+                if (tryFastForward(commitId, listener.getLogger(), client)) return;
+                if (tryRebase(commitId, client, listener.getLogger(), expandedIntegrationBranch)) return;
             }
-
-            if (tryFastForward(commitId, listener.getLogger(), client, commitCount)) return;
-            if (tryRebase(commitId, client, listener.getLogger(), expandedIntegrationBranch)) return;
-
+                
             String expandedBranchName;
-            try {
-                expandedBranchName = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
-            } catch (IOException | InterruptedException ex) {
-                expandedBranchName = gitbridge.getIntegrationBranch();
-            }
+            expandedBranchName = gitbridge.getExpandedIntegrationBranch(build.getEnvironment(listener));
 
             String logMessage = String.format(GitMessages.LOG_PREFIX + "Preparing to squash changes in commit %s on development branch %s to integration branch %s", triggerBranch.getSHA1String(), triggerBranch.getName(), expandedBranchName);
             LOGGER.log(Level.INFO, logMessage);
@@ -151,7 +147,7 @@ public class SquashCommitStrategy extends GitIntegrationStrategy {
     }
 
     @Override
-    public void integrate(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
+    public void integrate(GitSCM scm, Run<?, ?> build, GitClient client, TaskListener listener, Revision marked, Branch triggeredBranch, GitBridge gitbridge) throws IOException, InterruptedException, IntegrationFailedException, IntegrationUnknownFailureException, NothingToDoException, UnsupportedConfigurationException {
 
         String expandedRepoName;
         try {

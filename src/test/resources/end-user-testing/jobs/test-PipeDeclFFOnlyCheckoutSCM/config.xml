@@ -23,7 +23,7 @@
       </userRemoteConfigs>
       <branches>
         <hudson.plugins.git.BranchSpec>
-          <name>*/readyPipeDeclCheckoutSCM/*</name>
+          <name>*/readyPipeDeclFFOnlyCheckoutSCM/*</name>
         </hudson.plugins.git.BranchSpec>
       </branches>
       <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -32,7 +32,7 @@
         <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
       </extensions>
     </scm>
-    <scriptPath>JenkinsfileDeclCheckoutSCM</scriptPath>
+    <scriptPath>JenkinsfileDeclFFOnlyCheckoutSCM</scriptPath>
     <lightweight>false</lightweight>
   </definition>
   <disabled>false</disabled>

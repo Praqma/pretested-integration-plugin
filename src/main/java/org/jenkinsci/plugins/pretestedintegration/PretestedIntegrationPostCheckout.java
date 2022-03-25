@@ -162,7 +162,16 @@ public class PretestedIntegrationPostCheckout extends Recorder implements Serial
                 listener.getLogger().println(LOG_PREFIX + "Pretested Post Build step enabled, but Pretested Integration Git Plugin extension is not enabled");
             }
         } else {
-            listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
+            if(!run.getActions(PretestTriggerCommitAction.class).isEmpty()) {
+                String triggeredBranch = run.getAction(PretestTriggerCommitAction.class).triggerBranch.getName();
+                String integrationBranch = run.getAction(PretestTriggerCommitAction.class).integrationBranch;
+                String integrationRepo = run.getAction(PretestTriggerCommitAction.class).integrationRepo;
+                listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
+                GitBridge.updateBuildDescription(run, listener, "Failed:" + integrationBranch, triggeredBranch.replace(integrationRepo + "/", ""));
+            } else {
+                GitBridge.updateBuildDescription(run, listener, "", "Unknown error: " + LOG_PREFIX);
+                listener.getLogger().println(LOG_PREFIX + "Build result not satisfied - skipped post-build step.");
+            }
         }
     }
 
