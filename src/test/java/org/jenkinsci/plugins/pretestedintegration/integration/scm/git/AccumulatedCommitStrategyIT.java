@@ -15,9 +15,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import java.io.File;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.TestCase.assertEquals;
 import static org.jenkinsci.plugins.pretestedintegration.integration.scm.git.TestUtilsFactory.STRATEGY_TYPE;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * <h3>Set of tests that test that we react correctly to merge conflicts</h3>

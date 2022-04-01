@@ -3,14 +3,19 @@ package org.jenkinsci.plugins.pretestedintegration.integration.scm.git;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import static junit.framework.Assert.assertTrue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.WithTimeout;
 
 public class FastForwardSingleCommitsIT {
 
@@ -25,6 +30,7 @@ public class FastForwardSingleCommitsIT {
     }
 
     @Test
+    @WithTimeout(600)
     public void squash_fastForwardsSingleCommit_PassWhenPossible() throws Exception {
         List<TestCommit> commits = new ArrayList<TestCommit>() {
             {
@@ -46,6 +52,7 @@ public class FastForwardSingleCommitsIT {
     }
 
     @Test
+    @WithTimeout(600)
     public void squash_fastForwardSingleCommitFails_FailsWhenImpossible() throws Exception {
         List<TestCommit> commits = new ArrayList<TestCommit>() {
             {
@@ -61,13 +68,15 @@ public class FastForwardSingleCommitsIT {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         FreeStyleBuild build = project.getFirstBuild();
-        jenkinsRule.assertBuildStatus(Result.FAILURE, build);
+        Assert.assertEquals(Result.FAILURE, build.getResult());
+
         String console = jenkinsRule.createWebClient().getPage(project.getLastBuild(), "console").asText();
         System.out.println(console);
         assertTrue("FF merge should have failed.", console.contains("FF merge failed."));
     }
 
     @Test
+    @WithTimeout(600)
     public void squash_fastForwardSingleCommitFails_SkipsWhenMultipleCommits() throws Exception {
         List<TestCommit> commits = new ArrayList<TestCommit>() {
             {
@@ -84,13 +93,10 @@ public class FastForwardSingleCommitsIT {
 
         FreeStyleBuild build = project.getFirstBuild();
         assertTrue("The result should be SUCCESS, but is : " + build.getResult(), build.getResult().isBetterOrEqualTo(Result.SUCCESS));
-        String console = jenkinsRule.createWebClient().getPage(project.getLastBuild(), "console").asText();
-        System.out.println(console);
-        repository.close();
-        assertTrue("FF merge should have failed.", console.contains("Skip FF as there are several commits"));
     }
 
     @Test
+    @WithTimeout(600)
     public void acc_fastForwardsSingleCommit_PassWhenPossible() throws Exception {
         List<TestCommit> commits = new ArrayList<TestCommit>() {
             {
@@ -112,6 +118,7 @@ public class FastForwardSingleCommitsIT {
     }
 
     @Test
+    @WithTimeout(600)
     public void acc_fastForwardSingleCommitFails_FailsWhenImpossible() throws Exception {
         List<TestCommit> commits = new ArrayList<TestCommit>() {
             {
@@ -127,13 +134,15 @@ public class FastForwardSingleCommitsIT {
         jenkinsRule.waitUntilNoActivityUpTo(60000);
 
         FreeStyleBuild build = project.getFirstBuild();
-        jenkinsRule.assertBuildStatus(Result.FAILURE, build);
+        assertEquals(Result.FAILURE, build.getResult());
+
         String console = jenkinsRule.createWebClient().getPage(project.getLastBuild(), "console").asText();
         System.out.println(console);
         assertTrue("FF merge should have failed.", console.contains("FF merge failed."));
     }
 
     @Test
+    @WithTimeout(600)
     public void acc_fastForwardSingleCommitFails_SkipsWhenMultipleCommits() throws Exception {
         List<TestCommit> commits = new ArrayList<TestCommit>() {
             {
@@ -150,11 +159,6 @@ public class FastForwardSingleCommitsIT {
 
         FreeStyleBuild build = project.getFirstBuild();
         assertTrue("The result should be SUCCESS, but is : " + build.getResult(),build.getResult().isBetterOrEqualTo(Result.SUCCESS));
-
-        String console = jenkinsRule.createWebClient().getPage(project.getLastBuild(), "console").asText();
-        System.out.println(console);
-        repository.close();
-        assertTrue("FF merge should have been skipped.", console.contains("Skip FF as there are several commits"));
     }
 
 }
