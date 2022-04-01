@@ -22,3 +22,6 @@
 /src/test/resources/keys/*
 **/*.git
 /test-*/
+
+# VSCode
+.vscode/
