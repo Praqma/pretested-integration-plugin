@@ -787,7 +787,10 @@ public class TestUtilsFactory {
                 Boolean print = true;
                 while (entry != null) {
                     String entryName = entry.getName();
-                    File file = new File(destinationFolder + File.separator + entryName);
+                    File file = new File(destinationFolder, entryName);
+                    if (!file.toPath().normalize().startsWith(destinationFolder)) {
+                        throw new IOException("Bad zip entry");
+                    }
 
                     // only print first entry, the zip-file itself
                     if (print) {
